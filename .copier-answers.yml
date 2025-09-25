@@ -1,0 +1,10 @@
+# Changes here will be overwritten by Copier
+_commit: v0.4.2
+_src_path: gl:openscm/copier-basic-python-repository
+email: zebedee.nicholls@climate-resource.com
+name: Zebedee Nicholls
+notebooks: true
+package_manager: uv
+project_description_short: Manuscripts and other associated documents describing CMIP7
+    greenhouse gas (GHG) concentrations (both historical and future)
+project_url: https://github.com/climate-resource/CMIP7-GHG-Concentration-Manuscripts
