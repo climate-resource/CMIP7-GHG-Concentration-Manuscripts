@@ -1,6 +1,11 @@
 # ---
 # jupyter:
+#   authors:
+#   - name: Zebedee Nicholls
+#   - name: Florence Bockting
+#   - name: Mika Plf{\"u}ger
 #   jupytext:
+#     notebook_metadata_filter: title,authors
 #     text_representation:
 #       extension: .py
 #       format_name: percent
@@ -10,12 +15,14 @@
 #     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
+#   title: |
+#     CMIP Greenhouse Gas (GHG) Concentration Historical Dataset:
+#     Data Description and User Guide
 # ---
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-# # Historical dataset - data description and user guide
-
 # %% [markdown] editable=true slideshow={"slide_type": ""}
+# # Overview
+#
 # Here we provide a short description of the historical dataset
 # and a guide for users.
 # This is intended to provide a short introduction for users of the data.
@@ -27,13 +34,19 @@
 # When ready, we will point to this manuscript here.
 # [TODO cross-link]
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# # Imports
+# %% [markdown] editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# ## Imports
 
-# %%
-import xarray as xr
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# # Data description
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
 print("Show output only please")
 
-# %%
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# # User guide
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# Some text here

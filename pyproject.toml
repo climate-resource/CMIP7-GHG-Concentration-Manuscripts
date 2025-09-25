@@ -10,6 +10,7 @@ dependencies = [
     "xarray>=2024.7.0",
     "netcdf4>=1.7.2",
     "papermill>=2.6.0",
+    "loguru>=0.7.3",
 ]
 name = "prototype"
 version = "0.1.0"
