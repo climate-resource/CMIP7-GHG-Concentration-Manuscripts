@@ -1,3 +1,10 @@
+# Output pdfs
+output-pdfs
+
+# Intermediate notebooks
+notebooks-unexecuted
+notebooks-executed
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
