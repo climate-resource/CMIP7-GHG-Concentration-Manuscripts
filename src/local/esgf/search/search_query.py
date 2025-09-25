@@ -20,13 +20,29 @@ from attrs import asdict, define
 from local.esgf.search.input4MIPs import (
     MAPPING_FROM_GENERAL_TERMS as MAPPING_FROM_GENERAL_TERMS_INPUT4MIPS,
 )
-from local.esgf.search.query import query_esgf
+from local.esgf.search.query import query_esgf_files
 from local.esgf.search.search_result import SearchResult
 
 
 class KnownIndexNode(StrEnum):
     """
     Known index nodes for searching ESGF
+    """
+
+    # https://esgf.ceda.ac.uk/thredds/dodsC/esg_cmip6/input4MIPs/CMIP7/CMIP/CR/CR-CMIP-1-0-0/atmos/mon/c4f10/gr1z/v20250228/c4f10_input4MIPs_GHGConcentrations_CMIP_CR-CMIP-1-0-0_gr1z_000101-099912.nc
+    CEDA = "https://esgf.ceda.ac.uk/esg-search/search"
+    """
+    Centre for Environmental Data Analysis
+    """
+
+    DKRZ = "https://esgf-data.dkrz.de/esg-search/search"
+    """
+    Deutches Klimarechenzentrum (German climate computing centre)
+    """
+
+    NCI = "https://esgf.nci.org.au/esg-search/search"
+    """
+    National Computing Infrastructure (Australia)
     """
 
     ORNL = "https://esgf-node.ornl.gov/esgf-1-5-bridge"
@@ -40,9 +56,11 @@ class SearchQuery:
     """
     ESGF search query
 
-    Searches across facets use AND logic.
-    Searches within facets use OR logic.
-    If you want OR logic across facets or AND logic within facets
+    Searches with multiple values for a given search term
+    are deliberately not allowed in this low-level interface.
+    The reason is that the servers seem to not implement the logic correctly,
+    and we don't want to pass that confusion on to users.
+    If you want combination logic across search terms
     then you will need multiple [SearchQuery][]'s.
 
     Note that this is an abstraction.
@@ -50,17 +68,17 @@ class SearchQuery:
     as the names of different search terms have changed over time.
     """
 
-    project: str | tuple[str, ...]
+    project: str
     """
     ESGF project(s) to search within
     """
 
-    variable: str | tuple[str, ...] | None = None
+    variable: str | None = None
     """
     Name of the variable(s) to search for
     """
 
-    grid: str | tuple[str, ...] | None = None
+    grid: str | None = None
     """
     Grid label(s) to search for
     """
@@ -68,22 +86,22 @@ class SearchQuery:
     # might have to introduce simplified names for grids
     # (or just don't use grid names in your search)
 
-    time_sampling: str | tuple[str, ...] | None = None
+    time_sampling: str | None = None
     """
     Time sampling(s) to search for
     """
 
-    cmip_era: str | tuple[str, ...] | None = None
+    cmip_era: str | None = None
     """
     CMIP era(s) in which to search for data
     """
 
-    source_id: str | tuple[str, ...] | None = None
+    source_id: str | None = None
     """
     Source ID(s) to search for
     """
 
-    def to_input4MIPs_terms(self) -> dict[str, str | tuple[str, ...]]:
+    def to_input4MIPs_terms(self) -> dict[str, str]:
         input4MIPs_terms = {
             MAPPING_FROM_GENERAL_TERMS_INPUT4MIPS[k]: v
             for k, v in asdict(self).items()
@@ -92,9 +110,10 @@ class SearchQuery:
 
         return input4MIPs_terms
 
-    def get_results(self, index_node: str | KnownIndexNode) -> tuple[SearchResult, ...]:
+    def get_results(self, index_node: str) -> tuple[SearchResult, ...]:
         projects = (self.project,) if isinstance(self.project, str) else self.project
 
+        res_l = []
         for project in projects:
             # TODO: consider moving this out
             if project == "input4MIPs":
@@ -102,12 +121,49 @@ class SearchQuery:
             else:
                 raise NotImplementedError(project)
 
-            raw_query_response = query_esgf(
+            raw_query_response = query_esgf_files(
                 endpoint=str(index_node),
                 query_terms=specific_search_terms,
-                # TODO: support these configuration options
+                # TODO: support these configuration options?
+                # Much longer list here:
+                # https://esgf.github.io/esg-search/ESGF_Search_RESTful_API.html#the-esgf-search-restful-api
                 # format=format,
                 # distrib=distrib,
                 # limit=limit,
             )
-            breakpoint()
+
+            # TODO: split out a response parsing function
+            # This needs to return results that are datasets,
+            # with files being an attribute of the SearchResult class.
+            for result_d in raw_query_response["response"]["docs"]:
+                # search_result = SearchResult.from_esgf_solr_search_result(result_d)
+                def gv(inv):
+                    if isinstance(inv, list):
+                        if len(inv) != 1:
+                            raise AssertionError(inv)
+                        return inv[0]
+
+                    return inv
+
+                tmp = {
+                    k: gv(result_d[k])
+                    for k in (
+                        "data_node",
+                        "dataset_id",
+                        "id",  # includes node
+                        "index_node",
+                        "instance_id",  # does not include node
+                        "latest",
+                        "master_id",  # does not include node or version
+                        "tracking_id",
+                        "retracted",
+                        "version",
+                    )
+                }
+                tmp["url"] = result_d["url"]
+                inv_map = {
+                    v: k for k, v in MAPPING_FROM_GENERAL_TERMS_INPUT4MIPS.items()
+                }
+                tmp2 = {inv_map[k]: result_d[k] for k in result_d if k in inv_map}
+
+        return tuple(res_l)

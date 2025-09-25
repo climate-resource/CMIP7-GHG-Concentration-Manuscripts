@@ -8,11 +8,16 @@ from __future__ import annotations
 
 import xarray as xr
 
-from local.esgf.search import KnownIndexNode, SearchQuery
+from local.esgf.search import SearchQuery
 
 
-def fetch_and_load_ghg_file(
-    ghg: str, grid: str, time_sampling: str, cmip_era: str, source_id: str
+def fetch_and_load_ghg_file(  # noqa: PLR0913
+    ghg: str,
+    grid: str,
+    time_sampling: str,
+    cmip_era: str,
+    source_id: str,
+    index_node: str,
 ) -> xr.Dataset:
     """
     Fetch (if needed) and load a greenhouse gas concentration file
@@ -50,7 +55,7 @@ def fetch_and_load_ghg_file(
         cmip_era=cmip_era,
         source_id=source_id,
     )
-    search_results = query.get_results(index_node=KnownIndexNode.ORNL)
+    search_results = query.get_results(index_node=index_node)
     breakpoint()
     save_search_query_and_results_to_db(
         # Database into which to save search results
