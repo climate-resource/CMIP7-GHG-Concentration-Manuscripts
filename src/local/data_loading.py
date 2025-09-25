@@ -8,8 +8,12 @@ from __future__ import annotations
 
 import xarray as xr
 
+from local.esgf.search import KnownIndexNode, SearchQuery
 
-def fetch_and_load_ghg_file(ghg: str, grid: str, frequency: str) -> xr.Dataset:
+
+def fetch_and_load_ghg_file(
+    ghg: str, grid: str, time_sampling: str, cmip_era: str, source_id: str
+) -> xr.Dataset:
     """
     Fetch (if needed) and load a greenhouse gas concentration file
 
@@ -27,11 +31,29 @@ def fetch_and_load_ghg_file(ghg: str, grid: str, frequency: str) -> xr.Dataset:
     time_sampling
         Time sampling to fetch
 
+    cmip_era
+        CMIP era from which the data should be retrieved
+
+    source_id
+        Source ID for which to retrieve data
+
     Returns
     -------
     :
         Loaded data
     """
-    # import pdb
-    #
-    # pdb.set_trace()
+    query = SearchQuery(
+        project="input4MIPs",
+        variable=ghg,
+        grid=grid,
+        time_sampling=time_sampling,
+        cmip_era=cmip_era,
+        source_id=source_id,
+    )
+    search_results = query.get_results(index_node=KnownIndexNode.ORNL)
+    breakpoint()
+    save_search_query_and_results_to_db(
+        # Database into which to save search results
+    )
+    # Could also have:
+    # - `compare_search_query_and_results_to_db`
