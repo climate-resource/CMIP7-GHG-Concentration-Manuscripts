@@ -2,16 +2,66 @@
 Create the PDF version of the historical user guide
 """
 
+import re
 from pathlib import Path
 
 import jupytext
+import nbconvert
+import nbformat
 import papermill
 from loguru import logger
 from nbconvert.exporters import PDFExporter
 from nbconvert.preprocessors import TagRemovePreprocessor
+from nbconvert.preprocessors.base import Preprocessor
+
+
+class LatexSubSuperScriptPreprocessor(Preprocessor):
+    """
+    Pre-processor which converts markdown sub and superscript tags into latex equivalent
+    """
+
+    def preprocess_cell(
+        self,
+        cell: nbformat.NotebookNode,
+        resources: nbconvert.exporters.ResourcesDict,
+        cell_index: int,
+    ) -> tuple[nbformat.NotebookNode, nbconvert.exporters.ResourcesDict]:
+        """
+        Pre-process a cell before passing it to the exporter
+
+        Parameters
+        ----------
+        cell
+            Cell to pre-process
+
+        resources
+            Resources available to help with pre-processing
+
+        cell_index
+            Cell index
+
+        Returns
+        -------
+        :
+            Processed cell and resources
+        """
+        if cell.cell_type == "markdown" and (
+            "<sub>" in cell.source or "<sup>" in cell.source
+        ):
+            cell.source = re.sub(
+                r"<sub>(.*?)</sub>", r"\\textsubscript{\1}", cell.source
+            )
+            cell.source = re.sub(
+                r"<sup>(.*?)</sup>", r"\\textsuperscript{\1}", cell.source
+            )
+
+        return cell, resources
 
 
 def main():
+    """
+    Create the PDF of the user guide
+    """
     force_rerun = False
     force_rerun = True
 
@@ -67,6 +117,11 @@ def main():
             remove_all_outputs_tags=("remove_output",),
             remove_input_tags=("remove_input",),
         ),
+        enabled=True,
+    )
+
+    exporter.register_preprocessor(
+        LatexSubSuperScriptPreprocessor(),
         enabled=True,
     )
 

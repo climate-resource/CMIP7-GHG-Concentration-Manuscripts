@@ -12,13 +12,10 @@ dependencies = [
     "papermill>=2.6.0",
     "loguru>=0.7.3",
 ]
-name = "prototype"
+name = "local"
 version = "0.1.0"
 description = "Manuscripts and other associated documents describing CMIP7 greenhouse gas (GHG) concentrations (both historical and future)"
 readme = "README.md"
-
-[tool.uv]
-package = false
 
 [tool.jupytext]
 formats = "ipynb,py:percent"
@@ -43,6 +40,13 @@ ignore = [
     "D400",
     "UP007",
 ]
+[tool.ruff.lint.per-file-ignores]
+"notebooks/*" = [
+    "D100",
+    "E402",
+    "S101",
+]
+
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
