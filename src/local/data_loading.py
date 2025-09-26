@@ -59,6 +59,7 @@ def fetch_and_load_ghg_file(  # noqa: PLR0913
 
     # TODO: add something that allows you to check whether new results
     # differ from existing if the user wants to check this
+
     save_search_query_and_results_to_db(
         # Database into which to save search results
     )

@@ -13,7 +13,7 @@ This leads to some sub-classing, but this seems to be the least worst option
 in order to be able to get data validation on the Python API side.
 """
 
-from local.esgf.models.dataset import ESGFDataset, ESGFDatasetDB
+from local.esgf.models.esgf_dataset import ESGFDataset, ESGFDatasetDB
 from local.esgf.models.esgf_file import (
     ESGFFile,
     ESGFFileDB,
