@@ -10,7 +10,7 @@ from pydantic import ConfigDict
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from local.esgf.models import ESGFdatasetDB
+    from local.esgf.models import ESGFDatasetDB
 
 MAPPING_TO_GENERAL_TERMS = {
     "project": "project",
@@ -81,7 +81,7 @@ class ESGFRawMetadataDB(ESGFRawMetadataBase, table=True):
 
     # Would move esgf_dataset_id onto base if we had a 'create' class
     esgf_dataset_id: int | None = Field(default=None, foreign_key="esgfdatasetdb.id")
-    esgf_dataset: Optional["ESGFdatasetDB"] = Relationship(
+    esgf_dataset: Optional["ESGFDatasetDB"] = Relationship(
         back_populates="esgf_raw_metadata"
     )
     """
@@ -97,3 +97,13 @@ class ESGFRawMetadata(ESGFRawMetadataBase):
     """
 
     model_config = ConfigDict(extra="forbid")
+
+    def to_db_model(self) -> ESGFRawMetadataDB:
+        # Can't just use model_validate because of cross-references
+        db_model_init_kwargs = {
+            model_field: getattr(self, model_field)
+            for model_field in ESGFRawMetadataBase.model_fields
+        }
+        res = ESGFRawMetadataDB(**db_model_init_kwargs)
+
+        return res

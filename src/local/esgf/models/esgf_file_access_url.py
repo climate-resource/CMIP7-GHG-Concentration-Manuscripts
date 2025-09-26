@@ -61,3 +61,13 @@ class ESGFFileAccessURL(ESGFFileAccessURLBase):
     """
 
     model_config = ConfigDict(extra="forbid")
+
+    def to_db_model(self) -> ESGFFileAccessURLDB:
+        # Can't just use model_validate because of cross-references
+        db_model_init_kwargs = {
+            model_field: getattr(self, model_field)
+            for model_field in ESGFFileAccessURLBase.model_fields
+        }
+        res = ESGFFileAccessURLDB(**db_model_init_kwargs)
+
+        return res

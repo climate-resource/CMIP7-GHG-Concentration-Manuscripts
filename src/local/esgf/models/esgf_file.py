@@ -13,6 +13,7 @@ from sqlmodel import Field, Relationship, SQLModel
 from local.esgf.models.esgf_file_access_url import ESGFFileAccessURL
 
 if TYPE_CHECKING:
+    from local.esgf.models.esgf_dataset import ESGFDatasetDB
     from local.esgf.models.esgf_file_access_url import ESGFFileAccessURLDB
 
 
@@ -31,11 +32,11 @@ class ESGFFileDB(ESGFFileBase, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
 
-    # esgf_dataset_id: int = Field(foreign_key="esgfdataset.id")
-    # esgf_dataset: ESGFDataset = Relationship(back_populates="esgf_files")
-    # """
-    # Dataset to which this file belongs
-    # """
+    esgf_dataset_id: int = Field(foreign_key="esgfdatasetdb.id")
+    esgf_dataset: "ESGFDatasetDB" = Relationship(back_populates="esgf_files")
+    """
+    Dataset to which this file belongs
+    """
 
     esgf_file_access_urls: list["ESGFFileAccessURLDB"] = Relationship(
         back_populates="esgf_file"
@@ -67,6 +68,19 @@ class ESGFFile(ESGFFileNoLinks):
     """
     Access URLs available for this file
     """
+
+    def to_db_model(self) -> ESGFFileDB:
+        # Can't just use model_validate because of cross-references
+        db_model_init_kwargs = {
+            model_field: getattr(self, model_field)
+            for model_field in ESGFFileBase.model_fields
+        }
+        db_model_init_kwargs["esgf_file_access_urls"] = [
+            v.to_db_model() for v in self.esgf_file_access_urls
+        ]
+        res = ESGFFileDB(**db_model_init_kwargs)
+
+        return res
 
 
 def to_esgf_files(esgf_file_records: Iterable[dict[str, Any]]) -> tuple[ESGFFile, ...]:

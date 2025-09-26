@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Optional, TypeVar
 from pydantic import ConfigDict
 from sqlmodel import Field, Relationship, SQLModel
 
-from local.esgf.models.esgf_file import ESGFFile, to_esgf_files
+from local.esgf.models.esgf_file import ESGFFile, ESGFFileDB, to_esgf_files
 from local.esgf.models.esgf_raw_metadata import (
     MAPPING_TO_GENERAL_TERMS as MAPPING_TO_GENERAL_TERMS_FROM_RAW,
 )
@@ -58,6 +58,7 @@ class ESGFDatasetBase(SQLModel):
     """
 
 
+# TODO : think about uniqueness constraints
 class ESGFDatasetDB(ESGFDatasetBase, table=True):
     """
     Dataset on ESGF
@@ -67,7 +68,7 @@ class ESGFDatasetDB(ESGFDatasetBase, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
 
-    esgf_files: list["ESGFFile"] = Relationship(back_populates="esgf_dataset")
+    esgf_files: list["ESGFFileDB"] = Relationship(back_populates="esgf_dataset")
     """
     Files that make up this dataset
     """
@@ -180,5 +181,21 @@ class ESGFDataset(ESGFDatasetNoLinks):
         esgf_files = to_esgf_files(esgf_file_records)
         init_kwargs["esgf_files"] = esgf_files
         res = cls.model_validate(init_kwargs)
+
+        return res
+
+    def to_db_model(self) -> ESGFDatasetDB:
+        # Can't just use model_validate because of cross-references
+        db_model_init_kwargs = {
+            model_field: getattr(self, model_field)
+            for model_field in ESGFDatasetBase.model_fields
+        }
+        db_model_init_kwargs["esgf_files"] = [v.to_db_model() for v in self.esgf_files]
+        db_model_init_kwargs["esgf_raw_metadata"] = (
+            self.esgf_raw_metadata.to_db_model()
+            if self.esgf_raw_metadata is not None
+            else None
+        )
+        res = ESGFDatasetDB(**db_model_init_kwargs)
 
         return res

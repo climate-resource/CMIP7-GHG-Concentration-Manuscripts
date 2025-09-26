@@ -1,3 +1,6 @@
+# Databases
+*.db
+
 # Output pdfs
 output-pdfs
 
