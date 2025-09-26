@@ -7,10 +7,11 @@ Model of a dataset on ESGF
 
 from typing import Union
 
+from pydantic import Extra
 from sqlmodel import Field, Relationship, SQLModel
 
 
-class ESGFDataset(SQLModel, table=True):
+class ESGFDataset(SQLModel, table=True, extra=Extra.forbid):
     """
     Representation of a dataset on ESGF
 
@@ -111,7 +112,7 @@ class ESGFFileAccessURL(SQLModel, table=True):
     """
 
 
-class ESGFRawMetadata(SQLModel, table=True):
+class ESGFRawMetadata(SQLModel, table=True, extra=Extra.forbid):
     """
     Raw metadata with names as used on ESGF
     """

@@ -9,7 +9,7 @@ from typing import Any, TypeVar
 import httpx
 from loguru import logger
 
-from local.esgf.dataset import ESGFDataset, ESGFFile, ESGFFileAccessURL
+from local.esgf.dataset import ESGFDataset, ESGFFile, ESGFFileAccessURL, ESGFRawMetadata
 
 T = TypeVar("T")
 
@@ -144,6 +144,7 @@ def parse_raw_esgf_search_result(
             for esgf_result in results_by_file_id[id]
         ]
         esgf_dataset_init_kwargs = {}
+        esgf_raw_metadata_init_kwargs = {}
         # TODO: split this and relevant mapping out
         for key in MAPPING_FROM_GENERAL_TERMS.values():
             fvs = [get_single_value(esgf_result, key) for esgf_result in esgf_results]
@@ -157,15 +158,21 @@ def parse_raw_esgf_search_result(
 
             value = fvs[0]
             esgf_dataset_init_kwargs[MAPPING_TO_GENERAL_TERMS[key]] = value
+            esgf_raw_metadata_init_kwargs[key] = value
 
         esgf_files = [
             ESGFFile(esgf_file_access_urls=file_access_urls[file_id])
             for file_id in file_ids
         ]
+        # TODO: switch to multiple models to enable validation
+        # https://sqlmodel.tiangolo.com/tutorial/fastapi/multiple-models/#docs-ui-to-create-a-hero
+        esgf_raw_metadata = ESGFRawMetadata(**esgf_raw_metadata_init_kwargs)
+        assert False, "Should fail with unknown kwargs"
 
         esgf_dataset = ESGFDataset(
             **esgf_dataset_init_kwargs,
             esgf_files=esgf_files,
+            esgf_raw_metadata=esgf_raw_metadata,
         )
 
         esgf_datasets_l.append(esgf_dataset)
