@@ -38,7 +38,7 @@
 # ## Imports
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-from local.data_loading import fetch_and_load_ghg_file
+from local.data_loading import fetch_and_load_ghg_dataset
 
 # %% [markdown]
 # # Finding and accessing the data
@@ -207,7 +207,7 @@ from local.data_loading import fetch_and_load_ghg_file
 # 5. comparisons with CMIP6 (just do global- and hemispheric-mean)
 
 # %%
-fetch_and_load_ghg_file(
+fetch_and_load_ghg_dataset(
     ghg="co2", grid="gm", frequency="yr", cmip_era="CMIP7", source_id="CR-CMIP-1-0-0"
 )
 
