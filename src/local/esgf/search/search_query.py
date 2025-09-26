@@ -20,7 +20,7 @@ from attrs import asdict, define
 from local.esgf.search.input4MIPs import (
     MAPPING_FROM_GENERAL_TERMS as MAPPING_FROM_GENERAL_TERMS_INPUT4MIPS,
 )
-from local.esgf.search.query import query_esgf_files
+from local.esgf.search.query import query_esgf
 from local.esgf.search.search_result import SearchResult
 
 
@@ -101,69 +101,43 @@ class SearchQuery:
     Source ID(s) to search for
     """
 
-    def to_input4MIPs_terms(self) -> dict[str, str]:
-        input4MIPs_terms = {
-            MAPPING_FROM_GENERAL_TERMS_INPUT4MIPS[k]: v
-            for k, v in asdict(self).items()
-            if v is not None
+    def to_esgf_seach_terms(self) -> dict[str, str]:
+        if self.project == "input4MIPs":
+            mapping = MAPPING_FROM_GENERAL_TERMS_INPUT4MIPS
+        else:
+            raise NotImplementedError(self.project)
+
+        esgf_search_terms = {
+            mapping[k]: v for k, v in asdict(self).items() if v is not None
         }
 
-        return input4MIPs_terms
+        return esgf_search_terms
 
-    def get_results(self, index_node: str) -> tuple[SearchResult, ...]:
-        projects = (self.project,) if isinstance(self.project, str) else self.project
+    def get_results(
+        self,
+        index_node: str,
+        distrib: bool = True,
+        limit: int = 1_000,
+    ) -> tuple[SearchResult, ...]:
+        pass
+        """
+        Should the query be distributed?
 
+        I.e. look at results both on the index node and other nodes?
+        """
+        """
+        Maximum amount of results to retrieve
+        """
         res_l = []
-        for project in projects:
-            # TODO: consider moving this out
-            if project == "input4MIPs":
-                specific_search_terms = self.to_input4MIPs_terms()
-            else:
-                raise NotImplementedError(project)
 
-            raw_query_response = query_esgf_files(
-                endpoint=str(index_node),
-                query_terms=specific_search_terms,
-                # TODO: support these configuration options?
-                # Much longer list here:
-                # https://esgf.github.io/esg-search/ESGF_Search_RESTful_API.html#the-esgf-search-restful-api
-                # format=format,
-                # distrib=distrib,
-                # limit=limit,
-            )
+        esgf_search_terms = self.to_esgf_seach_terms()
 
-            # TODO: split out a response parsing function
-            # This needs to return results that are datasets,
-            # with files being an attribute of the SearchResult class.
-            for result_d in raw_query_response["response"]["docs"]:
-                # search_result = SearchResult.from_esgf_solr_search_result(result_d)
-                def gv(inv):
-                    if isinstance(inv, list):
-                        if len(inv) != 1:
-                            raise AssertionError(inv)
-                        return inv[0]
-
-                    return inv
-
-                tmp = {
-                    k: gv(result_d[k])
-                    for k in (
-                        "data_node",
-                        "dataset_id",
-                        "id",  # includes node
-                        "index_node",
-                        "instance_id",  # does not include node
-                        "latest",
-                        "master_id",  # does not include node or version
-                        "tracking_id",
-                        "retracted",
-                        "version",
-                    )
-                }
-                tmp["url"] = result_d["url"]
-                inv_map = {
-                    v: k for k, v in MAPPING_FROM_GENERAL_TERMS_INPUT4MIPS.items()
-                }
-                tmp2 = {inv_map[k]: result_d[k] for k in result_d if k in inv_map}
+        esgf_datasets = query_esgf(
+            endpoint=str(index_node),
+            query_terms=esgf_search_terms,
+            distrib=distrib,
+            limit=limit,
+        )
+        breakpoint()
 
         return tuple(res_l)

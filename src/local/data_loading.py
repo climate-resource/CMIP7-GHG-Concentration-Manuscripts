@@ -55,7 +55,10 @@ def fetch_and_load_ghg_file(  # noqa: PLR0913
         cmip_era=cmip_era,
         source_id=source_id,
     )
-    search_results = query.get_results(index_node=index_node)
+    esgf_datasets = query.get_results(index_node=index_node)
+    # (placeholder with something
+    # that allows you to check whether new results differ from existing)
+    # push into database
     breakpoint()
     save_search_query_and_results_to_db(
         # Database into which to save search results

@@ -9,8 +9,6 @@ fetch_and_load_ghg_file(
     source_id="CR-CMIP-1-0-0",
     # cmip_era="CMIP6Plus",
     # source_id="CR-CMIP-0-4-0",
+    index_node=KnownIndexNode.DKRZ,
     # index_node=KnownIndexNode.ORNL,
-    # index_node=KnownIndexNode.DKRZ,
-    # index_node=KnownIndexNode.CEDA,
-    index_node=KnownIndexNode.NCI,
 )
