@@ -9,7 +9,7 @@ from typing import Any, TypeVar
 import httpx
 from loguru import logger
 
-from local.esgf.dataset import ESGFDataset, ESGFFile, ESGFFileAccessURL, ESGFRawMetadata
+from local.esgf.models import ESGFDataset, ESGFFile, ESGFFileAccessURL, ESGFRawMetadata
 
 T = TypeVar("T")
 
@@ -164,10 +164,9 @@ def parse_raw_esgf_search_result(
             ESGFFile(esgf_file_access_urls=file_access_urls[file_id])
             for file_id in file_ids
         ]
-        # TODO: switch to multiple models to enable validation
-        # https://sqlmodel.tiangolo.com/tutorial/fastapi/multiple-models/#docs-ui-to-create-a-hero
-        esgf_raw_metadata = ESGFRawMetadata(**esgf_raw_metadata_init_kwargs)
-        assert False, "Should fail with unknown kwargs"
+        esgf_raw_metadata = ESGFRawMetadata.model_validate(
+            esgf_raw_metadata_init_kwargs
+        )
 
         esgf_dataset = ESGFDataset(
             **esgf_dataset_init_kwargs,
