@@ -56,12 +56,10 @@ def fetch_and_load_ghg_file(  # noqa: PLR0913
         source_id=source_id,
     )
     esgf_datasets = query.get_results(index_node=index_node)
-    # (placeholder with something
-    # that allows you to check whether new results differ from existing)
-    # push into database
-    breakpoint()
+
+    # TODO: add something that allows you to check whether new results
+    # differ from existing if the user wants to check this
     save_search_query_and_results_to_db(
         # Database into which to save search results
     )
-    # Could also have:
-    # - `compare_search_query_and_results_to_db`
+    assert False, "Up to here"

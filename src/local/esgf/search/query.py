@@ -9,22 +9,12 @@ from typing import Any, TypeVar
 import httpx
 from loguru import logger
 
-from local.esgf.models import ESGFDataset, ESGFFile, ESGFFileAccessURL, ESGFRawMetadata
+from local.esgf.models import ESGFDataset, ESGFFileAccessURL
 
 T = TypeVar("T")
 
 
 # TODO: think about how to organise this mapping etc.
-MAPPING_FROM_GENERAL_TERMS = {
-    "project": "project",
-    "variable": "variable_id",
-    "grid": "grid_label",
-    "time_sampling": "frequency",
-    "cmip_era": "mip_era",
-    "source_id": "source_id",
-}
-
-MAPPING_TO_GENERAL_TERMS = {v: k for k, v in MAPPING_FROM_GENERAL_TERMS.items()}
 
 
 def query_esgf(
@@ -102,6 +92,12 @@ def parse_raw_esgf_search_result(
     if num_results > max_supported_results_without_scrolling:
         raise NotImplementedError
 
+    # This is by far the hardest part.
+    # We go over all the retrieved file records.
+    # We figure out the dataset they belong to.
+    # We also need to associate the file access options with each file.
+    # Once we have done this, we can go back over the grouped files
+    # to create our dataset instances.
     dataset_file_ids = {}
     file_access_urls = {}
     results_by_file_id = {}
@@ -137,42 +133,13 @@ def parse_raw_esgf_search_result(
 
     esgf_datasets_l = []
     for dataset_id, file_ids in dataset_file_ids.items():
-        esgf_results = [
+        esgf_file_records = [
             esgf_result
             for id in file_ids
             # Each file can be listed more than one place due to duplication over nodes
             for esgf_result in results_by_file_id[id]
         ]
-        esgf_dataset_init_kwargs = {}
-        esgf_raw_metadata_init_kwargs = {}
-        # TODO: split this and relevant mapping out
-        for key in MAPPING_FROM_GENERAL_TERMS.values():
-            fvs = [get_single_value(esgf_result, key) for esgf_result in esgf_results]
-            if len(set(fvs)) != 1:
-                msg = (
-                    f"For {dataset_id=}, the component files do not agree on the value of {key}. "
-                    f"Values found: {fvs}. "
-                    f"Raw responses from ESGF {esgf_results}"
-                )
-                raise AssertionError(msg)
-
-            value = fvs[0]
-            esgf_dataset_init_kwargs[MAPPING_TO_GENERAL_TERMS[key]] = value
-            esgf_raw_metadata_init_kwargs[key] = value
-
-        esgf_files = [
-            ESGFFile(esgf_file_access_urls=file_access_urls[file_id])
-            for file_id in file_ids
-        ]
-        esgf_raw_metadata = ESGFRawMetadata.model_validate(
-            esgf_raw_metadata_init_kwargs
-        )
-
-        esgf_dataset = ESGFDataset(
-            **esgf_dataset_init_kwargs,
-            esgf_files=esgf_files,
-            esgf_raw_metadata=esgf_raw_metadata,
-        )
+        esgf_dataset = ESGFDataset.from_esgf_file_records(esgf_file_records)
 
         esgf_datasets_l.append(esgf_dataset)
 

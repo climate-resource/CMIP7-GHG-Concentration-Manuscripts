@@ -128,7 +128,6 @@ class SearchQuery:
         """
         Maximum amount of results to retrieve
         """
-        res_l = []
 
         esgf_search_terms = self.to_esgf_seach_terms()
 
@@ -138,6 +137,5 @@ class SearchQuery:
             distrib=distrib,
             limit=limit,
         )
-        breakpoint()
 
-        return tuple(res_l)
+        return esgf_datasets

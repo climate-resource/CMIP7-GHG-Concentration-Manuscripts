@@ -12,6 +12,18 @@ from sqlmodel import Field, Relationship, SQLModel
 if TYPE_CHECKING:
     from local.esgf.models import ESGFdatasetDB
 
+MAPPING_TO_GENERAL_TERMS = {
+    "project": "project",
+    "variable_id": "variable",
+    "grid_label": "grid",
+    "frequency": "time_sampling",
+    "mip_era": "cmip_era",
+    "source_id": "source_id",
+}
+"""
+Mapping from raw metadata terms to general terms
+"""
+
 
 class ESGFRawMetadataBase(SQLModel):
     """
