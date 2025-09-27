@@ -12,6 +12,10 @@ from sqlmodel import Field, Relationship, SQLModel
 if TYPE_CHECKING:
     from local.esgf.models import ESGFDatasetDB
 
+# TODO: move this into mappings rather than models?
+# Remove duplicaion with project-specific mappings,
+# this should just be general terms.
+# TODO: add test of above lack of duplication
 MAPPING_TO_GENERAL_TERMS = {
     "project": "project",
     "variable_id": "variable",
@@ -19,6 +23,10 @@ MAPPING_TO_GENERAL_TERMS = {
     "frequency": "time_sampling",
     "mip_era": "cmip_era",
     "source_id": "source_id",
+    # TODO: add drs_version in here
+    # (have to somehow make a decision about
+    # and be clear about the difference
+    # between drs_version and version that comes from e.g. source ID)
 }
 """
 Mapping from raw metadata terms to general terms

@@ -17,11 +17,11 @@ from enum import StrEnum
 
 from attrs import asdict, define
 
+from local.esgf.models import ESGFDataset
 from local.esgf.search.input4MIPs import (
     MAPPING_FROM_GENERAL_TERMS as MAPPING_FROM_GENERAL_TERMS_INPUT4MIPS,
 )
 from local.esgf.search.query import query_esgf
-from local.esgf.search.search_result import SearchResult
 
 
 class KnownIndexNode(StrEnum):
@@ -118,8 +118,8 @@ class SearchQuery:
         index_node: str,
         distrib: bool = True,
         limit: int = 1_000,
-    ) -> tuple[SearchResult, ...]:
-        pass
+    ) -> tuple[ESGFDataset, ...]:
+        # TODO: docstring
         """
         Should the query be distributed?
 
