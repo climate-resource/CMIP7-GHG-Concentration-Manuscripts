@@ -27,6 +27,10 @@ class ESGFDatasetBase(SQLModel):
     Dataset on ESGF
     """
 
+    # No version concept yet as version
+    # is highly variable across projects
+    # depending on how they use source id
+    # vs. drs version
     project: str
     """
     ESGF project
