@@ -1,4 +1,5 @@
 import concurrent.futures
+import threading
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -9,9 +10,19 @@ import tqdm.auto
 def download_file_parallel_helper(
     url: str,
     out_path: Path,
+    thread_positions: dict[int, int],
     progress: bool = False,
-    progress_bar_position: int = 0,
 ) -> Path:
+    thread_id = threading.get_ident()
+    if thread_id not in thread_positions:
+        thread_positions[thread_id] = len(thread_positions)
+
+    # with open("thread-info.txt", "a") as fh:
+    #     fh.write(f"Writing from {thread_id=}")
+    #     fh.write(f"\t{thread_positions=}")
+    #     fh.write(f"\t{thread_positions[thread_id]=}")
+    #     fh.write("\n")
+
     if progress:
         # try:
         #     from tqdm.auto import tqdm
@@ -36,16 +47,14 @@ def download_file_parallel_helper(
                 miniters=1,
                 unit="B",
                 unit_scale=True,
-                unit_divisor=1024,
-                position=progress_bar_position,
+                unit_divisor=2**10,
+                # unit_divisor=2**20,
+                position=thread_positions[thread_id],
                 leave=False,
             ) as pbar:
                 for chunk in request.iter_bytes(chunk_size=2**12):
                     fh.write(chunk)
                     pbar.update(len(chunk))
-                    import time
-
-                    time.sleep(0.1)
 
     else:
         raise NotImplementedError(progress)
@@ -56,10 +65,14 @@ def download_file_parallel_helper(
 def download(
     # URLS, out path would be better interface
     urls: Iterable[str],
-    n_processes: int = 4,
+    n_processes: int = 3,
     progress: bool = True,
     root_out_path: Path = Path("."),
 ) -> tuple[Path, ...]:
+    # with open("thread-info.txt", "w") as fh:
+    #     fh.write("Starting\n")
+
+    thread_positions = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=n_processes) as pool:
         futures = [
             pool.submit(
@@ -68,7 +81,7 @@ def download(
                 # Obviously silly
                 out_path=url.split("/")[-1],
                 progress=progress,
-                progress_bar_position=i,
+                thread_positions=thread_positions,
             )
             for i, url in enumerate(urls)
         ]
@@ -79,6 +92,12 @@ def download(
 
 
 to_download = [
+    "https://esgf1.dkrz.de/thredds/fileServer/input4mips/input4MIPs/CMIP7/CMIP/CR/CR-CMIP-1-0-0/atmos/yr/co2/gm/v20250228/co2_input4MIPs_GHGConcentrations_CMIP_CR-CMIP-1-0-0_gm_0001-0999.nc",
+    "https://esgf1.dkrz.de/thredds/fileServer/input4mips/input4MIPs/CMIP7/CMIP/CR/CR-CMIP-1-0-0/atmos/yr/co2/gm/v20250228/co2_input4MIPs_GHGConcentrations_CMIP_CR-CMIP-1-0-0_gm_1000-1749.nc",
+    "https://esgf1.dkrz.de/thredds/fileServer/input4mips/input4MIPs/CMIP7/CMIP/CR/CR-CMIP-1-0-0/atmos/yr/co2/gm/v20250228/co2_input4MIPs_GHGConcentrations_CMIP_CR-CMIP-1-0-0_gm_1750-2022.nc",
+    "https://esgf1.dkrz.de/thredds/fileServer/input4mips/input4MIPs/CMIP7/CMIP/CR/CR-CMIP-1-0-0/atmos/yr/co2/gm/v20250228/co2_input4MIPs_GHGConcentrations_CMIP_CR-CMIP-1-0-0_gm_0001-0999.nc",
+    "https://esgf1.dkrz.de/thredds/fileServer/input4mips/input4MIPs/CMIP7/CMIP/CR/CR-CMIP-1-0-0/atmos/yr/co2/gm/v20250228/co2_input4MIPs_GHGConcentrations_CMIP_CR-CMIP-1-0-0_gm_1000-1749.nc",
+    "https://esgf1.dkrz.de/thredds/fileServer/input4mips/input4MIPs/CMIP7/CMIP/CR/CR-CMIP-1-0-0/atmos/yr/co2/gm/v20250228/co2_input4MIPs_GHGConcentrations_CMIP_CR-CMIP-1-0-0_gm_1750-2022.nc",
     "https://esgf1.dkrz.de/thredds/fileServer/input4mips/input4MIPs/CMIP7/CMIP/CR/CR-CMIP-1-0-0/atmos/yr/co2/gm/v20250228/co2_input4MIPs_GHGConcentrations_CMIP_CR-CMIP-1-0-0_gm_0001-0999.nc",
     "https://esgf1.dkrz.de/thredds/fileServer/input4mips/input4MIPs/CMIP7/CMIP/CR/CR-CMIP-1-0-0/atmos/yr/co2/gm/v20250228/co2_input4MIPs_GHGConcentrations_CMIP_CR-CMIP-1-0-0_gm_1000-1749.nc",
     "https://esgf1.dkrz.de/thredds/fileServer/input4mips/input4MIPs/CMIP7/CMIP/CR/CR-CMIP-1-0-0/atmos/yr/co2/gm/v20250228/co2_input4MIPs_GHGConcentrations_CMIP_CR-CMIP-1-0-0_gm_1750-2022.nc",
