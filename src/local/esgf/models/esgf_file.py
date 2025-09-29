@@ -5,21 +5,28 @@ ESGF file models
 # from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from pydantic import ConfigDict
 from sqlmodel import Field, Relationship, SQLModel
 
 from local.esgf.models.esgf_file_access_url import ESGFFileAccessURL
+from local.esgf.models.esgf_file_local import ESGFFileLocal
 
 if TYPE_CHECKING:
     from local.esgf.models.esgf_dataset import ESGFDatasetDB
     from local.esgf.models.esgf_file_access_url import ESGFFileAccessURLDB
+    from local.esgf.models.esgf_file_local import ESGFFileLocalDB
 
 
 class ESGFFileBase(SQLModel):
     """
     File on ESGF
+    """
+
+    path_esgf: str
+    """
+    Filepath according to ESGF
     """
 
 
@@ -45,6 +52,12 @@ class ESGFFileDB(ESGFFileBase, table=True):
     Access URLs available for this file
     """
 
+    esgf_file_local_id: int | None = Field(foreign_key="esgffilelocaldb.id")
+    esgf_file_local: "ESGFFileLocalDB" = Relationship(back_populates="esgf_file")
+    """
+    Local version of this file
+    """
+
 
 class ESGFFileNoLinks(ESGFFileBase):
     """
@@ -64,12 +77,27 @@ class ESGFFile(ESGFFileNoLinks):
     Data model i.e. the one that users will likely want to interact with
     """
 
+    # No esgf_dataset to avoid circularity issues
+
     esgf_file_access_urls: list["ESGFFileAccessURL"] = Field(default_factory=list)
     """
     Access URLs available for this file
     """
 
+    esgf_file_local: Optional["ESGFFileLocal"] = None
+    """
+    Local version of this file
+    """
+
     def to_db_model(self) -> ESGFFileDB:
+        """
+        Convert to the database model
+
+        Returns
+        -------
+        :
+            Database model equivalent of `self`
+        """
         # Can't just use model_validate because of cross-references
         db_model_init_kwargs = {
             model_field: getattr(self, model_field)
@@ -78,6 +106,11 @@ class ESGFFile(ESGFFileNoLinks):
         db_model_init_kwargs["esgf_file_access_urls"] = [
             v.to_db_model() for v in self.esgf_file_access_urls
         ]
+        db_model_init_kwargs["esgf_file_local"] = (
+            self.esgf_file_local.to_db_model()
+            if self.esgf_file_local is not None
+            else None
+        )
         res = ESGFFileDB(**db_model_init_kwargs)
 
         return res
@@ -99,11 +132,23 @@ def to_esgf_files(esgf_file_records: Iterable[dict[str, Any]]) -> tuple[ESGFFile
         [ESGFFile][]'s
     """
     file_access_urls_grouped = {}
+    file_paths_by_id = {}
     for result_d in esgf_file_records:
-        # Get rid of the node before creating the file ID
-        our_file_id = result_d["id"].split("|")[0]
+        # Want the ID without the node
+        our_file_id = result_d["instance_id"]
         if our_file_id not in file_access_urls_grouped:
             file_access_urls_grouped[our_file_id] = []
+
+        # Best way to get file path I can think of,
+        # I really hope this convention doesn't break...
+        file_path = our_file_id.replace(".", "/").replace("/nc", ".nc")
+        if our_file_id not in file_paths_by_id:
+            file_paths_by_id[our_file_id] = file_path
+        elif file_path != file_paths_by_id[our_file_id]:
+            msg = (
+                f"{file_path} != {file_paths_by_id[our_file_id]}. {esgf_file_records=}"
+            )
+            raise AssertionError(msg)
 
         for access_url in result_d["url"]:
             # https://esgf.github.io/esg-search/ESGF_Search_RESTful_API.html#access-urls
@@ -116,8 +161,12 @@ def to_esgf_files(esgf_file_records: Iterable[dict[str, Any]]) -> tuple[ESGFFile
             file_access_urls_grouped[our_file_id].append(esgf_file_access_url)
 
     esgf_files = tuple(
-        ESGFFile(esgf_file_access_urls=file_access_urls)
-        for file_access_urls in file_access_urls_grouped.values()
+        ESGFFile(
+            path_esgf=file_paths_by_id[file_id],
+            esgf_file_access_urls=file_access_urls,
+            esgf_file_local=None,
+        )
+        for file_id, file_access_urls in file_access_urls_grouped.items()
     )
 
     return esgf_files

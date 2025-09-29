@@ -6,6 +6,8 @@ High-level helpers to hide the challenges of grabbing data from different source
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import sqlalchemy.engine.base
 import xarray as xr
 from sqlmodel import Session, select
@@ -15,6 +17,7 @@ from local.esgf.search import SearchQuery
 
 
 def fetch_and_load_ghg_dataset(  # noqa: PLR0913
+    local_data_root_dir: Path,
     ghg: str,
     grid: str,
     time_sampling: str,
@@ -31,6 +34,9 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
 
     Parameters
     ----------
+    local_data_root_dir
+        Path to the root directory in which local data should be downloaded
+
     ghg
         Greenhouse gas for which to fetch data
 
@@ -100,45 +106,18 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
         # TODO: add something that allows you to check whether new results
         # differ from existing if the user wants to check this
 
-        # local_root_dir needed somewhere e.g. in something like
-        # for esgf_f in esgf_dataset.esgf_files:
-        #     if esgf_f.local_file is None:
-        #         ESGFFileDB.set_local_file(local_root_dir)
-        #
-        # or esgf_dataset.set_local_files_root_dir(local_root_dir)
-        # which just does the above
+        esgf_dataset.set_local_files_root_dir(local_data_root_dir)
 
         with Session(engine) as session:
             session.add(esgf_dataset.to_db_model())
             session.commit()
 
-    assert False, "Up to here"
-    # Make a table so we can do back links using sqlmodel's handiness.
-    # Also a good point: don't have back-links in in-memory models
-    # because these can get out of date.
-    # Back-links only in DB models as sqlmodel handles updating for us.
-    # class LocalFileDB:
-    #     path: Path
-    #     esgf_file: ESGFFileDB | None
-    local_files = [esgff.local_file for esgff in esgf_dataset.esgf_files]
-    to_download = [lf for lf in local_files if not lf.path.exists()]
-    # or just local_files = esgf_dataset.ensure_all_files_available_locally(#tqdm stuff)
-    # (only downloading time slices needed would be smarter, but ok).
-    if to_download:
-        local_files_downloaded = download_files(
-            to_download,
-            # tqdm stuff here
-            # can use logging in here too
-        )
-        local_files = [
-            *local_files_downloaded,
-            *(lf for lf in local_files if lf.available()),
-        ]
+    local_paths = esgf_dataset.ensure_all_files_available_locally()
 
     # Finally, load the local files and return the xr.Dataset
     # TODO: abstract into load_xarray_from_db_dataset
     # so we can do pre- and post-processing
-    # based on metadata in dataset
-    res = xr.open_mfdataset([lf.local_path for lf in local_files])
+    # based on metadata in dataset and handle the year 0 issue for CMIP6
+    res = xr.open_mfdataset(local_paths, use_cftime=True)
 
     return res
