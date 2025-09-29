@@ -118,6 +118,6 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
     # TODO: abstract into load_xarray_from_db_dataset
     # so we can do pre- and post-processing
     # based on metadata in dataset and handle the year 0 issue for CMIP6
-    res = xr.open_mfdataset(local_paths, use_cftime=True)
+    res = xr.open_mfdataset(local_paths, use_cftime=True, data_vars=None)
 
     return res

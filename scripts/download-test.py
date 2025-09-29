@@ -24,7 +24,7 @@ create_all_tables(engine)
 
 ds = fetch_and_load_ghg_dataset(
     local_data_root_dir=local_data_root_dir,
-    ghg="n2o",
+    ghg="hfc23",
     grid="gnz",
     time_sampling="mon",
     cmip_era="CMIP7",
