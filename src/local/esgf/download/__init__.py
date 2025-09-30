@@ -38,6 +38,12 @@ def download_files_parallel_progress(
                 raise NotImplementedError
             access_url = access_url[0]
 
+            # # Very cool trick to get the header alone, thanks Bouwe
+            # # https://github.com/Climate-REF/climate-ref/issues/212#issuecomment-3347484978
+            # import netCDF4
+            # with netCDF4.Dataset(f"{access_url.url}#bytes") as ds:
+            #     ds.product
+
             future = pool.submit(
                 download_file_parallel_progress_helper,
                 access_url.url,
