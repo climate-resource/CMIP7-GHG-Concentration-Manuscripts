@@ -19,6 +19,10 @@ from local.esgf.models import ESGFDataset, ESGFDatasetDB
 from local.esgf.search import SearchQuery
 from local.xarray_loading import load_xarray_from_esgf_dataset
 
+CMIP7_TO_CMIP6EQ_GRID_MAP = {
+    "gm": "gr1-GMNHSH",
+}
+
 CMIP7_TO_CMIP6_VARIABLE_MAP = {
     "co2": "mole_fraction_of_carbon_dioxide_in_air",
     "ch4": "mole_fraction_of_methane_in_air",
@@ -69,34 +73,46 @@ CMIP7_TO_CMIP6_VARIABLE_MAP = {
 }
 
 
-def fix_year_zero_nonsense(
+def fix_broken_calendar_spec(
     ncdatas: list[ncdata.NcData], esgf_dataset: ESGFDataset, file_paths: list[Path]
 ) -> list[ncdata.NcData]:
     for ncd in ncdatas:
         if ncd.variables["time"].attributes["units"].value == "days since 0-1-1" and (
             ncd.variables["time"].attributes["calendar"].value == "gregorian"
         ):
-            # # Time units broken - fix here
-            # Drop out year 0 values (year 0 doesn't exist)
-            ncd.variables[
-                str(ncd.attributes["variable_id"].value)
-            ].data = ncd.variables[str(ncd.attributes["variable_id"].value)].data[1:, :]
-            ncd.variables["time"].data = ncd.variables["time"].data[1:]
-            ncd.variables["time_bnds"].data = ncd.variables["time_bnds"].data[1:, :]
-            # Use units that exist
-            ncd.variables["time"].attributes["units"].value = "days since 1-1-1"
-            # Align values with new units
-            ncd.variables["time"].data -= 365
-            ncd.variables["time_bnds"].data -= 365
+            # No year 0 in gregorian, but there is in proleptic_gregorian.
+            # Probably not perfect to just overwrite,
+            # but fine for what we're doing here.
+            ncd.variables["time"].set_attrval("calendar", "proleptic_gregorian")
 
     return ncdatas
 
 
+def fix_conventions_to_match_cmip7(
+    ds: xr.Dataset, esgf_dataset: ESGFDataset, file_paths: list[Path]
+) -> xr.Dataset:
+    # TODO: push this into post_xarray loading
+    if esgf_dataset.cmip_era == "CMIP6":
+        # Realign grids to match how CMIP7 does it
+        if esgf_dataset.grid == "gm":
+            ds = ds.isel(sector=0).drop(["sector", "sector_bnds"])
+        else:
+            raise NotImplementedError(esgf_dataset.grid)
+
+        ds = ds.rename({"bound": "bnds"})
+
+    return ds
+
+
 def load_cmip_ghg_ds(esgf_dataset: ESGFDataset) -> xr.Dataset:
-    return load_xarray_from_esgf_dataset(
+    res = load_xarray_from_esgf_dataset(
         esgf_dataset=esgf_dataset,
-        pre_to_xarray=fix_year_zero_nonsense,
+        pre_to_xarray=fix_broken_calendar_spec,
+        post_to_xarray=fix_conventions_to_match_cmip7,
+        add_attributes_from_metadata=("cmip_era", "source_id"),
     )
+
+    return res
 
 
 def fetch_and_load_ghg_dataset(  # noqa: PLR0913
@@ -183,15 +199,17 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
         if cmip_era == "CMIP6":
             # Translate names
             variable = CMIP7_TO_CMIP6_VARIABLE_MAP[ghg]
+            grid_query = CMIP7_TO_CMIP6EQ_GRID_MAP[grid]
 
         else:
             variable = ghg
+            grid_query = grid
 
         # Query the DB and add the results to the DB
         query = SearchQuery(
             project="input4MIPs",
             variable=variable,
-            grid=grid,
+            grid=grid_query,
             time_sampling=time_sampling,
             cmip_era=cmip_era,
             source_id=source_id,
@@ -205,6 +223,7 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
             # Overwrite the query result value with the one we want
             # TODO: better logic around this
             esgf_dataset_collection.esgf_datasets[0].variable = ghg
+            esgf_dataset_collection.esgf_datasets[0].grid = grid
 
         # TODO: add something that allows you to check whether new results
         # differ from existing if the user wants to check this
@@ -229,6 +248,4 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
 
     res = load_xr_dataset(esgf_dataset)
 
-    # TODO: add support for realigning grid
-    # to match CMIP7 style grids as needed
     return res

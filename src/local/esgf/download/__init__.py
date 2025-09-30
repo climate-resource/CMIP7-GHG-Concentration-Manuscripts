@@ -111,7 +111,7 @@ def download_file_parallel_progress_helper(
                 leave=False,
             ) as pbar,
         ):
-            for chunk in request.iter_bytes(chunk_size=2**12):
+            for chunk in request.iter_bytes(chunk_size=2**17):
                 fh.write(chunk)
                 pbar.update(len(chunk))
 
