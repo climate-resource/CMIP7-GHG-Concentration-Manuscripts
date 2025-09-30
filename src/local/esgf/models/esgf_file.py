@@ -29,6 +29,11 @@ class ESGFFileBase(SQLModel):
     Filepath according to ESGF
     """
 
+    size: int
+    """
+    File size in bytes
+    """
+
 
 class ESGFFileDB(ESGFFileBase, table=True):
     """
@@ -132,7 +137,7 @@ def to_esgf_files(esgf_file_records: Iterable[dict[str, Any]]) -> tuple[ESGFFile
         [ESGFFile][]'s
     """
     file_access_urls_grouped = {}
-    file_paths_by_id = {}
+    file_info_by_id = {}
     for result_d in esgf_file_records:
         # Want the ID without the node
         our_file_id = result_d["instance_id"]
@@ -142,12 +147,18 @@ def to_esgf_files(esgf_file_records: Iterable[dict[str, Any]]) -> tuple[ESGFFile
         # Best way to get file path I can think of,
         # I really hope this convention doesn't break...
         file_path = our_file_id.replace(".", "/").replace("/nc", ".nc")
-        if our_file_id not in file_paths_by_id:
-            file_paths_by_id[our_file_id] = file_path
-        elif file_path != file_paths_by_id[our_file_id]:
-            msg = (
-                f"{file_path} != {file_paths_by_id[our_file_id]}. {esgf_file_records=}"
-            )
+        if our_file_id not in file_info_by_id:
+            file_info_by_id[our_file_id] = {
+                "path_esgf": file_path,
+                "size": result_d["size"],
+                # Could do checksum here, but probably asking for trouble
+            }
+
+        elif (
+            file_path != file_info_by_id[our_file_id]["path_esgf"]
+            # Don't care about checking size across sources
+        ):
+            msg = f"{file_path} != {file_info_by_id[our_file_id]}. {esgf_file_records=}"
             raise AssertionError(msg)
 
         for access_url in result_d["url"]:
@@ -162,7 +173,7 @@ def to_esgf_files(esgf_file_records: Iterable[dict[str, Any]]) -> tuple[ESGFFile
 
     esgf_files = tuple(
         ESGFFile(
-            path_esgf=file_paths_by_id[file_id],
+            **file_info_by_id[file_id],
             esgf_file_access_urls=file_access_urls,
             esgf_file_local=None,
         )

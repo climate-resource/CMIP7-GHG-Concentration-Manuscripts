@@ -53,7 +53,8 @@ def download_files_parallel_progress(
 
             future = pool.submit(
                 download_file_parallel_progress_helper,
-                access_url.url,
+                url=access_url.url,
+                size=esgf_file.size,
                 out_path=Path(esgf_file.esgf_file_local.path),
                 thread_positions=thread_positions,
             )
@@ -73,6 +74,7 @@ def download_files_parallel_progress(
 
 def download_file_parallel_progress_helper(
     url: str,
+    size: int,
     out_path: Path,
     thread_positions: dict[int, int],
     progress: bool = False,
@@ -100,8 +102,7 @@ def download_file_parallel_progress_helper(
             open(tmpf, "wb") as fh,
             tqdm.auto.tqdm(
                 desc=desc,
-                # # TODO: think about this, might be a better way for ESGF
-                # total=int(request.headers.get("content-length"), 0),
+                total=size,
                 miniters=1,
                 unit="B",
                 unit_scale=True,
