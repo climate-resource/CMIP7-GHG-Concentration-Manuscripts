@@ -14,10 +14,6 @@ in order to be able to get data validation on the Python API side.
 """
 
 from local.esgf.models.esgf_dataset import ESGFDataset, ESGFDatasetDB
-from local.esgf.models.esgf_dataset_local import (
-    ESGFDatasetLocal,
-    ESGFDatasetLocalDB,
-)
 from local.esgf.models.esgf_file import (
     ESGFFile,
     ESGFFileDB,
@@ -38,8 +34,6 @@ from local.esgf.models.esgf_raw_metadata import (
 # Ensure cross-links validate properly
 ESGFDataset.model_rebuild()
 ESGFDatasetDB.model_rebuild()
-ESGFDatasetLocal.model_rebuild()
-ESGFDatasetLocalDB.model_rebuild()
 ESGFFile.model_rebuild()
 ESGFFileAccessURL.model_rebuild()
 ESGFFileAccessURLDB.model_rebuild()
@@ -53,8 +47,6 @@ ESGFRawMetadataDB.model_rebuild()
 __all__ = [
     "ESGFDataset",
     "ESGFDatasetDB",
-    "ESGFDatasetLocal",
-    "ESGFDatasetLocalDB",
     "ESGFFile",
     "ESGFFileAccessURL",
     "ESGFFileAccessURLDB",

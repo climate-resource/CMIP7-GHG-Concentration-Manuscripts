@@ -17,7 +17,7 @@ from enum import StrEnum
 
 from attrs import asdict, define
 
-from local.esgf.models import ESGFDataset
+from local.esgf.esgf_dataset_collection import ESGFDatasetCollection
 from local.esgf.search.input4MIPs import (
     MAPPING_FROM_GENERAL_TERMS as MAPPING_FROM_GENERAL_TERMS_INPUT4MIPS,
 )
@@ -118,7 +118,7 @@ class SearchQuery:
         index_node: str,
         distrib: bool = True,
         limit: int = 1_000,
-    ) -> tuple[ESGFDataset, ...]:
+    ) -> ESGFDatasetCollection:
         # TODO: docstring
         """
         Should the query be distributed?
@@ -131,11 +131,11 @@ class SearchQuery:
 
         esgf_search_terms = self.to_esgf_seach_terms()
 
-        esgf_datasets = query_esgf(
+        esgf_dataset_collection = query_esgf(
             endpoint=str(index_node),
             query_terms=esgf_search_terms,
             distrib=distrib,
             limit=limit,
         )
 
-        return esgf_datasets
+        return esgf_dataset_collection

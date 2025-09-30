@@ -9,6 +9,7 @@ from typing import Any, TypeVar
 import httpx
 from loguru import logger
 
+from local.esgf.esgf_dataset_collection import ESGFDatasetCollection
 from local.esgf.models import ESGFDataset, ESGFFileAccessURL
 
 T = TypeVar("T")
@@ -22,7 +23,7 @@ def query_esgf(
     query_terms: dict[str, tuple[str, ...]],
     distrib: bool = True,
     limit: int = 1000,
-) -> tuple[ESGFDataset, ...]:
+) -> ESGFDatasetCollection:
     raw_response = query_esgf_files(
         endpoint=endpoint,
         query_terms=query_terms,
@@ -30,9 +31,11 @@ def query_esgf(
         limit=limit,
     )
 
-    esgf_datasets = parse_raw_esgf_search_result(raw_response.raise_for_status().json())
+    esgf_dataset_collection = parse_raw_esgf_search_result(
+        raw_response.raise_for_status().json()
+    )
 
-    return esgf_datasets
+    return esgf_dataset_collection
 
 
 def query_esgf_files(
@@ -83,7 +86,7 @@ def get_single_value(ind: dict[Any, Any], key: Any) -> T:
 
 def parse_raw_esgf_search_result(
     raw_search_json: dict[str, Any],
-) -> tuple[ESGFDataset, ...]:
+) -> ESGFDatasetCollection:
     # work out which dataset each file belongs to
     # parse everything into dataset/ESGFDataset objects
 
@@ -143,6 +146,6 @@ def parse_raw_esgf_search_result(
 
         esgf_datasets_l.append(esgf_dataset)
 
-    res = tuple(esgf_datasets_l)
+    res = ESGFDatasetCollection(esgf_datasets=tuple(esgf_datasets_l))
 
     return res

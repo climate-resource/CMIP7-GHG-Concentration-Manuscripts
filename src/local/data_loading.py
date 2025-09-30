@@ -63,9 +63,11 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
     :
         Loaded data
     """
+    # Check for values already in the database
     with Session(engine) as session:
         statement = select(ESGFDatasetDB).where(
-            # I Wonder if we can do `where(query)` or something
+            # I Wonder if we can do `where(query)`
+            # where `query` is an object or something
             # to be less repetitive
             ESGFDatasetDB.variable == ghg,
             ESGFDatasetDB.grid == grid,
@@ -83,7 +85,11 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
         else:
             esgf_dataset = None
 
+    # TODO: optionally allow for checking for new results from ESGF,
+    # even if we already have search results in the DB
+
     if esgf_dataset is None:
+        # Query the DB and add the results to the DB
         query = SearchQuery(
             project="input4MIPs",
             variable=ghg,
@@ -92,32 +98,33 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
             cmip_era=cmip_era,
             source_id=source_id,
         )
-        # Check if results already in the database
-        # Optionally check for new results from ESGF
-        # (don't implement for now)
-        # If no results in database, grab them from ESGF
-        # Then save into database
-        esgf_datasets = query.get_results(index_node=index_node)
-        if len(esgf_datasets) != 1:
-            raise AssertionError(esgf_datasets)
-
-        esgf_dataset = esgf_datasets[0]
+        esgf_dataset_collection = query.get_results(index_node=index_node)
 
         # TODO: add something that allows you to check whether new results
         # differ from existing if the user wants to check this
 
-        esgf_dataset.set_local_files_root_dir(local_data_root_dir)
+        esgf_dataset_collection.set_local_files_root_dir(local_data_root_dir)
 
         with Session(engine) as session:
-            session.add(esgf_dataset.to_db_model())
+            session.add(
+                esgf_dataset.to_db_model()
+                for esgf_dataset in esgf_dataset_collection.esgf_datasets
+            )
             session.commit()
 
-    local_paths = esgf_dataset.ensure_all_files_available_locally()
+    # Download
+    local_paths = esgf_dataset_collection.ensure_all_files_available_locally()
 
     # Finally, load the local files and return the xr.Dataset
     # TODO: abstract into load_xarray_from_db_dataset
     # so we can do pre- and post-processing
     # based on metadata in dataset and handle the year 0 issue for CMIP6
-    res = xr.open_mfdataset(local_paths, use_cftime=True, data_vars=None)
+    # TODO: other loading methods e.g. load into xr.Datatree
+    if len(esgf_dataset_collection.esgf_datasets) != 1:
+        raise AssertionError(esgf_dataset_collection)
+    esgf_dataset = esgf_dataset_collection.esgf_datasets[0]
+    res = xr.open_mfdataset(
+        local_paths, use_cftime=True, data_vars=None, compat="no_conflicts"
+    )
 
     return res

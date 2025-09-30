@@ -14,9 +14,6 @@ from pydantic import ConfigDict
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from local.esgf.models.esgf_dataset_local import (
-        ESGFDatasetLocalDB,
-    )
     from local.esgf.models.esgf_file import ESGFFileDB
 
 
@@ -39,14 +36,6 @@ class ESGFFileLocalDB(ESGFFileLocalBase, table=True):
     """
 
     id: int | None = Field(default=None, primary_key=True)
-
-    esgf_dataset_local_id: int = Field(foreign_key="esgfdatasetlocaldb.id")
-    esgf_dataset_local: "ESGFDatasetLocalDB" = Relationship(
-        back_populates="esgf_files_local"
-    )
-    """
-    Local dataset to which this file belongs
-    """
 
     esgf_file: "ESGFFileDB" = Relationship(back_populates="esgf_file_local")
     """
