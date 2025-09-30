@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 # TODO: add test of above lack of duplication
 MAPPING_TO_GENERAL_TERMS = {
     "project": "project",
-    "variable_id": "variable",
+    "variable": "variable",
     "grid_label": "grid",
     "frequency": "time_sampling",
     "mip_era": "cmip_era",
@@ -72,10 +72,16 @@ class ESGFRawMetadataBase(SQLModel):
     (not always institute, not always model, can include some version information).
     """
 
-    variable_id: str
+    variable: str
     """
-    ID of the variable represented by the ESGF record
+    Variable represented by the ESGF record
     """
+
+    # Turn off for now to avoid confusion with variable above
+    # variable_id: str
+    # """
+    # ID of the variable represented by the ESGF record
+    # """
 
 
 class ESGFRawMetadataDB(ESGFRawMetadataBase, table=True):

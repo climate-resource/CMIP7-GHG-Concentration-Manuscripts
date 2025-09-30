@@ -7,7 +7,7 @@ from __future__ import annotations
 # TODO: move this into mappings rather than search
 MAPPING_FROM_GENERAL_TERMS = {
     "project": "project",
-    "variable": "variable_id",
+    "variable": "variable",
     "grid": "grid_label",
     "time_sampling": "frequency",
     "cmip_era": "mip_era",

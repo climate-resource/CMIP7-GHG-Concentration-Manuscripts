@@ -1414,6 +1414,7 @@ dependencies = [
     { name = "jupyterlab" },
     { name = "jupytext" },
     { name = "loguru" },
+    { name = "ncdata" },
     { name = "netcdf4" },
     { name = "papermill" },
     { name = "pre-commit" },
@@ -1429,6 +1430,7 @@ requires-dist = [
     { name = "jupyterlab", specifier = ">=4.0.0" },
     { name = "jupytext", specifier = ">=1.15.2" },
     { name = "loguru", specifier = ">=0.7.3" },
+    { name = "ncdata", specifier = ">=0.2.0" },
     { name = "netcdf4", specifier = ">=1.7.2" },
     { name = "papermill", specifier = ">=2.6.0" },
     { name = "pre-commit", specifier = ">=3.3.1" },
@@ -1796,6 +1798,23 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/6d/fd/91545e604bc3dad7dca9ed03284086039b294c6b3d75c0d2fa45f9e9caf3/nbformat-5.10.4.tar.gz", hash = "sha256:322168b14f937a5d11362988ecac2a4952d3d8e3a2cbeb2319584631226d5b3a", size = 142749, upload-time = "2024-04-04T11:20:37.371Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a9/82/0340caa499416c78e5d8f5f05947ae4bc3cba53c9f038ab6e9ed964e22f1/nbformat-5.10.4-py3-none-any.whl", hash = "sha256:3b48d6c8fbca4b299bf3982ea7db1af21580e4fec269ad087b9e81588891200b", size = 78454, upload-time = "2024-04-04T11:20:34.895Z" },
+]
+
+[[package]]
+name = "ncdata"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dask", version = "2024.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "dask", version = "2025.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "netcdf4" },
+    { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
+    { name = "numpy", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5f/71/17a4b787058c75e91091c50f64390844affc308092c066309da346796b0e/ncdata-0.2.0.tar.gz", hash = "sha256:bda53adc0f76a805038300ac4f8cac0a4cb2745c2c1d1d7248c3707e4b482a3b", size = 578206, upload-time = "2025-03-05T11:13:45.642Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bb/e0/9b439fcd207fd1ff706393594d7ebe4d5eb814e3d0cbb63f1dde897467c4/ncdata-0.2.0-py3-none-any.whl", hash = "sha256:dbd892b38a49d9db5b7a898d030d33cb8c8583c31546c26ad77943c82ef6d6b4", size = 36537, upload-time = "2025-03-05T11:13:43.613Z" },
 ]
 
 [[package]]
