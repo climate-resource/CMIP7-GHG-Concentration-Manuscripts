@@ -12,6 +12,7 @@ import sqlalchemy.engine.base
 import xarray as xr
 from sqlmodel import Session, select
 
+from local.esgf.esgf_dataset_collection import ESGFDatasetCollection
 from local.esgf.models import ESGFDataset, ESGFDatasetDB
 from local.esgf.search import SearchQuery
 
@@ -77,18 +78,22 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
         )
         result_exec = session.exec(statement)
 
-        result = result_exec.one_or_none()
+        results = result_exec.all()
 
-        if result is not None:
-            esgf_dataset: ESGFDataset | None = ESGFDataset.model_validate(result)
+        if results is not None:
+            esgf_dataset_collection: ESGFDatasetCollection | None = (
+                ESGFDatasetCollection(
+                    esgf_datasets=tuple(ESGFDataset.model_validate(r) for r in results)
+                )
+            )
 
         else:
-            esgf_dataset = None
+            esgf_dataset_collection = None
 
     # TODO: optionally allow for checking for new results from ESGF,
     # even if we already have search results in the DB
 
-    if esgf_dataset is None:
+    if esgf_dataset_collection is None:
         # Query the DB and add the results to the DB
         query = SearchQuery(
             project="input4MIPs",
@@ -106,7 +111,7 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
         esgf_dataset_collection.set_local_files_root_dir(local_data_root_dir)
 
         with Session(engine) as session:
-            session.add(
+            session.add_all(
                 esgf_dataset.to_db_model()
                 for esgf_dataset in esgf_dataset_collection.esgf_datasets
             )
@@ -116,13 +121,16 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
     local_paths = esgf_dataset_collection.ensure_all_files_available_locally()
 
     # Finally, load the local files and return the xr.Dataset
+
     # TODO: abstract into load_xarray_from_db_dataset
     # so we can do pre- and post-processing
     # based on metadata in dataset and handle the year 0 issue for CMIP6
-    # TODO: other loading methods e.g. load into xr.Datatree
+
+    # Make sure that we can load our paths into a single dataset
     if len(esgf_dataset_collection.esgf_datasets) != 1:
         raise AssertionError(esgf_dataset_collection)
     esgf_dataset = esgf_dataset_collection.esgf_datasets[0]
+    # TODO: other loading methods e.g. load into xr.Datatree
     res = xr.open_mfdataset(
         local_paths, use_cftime=True, data_vars=None, compat="no_conflicts"
     )

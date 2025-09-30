@@ -119,6 +119,7 @@ class SearchQuery:
         distrib: bool = True,
         limit: int = 1_000,
     ) -> ESGFDatasetCollection:
+        pass
         # TODO: docstring
         """
         Should the query be distributed?

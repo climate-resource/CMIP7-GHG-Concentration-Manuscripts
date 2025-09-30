@@ -215,8 +215,26 @@ class ESGFDataset(ESGFDatasetNoLinks):
         :
             Local paths
         """
-        local_files_available = []
-        to_download = []
+        local_files_split = self.split_local_files_by_availability()
+
+        local_files = tuple(
+            (
+                *local_files_split["available_locally"],
+                *download_files_parallel_progress(
+                    local_files_split["not_available_locally"]
+                ),
+            )
+        )
+
+        return local_files
+
+    def split_local_files_by_availability(
+        self,
+    ) -> dict[str, tuple[Path, ...]]:
+        res = {
+            "available_locally": [],
+            "not_available_locally": [],
+        }
         for esgf_file in self.esgf_files:
             if esgf_file.esgf_file_local is None:
                 msg = f"No local path specified for {esgf_file=}"
@@ -224,22 +242,11 @@ class ESGFDataset(ESGFDatasetNoLinks):
 
             lp = Path(esgf_file.esgf_file_local.path)
             if lp.exists():
-                local_files_available.append(lp)
+                res["available_locally"].append(lp)
             else:
-                to_download.append(esgf_file)
+                res["not_available_locally"].append(esgf_file)
 
-        local_files_downloaded = (
-            download_files_parallel_progress(to_download) if to_download else []
-        )
-
-        local_files = tuple(
-            (
-                *local_files_available,
-                *local_files_downloaded,
-            )
-        )
-
-        return local_files
+        return res
 
     def set_local_files_root_dir(self, local_files_root_dir: Path) -> ESGFDatasetDB:
         """
