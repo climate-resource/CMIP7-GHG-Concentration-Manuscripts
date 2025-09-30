@@ -24,15 +24,16 @@ create_all_tables(engine)
 
 ds = fetch_and_load_ghg_dataset(
     local_data_root_dir=local_data_root_dir,
-    ghg="hfc23",
-    grid="gnz",
-    time_sampling="mon",
-    cmip_era="CMIP7",
-    source_id="CR-CMIP-1-0-0",
-    # cmip_era="CMIP6Plus",
-    # source_id="CR-CMIP-0-4-0",
-    index_node=KnownIndexNode.DKRZ,
-    # index_node=KnownIndexNode.ORNL,
+    ghg="co2",
+    time_sampling="yr",
+    # grid="gm",
+    # cmip_era="CMIP7",
+    # source_id="CR-CMIP-1-0-0",
+    grid="gr1-GMNHSH",
+    cmip_era="CMIP6",
+    source_id="UoM-CMIP-1-2-0",
+    # index_node=KnownIndexNode.DKRZ,
+    index_node=KnownIndexNode.ORNL,
     engine=engine,
 )
 print(ds)

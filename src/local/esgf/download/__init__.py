@@ -5,6 +5,8 @@ Support for downloading from ESGF
 from __future__ import annotations
 
 import concurrent.futures
+import shutil
+import tempfile
 import threading
 from collections.abc import Iterable
 from pathlib import Path
@@ -32,10 +34,15 @@ def download_files_parallel_progress(
             access_url = [
                 v
                 for v in esgf_file.esgf_file_access_urls
-                if v.service_name == "HTTPServer" and "dkrz" in v.url
+                if v.service_name == "HTTPServer"
+                # and "dkrz" in v.url
+                and "globus" not in v.url
             ]
-            if len(access_url) != 1:
-                raise NotImplementedError
+            if len(access_url) < 1:
+                # Interesting, can have more than one HTTPServer on the same node
+                # TODO: deal with this as part of URL sorting
+                raise NotImplementedError(esgf_file.esgf_file_access_urls)
+
             access_url = access_url[0]
 
             # # Very cool trick to get the header alone, thanks Bouwe
@@ -52,7 +59,12 @@ def download_files_parallel_progress(
             )
             futures.append(future)
 
-        iterator_results = concurrent.futures.as_completed(futures)
+        iterator_results = tqdm.auto.tqdm(
+            concurrent.futures.as_completed(futures),
+            desc="Datasets",
+            total=len(futures),
+            position=0,
+        )
 
         res_l = [future.result() for future in iterator_results]
 
@@ -69,7 +81,7 @@ def download_file_parallel_progress_helper(
     # TODO: fix up hard-coded widths and chunk sizes
     thread_id = threading.get_ident()
     if thread_id not in thread_positions:
-        thread_positions[thread_id] = len(thread_positions)
+        thread_positions[thread_id] = len(thread_positions) + 1
 
     # No-one knows why this is needed, but it is in jupyter notebooks
     print(end=" ")
@@ -79,22 +91,31 @@ def download_file_parallel_progress_helper(
     else:
         desc = url
 
-    out_path.parent.mkdir(exist_ok=True, parents=True)
-    with open(out_path, "wb") as fh, httpx.stream("GET", url) as request:
-        with tqdm.auto.tqdm(
-            desc=desc,
-            # TODO: think about this, might be a better way for ESGF
-            total=int(request.headers.get("content-length"), 0),
-            miniters=1,
-            unit="B",
-            unit_scale=True,
-            unit_divisor=2**10,
-            # unit_divisor=2**20,
-            position=thread_positions[thread_id],
-            leave=False,
-        ) as pbar:
+    with (
+        tempfile.TemporaryDirectory() as td,
+        httpx.stream("GET", url, follow_redirects=True) as request,
+    ):
+        tmpf = Path(td) / out_path.name
+        with (
+            open(tmpf, "wb") as fh,
+            tqdm.auto.tqdm(
+                desc=desc,
+                # # TODO: think about this, might be a better way for ESGF
+                # total=int(request.headers.get("content-length"), 0),
+                miniters=1,
+                unit="B",
+                unit_scale=True,
+                unit_divisor=2**10,
+                position=thread_positions[thread_id],
+                leave=False,
+            ) as pbar,
+        ):
             for chunk in request.iter_bytes(chunk_size=2**12):
                 fh.write(chunk)
                 pbar.update(len(chunk))
+
+        # If we got to here, can move the tempfile to our destination file
+        out_path.parent.mkdir(exist_ok=True, parents=True)
+        shutil.move(tmpf, out_path)
 
     return out_path

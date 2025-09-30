@@ -15,7 +15,7 @@ def download_file_parallel_helper(
 ) -> Path:
     thread_id = threading.get_ident()
     if thread_id not in thread_positions:
-        thread_positions[thread_id] = len(thread_positions)
+        thread_positions[thread_id] = len(thread_positions) + 1
 
     # with open("thread-info.txt", "a") as fh:
     #     fh.write(f"Writing from {thread_id=}")
@@ -88,7 +88,15 @@ def download(
 
         iterator_results = concurrent.futures.as_completed(futures)
 
-        res_l = [future.result() for future in iterator_results]
+        breakpoint()
+        res_l = [
+            future.result()
+            for future in tqdm.auto.tqdm(
+                iterator_results, desc="Datasets", total=len(futures), position=0
+            )
+        ]
+
+    return tuple(res_l)
 
 
 to_download = [
