@@ -38,7 +38,6 @@
 # ## Imports
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-
 from local.data_loading import fetch_and_load_ghg_dataset
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
 from local.esgf.search.search_query import KnownIndexNode
