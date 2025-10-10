@@ -76,6 +76,25 @@ CMIP7_TO_CMIP6_VARIABLE_MAP = {
 def fix_broken_calendar_spec(
     ncdatas: list[ncdata.NcData], esgf_dataset: ESGFDataset, file_paths: list[Path]
 ) -> list[ncdata.NcData]:
+    """
+    Fix broken calendar specifications
+
+    Parameters
+    ----------
+    ncdatas
+        [ncdata.NcData][] objects to fix
+
+    esgf_dataset
+        [ESGFDataset][] from which `ncdatas` were loaded
+
+    file_paths
+        File paths from which `ncdatas` were loaded
+
+    Returns
+    -------
+    :
+        `ncdatas` with fixed calendar specifications
+    """
     for ncd in ncdatas:
         if ncd.variables["time"].attributes["units"].value == "days since 0-1-1" and (
             ncd.variables["time"].attributes["calendar"].value == "gregorian"
@@ -91,6 +110,25 @@ def fix_broken_calendar_spec(
 def fix_conventions_to_match_cmip7(
     ds: xr.Dataset, esgf_dataset: ESGFDataset, file_paths: list[Path]
 ) -> xr.Dataset:
+    """
+    Fix data conventions so they match how CMIP7 is reported
+
+    Parameters
+    ----------
+    ds
+        Dataset to fix
+
+    esgf_dataset
+        [ESGFDataset][] from which `ds` was loaded
+
+    file_paths
+        File paths from which `ds` was loaded
+
+    Returns
+    -------
+    :
+        `ds` with updates so it matches CMIP7
+    """
     # TODO: push this into post_xarray loading
     if esgf_dataset.cmip_era == "CMIP6":
         # Realign grids to match how CMIP7 does it
@@ -105,6 +143,19 @@ def fix_conventions_to_match_cmip7(
 
 
 def load_cmip_ghg_ds(esgf_dataset: ESGFDataset) -> xr.Dataset:
+    """
+    Load a CMIP greenhouse gas dataset
+
+    Parameters
+    ----------
+    esgf_dataset
+        [ESGFDataset][] from which to load
+
+    Returns
+    -------
+    :
+        Loaded data
+    """
     res = load_xarray_from_esgf_dataset(
         esgf_dataset=esgf_dataset,
         pre_to_xarray=fix_broken_calendar_spec,
@@ -249,3 +300,62 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
     res = load_xr_dataset(esgf_dataset)
 
     return res
+
+
+def get_ghg_dataset_local_files(  # noqa: PLR0913
+    ghg: str,
+    grid: str,
+    time_sampling: str,
+    cmip_era: str,
+    source_id: str,
+    engine: sqlalchemy.engine.base.Engine,
+) -> tuple[Path, ...]:
+    """
+    Get GHG dataset local files
+
+    Assumes you've already downloaded
+
+    Parameters
+    ----------
+    ghg
+        Greenhouse gas for which to fetch data
+
+    grid
+        Grid on which to fetch the data
+
+    time_sampling
+        Time sampling to fetch
+
+    cmip_era
+        CMIP era from which the data should be retrieved
+
+    source_id
+        Source ID for which to retrieve data
+
+    engine
+        Database engine for saving results
+
+    Returns
+    -------
+    :
+        Local files that belong to the given dataset
+    """
+    with Session(engine) as session:
+        statement = select(ESGFDatasetDB).where(
+            ESGFDatasetDB.variable == ghg,
+            ESGFDatasetDB.grid == grid,
+            ESGFDatasetDB.time_sampling == time_sampling,
+            ESGFDatasetDB.cmip_era == cmip_era,
+            ESGFDatasetDB.source_id == source_id,
+        )
+        result_exec = session.exec(statement)
+
+        result = result_exec.one()
+
+        esgf_ds = ESGFDataset.model_validate(result)
+
+    out = tuple(
+        Path(esgf_file.esgf_file_local.path) for esgf_file in esgf_ds.esgf_files
+    )
+
+    return out

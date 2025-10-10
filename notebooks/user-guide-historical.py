@@ -38,7 +38,12 @@
 # ## Imports
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-from local.data_loading import fetch_and_load_ghg_dataset
+from functools import partial
+
+import cftime
+import matplotlib.pyplot as plt
+import nc_time_axis  # noqa: F401
+from local.data_loading import fetch_and_load_ghg_dataset, get_ghg_dataset_local_files
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
 from local.esgf.search.search_query import KnownIndexNode
 from local.paths import REPO_ROOT
@@ -200,7 +205,7 @@ create_all_tables(engine)
 # It is also worth noting that the uncertainty increases as we go further back in time,
 # particularly as we shift from using surface flasks to relying on ice cores instead.
 
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Differences compared to CMIP6
 #
 # At present, the changes from CMIP6 are minor,
@@ -212,34 +217,261 @@ create_all_tables(engine)
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # User guide
-#
-# Having downloaded the data, using it is quite straightforward.
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# 1. for each grid-frequency combo
-#     1. somehow convey the on disk file format
-#        e.g. demo how to load a file using xarray
-#        and do ncdump
-#     1. load a dataset using xarray
-#     1. plot
-# 5. comparisons with CMIP6
-#    - think about what makes most sense and is easiest to do
+# Having downloaded the data, using it is quite straightforward.
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-ds = fetch_and_load_ghg_dataset(
-    local_data_root_dir=local_data_root_dir,
+# Ensure data is downloaded
+query_kwargs_co2_yearly_global = dict(
     ghg="co2",
     time_sampling="yr",
     grid="gm",
     cmip_era="CMIP7",
     source_id="CR-CMIP-1-0-0",
+    engine=engine,
+)
+fetch_and_load = partial(
+    fetch_and_load_ghg_dataset,
+    local_data_root_dir=local_data_root_dir,
     index_node=KnownIndexNode.DKRZ,
     # cmip_era="CMIP6",
     # source_id="UoM-CMIP-1-2-0",
     # index_node=KnownIndexNode.ORNL,
-    engine=engine,
 )
-ds
+_ = fetch_and_load(**query_kwargs_co2_yearly_global)
+
+# Get file paths
+co2_yearly_global_fps = get_ghg_dataset_local_files(**query_kwargs_co2_yearly_global)
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ## Annual-, global-mean data
+#
+# We start with the annual-, global-mean data.
+# Like all our datasets, this is composed of three files,
+# each covering a different time period:
+#
+# 1. year 1 to year 999
+# 2. year 1000 to year 1749
+# 3. year 1750 to year 2022
+#
+# For yearly data, the time labels in the filename are years
+# (for months, the month is included e.g. you will see `000101-09912`
+# rather than `0001-0999` in the filename,
+# the files also have different values for the `frequency` attribute).
+# Global-mean data is identified by the 'grid label' `gm`,
+# which appears in the filename.
+# Below we show the filenames for the CO<sub>2</sub> output.
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+for fp in co2_yearly_global_fps:
+    print(f"- {fp.name}")
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# Output for other gases are named identically,
+# with `co2` being replaced by the other gas name.
+# For example, for methane the filenames are:
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# Ensure data is downloaded
+query_kwargs_ch4_yearly_global = {
+    **query_kwargs_co2_yearly_global,
+    "ghg": "ch4",
+}
+_ = fetch_and_load(**query_kwargs_ch4_yearly_global)
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# Get file paths
+ch4_yearly_global_fps = get_ghg_dataset_local_files(**query_kwargs_ch4_yearly_global)
+for fp in ch4_yearly_global_fps:
+    print(f"- {fp.name}")
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# As described above, the data is netCDF files.
+# This means that metadata can be trivially inspected
+# using a tool like `ncdump`.
+# As you can see, there is a lot of metadata included in these files.
+# In general, you should not need to parse this metadata directly.
+# However, if you have specific questions,
+# please feel free to contact the emails given in the `contact` attribute.
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# !ncdump -h {co2_yearly_global_fps[0]} | fold -w 80 -s
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# Using a tool like [xarray](https://github.com/pydata/xarray),
+# loading and working with the data is trivial.
+
+# %% editable=true slideshow={"slide_type": ""}
+import xarray as xr
+
+time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
+ds_co2_yearly_global = xr.open_mfdataset(co2_yearly_global_fps, decode_times=time_coder)
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# Force values to compute to avoid dask getting involved
+ds_co2_yearly_global = ds_co2_yearly_global.compute()
+
+# %% editable=true slideshow={"slide_type": ""}
+ds_co2_yearly_global
+
+# %% editable=true slideshow={"slide_type": ""}
+ds_co2_yearly_global["co2"].plot.scatter(alpha=0.4)
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ## Space- and time-average nature of the data
+#
+# All of our data represents the mean over each cell.
+# This is indicated by the `cell_methods` attribute
+# of all of our output variables.
+
+# %% editable=true slideshow={"slide_type": ""}
+ds_co2_yearly_global["co2"].attrs["cell_methods"]
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# This mean is both in space and time.
+# The time bounds covered by each step
+# are specified by the `time_bnds` variable
+# (when there is spatial information,
+# equivalent `lat_bnds` and `lon_bnds`
+# information is also included).
+# This variable specifies the start (inclusive)
+# and end (exclusive) of the time period
+# covered by each data point.
+
+# %% editable=true slideshow={"slide_type": ""}
+ds_co2_yearly_global["time_bnds"]
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# As a result of the time average that the data represents,
+# it is inappropriate to plot this data
+# using a line plot
+# (the mean of the lines joining the points
+# is not the same as the data given in the files).
+# Instead, the data should be plotted (and used)
+# as a scatter or a step plot, as shown below.
+# (The same logic applies to any spatial plots
+# which could be created from our datasets
+# that include spatial dimensions).
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+ds_plt = ds_co2_yearly_global.isel(time=slice(-5, None))
+
+fig, ax = plt.subplots(figsize=(8, 4))
+ds_plt["co2"].plot.scatter(ax=ax)
+
+for bounds, val in zip(ds_plt["time_bnds"].values, ds_plt["co2"].values):
+    ax.plot(bounds, [val, val], color="tab:blue", linewidth=1.0, alpha=0.7)
+
+xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2018, 2024)]
+ax.set_xticks(xticks)
+ax.set_xlim(xticks[0], xticks[-1])
+ax.grid()
+
+plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ## Monthly-, global-mean data
+#
+# If you want to have information at a finer level
+# of temporal detail, we also provide monthly files.
+# Like the global datasets, these come in three files.
+#
+# For monthly data, the time labels in the filename are months.
+# Below we show the filenames for the CO<sub>2</sub> output.
+
+# %% editable=true slideshow={"slide_type": ""}
+# Ensure data is downloaded
+query_kwargs_co2_monthly_global = {
+    **query_kwargs_co2_yearly_global,
+    "time_sampling": "mon",
+}
+_ = fetch_and_load(**query_kwargs_co2_monthly_global)
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# Get file paths
+co2_monthly_global_fps = get_ghg_dataset_local_files(**query_kwargs_co2_monthly_global)
+for fp in co2_monthly_global_fps:
+    print(f"- {fp.name}")
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# Again, the data can be trivially loaded with [xarray](https://github.com/pydata/xarray).
+
+# %% editable=true slideshow={"slide_type": ""}
+ds_co2_monthly_global = xr.open_mfdataset(
+    co2_monthly_global_fps, decode_times=time_coder
+)
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# Force values to compute to avoid dask getting involved
+ds_co2_monthly_global = ds_co2_monthly_global.compute()
+
+# %% editable=true slideshow={"slide_type": ""}
+ds_co2_monthly_global
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# For this data, the time bounds show that each point
+# is the average a month, not a year.
+
+# %% editable=true slideshow={"slide_type": ""}
+ds_co2_monthly_global["time_bnds"]
+
+# %% [markdown]
+# As above, as a result of the time average that the data represents,
+# it is inappropriate to plot this data using a line plot.
+# Scatter or step plots should be used instead.
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+ds_plt = ds_co2_monthly_global.isel(time=slice(-5 * 12, None))
+
+fig, ax = plt.subplots(figsize=(8, 4))
+ds_plt["co2"].plot.scatter(ax=ax)
+
+for bounds, val in zip(ds_plt["time_bnds"].values, ds_plt["co2"].values):
+    ax.plot(bounds, [val, val], color="tab:blue", linewidth=1.0, alpha=0.7)
+
+xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2018, 2024)]
+ax.set_xticks(xticks)
+ax.set_xlim(xticks[0], xticks[-1])
+ax.grid()
+
+plt.show()
+# %% [markdown]
+# The monthly data includes seasonality.
+# Plotting the monthly and yearly data
+# on the same axes makes particularly clear
+# why a line plot is inappropriate.
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+fig, ax = plt.subplots(figsize=(8, 4))
+
+for ds_plt, label, colour in (
+    (ds_co2_monthly_global.isel(time=slice(-5 * 12, None)), "monthly", "tab:blue"),
+    (ds_co2_yearly_global.isel(time=slice(-5, None)), "yearly", "tab:orange"),
+):
+    ds_plt["co2"].plot.scatter(ax=ax, label=label, color=colour, s=10)
+
+    for bounds, val in zip(ds_plt["time_bnds"].values, ds_plt["co2"].values):
+        ax.plot(bounds, [val, val], color=colour, linewidth=1.0, alpha=0.7)
+
+ax.legend()
+
+xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2018, 2024)]
+ax.set_xticks(xticks)
+ax.set_xlim(xticks[0], xticks[-1])
+ax.grid()
+
+plt.show()
+
+# %% [markdown]
+# ## Monthly-, latitudinally-resolved data
+#
+#
+
+# %% [markdown]
+# 1. skip hemisphere stuff, but point out that files exist
+# 2. show files and dimensions etc.
+# 3. plot lat gradient over time using carpet plots
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Differences from CMIP6
@@ -328,3 +560,6 @@ ds
 # ```
 
 # %%
+# Plot of difference in global-means for co2, ch4, n2o, cfc12eq and hfc134aeq,
+# also converted to ERF terms (at least approximately).
+# Forget the rest
