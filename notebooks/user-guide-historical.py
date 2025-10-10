@@ -38,11 +38,14 @@
 # ## Imports
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+import calendar
 from functools import partial
 
 import cftime
+import matplotlib
 import matplotlib.pyplot as plt
 import nc_time_axis  # noqa: F401
+import numpy as np
 from local.data_loading import fetch_and_load_ghg_dataset, get_ghg_dataset_local_files
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
 from local.esgf.search.search_query import KnownIndexNode
@@ -436,6 +439,7 @@ ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
 
 plt.show()
+
 # %% [markdown]
 # The monthly data includes seasonality.
 # Plotting the monthly and yearly data
@@ -466,12 +470,162 @@ plt.show()
 # %% [markdown]
 # ## Monthly-, latitudinally-resolved data
 #
+# We also provide data with spatial,
+# specifically latituindal, resolution.
+# This data comes on a 15-degree latituindal grid
+# (see below for details of the grid and latituindal bounds).
+# These files are identified by the grid label `gnz`.
+# We only provide these files with monthly resolution.
 #
+# For completeness, we note that we also provide hemispheric means.
+# These are not shown here,
+# but are identified by the grid label `gr1z`.
+#
+# Below we show the filenames for the latitudinally-resolved data
+# for CO<sub>2</sub>
+
+# %% editable=true slideshow={"slide_type": ""}
+# Ensure data is downloaded
+query_kwargs_co2_monthly_lat = {
+    **query_kwargs_co2_yearly_global,
+    "time_sampling": "mon",
+    "grid": "gnz",
+}
+_ = fetch_and_load(**query_kwargs_co2_monthly_lat)
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# Get file paths
+co2_monthly_lat_fps = get_ghg_dataset_local_files(**query_kwargs_co2_monthly_lat)
+for fp in co2_monthly_lat_fps:
+    print(f"- {fp.name}")
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# Again, the data can be trivially loaded with [xarray](https://github.com/pydata/xarray).
+
+# %% editable=true slideshow={"slide_type": ""}
+ds_co2_monthly_lat = xr.open_mfdataset(
+    co2_monthly_lat_fps, decode_times=time_coder, data_vars=None, compat="no_conflicts"
+)
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# Force values to compute to avoid dask getting involved
+ds_co2_monthly_lat = ds_co2_monthly_lat.compute()
+
+# %% editable=true slideshow={"slide_type": ""}
+ds_co2_monthly_lat
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# For this data, the latitudinal bounds show the area
+# over which each point is the average.
+
+# %% editable=true slideshow={"slide_type": ""}
+ds_co2_monthly_lat["lat_bnds"]
 
 # %% [markdown]
-# 1. skip hemisphere stuff, but point out that files exist
-# 2. show files and dimensions etc.
-# 3. plot lat gradient over time using carpet plots
+# As above, but this time for the spatial axis,
+# it is inappropriate to plot this data using a line plot.
+# Scatter or step plots should be used instead.
+
+# %%
+ds_plt = ds_co2_monthly_lat.isel(time=slice(-12, None))
+
+
+def get_label_for_month(inds: xr.Dataset) -> str:
+    """
+    Get the label for a given month of data
+    """
+    year = int(inds["time"].dt.year)
+    month_name = calendar.month_name[int(inds["time"].dt.month)]
+
+    return f"{year} - {month_name}"
+
+
+mosaic_flat = [get_label_for_month(ds_plt.sel(time=time)) for time in ds_plt["time"]]
+
+mosaic = [mosaic_flat[3 * i : 3 * (i + 1)] for i in range(len(mosaic_flat) // 3)]
+
+fig, axes_d = plt.subplot_mosaic(mosaic, figsize=(8, 9), sharey=True, sharex=True)
+
+for time in ds_plt["time"]:
+    ds_plt_time = ds_plt.sel(time=time)
+    label = get_label_for_month(ds_plt_time)
+
+    axes_d[label].scatter(
+        x=ds_plt_time["co2"].values,
+        y=ds_plt_time["lat"].values,
+        s=10,
+        label=label,
+    )
+
+    for bounds, val in zip(ds_plt_time["lat_bnds"].values, ds_plt_time["co2"].values):
+        axes_d[label].plot(
+            [val, val], bounds, color="tab:blue", linewidth=1.0, alpha=0.7
+        )
+
+    yticks = np.arange(-90, 91, 15.0)
+    axes_d[label].set_yticks(yticks)
+    axes_d[label].set_ylim(yticks[0], yticks[-1])
+    # axes_d[label].set_ylabel("Latitude (degrees north)")
+
+    # axes_d[label].set_xlabel("co2 [ppm]")
+    axes_d[label].grid()
+    axes_d[label].set_title(label, fontsize="small")
+
+for month in [1, 5, 9]:
+    axes_d[f"2022 - {calendar.month_name[month]}"].set_ylabel(
+        "Latitude (degrees north)"
+    )
+
+for month in range(9, 13):
+    axes_d[f"2022 - {calendar.month_name[month]}"].set_xlabel("co2 [ppm]")
+# ax.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
+
+plt.tight_layout()
+plt.show()
+
+# %% [markdown]
+# We can compare the global-mean data
+# to the data at each latitude.
+# The strength of the latitudinal gradient varies also by gas (not shown).
+
+# %%
+fig, ax = plt.subplots(figsize=(8, 4))
+
+time_slice = slice(-5 * 12, None)
+
+ds_plt = ds_co2_monthly_global.isel(time=time_slice)
+ds_plt["co2"].plot.scatter(
+    ax=ax, label="global-mean", color="tab:blue", s=30, zorder=10.0
+)
+
+for bounds, val in zip(ds_plt["time_bnds"].values, ds_plt["co2"].values):
+    ax.plot(bounds, [val, val], color="tab:blue", linewidth=1.0, alpha=0.7)
+
+ds_all_lats = ds_co2_monthly_lat.isel(time=time_slice)
+
+for i, lat in enumerate(sorted(ds_all_lats["lat"])[::-1]):
+    ds_plt = ds_all_lats.sel(lat=lat)
+    colour = matplotlib.colormaps["magma"](i / len(ds_all_lats["lat"]))
+
+    ds_plt["co2"].plot.scatter(
+        ax=ax, label=f"{float(lat)}", color=colour, marker="x", s=10
+    )
+
+    for bounds, val in zip(ds_plt["time_bnds"].values, ds_plt["co2"].values):
+        ax.plot(bounds, [val, val], color=colour, linewidth=1.0, alpha=0.7)
+
+ax.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
+
+xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2018, 2024)]
+ax.set_xticks(xticks)
+ax.set_xlim(xticks[0], xticks[-1])
+ax.grid()
+
+plt.show()
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# TODO: carpet plot
+assert False, "TODO: carpet plot"
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Differences from CMIP6
