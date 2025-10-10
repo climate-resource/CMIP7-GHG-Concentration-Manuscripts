@@ -237,10 +237,10 @@ query_kwargs_co2_yearly_global = dict(
 fetch_and_load = partial(
     fetch_and_load_ghg_dataset,
     local_data_root_dir=local_data_root_dir,
-    index_node=KnownIndexNode.DKRZ,
+    # index_node=KnownIndexNode.DKRZ,
     # cmip_era="CMIP6",
     # source_id="UoM-CMIP-1-2-0",
-    # index_node=KnownIndexNode.ORNL,
+    index_node=KnownIndexNode.ORNL,
 )
 _ = fetch_and_load(**query_kwargs_co2_yearly_global)
 
@@ -318,8 +318,9 @@ ds_co2_yearly_global = ds_co2_yearly_global.compute()
 # %% editable=true slideshow={"slide_type": ""}
 ds_co2_yearly_global
 
-# %% editable=true slideshow={"slide_type": ""}
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
 ds_co2_yearly_global["co2"].plot.scatter(alpha=0.4)
+plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Space- and time-average nature of the data
@@ -383,7 +384,7 @@ plt.show()
 # For monthly data, the time labels in the filename are months.
 # Below we show the filenames for the CO<sub>2</sub> output.
 
-# %% editable=true slideshow={"slide_type": ""}
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 # Ensure data is downloaded
 query_kwargs_co2_monthly_global = {
     **query_kwargs_co2_yearly_global,
@@ -484,7 +485,7 @@ plt.show()
 # Below we show the filenames for the latitudinally-resolved data
 # for CO<sub>2</sub>
 
-# %% editable=true slideshow={"slide_type": ""}
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 # Ensure data is downloaded
 query_kwargs_co2_monthly_lat = {
     **query_kwargs_co2_yearly_global,
@@ -526,7 +527,7 @@ ds_co2_monthly_lat["lat_bnds"]
 # it is inappropriate to plot this data using a line plot.
 # Scatter or step plots should be used instead.
 
-# %%
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
 ds_plt = ds_co2_monthly_lat.isel(time=slice(-12, None))
 
 
@@ -571,24 +572,24 @@ for time in ds_plt["time"]:
     axes_d[label].grid()
     axes_d[label].set_title(label, fontsize="small")
 
-for month in [1, 5, 9]:
+for month in [1, 4, 7, 10]:
     axes_d[f"2022 - {calendar.month_name[month]}"].set_ylabel(
         "Latitude (degrees north)"
     )
 
-for month in range(9, 13):
+for month in range(10, 13):
     axes_d[f"2022 - {calendar.month_name[month]}"].set_xlabel("co2 [ppm]")
 # ax.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
 
 plt.tight_layout()
 plt.show()
 
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # We can compare the global-mean data
 # to the data at each latitude.
 # The strength of the latitudinal gradient varies also by gas (not shown).
 
-# %%
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
 fig, ax = plt.subplots(figsize=(8, 4))
 
 time_slice = slice(-5 * 12, None)
@@ -623,9 +624,46 @@ ax.grid()
 
 plt.show()
 
+# %% [markdown]
+# The data can also be plotted in a so-called "magic carpet"
+# to see the variation in space and time simultaneously.
+
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
-# TODO: carpet plot
-assert False, "TODO: carpet plot"
+fig = plt.figure(figsize=(8, 6))
+ax = fig.add_subplot(projection="3d")
+
+tmp = ds_co2_monthly_lat["co2"].isel(time=range(-10 * 12, 0)).copy()
+tmp = tmp.assign_coords(time=tmp["time"].dt.year + tmp["time"].dt.month / 12)
+# Interpolate so the plot shows the step nature
+tmp = tmp.interp(
+    coords=dict(
+        time=np.linspace(
+            tmp["time"].values[0], tmp["time"].values[-1], tmp["time"].size * 10
+        )
+    ),
+    method="nearest",
+).interp(
+    coords=dict(
+        lat=np.linspace(
+            tmp["lat"].values[0], tmp["lat"].values[-1], tmp["lat"].size * 10
+        )
+    ),
+    method="nearest",
+)
+
+tmp.plot.surface(
+    x="time",
+    y="lat",
+    ax=ax,
+    cmap="magma_r",
+    levels=30,
+    # alpha=0.7,
+)
+
+ax.view_init(15, -135, 0)
+
+plt.tight_layout()
+plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Differences from CMIP6
@@ -713,7 +751,64 @@ assert False, "TODO: carpet plot"
 # }
 # ```
 
-# %%
-# Plot of difference in global-means for co2, ch4, n2o, cfc12eq and hfc134aeq,
-# also converted to ERF terms (at least approximately).
-# Forget the rest
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ### Data comparisons
+#
+# Comparing the data from CMIP6 and CMIP7 shows minor changes
+# (although doing this comparison requires a bit of care
+# because of the changes in file formats).
+
+# %% editable=true slideshow={"slide_type": ""}
+fig, axes_d = plt.subplot_mosaic(
+    mosaic=[
+        # ["co2", "ch4"],
+        ["co2", "ch4", "n2o"],
+        ["cfc12eq", "hfc134aeq", ""],
+    ],
+    figsize=(12, 6),
+)
+
+for gas, ax in axes_d.items():
+    if not gas:
+        continue
+
+    plt_ds_d = {}
+    for source_id, cmip_era in (
+        ("CR-CMIP-1-0-0", "CMIP7"),
+        ("UoM-CMIP-1-2-0", "CMIP6"),
+    ):
+        query_kwargs = {
+            "ghg": gas,
+            "time_sampling": "yr",
+            "grid": "gm",
+            "source_id": source_id,
+            "cmip_era": cmip_era,
+            "engine": engine,
+        }
+        ds = fetch_and_load(**query_kwargs)
+        ds = ds.assign_coords(cmip_era=cmip_era)
+
+        plt_ds_d[cmip_era] = ds
+
+    for cmip_era, ds in plt_ds_d.items():
+        label = f"{cmip_era} ({ds.attrs['source_id']})"
+        ds[gas].plot.scatter(ax=axes_d[gas], label=label, alpha=0.7, edgecolors="none")
+
+    ax.legend()
+    ax.set_title(gas)
+    # break
+
+plt.tight_layout()
+plt.show()
+
+# %% editable=true slideshow={"slide_type": ""}
+# assert False, "Up to here"
+#
+# Rewrite the above to:
+# 1. download and load
+# 2. plot concs
+#    - brief explanation of differences
+# 3. plot concs since 1750
+# 4. plot ERF since 1750
+# 3. plot concs since 1990 using monthly data
+# 4. plot ERF since 1990 using monthly data
