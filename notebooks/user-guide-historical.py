@@ -758,21 +758,13 @@ plt.show()
 # (although doing this comparison requires a bit of care
 # because of the changes in file formats).
 
-# %% editable=true slideshow={"slide_type": ""}
-fig, axes_d = plt.subplot_mosaic(
-    mosaic=[
-        # ["co2", "ch4"],
-        ["co2", "ch4", "n2o"],
-        ["cfc12eq", "hfc134aeq", ""],
-    ],
-    figsize=(12, 6),
-)
+# %%
 
-for gas, ax in axes_d.items():
-    if not gas:
-        continue
-
-    plt_ds_d = {}
+# %%
+gases_to_show = ["co2", "ch4", "n2o", "cfc12eq", "hfc134aeq"]
+ds_gases_full_d = {}
+for gas in gases_to_show:
+    ds_gases_full_d[gas] = {}
     for source_id, cmip_era in (
         ("CR-CMIP-1-0-0", "CMIP7"),
         ("UoM-CMIP-1-2-0", "CMIP6"),
@@ -786,16 +778,103 @@ for gas, ax in axes_d.items():
             "engine": engine,
         }
         ds = fetch_and_load(**query_kwargs)
-        ds = ds.assign_coords(cmip_era=cmip_era)
+        ds["time"] = [cftime.DatetimeProlepticGregorian(v.year, v.month, 15) for v in ds["time"].values]
 
-        plt_ds_d[cmip_era] = ds
+        # Unify time axis to simplify
+        ds_gases_full_d[gas][cmip_era] = ds
 
-    for cmip_era, ds in plt_ds_d.items():
+# %% editable=true slideshow={"slide_type": ""}
+fig, axes_d = plt.subplot_mosaic(
+    mosaic=[
+        # ["co2", "ch4"],
+        ["co2", "ch4", "n2o"],
+        ["co2", "ch4", "n2o"],
+        ["co2_delta", "ch4_delta", "n2o_delta"],
+        ["cfc12eq", "hfc134aeq", ""],
+        ["cfc12eq", "hfc134aeq", ""],
+        ["cfc12eq_delta", "hfc134aeq_delta", ""],
+    ],
+    figsize=(12, 8),
+)
+
+for gas, ax in axes_d.items():
+    if not gas:
+        axes_d[gas].remove()
+        continue
+
+    if gas.endswith("_delta"):
+        continue
+
+    for cmip_era, ds in ds_gases_full_d[gas].items():
         label = f"{cmip_era} ({ds.attrs['source_id']})"
         ds[gas].plot.scatter(ax=axes_d[gas], label=label, alpha=0.7, edgecolors="none")
 
     ax.legend()
     ax.set_title(gas)
+
+    overlapping_times = np.intersect1d(
+        ds_gases_full_d[gas]["CMIP6"][gas]["time"],
+        ds_gases_full_d[gas]["CMIP7"][gas]["time"]
+    )
+    delta = ds_gases_full_d[gas]["CMIP7"][gas].sel(time=overlapping_times) - ds_gases_full_d[gas]["CMIP6"][gas].sel(time=overlapping_times)
+    delta.plot.scatter(
+        ax=axes_d[f"{gas}_delta"],
+        color="tab:grey",
+        edgecolors="none",
+        s=10,
+    )
+    axes_d[f"{gas}_delta"].set_title(f"CMIP7 - CMIP6", fontsize="small")
+    axes_d[f"{gas}_delta"].axhline(0.0, color="k", linestyle="--")
+    
+    # break
+
+plt.tight_layout()
+plt.show()
+
+# %%
+year_min = 1750
+fig, axes_d = plt.subplot_mosaic(
+    mosaic=[
+        # ["co2", "ch4"],
+        ["co2", "ch4", "n2o"],
+        ["co2", "ch4", "n2o"],
+        ["co2_delta", "ch4_delta", "n2o_delta"],
+        ["cfc12eq", "hfc134aeq", ""],
+        ["cfc12eq", "hfc134aeq", ""],
+        ["cfc12eq_delta", "hfc134aeq_delta", ""],
+    ],
+    figsize=(12, 8),
+)
+
+for gas, ax in axes_d.items():
+    if not gas:
+        axes_d[gas].remove()
+        continue
+
+    if gas.endswith("_delta"):
+        continue
+
+    for cmip_era, ds in ds_gases_full_d[gas].items():
+        label = f"{cmip_era} ({ds.attrs['source_id']})"
+        ds[gas].sel(time=ds[gas]["time"].dt.year >= year_min).plot.scatter(ax=axes_d[gas], label=label, alpha=0.7, edgecolors="none")
+
+    ax.legend()
+    ax.set_title(gas)
+
+    overlapping_times = np.intersect1d(
+        ds_gases_full_d[gas]["CMIP6"][gas].sel(time=ds_gases_full_d[gas]["CMIP6"][gas]["time"].dt.year >= year_min)["time"],
+        ds_gases_full_d[gas]["CMIP7"][gas].sel(time=ds_gases_full_d[gas]["CMIP7"][gas]["time"].dt.year >= year_min)["time"]
+    )
+    delta = ds_gases_full_d[gas]["CMIP7"][gas].sel(time=overlapping_times) - ds_gases_full_d[gas]["CMIP6"][gas].sel(time=overlapping_times)
+    delta.plot.scatter(
+        ax=axes_d[f"{gas}_delta"],
+        color="tab:grey",
+        edgecolors="none",
+        s=10,
+    )
+    axes_d[f"{gas}_delta"].set_title(f"CMIP7 - CMIP6", fontsize="small")
+    axes_d[f"{gas}_delta"].axhline(0.0, color="k", linestyle="--")
+    
     # break
 
 plt.tight_layout()
