@@ -19,6 +19,7 @@ dependencies = [
     "nc-time-axis>=1.4.1",
     "ipywidgets>=8.1.7",
     "scipy>=1.13.1",
+    "openscm-units>=0.6.3",
 ]
 name = "local"
 version = "0.1.0"

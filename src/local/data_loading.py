@@ -139,6 +139,16 @@ def fix_conventions_to_match_cmip7(
 
         ds = ds.rename({"bound": "bnds"})
 
+        # Put units in sensible, aligned with CMIP7 (and pint-usable) units
+        unit_map = {
+            "1.e-6": "ppm",
+            "1.e-9": "ppb",
+            "1.e-12": "ppt",
+        }
+        ds[ds.attrs["variable_id"]].attrs["units"] = unit_map[
+            ds[ds.attrs["variable_id"]].attrs["units"]
+        ]
+
     return ds
 
 
