@@ -52,7 +52,10 @@ import matplotlib
 import matplotlib.pyplot as plt
 import nc_time_axis  # noqa: F401
 import numpy as np
-from local.data_loading import fetch_and_load_ghg_dataset, get_ghg_dataset_local_files
+from local.data_loading import (
+    fetch_and_load_ghg_dataset_scenarios,
+    get_ghg_dataset_local_files,
+)
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
 from local.esgf.search.search_query import KnownIndexNode
 from local.paths import REPO_ROOT
@@ -60,7 +63,7 @@ from local.paths import REPO_ROOT
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 local_data_root_dir = REPO_ROOT / "data" / "raw" / "esgf"
 local_data_root_dir.mkdir(exist_ok=True, parents=True)
-sqlite_file = REPO_ROOT / "download-test-database.db"
+sqlite_file = REPO_ROOT / "download-test-scenario-database.db"
 # # Obviously we wouldn't delete the database every time
 # # in production, but while experimenting it's handy
 # # to always start with a clean slate.
@@ -244,6 +247,162 @@ create_all_tables(engine)
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # Having downloaded the data, using it is quite straightforward.
+
+# %%
+# Ensure data is downloaded
+query_kwargs_co2_yearly_global = dict(
+    ghg="co2",
+    time_sampling="yr",
+    grid="gm",
+    cmip_era="CMIP6Plus",
+    source_version="0.1.0",
+    institution_id="CR",
+    target_mip="ScenarioMIP",
+    engine=engine,
+)
+fetch_and_load = partial(
+    fetch_and_load_ghg_dataset_scenarios,
+    local_data_root_dir=local_data_root_dir,
+    # index_node=KnownIndexNode.DKRZ,
+    # cmip_era="CMIP6",
+    # source_id="UoM-CMIP-1-2-0",
+    index_node=KnownIndexNode.ORNL,
+)
+tmp_cmip7 = fetch_and_load(**query_kwargs_co2_yearly_global)
+
+# %%
+# Ensure data is downloaded
+query_kwargs_co2_yearly_global = dict(
+    ghg="co2",
+    time_sampling="yr",
+    grid="gm",
+    cmip_era="CMIP6",
+    source_version="1.2.1",
+    institution_id="UoM",
+    target_mip="ScenarioMIP",
+    engine=engine,
+)
+tmp_cmip6 = fetch_and_load(**query_kwargs_co2_yearly_global)
+
+# %%
+from local.data_loading import fetch_and_load_ghg_dataset
+
+# Ensure data is downloaded
+query_kwargs_co2_yearly_global = dict(
+    ghg="co2",
+    time_sampling="yr",
+    grid="gm",
+    cmip_era="CMIP7",
+    source_id="CR-CMIP-1-0-0",
+    institution_id="CR",
+    target_mip="CMIP",
+    engine=engine,
+)
+fetch_and_load = partial(
+    fetch_and_load_ghg_dataset,
+    local_data_root_dir=local_data_root_dir,
+    # index_node=KnownIndexNode.DKRZ,
+    # cmip_era="CMIP6",
+    # source_id="UoM-CMIP-1-2-0",
+    index_node=KnownIndexNode.ORNL,
+)
+tmp_h_cmip7 = fetch_and_load(**query_kwargs_co2_yearly_global).compute()
+
+# %%
+from local.data_loading import fetch_and_load_ghg_dataset
+
+# Ensure data is downloaded
+query_kwargs_co2_yearly_global = dict(
+    ghg="co2",
+    time_sampling="yr",
+    grid="gm",
+    cmip_era="CMIP6",
+    source_version="1.2.0",
+    institution_id="UoM",
+    target_mip="CMIP",
+    engine=engine,
+)
+tmp_h_cmip6 = fetch_and_load(**query_kwargs_co2_yearly_global).compute()
+
+# %%
+import pandas_openscm
+import seaborn as sns
+
+# %%
+pandas_openscm.register_pandas_accessors()
+
+# %%
+palette = {
+    "history": "k",
+    "history-cmip6": "tab:grey",
+    "vl": "#24a4ff",
+    "vllo": "#24a4ff",
+    "ln": "#4a0daf",
+    "vlho": "#4a0daf",
+    "l": "#00cc69",
+    "ml": "#f5ac00",
+    "m": "#ffa9dc",
+    "h": "#700000",
+    "hl": "#8f003b",
+    "ssp119": "#00a9cf",
+    "ssp126": "#003466",
+    "ssp245": "#f69320",
+    "ssp370": "#df0000",
+    "ssp434": "#2274ae",
+    "ssp460": "#b0724e",
+    "ssp534": "#92397a",
+    "ssp585": "#980002",
+}
+
+# %%
+import pandas_indexing as pix
+
+pdf = (
+    pix.concat(
+        [
+            tmp_cmip7["co2"]
+            .groupby("time.year")
+            .mean()
+            .to_dataframe()["co2"]
+            .unstack("year")
+            .pix.assign(cmip_era="cmip7"),
+            tmp_h_cmip7["co2"]
+            .groupby("time.year")
+            .mean()
+            .expand_dims({"scenario": ["history"]})
+            .to_dataframe()["co2"]
+            .unstack("year")
+            .pix.assign(cmip_era="cmip7"),
+            tmp_cmip6["co2"]
+            .groupby("time.year")
+            .mean()
+            .to_dataframe()["co2"]
+            .unstack("year")
+            .pix.assign(cmip_era="cmip6"),
+            tmp_h_cmip6["co2"]
+            .groupby("time.year")
+            .mean()
+            .expand_dims({"scenario": ["history-cmip6"]})
+            .to_dataframe()["co2"]
+            .unstack("year")
+            .pix.assign(cmip_era="cmip6"),
+        ]
+    )
+    .sort_index(axis="columns")
+    .loc[:, 1950:2100]
+    .openscm.to_long_data()
+)
+# .T.plot()
+ax = sns.scatterplot(
+    data=pdf,
+    x="time",
+    y="value",
+    hue="scenario",
+    hue_order=sorted(pdf["scenario"]),
+    palette={k: v for k, v in palette.items() if k in pdf["scenario"].tolist()},
+    style="cmip_era",
+)
+sns.move_legend(ax, loc="center left", bbox_to_anchor=(1.05, 0.5))
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 # Ensure data is downloaded

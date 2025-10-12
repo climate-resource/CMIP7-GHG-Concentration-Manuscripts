@@ -178,13 +178,16 @@ def load_cmip_ghg_ds(esgf_dataset: ESGFDataset) -> xr.Dataset:
 
 def fetch_and_load_ghg_dataset(  # noqa: PLR0913
     local_data_root_dir: Path,
+    index_node: str,
     ghg: str,
     grid: str,
     time_sampling: str,
     cmip_era: str,
-    source_id: str,
-    index_node: str,
     engine: sqlalchemy.engine.base.Engine,
+    source_id: str | None = None,
+    source_version: str | None = None,
+    institution_id: str | None = None,
+    target_mip: str | None = None,
     load_xr_dataset: Callable[[ESGFDataset], xr.Dataset] = load_cmip_ghg_ds,
 ) -> xr.Dataset:
     """
@@ -198,6 +201,9 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
     local_data_root_dir
         Path to the root directory in which local data should be downloaded
 
+    index_node
+        Index node to use for searching
+
     ghg
         Greenhouse gas for which to fetch data
 
@@ -210,14 +216,20 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
     cmip_era
         CMIP era from which the data should be retrieved
 
+    engine
+        Database engine for saving results
+
     source_id
         Source ID for which to retrieve data
 
-    index_node
-        Index node to use for searching
+    source_version
+        Source version for which to retrieve data
 
-    engine
-        Database engine for saving results
+    institution_id
+        Institution ID for which to retrieve data
+
+    target_mip
+        Target MIP for which to retrieve data
 
     load_xr_dataset
         Function to use to load an [xr.Dataset][xarray.Dataset]
@@ -229,16 +241,21 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
     """
     # Check for values already in the database
     with Session(engine) as session:
-        statement = select(ESGFDatasetDB).where(
-            # I Wonder if we can do `where(query)`
-            # where `query` is an object or something
-            # to be less repetitive
-            ESGFDatasetDB.variable == ghg,
-            ESGFDatasetDB.grid == grid,
-            ESGFDatasetDB.time_sampling == time_sampling,
-            ESGFDatasetDB.cmip_era == cmip_era,
-            ESGFDatasetDB.source_id == source_id,
-        )
+        args_l = []
+        for name, value in (
+            ("variable", ghg),
+            ("grid", grid),
+            ("time_sampling", time_sampling),
+            ("cmip_era", cmip_era),
+            ("source_id", source_id),
+            ("source_version", source_version),
+            ("institution_id", institution_id),
+            ("target_mip", target_mip),
+        ):
+            if value is not None:
+                args_l.append(getattr(ESGFDatasetDB, name) == value)
+
+        statement = select(ESGFDatasetDB).where(*args_l)
         result_exec = session.exec(statement)
 
         results = result_exec.all()
@@ -274,6 +291,9 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
             time_sampling=time_sampling,
             cmip_era=cmip_era,
             source_id=source_id,
+            source_version=source_version,
+            institution_id=institution_id,
+            target_mip=target_mip,
         )
         esgf_dataset_collection = query.get_results(index_node=index_node)
 
@@ -308,6 +328,185 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
     esgf_dataset = esgf_dataset_collection.esgf_datasets[0]
 
     res = load_xr_dataset(esgf_dataset)
+
+    return res
+
+
+def fetch_and_load_ghg_dataset_scenarios(  # noqa: PLR0913
+    local_data_root_dir: Path,
+    index_node: str,
+    ghg: str,
+    grid: str,
+    time_sampling: str,
+    cmip_era: str,
+    engine: sqlalchemy.engine.base.Engine,
+    source_id: str | None = None,
+    source_version: str | None = None,
+    institution_id: str | None = None,
+    target_mip: str | None = None,
+    load_xr_dataset: Callable[[ESGFDataset], xr.Dataset] = load_cmip_ghg_ds,
+) -> xr.Dataset:
+    """
+    Fetch (if needed) and load greenhouse gas concentration datasets for scenarios
+
+    This also deals with unifying variable names, metadata, units etc.
+    across the CMIP6 and CMIP7 data
+
+    Parameters
+    ----------
+    local_data_root_dir
+        Path to the root directory in which local data should be downloaded
+
+    index_node
+        Index node to use for searching
+
+    ghg
+        Greenhouse gas for which to fetch data
+
+    grid
+        Grid on which to fetch the data
+
+    time_sampling
+        Time sampling to fetch
+
+    cmip_era
+        CMIP era from which the data should be retrieved
+
+    engine
+        Database engine for saving results
+
+    source_id
+        Source ID for which to retrieve data
+
+    source_version
+        Source version for which to retrieve data
+
+    institution_id
+        Institution ID for which to retrieve data
+
+    target_mip
+        Target MIP for which to retrieve data
+
+    load_xr_dataset
+        Function to use to load an [xr.Dataset][xarray.Dataset]
+
+    Returns
+    -------
+    :
+        Loaded data
+    """
+    # Check for values already in the database
+    with Session(engine) as session:
+        args_l = []
+        for name, value in (
+            ("variable", ghg),
+            ("grid", grid),
+            ("time_sampling", time_sampling),
+            ("cmip_era", cmip_era),
+            ("source_id", source_id),
+            ("source_version", source_version),
+            ("institution_id", institution_id),
+            ("target_mip", target_mip),
+        ):
+            if value is not None:
+                args_l.append(getattr(ESGFDatasetDB, name) == value)
+
+        statement = select(ESGFDatasetDB).where(*args_l)
+        result_exec = session.exec(statement)
+
+        results = result_exec.all()
+
+        if results:
+            esgf_dataset_collection: ESGFDatasetCollection | None = (
+                ESGFDatasetCollection(
+                    esgf_datasets=tuple(ESGFDataset.model_validate(r) for r in results)
+                )
+            )
+
+        else:
+            esgf_dataset_collection = None
+
+    # TODO: optionally allow for checking for new results from ESGF,
+    # even if we already have search results in the DB
+
+    if esgf_dataset_collection is None:
+        if cmip_era == "CMIP6":
+            # Translate names
+            variable = CMIP7_TO_CMIP6_VARIABLE_MAP[ghg]
+            grid_query = CMIP7_TO_CMIP6EQ_GRID_MAP[grid]
+
+        else:
+            variable = ghg
+            grid_query = grid
+
+        # Query the DB and add the results to the DB
+        query = SearchQuery(
+            project="input4MIPs",
+            variable=variable,
+            grid=grid_query,
+            time_sampling=time_sampling,
+            cmip_era=cmip_era,
+            source_id=source_id,
+            source_version=source_version,
+            institution_id=institution_id,
+            target_mip=target_mip,
+        )
+        esgf_dataset_collection = query.get_results(index_node=index_node)
+
+        if cmip_era == "CMIP6":
+            for i in range(len(esgf_dataset_collection.esgf_datasets)):
+                # Overwrite the query result value with the one we want
+                # TODO: better logic around this
+                esgf_dataset_collection.esgf_datasets[i].variable = ghg
+                esgf_dataset_collection.esgf_datasets[i].grid = grid
+
+        # TODO: add something that allows you to check whether new results
+        # differ from existing if the user wants to check this
+
+        esgf_dataset_collection.set_local_files_root_dir(local_data_root_dir)
+
+        with Session(engine) as session:
+            session.add_all(
+                esgf_dataset.to_db_model()
+                for esgf_dataset in esgf_dataset_collection.esgf_datasets
+            )
+            session.commit()
+
+    # Download
+    esgf_dataset_collection.ensure_all_files_available_locally()
+
+    # Finally, load the local files and return the xr.Dataset
+    res_l = []
+    for esgf_dataset in esgf_dataset_collection.esgf_datasets:
+        tmp = load_xr_dataset(esgf_dataset)
+        tmp = tmp.assign_coords(scenario=get_scenario(tmp))
+        res_l.append(tmp)
+
+    # Yuck hard-coded stuff we wouldn't want in a general tool
+    res = xr.concat(res_l, "scenario")
+    return res
+
+
+def get_scenario(ds: xr.Dataset) -> str:
+    """
+    Get scenario from a given dataset
+
+    Parameters
+    ----------
+    ds
+        Dataset from which to extract scenario information
+
+    Returns
+    -------
+    :
+        Scenario to which the dataset applies
+    """
+    if ds.attrs["mip_era"] == "CMIP6":
+        tmp = ds.attrs["source_id"].split("ssp")[1].split("-")[0]
+        res = f"ssp{tmp}"
+
+    else:
+        res = ds.attrs["source_id"].split("-")[1]
 
     return res
 

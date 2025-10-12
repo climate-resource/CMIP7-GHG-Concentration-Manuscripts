@@ -64,6 +64,21 @@ class ESGFDatasetBase(SQLModel):
     Source ID
     """
 
+    source_version: str
+    """
+    Source version
+    """
+
+    institution_id: str
+    """
+    Institution ID
+    """
+
+    target_mip: str
+    """
+    Target MIP
+    """
+
 
 # TODO : think about uniqueness constraints
 class ESGFDatasetDB(ESGFDatasetBase, table=True):
