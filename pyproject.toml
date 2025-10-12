@@ -1,0 +1,61 @@
+[project]
+authors = [
+    { name = "Zebedee Nicholls", email = "zebedee.nicholls@climate-resource.com"},
+]
+requires-python = ">=3.9"
+dependencies = [
+    "pre-commit>=3.3.1",
+    "jupyterlab>=4.0.0",
+    "jupytext>=1.15.2",
+    "xarray>=2024.7.0",
+    "netcdf4>=1.7.2",
+    "papermill>=2.6.0",
+    "loguru>=0.7.3",
+    "sqlmodel>=0.0.25",
+    "dask>=2024.8.0",
+    "ncdata>=0.2.0",
+    "seaborn>=0.13.2",
+    "matplotlib>=3.9.4",
+    "nc-time-axis>=1.4.1",
+    "ipywidgets>=8.1.7",
+    "scipy>=1.13.1",
+    "openscm-units>=0.6.3",
+]
+name = "local"
+version = "0.1.0"
+description = "Manuscripts and other associated documents describing CMIP7 greenhouse gas (GHG) concentrations (both historical and future)"
+readme = "README.md"
+
+[tool.jupytext]
+formats = "ipynb,py:percent"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "D",
+    "PL",
+    "TRY",
+    "NPY",
+    "RUF",
+    "UP",
+    "S",
+]
+unfixable = [ ]
+ignore = [
+    "D200",
+    "D400",
+    "UP007",
+]
+[tool.ruff.lint.per-file-ignores]
+"notebooks/*" = [
+    "D100",
+    "E402",
+    "S101",
+]
+
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
