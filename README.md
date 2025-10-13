@@ -57,6 +57,13 @@ As another example, to run a notebook server, run
 uv run jupyter lab
 ```
 
+**Additional requirements**
+
+Using `nbconvert` for converting notebooks to PDF requires the following installations:
+  + **Pandoc** see https://pandoc.org/installing.html
+  + **LaTeX** see https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex
+    + If you are Windows user and use MiKTeX (https://miktex.org/howto/install-miktex) it might be necessary to set `xelatex` additionally on the PATH
+
 <!--- Other documentation and instructions can then be added here as you go,
 perhaps replacing the other instructions above as they may become redundant.
 -->
