@@ -64,38 +64,44 @@ sqlite_file = REPO_ROOT / "download-test-database.db"
 engine = get_sqlite_engine(sqlite_file)
 create_all_tables(engine)
 
+# %% [raw]
+# \bibliographystyle{plain}
+# \bibliography{references}
+
 # %% [markdown]
 # # Finding and accessing the data
 
-# %% [markdown]
+# %% [markdown] jp-MarkdownHeadingCollapsed=true
 # ## ESGF
 #
-# The Earth System Grid Federation (ESGF) provides access to a range of climate data.
-#
+# The **Earth System Grid Federation** (ESGF, REF-TODO) provides access to a
+# range of climate data.
 # The historical data of interest here,
 # which is the data to be used
 # for historical and piControl simulations within CMIP [TODO ref Dunne paper],
 # can be found under the "source ID", `CR-CMIP-1-0-0`.
-# The concept of a source ID is a bit of a perculiar one
+# The concept of a "source ID" is a bit of a perculiar one
 # to CMIP forcings data.
 # In practice, it is simply a unique identifier for a collection of datasets
 # (and it's best not to read more than that into it).
+#
 # It is possible to filter searches on ESGF
-# via the user interface.
-# Searches can often be encoded in URLs too
-# (although these URLs sometimes move,
-# so we make no guarantee that this link will always be live)
-# e.g. [https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_id%22%3A%22CR-CMIP-1-0-0%22%7D]().
+# via the user interface (see ESGF user guides[^1]).
+# Alternatively, searches can be encoded in URLs. However, a caveat with this
+# approach is that URLs sometimes move, so we make no guarantee that this link
+# will always be live. An example provides the following link:
+#
+# > [https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%2ource_id%22%3A%22CR-CMIP-1-0-0%22%7D]()
 #
 # To download the data, we recommend accessing it directly via the ESGF user interfaces
 # via links like the one above.
 # Alternately, there are tools dedicated to accessing ESGF data,
-# with two prominent examples being:
+# with two prominent examples being **esgpull**[^2] and **intake-esgf**[^3].
+# Please refer to the tools' docs for usage instructions.
 #
-# 1. esgpull: https://esgf.github.io/esgf-download
-# 2. intake-esgf: https://intake-esgf.readthedocs.io
-#
-# Please see these tools' docs for usage instructions.
+# [^1]: https://esgf.github.io/esgf-user-support/user_guide.html#data-search-and-download
+# [^2]: https://esgf.github.io/esgf-download
+# [^3]: https://intake-esgf.readthedocs.io
 
 # %% [markdown]
 # ## Zenodo
@@ -103,7 +109,7 @@ create_all_tables(engine)
 # While it aims to be, the ESGF is technically not a permanent archive
 # and does not issue DOIs.
 # In order to provide more reliable, citable access to the data,
-# we also provide it on Zenodo.
+# we also provide it on **Zenodo** (REF-TODO).
 # The data, as well as all the source code and input data used to process it,
 # can be found at https://doi.org/10.5281/zenodo.14892947.
 
@@ -113,7 +119,7 @@ create_all_tables(engine)
 # %% [markdown]
 # ## Format
 #
-# The data is provided in netCDF format [TODO citation].
+# The data is provided in **netCDF format** [TODO citation].
 # This self-describing format allows the data
 # to be placed in the same file as metadata
 # (in the so-called "file header").
@@ -136,7 +142,8 @@ create_all_tables(engine)
 # under the attributes `grid_label` (for grid) and `frequency` (for time sampling).
 # The `grid_label` and `frequency` also appear in each file's name,
 # which allows files to be filtered without needing to load them first.
-#
+
+# %% [markdown]
 # The five combinations of grid and time sampling are:
 #
 # 1. global-, annual-mean (`grid_label="gm"`, `frequency="yr"`)
@@ -257,7 +264,8 @@ co2_yearly_global_fps = get_ghg_dataset_local_files(**query_kwargs_co2_yearly_gl
 # 1. year 1 to year 999
 # 2. year 1000 to year 1749
 # 3. year 1750 to year 2022
-#
+
+# %% [markdown]
 # For yearly data, the time labels in the filename are years
 # (for months, the month is included e.g. you will see `000101-09912`
 # rather than `0001-0999` in the filename,
@@ -474,7 +482,7 @@ plt.show()
 # We also provide data with spatial,
 # specifically latituindal, resolution.
 # This data comes on a 15-degree latituindal grid
-# (see below for details of the grid and latituindal bounds).
+# (see below for details of the grid and latitudinal bounds).
 # These files are identified by the grid label `gnz`.
 # We only provide these files with monthly resolution.
 #
@@ -676,7 +684,7 @@ plt.show()
 # 1. we have split the global-mean and hemispheric-mean data into separate files.
 #    In CMIP6, this data was in the same file (with a grid label of `GMNHSH`).
 #    We have split this for two reasons:
-#    a) `GMNHSH` is not a grid label recognised in the CMIP CVs and
+#    a) `GMNHSH` is not a grid label recognised in the CMIP CVs [REF-TODO] and
 #    b) having global-mean and hemispheric-mean data in the same file
 #       required us to introduce a 'sector' coordinate,
 #       which was confusing and does not follow the CF-conventions.
@@ -948,12 +956,11 @@ plt.show()
 # This isn't the same as effective radiative forcing (ERF).
 # For that comparison, see the later sections focussed on ERF.
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-
 # %% [markdown]
 # Values below come from Table 7.SM.7 of
-# IPCC AR7 WG1 Ch. 7 Supplementary Material
-# (https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07_SM.pdf).
+# IPCC AR7 WG1 Ch. 7 Supplementary Material[^4].
+#
+# [^4]: https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07_SM.pdf
 
 # %% editable=true slideshow={"slide_type": ""}
 from openscm_units import unit_registry
@@ -1088,11 +1095,12 @@ plt.show()
 # In summary, in ERF terms, the differences from CMIP6 are very small.
 # For all gases, they are less than around 0.025 W / m<sup>2</sup>.
 # Compared to the estimated total greenhouse gas forcing and uncertainty in IPCC AR6
-# (see Section 7.3.5.2 of AR6 WG1 Chapter 7,
-# https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/),
+# (see Section 7.3.5.2 of AR6 WG1 Chapter 7[^5]),
 # estimated to be 3.84 W / m<sup>2</sup>
 # (very likely range of 3.46 to 4.22 W / m<sup>2</sup>),
 # such differences are particularly small.
+#
+# [^5]: https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/
 
 # %% [markdown]
 # #### Atmospheric concentrations including seasonality: Year 2000 - 2022
