@@ -621,6 +621,7 @@ xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2018, 2024)]
 ax.set_xticks(xticks)
 ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
+ax.set_title("")
 
 plt.show()
 
@@ -948,9 +949,7 @@ plt.show()
 # This isn't the same as effective radiative forcing (ERF).
 # For that comparison, see the later sections focussed on ERF.
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # Values below come from Table 7.SM.7 of
 # IPCC AR7 WG1 Ch. 7 Supplementary Material
 # (https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07_SM.pdf).
@@ -1147,7 +1146,7 @@ plot_overview_and_deltas(
 plt.tight_layout()
 plt.show()
 
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # Like the annual-means,
 # the atmospheric concentrations including seasonality
 # are reasonably consistent between CMIP6 and CMIP7.

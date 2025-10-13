@@ -502,7 +502,7 @@ def get_scenario(ds: xr.Dataset) -> str:
         Scenario to which the dataset applies
     """
     if ds.attrs["mip_era"] == "CMIP6":
-        tmp = ds.attrs["source_id"].split("ssp")[1].split("-")[0]
+        tmp = ds.attrs["source_id"].split("ssp")[1].split("-1-2-0")[0]
         res = f"ssp{tmp}"
 
     else:
@@ -512,12 +512,15 @@ def get_scenario(ds: xr.Dataset) -> str:
 
 
 def get_ghg_dataset_local_files(  # noqa: PLR0913
+    engine: sqlalchemy.engine.base.Engine,
     ghg: str,
     grid: str,
     time_sampling: str,
     cmip_era: str,
-    source_id: str,
-    engine: sqlalchemy.engine.base.Engine,
+    source_id: str | None = None,
+    source_version: str | None = None,
+    institution_id: str | None = None,
+    target_mip: str | None = None,
 ) -> tuple[Path, ...]:
     """
     Get GHG dataset local files
@@ -541,6 +544,15 @@ def get_ghg_dataset_local_files(  # noqa: PLR0913
     source_id
         Source ID for which to retrieve data
 
+    source_version
+        Source version for which to retrieve data
+
+    institution_id
+        Institution ID for which to retrieve data
+
+    target_mip
+        Target MIP for which to retrieve data
+
     engine
         Database engine for saving results
 
@@ -550,21 +562,33 @@ def get_ghg_dataset_local_files(  # noqa: PLR0913
         Local files that belong to the given dataset
     """
     with Session(engine) as session:
-        statement = select(ESGFDatasetDB).where(
-            ESGFDatasetDB.variable == ghg,
-            ESGFDatasetDB.grid == grid,
-            ESGFDatasetDB.time_sampling == time_sampling,
-            ESGFDatasetDB.cmip_era == cmip_era,
-            ESGFDatasetDB.source_id == source_id,
-        )
+        args_l = []
+        for name, value in (
+            ("variable", ghg),
+            ("grid", grid),
+            ("time_sampling", time_sampling),
+            ("cmip_era", cmip_era),
+            ("source_id", source_id),
+            ("source_version", source_version),
+            ("institution_id", institution_id),
+            ("target_mip", target_mip),
+        ):
+            if value is not None:
+                args_l.append(getattr(ESGFDatasetDB, name) == value)
+
+        statement = select(ESGFDatasetDB).where(*args_l)
         result_exec = session.exec(statement)
 
-        result = result_exec.one()
+        results = result_exec.all()
 
-        esgf_ds = ESGFDataset.model_validate(result)
+        out_l = []
+        for result in results:
+            esgf_ds = ESGFDataset.model_validate(result)
 
-    out = tuple(
-        Path(esgf_file.esgf_file_local.path) for esgf_file in esgf_ds.esgf_files
-    )
+            out_l.extend(
+                Path(esgf_file.esgf_file_local.path) for esgf_file in esgf_ds.esgf_files
+            )
+
+    out = tuple(out_l)
 
     return out
