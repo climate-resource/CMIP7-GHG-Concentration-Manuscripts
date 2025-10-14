@@ -502,8 +502,12 @@ def get_scenario(ds: xr.Dataset) -> str:
         Scenario to which the dataset applies
     """
     if ds.attrs["mip_era"] == "CMIP6":
-        tmp = ds.attrs["source_id"].split("ssp")[1].split("-1-2-0")[0]
-        res = f"ssp{tmp}"
+        if "ssp" in ds.attrs["source_id"]:
+            tmp = ds.attrs["source_id"].split("ssp")[1].split("-1-2")[0]
+            res = f"ssp{tmp}"
+
+        else:
+            res = "historical"
 
     else:
         res = ds.attrs["source_id"].split("-")[1]
