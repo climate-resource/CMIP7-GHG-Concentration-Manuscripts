@@ -101,7 +101,7 @@ create_all_tables(engine)
 #        purely statistical extrapolations are used instead
 #      - the extension varies by gas,
 #        aiming to make use of as much information as is possible
-#        e.g. hesmiephere specific ice core information
+#        e.g. hemisphere specific ice core information
 #        and the latitudinal gradient
 #        over the period covered by ground-based observations
 # 8. combine the extended global-mean, seasonality and latitudinal gradients
