@@ -51,6 +51,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import nc_time_axis  # noqa: F401
 import numpy as np
+import pandas_indexing as pix
+import pandas_openscm
+
 from local.data_loading import (
     fetch_and_load_ghg_dataset,
     fetch_and_load_ghg_dataset_scenarios,
@@ -59,6 +62,9 @@ from local.data_loading import (
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
 from local.esgf.search.search_query import KnownIndexNode
 from local.paths import REPO_ROOT
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+pandas_openscm.register_pandas_accessors()
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 local_data_root_dir = REPO_ROOT / "data" / "raw" / "esgf"
@@ -73,6 +79,18 @@ sqlite_file = REPO_ROOT / "download-test-scenario-database.db"
 engine = get_sqlite_engine(sqlite_file)
 create_all_tables(engine)
 
+
+# %% [markdown]
+# # Dataset construction
+#
+# TODO:
+#
+# 1. emissions from elsewhere
+# 2. run MAGICC
+# 3. harmonise
+# 4. seasonality and lat. gradient projections
+# 5. combine
+# 6. provide
 
 # %% [markdown]
 # # Finding and accessing the data
@@ -1045,6 +1063,235 @@ plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Annual-, global-mean data
+
+# %%
+gases_to_show = ["co2", "ch4", "n2o", "cfc12eq", "hfc134aeq"]
+ds_gases_full_yearly_d = {}
+for gas in gases_to_show:
+    ds_gases_full_yearly_d[gas] = {}
+    for key, target_mip, source_version, institution_id, cmip_era in (
+        ("history", "CMIP", "1.0.0", "CR", "CMIP7"),
+        ("scenarios", "ScenarioMIP", "0.1.0", "CR", "CMIP6Plus"),
+    ):
+        query_kwargs = {
+            "ghg": gas,
+            "time_sampling": "yr",
+            "grid": "gm",
+            "target_mip": target_mip,
+            "source_version": source_version,
+            "institution_id": institution_id,
+            "cmip_era": cmip_era,
+            "engine": engine,
+        }
+        ds = fetch_and_load(**query_kwargs)
+
+        # Unify time axis days to simplify
+        ds["time"] = [
+            cftime.DatetimeProlepticGregorian(v.year, v.month, 15)
+            for v in ds["time"].values
+        ]
+
+        # compute to avoid dask weirdness
+        ds_gases_full_yearly_d[gas][key] = ds.compute()
+
+# %%
+# to DF
+# group and plot
+
+# %%
+from typing import Any
+
+import pandas as pd
+
+
+def to_data_frame(
+    ds: xr.Dataset,
+    unstack_col: str,
+    assign_metadata: dict[str, Any] | None,
+) -> pd.DataFrame:
+    ds_var = ds.attrs["variable_id"]
+    
+    res = ds[ds_var].to_dataframe()[ds_var].unstack(unstack_col)
+    if assign_metadata is not None:
+        res = res.pix.assign(**assign_metadata)
+
+    res = res.openscm.eiim()
+    
+    return res
+
+
+# %%
+scenario_group_map = {
+    # "h": "high",
+    # "hl": "high",
+    # "m": "medium",
+    # "ml": "medium",
+    # "l": "low",
+    # # "vl": "low",
+    # # "ln": "low",
+    # "vllo": "low",
+    # "vlho": "low",
+    # "history": "history",
+    "h": "s",
+    "hl": "s",
+    "m": "s",
+    "ml": "s",
+    "l": "s",
+    # "vl": "s",
+    # "ln": "s",
+    "vllo": "s",
+    "vlho": "s",
+    "history": "history",
+}
+
+
+pdf = pix.concat(
+    [
+        to_data_frame(
+            ds=ds_gases_full_yearly_d["ch4"]["scenarios"].groupby("time.year").mean(),
+            unstack_col="year",
+            assign_metadata=None,
+        ),
+        to_data_frame(
+            ds=ds_gases_full_yearly_d["ch4"]["history"].groupby("time.year").mean(),
+            unstack_col="year",
+            assign_metadata={"scenario": "history"},
+        ),
+    ], axis="columns"
+).sort_index(axis="columns")
+
+pdf = pdf.openscm.update_index_levels_from_other(
+    {"scenario_group": ("scenario", lambda x: scenario_group_map[x])}
+)
+
+pdf
+
+# %%
+import seaborn as sns
+
+# %%
+palette = {
+    "history": "k",
+    "history-cmip6": "tab:grey",
+    "vl": "#24a4ff",
+    "vllo": "#24a4ff",
+    "ln": "#4a0daf",
+    "vlho": "#4a0daf",
+    "l": "#00cc69",
+    "ml": "#f5ac00",
+    "m": "#ffa9dc",
+    "h": "#700000",
+    "hl": "#8f003b",
+    "ssp119": "#00a9cf",
+    "ssp126": "#003466",
+    "ssp245": "#f69320",
+    "ssp370": "#df0000",
+    "ssp434": "#2274ae",
+    "ssp460": "#b0724e",
+    "ssp534": "#92397a",
+    "ssp585": "#980002",
+}
+
+# %%
+pdf_grouped = {sg: sgdf for sg, sgdf in pdf.groupby("scenario_group")}
+
+start_year = 2010
+hue_order = [
+    "h",
+    "hl",
+    "m",
+    "ml",
+    "l",
+    # "ln",
+    "vlho",
+    # "vl",
+    "vllo",
+    "history",
+]
+
+fig, axes_d = plt.subplot_mosaic(
+    [
+        # ["low"],
+        # ["medium"],
+        # ["high"],
+        ["s"],
+    ],
+    figsize=(8, 8)
+)
+
+for scenario_group, sgdf in pdf_grouped.items():
+    if scenario_group == "history":
+        continue
+
+    ax = axes_d[scenario_group]
+    
+    sgdf_pdf = pix.concat([sgdf, pdf_grouped["history"]]).loc[:, start_year:].openscm.to_long_data()
+
+    sns.scatterplot(
+        data=sgdf_pdf,
+        x="time",
+        y="value",
+        hue="scenario",
+        hue_order=hue_order,
+        palette=palette,
+        ax=ax,
+    )
+    sns.move_legend(ax, loc="center left", bbox_to_anchor=(1.05, 0.5))
+
+plt.tight_layout()
+plt.show()
+
+# %%
+# import pandas_indexing as pix
+
+# pdf = (
+#     pix.concat(
+#         [
+#             tmp_cmip7["co2"]
+#             .groupby("time.year")
+#             .mean()
+#             .to_dataframe()["co2"]
+#             .unstack("year")
+#             .pix.assign(cmip_era="cmip7"),
+#             tmp_h_cmip7["co2"]
+#             .groupby("time.year")
+#             .mean()
+#             .expand_dims({"scenario": ["history"]})
+#             .to_dataframe()["co2"]
+#             .unstack("year")
+#             .pix.assign(cmip_era="cmip7"),
+#             tmp_cmip6["co2"]
+#             .groupby("time.year")
+#             .mean()
+#             .to_dataframe()["co2"]
+#             .unstack("year")
+#             .pix.assign(cmip_era="cmip6"),
+#             tmp_h_cmip6["co2"]
+#             .groupby("time.year")
+#             .mean()
+#             .expand_dims({"scenario": ["history-cmip6"]})
+#             .to_dataframe()["co2"]
+#             .unstack("year")
+#             .pix.assign(cmip_era="cmip6"),
+#         ]
+#     )
+#     .sort_index(axis="columns")
+#     .loc[:, 1950:2100]
+#     .openscm.to_long_data()
+# )
+# # .T.plot()
+# ax = sns.scatterplot(
+#     data=pdf,
+#     x="time",
+#     y="value",
+#     hue="scenario",
+#     hue_order=sorted(pdf["scenario"]),
+#     palette={k: v for k, v in palette.items() if k in pdf["scenario"].tolist()},
+#     style="cmip_era",
+# )
+# sns.move_legend(ax, loc="center left", bbox_to_anchor=(1.05, 0.5))
+
+# %%
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Monthly-, global-mean data
