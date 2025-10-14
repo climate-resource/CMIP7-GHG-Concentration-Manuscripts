@@ -25,14 +25,12 @@
 #
 # Here we provide a short description of the historical dataset
 # and a guide for users.
-# This is intended to provide a short introduction for users of the data.
+# This is intended to provide a short introduction for users of the data:
+# its construction, key features, metadata
+# and relationship to CMIP6 forcing data.
 # The full details of the dataset's construction
 # and evaluation against other data sources
 # will be provided in the full manuscript which is being prepared.
-
-# %% [markdown] editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-# When ready, we will point to this manuscript here.
-# [TODO cross-link]
 
 # %% [markdown] editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 # ## Imports
@@ -67,6 +65,72 @@ create_all_tables(engine)
 # %% [raw]
 # \bibliographystyle{plain}
 # \bibliography{references}
+
+# %% [markdown]
+# # Dataset construction
+#
+# The dataset is constructed following the methodology of
+# Meinshausen et al. (2017, REF-TODO).
+# The methods are described in full in that paper
+# and will be clarified and described again
+# in the forthcoming manuscript describing this dataset's construction.
+#
+# In brief, the dataset for each greenhouse gas is constructed via the following steps:
+#
+# 1. collect as many ground-based observations as possible
+# 2. from ground-based networks such as the NOAA (TODO REF)
+#    and AGAGE (TODO REF) networks
+#     - these are only available over the last few decades at most
+#       (less for some greenhouse gases)
+#     - these are spatially sparse because sampling stations
+#       are discrete points and there are not an infinite number of stations
+#       (at most, usually around 30, often far fewer)
+# 4. bin the ground-based observations in space and time,
+#    averaging over input stations and observations that fall in the same cell
+# 5. interpolate the binned data in space, to derive a dataset with spatial coverage
+# 6. use the interpolated, ground-based data
+#    to derive a statistical model for seasonal variation and latitudinal gradients
+#    specific to each greenhouse gas
+#      - the exact form of the statistical model varies by gas,
+#        but is generally driven by either concentrations of the gas itself,
+#        global-mean temperature or purely statistical regressions/extensions
+# 7. use the models, plus ice core or other proxy records,
+#    to extend global-mean concentrations, seasonality and latitudinal gradients
+#    over the full time period of the dataset (i.e. back to year 1)
+#      - where ice cores or proxy records are not available,
+#        purely statistical extrapolations are used instead
+#      - the extension varies by gas,
+#        aiming to make use of as much information as is possible
+#        e.g. hemisphere specific ice core information
+#        and the latitudinal gradient
+#        over the period covered by ground-based observations
+# 8. combine the extended global-mean, seasonality and latitudinal gradients
+#    to create a dataset that extends over the period
+#    year 1 to 2022 (the last year available for some observational networks
+#    at the time the data was compiled)
+#      - this dataset is on our binned grid,
+#        which we choose to be a grid comprised of latitudinal bins 15-degrees in size
+#      - it is not trivial to infer the global-means,
+#        seasonality and latitudinal gradient used to construct the dataset
+#        from the output dataset. For this reason,
+#        we include these components separately
+#        in the [zenodo record](https://doi.org/10.5281/zenodo.14892947)
+#        [TODO better ref]
+#        that archives the output dataset,
+#        all its inputs and intermediate data prdoucts
+# 9. calculate annual-, hemispheric- and global-means
+#    to produce our lower resolution data products
+#      - we can also produce higher spatial resolution data products,
+#        but have not done so at the moment to save processing and storage space
+#        given that there has been no demand for these products from modelling teams
+#
+# The input datasets and associated references
+# are documented in the `references*` attributes of each netCDF file.
+# This documentation is limited, so cannot document how each input dataset is used
+# (that is the role of the manuscript),
+# but does provide machine-readable provenance information
+# (which is used to support links between all the input data
+# e.g. linking of the Zenodo archive underpinning this dataset).
 
 # %% [markdown]
 # # Finding and accessing the data
@@ -475,6 +539,12 @@ ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
 
 plt.show()
+
+# %% [markdown]
+# At present, we do not provide data at a higher temporal resolution than monthly.
+# In theory, such a dataset is possible to compile,
+# however this requires careful consideration of daily
+# and potentially sub-daily trends (e.g. the diurnal cycle).
 
 # %% [markdown]
 # ## Monthly-, latitudinally-resolved data
