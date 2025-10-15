@@ -45,14 +45,17 @@
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 import calendar
 from functools import partial
+from typing import Any
 
 import cftime
 import matplotlib
 import matplotlib.pyplot as plt
 import nc_time_axis  # noqa: F401
 import numpy as np
-import pandas_indexing as pix
+import pandas as pd
 import pandas_openscm
+import seaborn as sns
+import tqdm.auto
 from local.data_loading import (
     fetch_and_load_ghg_dataset,
     fetch_and_load_ghg_dataset_scenarios,
@@ -349,163 +352,6 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # Having downloaded the data, using it is relatively straightforward
 # (scenario identification issue discussed above notwithstanding).
-
-# %%
-# # Ensure data is downloaded
-# query_kwargs_co2_yearly_global = dict(
-#     ghg="co2",
-#     time_sampling="yr",
-#     grid="gm",
-#     cmip_era="CMIP6",
-#     source_version="1.2.1",
-#     institution_id="UoM",
-#     target_mip="ScenarioMIP",
-#     engine=engine,
-# )
-# tmp_cmip6 = fetch_and_load(**query_kwargs_co2_yearly_global)
-
-# %%
-# from local.data_loading import fetch_and_load_ghg_dataset
-
-# # Ensure data is downloaded
-# query_kwargs_co2_yearly_global = dict(
-#     ghg="co2",
-#     time_sampling="yr",
-#     grid="gm",
-#     cmip_era="CMIP7",
-#     source_id="CR-CMIP-1-0-0",
-#     institution_id="CR",
-#     target_mip="CMIP",
-#     engine=engine,
-# )
-# fetch_and_load = partial(
-#     fetch_and_load_ghg_dataset,
-#     local_data_root_dir=local_data_root_dir,
-#     # index_node=KnownIndexNode.DKRZ,
-#     # cmip_era="CMIP6",
-#     # source_id="UoM-CMIP-1-2-0",
-#     index_node=KnownIndexNode.ORNL,
-# )
-# tmp_h_cmip7 = fetch_and_load(**query_kwargs_co2_yearly_global).compute()
-
-# %%
-# from local.data_loading import fetch_and_load_ghg_dataset
-
-# # Ensure data is downloaded
-# query_kwargs_co2_yearly_global = dict(
-#     ghg="co2",
-#     time_sampling="yr",
-#     grid="gm",
-#     cmip_era="CMIP6",
-#     source_version="1.2.0",
-#     institution_id="UoM",
-#     target_mip="CMIP",
-#     engine=engine,
-# )
-# tmp_h_cmip6 = fetch_and_load(**query_kwargs_co2_yearly_global).compute()
-
-# %%
-# import pandas_openscm
-# import seaborn as sns
-
-# %%
-# pandas_openscm.register_pandas_accessors()
-
-# %%
-# palette = {
-#     "history": "k",
-#     "history-cmip6": "tab:grey",
-#     "vl": "#24a4ff",
-#     "vllo": "#24a4ff",
-#     "ln": "#4a0daf",
-#     "vlho": "#4a0daf",
-#     "l": "#00cc69",
-#     "ml": "#f5ac00",
-#     "m": "#ffa9dc",
-#     "h": "#700000",
-#     "hl": "#8f003b",
-#     "ssp119": "#00a9cf",
-#     "ssp126": "#003466",
-#     "ssp245": "#f69320",
-#     "ssp370": "#df0000",
-#     "ssp434": "#2274ae",
-#     "ssp460": "#b0724e",
-#     "ssp534": "#92397a",
-#     "ssp585": "#980002",
-# }
-
-# %%
-# import pandas_indexing as pix
-
-# pdf = (
-#     pix.concat(
-#         [
-#             tmp_cmip7["co2"]
-#             .groupby("time.year")
-#             .mean()
-#             .to_dataframe()["co2"]
-#             .unstack("year")
-#             .pix.assign(cmip_era="cmip7"),
-#             tmp_h_cmip7["co2"]
-#             .groupby("time.year")
-#             .mean()
-#             .expand_dims({"scenario": ["history"]})
-#             .to_dataframe()["co2"]
-#             .unstack("year")
-#             .pix.assign(cmip_era="cmip7"),
-#             tmp_cmip6["co2"]
-#             .groupby("time.year")
-#             .mean()
-#             .to_dataframe()["co2"]
-#             .unstack("year")
-#             .pix.assign(cmip_era="cmip6"),
-#             tmp_h_cmip6["co2"]
-#             .groupby("time.year")
-#             .mean()
-#             .expand_dims({"scenario": ["history-cmip6"]})
-#             .to_dataframe()["co2"]
-#             .unstack("year")
-#             .pix.assign(cmip_era="cmip6"),
-#         ]
-#     )
-#     .sort_index(axis="columns")
-#     .loc[:, 1950:2100]
-#     .openscm.to_long_data()
-# )
-# # .T.plot()
-# ax = sns.scatterplot(
-#     data=pdf,
-#     x="time",
-#     y="value",
-#     hue="scenario",
-#     hue_order=sorted(pdf["scenario"]),
-#     palette={k: v for k, v in palette.items() if k in pdf["scenario"].tolist()},
-#     style="cmip_era",
-# )
-# sns.move_legend(ax, loc="center left", bbox_to_anchor=(1.05, 0.5))
-
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-# # Ensure data is downloaded
-# query_kwargs_co2_yearly_global = dict(
-#     ghg="co2",
-#     time_sampling="yr",
-#     grid="gm",
-#     cmip_era="CMIP7",
-#     source_id="CR-CMIP-1-0-0",
-#     engine=engine,
-# )
-# fetch_and_load = partial(
-#     fetch_and_load_ghg_dataset,
-#     local_data_root_dir=local_data_root_dir,
-#     # index_node=KnownIndexNode.DKRZ,
-#     # cmip_era="CMIP6",
-#     # source_id="UoM-CMIP-1-2-0",
-#     index_node=KnownIndexNode.ORNL,
-# )
-# _ = fetch_and_load(**query_kwargs_co2_yearly_global)
-
-# # Get file paths
-# co2_yearly_global_fps = get_ghg_dataset_local_files(**query_kwargs_co2_yearly_global)
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Annual-, global-mean data
@@ -1020,13 +866,13 @@ plt.show()
 # This will be fixed before the final dataset is published.
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-query_kwargs_co2_monthyly_global_history = {
+query_kwargs_co2_monthly_global_history = {
     **query_kwargs_co2_yearly_global_history,
     "time_sampling": "mon",
 }
 
 ds_history_co2_monthly_global = fetch_and_load_history(
-    **query_kwargs_co2_monthyly_global_history
+    **query_kwargs_co2_monthly_global_history
 ).compute()
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
@@ -1053,6 +899,24 @@ ax.legend()
 
 plt.show()
 
+# %% [markdown]
+# ### Monthly-, 15-degree latitudinally binned data
+#
+# Note that the transition from history to scenarios
+# is clearly wrong in the draft dataset.
+# This will be fixed before the final dataset is published.
+
+# %%
+# # Get file paths
+# query_kwargs_co2_monthly_lat_history = {
+#     **query_kwargs_co2_monthly_global_history,
+#     "grid": "gnz",
+# }
+
+# ds_history_co2_monthly_lat_history = fetch_and_load_history(
+#     **query_kwargs_co2_monthly_lat_history
+# ).compute()
+
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Full scenario set
 #
@@ -1063,7 +927,7 @@ plt.show()
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Annual-, global-mean data
 
-# %%
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 gases_to_show = ["co2", "ch4", "n2o", "cfc12eq", "hfc134aeq"]
 ds_gases_full_yearly_d = {}
 for gas in gases_to_show:
@@ -1093,16 +957,8 @@ for gas in gases_to_show:
         # compute to avoid dask weirdness
         ds_gases_full_yearly_d[gas][key] = ds.compute()
 
-# %%
-# to DF
-# group and plot
 
-# %%
-from typing import Any
-
-import pandas as pd
-
-
+# %% editable=true slideshow={"slide_type": ""}
 def to_data_frame(
     ds: xr.Dataset,
     unstack_col: str,
@@ -1126,60 +982,7 @@ def to_data_frame(
     return res
 
 
-# %%
-scenario_group_map = {
-    # "h": "high",
-    # "hl": "high",
-    # "m": "medium",
-    # "ml": "medium",
-    # "l": "low",
-    # # "vl": "low",
-    # # "ln": "low",
-    # "vllo": "low",
-    # "vlho": "low",
-    # "history": "history",
-    "h": "s",
-    "hl": "s",
-    "m": "s",
-    "ml": "s",
-    "l": "s",
-    # "vl": "s",
-    # "ln": "s",
-    "vllo": "s",
-    "vlho": "s",
-    "history": "history",
-}
-pdf = pdf.openscm.update_index_levels_from_other(
-    {"scenario_group": ("scenario", lambda x: scenario_group_map[x])}
-)
-
-
-pdf = pix.concat(
-    [
-        to_data_frame(
-            ds=ds_gases_full_yearly_d["co2"]["scenarios"].groupby("time.year").mean(),
-            unstack_col="year",
-            assign_metadata=None,
-        ),
-        to_data_frame(
-            ds=ds_gases_full_yearly_d["co2"]["history"].groupby("time.year").mean(),
-            unstack_col="year",
-            assign_metadata={"scenario": "history"},
-        ),
-    ],
-    axis="columns",
-).sort_index(axis="columns")
-
-pdf = pdf.openscm.update_index_levels_from_other(
-    {"scenario_group": ("scenario", lambda x: scenario_group_map[x])}
-)
-
-pdf
-
-# %%
-import seaborn as sns
-
-# %%
+# %% editable=true slideshow={"slide_type": ""}
 palette = {
     "history": "k",
     "history-cmip6": "tab:grey",
@@ -1204,10 +1007,8 @@ palette = {
     "ssp585": "#980002",
 }
 
-# %%
 plt.rcParams["axes.xmargin"] = 0
 
-# %%
 hue_order = [
     "h",
     "hl",
@@ -1221,66 +1022,34 @@ hue_order = [
     "historical",
 ]
 
-# %%
-pdf_grouped = {sg: sgdf for sg, sgdf in pdf.groupby("scenario_group")}
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+start_year = 1950
 
-start_year = 2010
-
-
-fig, axes_d = plt.subplot_mosaic(
-    [
-        # ["low"],
-        # ["medium"],
-        # ["high"],
-        ["s"],
-    ],
-    figsize=(8, 8),
-)
-
-for scenario_group, sgdf in pdf_grouped.items():
-    if scenario_group == "history":
-        continue
-
-    ax = axes_d[scenario_group]
-
-    sgdf_pdf = (
-        pix.concat([sgdf, pdf_grouped["history"]])
-        .loc[:, start_year:]
-        .openscm.to_long_data()
-    )
-
-    sns.scatterplot(
-        data=sgdf_pdf,
-        x="time",
-        y="value",
-        hue="scenario",
-        hue_order=hue_order,
-        palette=palette,
-        ax=ax,
-    )
-    ax.axvline(2023, color="tab:gray", linestyle="--", label="Harmonisation year")
-    sns.move_legend(ax, loc="center left", bbox_to_anchor=(1.05, 0.5))
-
-plt.tight_layout()
-plt.show()
-
-# %%
-import tqdm.auto
-
-# %%
 pdf_l = [
     v.sort_index(axis="columns")
     for ghg in tqdm.auto.tqdm(ds_gases_full_yearly_d)
     for v in [
         to_data_frame(
-            ds=ds_gases_full_yearly_d[ghg]["scenarios"].groupby("time.year").mean(),
+            ds=ds_gases_full_yearly_d[ghg]["scenarios"]
+            .sel(
+                time=ds_gases_full_yearly_d[ghg]["scenarios"]["time"].dt.year
+                >= start_year
+            )
+            .groupby("time.year")
+            .mean(),
             unstack_col="year",
             assign_metadata={"ghg": ghg},
         ).openscm.update_index_levels_from_other(
             {"experiment": ("scenario", lambda x: x)}
         ),
         to_data_frame(
-            ds=ds_gases_full_yearly_d[ghg]["history"].groupby("time.year").mean(),
+            ds=ds_gases_full_yearly_d[ghg]["history"]
+            .sel(
+                time=ds_gases_full_yearly_d[ghg]["history"]["time"].dt.year
+                >= start_year
+            )
+            .groupby("time.year")
+            .mean(),
             unstack_col="year",
             assign_metadata={"experiment": "historical", "ghg": ghg},
         ),
@@ -1292,9 +1061,9 @@ pdf = pd.concat(
 
 # pdf
 
-# %%
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
 sns.relplot(
-    data=pdf.loc[:, start_year:].openscm.to_long_data(),
+    data=pdf.openscm.to_long_data(),
     x="time",
     y="value",
     hue="experiment",
@@ -1312,9 +1081,6 @@ plt.show()
 # ### Monthly-, global-mean data
 
 # %% editable=true slideshow={"slide_type": ""}
-assert False, "plan below"
-
-# %%
 ds_gases_full_monthly_d = {}
 for gas in gases_to_show:
     ds_gases_full_monthly_d[gas] = {}
@@ -1344,19 +1110,44 @@ for gas in gases_to_show:
         ds_gases_full_monthly_d[gas][key] = ds.compute()
 
 # %%
+start_year = 2015
+end_year = 2030
+
 pdf_l = [
     v.sort_index(axis="columns")
     for ghg in tqdm.auto.tqdm(ds_gases_full_monthly_d)
     for v in [
         to_data_frame(
-            ds=ds_gases_full_monthly_d[ghg]["scenarios"],
+            ds=ds_gases_full_monthly_d[ghg]["scenarios"].sel(
+                time=(
+                    (
+                        ds_gases_full_monthly_d[ghg]["scenarios"]["time"].dt.year
+                        >= start_year
+                    )
+                    & (
+                        ds_gases_full_monthly_d[ghg]["scenarios"]["time"].dt.year
+                        <= end_year
+                    )
+                )
+            ),
             unstack_col="time",
             assign_metadata={"ghg": ghg},
         ).openscm.update_index_levels_from_other(
             {"experiment": ("scenario", lambda x: x)}
         ),
         to_data_frame(
-            ds=ds_gases_full_monthly_d[ghg]["history"],
+            ds=ds_gases_full_monthly_d[ghg]["history"].sel(
+                time=(
+                    (
+                        ds_gases_full_monthly_d[ghg]["history"]["time"].dt.year
+                        >= start_year
+                    )
+                    & (
+                        ds_gases_full_monthly_d[ghg]["history"]["time"].dt.year
+                        <= end_year
+                    )
+                )
+            ),
             unstack_col="time",
             assign_metadata={"experiment": "historical", "ghg": ghg},
         ),
@@ -1370,13 +1161,8 @@ pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 # pdf
 
 # %%
-start_year = 2015
-end_year = 2030
-
 sns.relplot(
-    data=pdf.loc[
-        :, (pdf.columns >= start_year) & (pdf.columns <= end_year + 1)
-    ].openscm.to_long_data(),
+    data=pdf.openscm.to_long_data(),
     x="time",
     y="value",
     hue="experiment",
@@ -1391,8 +1177,13 @@ sns.relplot(
 
 plt.show()
 
+# %% [markdown]
+# ### Monthly-, 15-degree latitudinal data
+
 # %%
 assert False, "Check latitudinal gradient transition too somehow"
+# row is GHG
+# col is lat - just pick 3, sharey is row
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Differences from CMIP6
@@ -1482,16 +1273,53 @@ assert False, "Check latitudinal gradient transition too somehow"
 # 1. the scenarios are simply different
 # 2. the transition from historical to scenarios is more carefully harmonised
 
-# %% editable=true slideshow={"slide_type": ""}
-assert False, "plan below"
+# %% [markdown]
+# ### Annual-, global-mean data
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# 1. annual data including history for all scenarios by scenario group across both phases
-# 2. annual data including history for all scenarios by scenario group across both phases for just the transition period
-# 3. monthly data including history for all scenarios by scenario group for just the transition period (more for my own interest, but ok)
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+scenario_group_map = {
+    "h": "high",
+    "hl": "high",
+    "ssp585": "high",
+    "ssp534-over": "high",
+    "ssp370": "high",
+    "ssp460": "high",
+    "m": "continuing-trends",
+    "ml": "continuing-trends",
+    "ssp434": "continuing-trends",
+    "ssp245": "continuing-trends",
+    "l": "low",
+    # "vl": "low",
+    # "ln": "low",
+    "vllo": "low",
+    "vlho": "low",
+    "ssp126": "low",
+    "ssp119": "low",
+    "historical": "historical",
+}
 
-# %%
-gases_to_show = ["co2", "ch4", "n2o", "cfc12eq", "hfc134aeq"]
+hue_order_incl_cmip6 = [
+    "h",
+    "hl",
+    "m",
+    "ml",
+    "l",
+    # "ln",
+    "vlho",
+    # "vl",
+    "vllo",
+    "historical",
+    "ssp585",
+    "ssp534-over",
+    "ssp370",
+    "ssp460",
+    "ssp434",
+    "ssp245",
+    "ssp126",
+    "ssp119",
+]
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 ds_gases_full_yearly_multi_phase_d = {}
 for gas in gases_to_show:
     ds_gases_full_yearly_multi_phase_d[gas] = {}
@@ -1523,12 +1351,30 @@ for gas in gases_to_show:
         ds_gases_full_yearly_multi_phase_d[gas][key] = ds.compute()
 
 # %%
+start_year = 2000
+end_year = 2100
 pdf_l = [
     v.sort_index(axis="columns")
     for ghg in tqdm.auto.tqdm(ds_gases_full_yearly_multi_phase_d)
     for v in [
         to_data_frame(
             ds=ds_gases_full_yearly_multi_phase_d[ghg]["scenarios-cmip7"]
+            .sel(
+                time=(
+                    (
+                        ds_gases_full_yearly_multi_phase_d[ghg]["scenarios-cmip7"][
+                            "time"
+                        ].dt.year
+                        >= start_year
+                    )
+                    & (
+                        ds_gases_full_yearly_multi_phase_d[ghg]["scenarios-cmip7"][
+                            "time"
+                        ].dt.year
+                        <= end_year
+                    )
+                )
+            )
             .groupby("time.year")
             .mean(),
             unstack_col="year",
@@ -1538,6 +1384,22 @@ pdf_l = [
         ),
         to_data_frame(
             ds=ds_gases_full_yearly_multi_phase_d[ghg]["history-cmip7"]
+            .sel(
+                time=(
+                    (
+                        ds_gases_full_yearly_multi_phase_d[ghg]["history-cmip7"][
+                            "time"
+                        ].dt.year
+                        >= start_year
+                    )
+                    & (
+                        ds_gases_full_yearly_multi_phase_d[ghg]["history-cmip7"][
+                            "time"
+                        ].dt.year
+                        <= end_year
+                    )
+                )
+            )
             .groupby("time.year")
             .mean(),
             unstack_col="year",
@@ -1549,6 +1411,22 @@ pdf_l = [
         ),
         to_data_frame(
             ds=ds_gases_full_yearly_multi_phase_d[ghg]["scenarios-cmip6"]
+            .sel(
+                time=(
+                    (
+                        ds_gases_full_yearly_multi_phase_d[ghg]["scenarios-cmip6"][
+                            "time"
+                        ].dt.year
+                        >= start_year
+                    )
+                    & (
+                        ds_gases_full_yearly_multi_phase_d[ghg]["scenarios-cmip6"][
+                            "time"
+                        ].dt.year
+                        <= end_year
+                    )
+                )
+            )
             .groupby("time.year")
             .mean(),
             unstack_col="year",
@@ -1559,6 +1437,22 @@ pdf_l = [
         ),
         to_data_frame(
             ds=ds_gases_full_yearly_multi_phase_d[ghg]["history-cmip6"]
+            .sel(
+                time=(
+                    (
+                        ds_gases_full_yearly_multi_phase_d[ghg]["history-cmip6"][
+                            "time"
+                        ].dt.year
+                        >= start_year
+                    )
+                    & (
+                        ds_gases_full_yearly_multi_phase_d[ghg]["history-cmip6"][
+                            "time"
+                        ].dt.year
+                        <= end_year
+                    )
+                )
+            )
             .groupby("time.year")
             .mean(),
             unstack_col="year",
@@ -1575,29 +1469,6 @@ pdf = pd.concat(
     [v.reorder_levels(pdf_l[0].index.names) for v in pdf_l], axis="rows"
 ).sort_index(axis="columns")
 
-pdf
-
-# %%
-scenario_group_map = {
-    "h": "high",
-    "hl": "high",
-    "ssp585": "high",
-    "ssp534-over": "high",
-    "ssp370": "high",
-    "ssp460": "high",
-    "m": "continuing-trends",
-    "ml": "continuing-trends",
-    "ssp434": "continuing-trends",
-    "ssp245": "continuing-trends",
-    "l": "low",
-    # "vl": "low",
-    # "ln": "low",
-    "vllo": "low",
-    "vlho": "low",
-    "ssp126": "low",
-    "ssp119": "low",
-    "historical": "historical",
-}
 pdf = pdf.openscm.update_index_levels_from_other(
     {"scenario_group": ("experiment", lambda x: scenario_group_map[x])}
 )
@@ -1616,9 +1487,8 @@ pdf = pd.concat([v.reorder_levels(tmp_l[0].index.names) for v in tmp_l])
 pdf
 
 # %%
-start_year = 2005
+start_year = 2000
 end_year = 2100
-# end_year = 2025
 
 sns.relplot(
     data=pdf.loc[
@@ -1631,8 +1501,8 @@ sns.relplot(
     style="cmip_era",
     # markers={"CMIP6": ".", "CMIP7": "o"},
     # edgecolors="none",
-    markers={"CMIP6": "+", "CMIP7": 5},
-    # hue_order=hue_order,
+    markers={"CMIP6": "+", "CMIP7": 4},
+    hue_order=hue_order_incl_cmip6,
     kind="scatter",
     row="ghg",
     col="scenario_group",
@@ -1644,29 +1514,52 @@ sns.relplot(
 
 plt.show()
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Annual-, global-mean data
+# %%
+start_year = 2005
+end_year = 2030
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Annual-, global-mean data transition from history to scenarios
+sns.relplot(
+    data=pdf.loc[
+        :, (pdf.columns >= start_year) & (pdf.columns <= end_year + 1)
+    ].openscm.to_long_data(),
+    x="time",
+    y="value",
+    hue="experiment",
+    palette=palette,
+    style="cmip_era",
+    # markers={"CMIP6": ".", "CMIP7": "o"},
+    # edgecolors="none",
+    markers={"CMIP6": "+", "CMIP7": 4},
+    hue_order=hue_order_incl_cmip6,
+    kind="scatter",
+    row="ghg",
+    col="scenario_group",
+    col_order=["low", "continuing-trends", "high"],
+    facet_kws=dict(sharey=False),
+    s=100,
+    alpha=0.8,
+)
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Monthly-, global-mean data transition from history to scenarios
+plt.show()
 
-# %% editable=true slideshow={"slide_type": ""}
-gases_to_show = ["co2", "ch4", "n2o", "cfc12eq", "hfc134aeq"]
-ds_gases_full_d = {}
+# %% [markdown]
+# ### Monthly-, global-mean data
+
+# %%
+ds_gases_full_monthly_multi_phase_d = {}
 for gas in gases_to_show:
-    ds_gases_full_d[gas] = {}
-    for source_version, institution_id, cmip_era in (
-        ("0.1.0", "CR", "CMIP6Plus"),
-        ("1.2.0", "UoM", "CMIP6"),
+    ds_gases_full_monthly_multi_phase_d[gas] = {}
+    for key, target_mip, source_version, institution_id, cmip_era in (
+        ("history-cmip7", "CMIP", "1.0.0", "CR", "CMIP7"),
+        ("scenarios-cmip7", "ScenarioMIP", "0.1.0", "CR", "CMIP6Plus"),
+        ("history-cmip6", "CMIP", "1.2.0", "UoM", "CMIP6"),
+        ("scenarios-cmip6", "ScenarioMIP", "1.2.1", "UoM", "CMIP6"),
     ):
         query_kwargs = {
             "ghg": gas,
             "time_sampling": "mon",
             "grid": "gm",
-            "target_mip": "ScenarioMIP",
+            "target_mip": target_mip,
             "source_version": source_version,
             "institution_id": institution_id,
             "cmip_era": cmip_era,
@@ -1681,134 +1574,157 @@ for gas in gases_to_show:
         ]
 
         # compute to avoid dask weirdness
-        ds_gases_full_d[gas][cmip_era] = ds.compute()
+        ds_gases_full_monthly_multi_phase_d[gas][key] = ds.compute()
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-from typing import Callable
-
-import numpy.typing as npt
-
-
-def sel_times(
-    ds_d: dict[str, dict[str, xr.Dataset]],
-    sel_func: Callable[[xr.DataArray], npt.NDArray[bool]],
-) -> dict[str, dict[str, xr.Dataset]]:
-    """
-    Select times from our dictionary of [xr.Dataset][]'s
-    """
-    res = {
-        gas: {
-            key: value.sel(time=sel_func(value["time"])) for key, value in tmp.items()
-        }
-        for gas, tmp in ds_d.items()
-    }
-
-    return res
-
-
-def plot_overview_and_deltas(
-    ds_d: dict[str, dict[str, xr.Dataset]],
-    axes_d: dict[str, matplotlib.axes.Axes],
-):
-    """
-    Plot overviews of timeseries and deltas between CMIP7 and CMIP6
-    """
-    for ax_name, ax in axes_d.items():
-        if ax_name.endswith("_delta"):
-            continue
-
-        gas = ax_name
-
-        for cmip_era, ds in ds_d[gas].items():
-            label = f"{cmip_era} ({ds.attrs['source_id']})"
-            ds[gas].plot.scatter(
-                ax=axes_d[gas], label=label, alpha=0.7, edgecolors="none"
-            )
-
-        ax.legend()
-        ax.set_title(gas)
-        ax.xaxis.set_tick_params(labelbottom=True)
-
-        ax_delta = axes_d[f"{gas}_delta"]
-
-        da_cmip6 = ds_d[gas]["CMIP6"][gas]
-        da_cmip7 = ds_d[gas]["CMIP7"][gas]
-        overlapping_times = np.intersect1d(da_cmip6["time"], da_cmip7["time"])
-        delta = da_cmip7.sel(time=overlapping_times) - da_cmip6.sel(
-            time=overlapping_times
-        )
-        ax_delta.set_title("CMIP7 - CMIP6", fontsize="small")
-        delta.plot.scatter(
-            ax=ax_delta,
-            color="tab:grey",
-            edgecolors="none",
-            s=10,
-        )
-        ax_delta.axhline(0.0, color="k", linestyle="--")
-
-        ax_delta.xaxis.set_tick_params(labelbottom=True)
-
-
-plt_mosaic = [
-    ["co2", "ch4", "n2o"],
-    ["co2", "ch4", "n2o"],
-    ["co2_delta", "ch4_delta", "n2o_delta"],
-    ["cfc12eq", "hfc134aeq", ""],
-    ["cfc12eq", "hfc134aeq", ""],
-    ["cfc12eq_delta", "hfc134aeq_delta", ""],
+# %%
+start_year = 2000
+end_year = 2100
+pdf_l = [
+    v.sort_index(axis="columns")
+    for ghg in tqdm.auto.tqdm(ds_gases_full_monthly_multi_phase_d)
+    for v in [
+        to_data_frame(
+            ds=ds_gases_full_monthly_multi_phase_d[ghg]["scenarios-cmip7"].sel(
+                time=(
+                    (
+                        ds_gases_full_monthly_multi_phase_d[ghg]["scenarios-cmip7"][
+                            "time"
+                        ].dt.year
+                        >= start_year
+                    )
+                    & (
+                        ds_gases_full_monthly_multi_phase_d[ghg]["scenarios-cmip7"][
+                            "time"
+                        ].dt.year
+                        <= end_year
+                    )
+                )
+            ),
+            unstack_col="time",
+            assign_metadata={"ghg": ghg, "cmip_era": "CMIP7"},
+        ).openscm.update_index_levels_from_other(
+            {"experiment": ("scenario", lambda x: x)}
+        ),
+        to_data_frame(
+            ds=ds_gases_full_monthly_multi_phase_d[ghg]["history-cmip7"].sel(
+                time=(
+                    (
+                        ds_gases_full_monthly_multi_phase_d[ghg]["history-cmip7"][
+                            "time"
+                        ].dt.year
+                        >= start_year
+                    )
+                    & (
+                        ds_gases_full_monthly_multi_phase_d[ghg]["history-cmip7"][
+                            "time"
+                        ].dt.year
+                        <= end_year
+                    )
+                )
+            ),
+            unstack_col="time",
+            assign_metadata={
+                "experiment": "historical",
+                "ghg": ghg,
+                "cmip_era": "CMIP7",
+            },
+        ),
+        to_data_frame(
+            ds=ds_gases_full_monthly_multi_phase_d[ghg]["scenarios-cmip6"].sel(
+                time=(
+                    (
+                        ds_gases_full_monthly_multi_phase_d[ghg]["scenarios-cmip6"][
+                            "time"
+                        ].dt.year
+                        >= start_year
+                    )
+                    & (
+                        ds_gases_full_monthly_multi_phase_d[ghg]["scenarios-cmip6"][
+                            "time"
+                        ].dt.year
+                        <= end_year
+                    )
+                )
+            ),
+            unstack_col="time",
+            assign_metadata={"ghg": ghg, "cmip_era": "CMIP6"},
+            ds_var=ghg,
+        ).openscm.update_index_levels_from_other(
+            {"experiment": ("scenario", lambda x: x)}
+        ),
+        to_data_frame(
+            ds=ds_gases_full_monthly_multi_phase_d[ghg]["history-cmip6"].sel(
+                time=(
+                    (
+                        ds_gases_full_monthly_multi_phase_d[ghg]["history-cmip6"][
+                            "time"
+                        ].dt.year
+                        >= start_year
+                    )
+                    & (
+                        ds_gases_full_monthly_multi_phase_d[ghg]["history-cmip6"][
+                            "time"
+                        ].dt.year
+                        <= end_year
+                    )
+                )
+            ),
+            unstack_col="time",
+            assign_metadata={
+                "experiment": "historical",
+                "ghg": ghg,
+                "cmip_era": "CMIP6",
+            },
+            ds_var=ghg,
+        ),
+    ]
 ]
-get_default_delta_mosaic = partial(
-    plt.subplot_mosaic,
-    mosaic=plt_mosaic,
-    figsize=(12, 8),
-    sharex=True,
+pdf = pd.concat(
+    [v.reorder_levels(pdf_l[0].index.names) for v in pdf_l], axis="rows"
+).sort_index(axis="columns")
+
+pdf = pdf.openscm.update_index_levels_from_other(
+    {"scenario_group": ("experiment", lambda x: scenario_group_map[x])}
+)
+pdf_grouped = {sg: sgdf for sg, sgdf in pdf.groupby("scenario_group")}
+tmp_l = []
+for sg, sgdf in pdf_grouped.items():
+    if sg == "historical":
+        continue
+
+    tmp_l.append(sgdf)
+    tmp_l.append(
+        pdf_grouped["historical"].openscm.set_index_levels({"scenario_group": sg})
+    )
+
+pdf = pd.concat([v.reorder_levels(tmp_l[0].index.names) for v in tmp_l])
+pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
+pdf
+
+# %%
+start_year = 2010
+end_year = 2030
+
+sns.relplot(
+    data=pdf.loc[
+        :, (pdf.columns >= start_year) & (pdf.columns <= end_year + 1)
+    ].openscm.to_long_data(),
+    x="time",
+    y="value",
+    hue="experiment",
+    palette=palette,
+    style="cmip_era",
+    # markers={"CMIP6": ".", "CMIP7": "o"},
+    # edgecolors="none",
+    markers={"CMIP6": "+", "CMIP7": 4},
+    hue_order=hue_order_incl_cmip6,
+    kind="scatter",
+    row="ghg",
+    col="scenario_group",
+    col_order=["low", "continuing-trends", "high"],
+    facet_kws=dict(sharey=False),
+    s=30,
+    alpha=0.8,
 )
 
-
-def remove_empty_axes(
-    axes_d: dict[str, matplotlib.axes.Axes],
-) -> dict[str, matplotlib.axes.Axes]:
-    """Remove empty axes"""
-    res = {}
-    for k, v in axes_d.items():
-        if k:
-            res[k] = v
-
-        else:
-            v.remove()
-
-    return res
-
-
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Atmospheric concentrations: Year 1 - 2022
-
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
-fig, axes_d = get_default_delta_mosaic()
-axes_d = remove_empty_axes(axes_d)
-
-plot_overview_and_deltas(
-    ds_gases_full_d,
-    axes_d,
-)
-
-plt.tight_layout()
-plt.show()
-
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Atmospheric concentrations: Year 1750 - 2022
-
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
-
-
-fig, axes_d = get_default_delta_mosaic()
-axes_d = remove_empty_axes(axes_d)
-
-min_year = 1750
-plot_overview_and_deltas(
-    sel_times(ds_gases_full_d, lambda x: x.dt.year >= min_year),
-    axes_d,
-)
-
-plt.tight_layout()
 plt.show()
