@@ -25,14 +25,12 @@
 #
 # Here we provide a short description of the historical dataset
 # and a guide for users.
-# This is intended to provide a short introduction for users of the data.
+# This is intended to provide a short introduction for users of the data:
+# its construction, key features, metadata
+# and relationship to CMIP6 forcing data.
 # The full details of the dataset's construction
 # and evaluation against other data sources
 # will be provided in the full manuscript which is being prepared.
-
-# %% [markdown] editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-# When ready, we will point to this manuscript here.
-# [TODO cross-link]
 
 # %% [markdown] editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 # ## Imports
@@ -64,38 +62,110 @@ sqlite_file = REPO_ROOT / "download-test-database.db"
 engine = get_sqlite_engine(sqlite_file)
 create_all_tables(engine)
 
+# %% [raw]
+# \bibliographystyle{plain}
+# \bibliography{references}
+
+# %% [markdown]
+# # Dataset construction
+#
+# The dataset is constructed following the methodology of
+# Meinshausen et al. (2017, REF-TODO).
+# The methods are described in full in that paper
+# and will be clarified and described again
+# in the forthcoming manuscript describing this dataset's construction.
+#
+# In brief, the dataset for each greenhouse gas is constructed via the following steps:
+#
+# 1. collect as many ground-based observations as possible
+# 2. from ground-based networks such as the NOAA (TODO REF)
+#    and AGAGE (TODO REF) networks
+#     - these are only available over the last few decades at most
+#       (less for some greenhouse gases)
+#     - these are spatially sparse because sampling stations
+#       are discrete points and there are not an infinite number of stations
+#       (at most, usually around 30, often far fewer)
+# 4. bin the ground-based observations in space and time,
+#    averaging over input stations and observations that fall in the same cell
+# 5. interpolate the binned data in space, to derive a dataset with spatial coverage
+# 6. use the interpolated, ground-based data
+#    to derive a statistical model for seasonal variation and latitudinal gradients
+#    specific to each greenhouse gas
+#      - the exact form of the statistical model varies by gas,
+#        but is generally driven by either concentrations of the gas itself,
+#        global-mean temperature or purely statistical regressions/extensions
+# 7. use the models, plus ice core or other proxy records,
+#    to extend global-mean concentrations, seasonality and latitudinal gradients
+#    over the full time period of the dataset (i.e. back to year 1)
+#      - where ice cores or proxy records are not available,
+#        purely statistical extrapolations are used instead
+#      - the extension varies by gas,
+#        aiming to make use of as much information as is possible
+#        e.g. hemisphere specific ice core information
+#        and the latitudinal gradient
+#        over the period covered by ground-based observations
+# 8. combine the extended global-mean, seasonality and latitudinal gradients
+#    to create a dataset that extends over the period
+#    year 1 to 2022 (the last year available for some observational networks
+#    at the time the data was compiled)
+#      - this dataset is on our binned grid,
+#        which we choose to be a grid comprised of latitudinal bins 15-degrees in size
+#      - it is not trivial to infer the global-means,
+#        seasonality and latitudinal gradient used to construct the dataset
+#        from the output dataset. For this reason,
+#        we include these components separately
+#        in the [zenodo record](https://doi.org/10.5281/zenodo.14892947)
+#        [TODO better ref]
+#        that archives the output dataset,
+#        all its inputs and intermediate data prdoucts
+# 9. calculate annual-, hemispheric- and global-means
+#    to produce our lower resolution data products
+#      - we can also produce higher spatial resolution data products,
+#        but have not done so at the moment to save processing and storage space
+#        given that there has been no demand for these products from modelling teams
+#
+# The input datasets and associated references
+# are documented in the `references*` attributes of each netCDF file.
+# This documentation is limited, so cannot document how each input dataset is used
+# (that is the role of the manuscript),
+# but does provide machine-readable provenance information
+# (which is used to support links between all the input data
+# e.g. linking of the Zenodo archive underpinning this dataset).
+
 # %% [markdown]
 # # Finding and accessing the data
 
-# %% [markdown]
+# %% [markdown] jp-MarkdownHeadingCollapsed=true
 # ## ESGF
 #
-# The Earth System Grid Federation (ESGF) provides access to a range of climate data.
-#
+# The **Earth System Grid Federation** (ESGF, REF-TODO) provides access to a
+# range of climate data.
 # The historical data of interest here,
 # which is the data to be used
 # for historical and piControl simulations within CMIP [TODO ref Dunne paper],
 # can be found under the "source ID", `CR-CMIP-1-0-0`.
-# The concept of a source ID is a bit of a perculiar one
+# The concept of a "source ID" is a bit of a perculiar one
 # to CMIP forcings data.
 # In practice, it is simply a unique identifier for a collection of datasets
 # (and it's best not to read more than that into it).
+#
 # It is possible to filter searches on ESGF
-# via the user interface.
-# Searches can often be encoded in URLs too
-# (although these URLs sometimes move,
-# so we make no guarantee that this link will always be live)
-# e.g. [https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_id%22%3A%22CR-CMIP-1-0-0%22%7D]().
+# via the user interface (see ESGF user guides[^1]).
+# Alternatively, searches can be encoded in URLs. However, a caveat with this
+# approach is that URLs sometimes move, so we make no guarantee that this link
+# will always be live. An example provides the following link:
+#
+# > [https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%2ource_id%22%3A%22CR-CMIP-1-0-0%22%7D]()
 #
 # To download the data, we recommend accessing it directly via the ESGF user interfaces
 # via links like the one above.
 # Alternately, there are tools dedicated to accessing ESGF data,
-# with two prominent examples being:
+# with two prominent examples being **esgpull**[^2] and **intake-esgf**[^3].
+# Please refer to the tools' docs for usage instructions.
 #
-# 1. esgpull: https://esgf.github.io/esgf-download
-# 2. intake-esgf: https://intake-esgf.readthedocs.io
-#
-# Please see these tools' docs for usage instructions.
+# [^1]: https://esgf.github.io/esgf-user-support/user_guide.html#data-search-and-download
+# [^2]: https://esgf.github.io/esgf-download
+# [^3]: https://intake-esgf.readthedocs.io
 
 # %% [markdown]
 # ## Zenodo
@@ -103,7 +173,7 @@ create_all_tables(engine)
 # While it aims to be, the ESGF is technically not a permanent archive
 # and does not issue DOIs.
 # In order to provide more reliable, citable access to the data,
-# we also provide it on Zenodo.
+# we also provide it on **Zenodo** (REF-TODO).
 # The data, as well as all the source code and input data used to process it,
 # can be found at https://doi.org/10.5281/zenodo.14892947.
 
@@ -113,7 +183,7 @@ create_all_tables(engine)
 # %% [markdown]
 # ## Format
 #
-# The data is provided in netCDF format [TODO citation].
+# The data is provided in **netCDF format** [TODO citation].
 # This self-describing format allows the data
 # to be placed in the same file as metadata
 # (in the so-called "file header").
@@ -136,7 +206,8 @@ create_all_tables(engine)
 # under the attributes `grid_label` (for grid) and `frequency` (for time sampling).
 # The `grid_label` and `frequency` also appear in each file's name,
 # which allows files to be filtered without needing to load them first.
-#
+
+# %% [markdown]
 # The five combinations of grid and time sampling are:
 #
 # 1. global-, annual-mean (`grid_label="gm"`, `frequency="yr"`)
@@ -257,7 +328,8 @@ co2_yearly_global_fps = get_ghg_dataset_local_files(**query_kwargs_co2_yearly_gl
 # 1. year 1 to year 999
 # 2. year 1000 to year 1749
 # 3. year 1750 to year 2022
-#
+
+# %% [markdown]
 # For yearly data, the time labels in the filename are years
 # (for months, the month is included e.g. you will see `000101-09912`
 # rather than `0001-0999` in the filename,
@@ -469,12 +541,18 @@ ax.grid()
 plt.show()
 
 # %% [markdown]
+# At present, we do not provide data at a higher temporal resolution than monthly.
+# In theory, such a dataset is possible to compile,
+# however this requires careful consideration of daily
+# and potentially sub-daily trends (e.g. the diurnal cycle).
+
+# %% [markdown]
 # ## Monthly-, latitudinally-resolved data
 #
 # We also provide data with spatial,
 # specifically latituindal, resolution.
 # This data comes on a 15-degree latituindal grid
-# (see below for details of the grid and latituindal bounds).
+# (see below for details of the grid and latitudinal bounds).
 # These files are identified by the grid label `gnz`.
 # We only provide these files with monthly resolution.
 #
@@ -677,7 +755,7 @@ plt.show()
 # 1. we have split the global-mean and hemispheric-mean data into separate files.
 #    In CMIP6, this data was in the same file (with a grid label of `GMNHSH`).
 #    We have split this for two reasons:
-#    a) `GMNHSH` is not a grid label recognised in the CMIP CVs and
+#    a) `GMNHSH` is not a grid label recognised in the CMIP CVs [REF-TODO] and
 #    b) having global-mean and hemispheric-mean data in the same file
 #       required us to introduce a 'sector' coordinate,
 #       which was confusing and does not follow the CF-conventions.
@@ -949,10 +1027,11 @@ plt.show()
 # This isn't the same as effective radiative forcing (ERF).
 # For that comparison, see the later sections focussed on ERF.
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # Values below come from Table 7.SM.7 of
-# IPCC AR7 WG1 Ch. 7 Supplementary Material
-# (https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07_SM.pdf).
+# IPCC AR7 WG1 Ch. 7 Supplementary Material[^4].
+#
+# [^4]: https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07_SM.pdf
 
 # %% editable=true slideshow={"slide_type": ""}
 from openscm_units import unit_registry
@@ -1087,11 +1166,12 @@ plt.show()
 # In summary, in ERF terms, the differences from CMIP6 are very small.
 # For all gases, they are less than around 0.025 W / m<sup>2</sup>.
 # Compared to the estimated total greenhouse gas forcing and uncertainty in IPCC AR6
-# (see Section 7.3.5.2 of AR6 WG1 Chapter 7,
-# https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/),
+# (see Section 7.3.5.2 of AR6 WG1 Chapter 7[^5]),
 # estimated to be 3.84 W / m<sup>2</sup>
 # (very likely range of 3.46 to 4.22 W / m<sup>2</sup>),
 # such differences are particularly small.
+#
+# [^5]: https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/
 
 # %% [markdown]
 # #### Atmospheric concentrations including seasonality: Year 2000 - 2022

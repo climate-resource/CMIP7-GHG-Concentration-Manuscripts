@@ -28,6 +28,15 @@ version = "0.1.0"
 description = "Manuscripts and other associated documents describing CMIP7 greenhouse gas (GHG) concentrations (both historical and future)"
 readme = "README.md"
 
+[build-system]
+requires = ["uv_build>=0.8.7,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+source-include = [
+    "src/local"
+]
+
 [tool.jupytext]
 formats = "ipynb,py:percent"
 
