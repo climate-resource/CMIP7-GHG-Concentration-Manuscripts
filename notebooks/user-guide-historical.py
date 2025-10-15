@@ -699,7 +699,6 @@ xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2018, 2024)]
 ax.set_xticks(xticks)
 ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
-ax.set_title("")
 
 plt.show()
 
@@ -1226,7 +1225,7 @@ plot_overview_and_deltas(
 plt.tight_layout()
 plt.show()
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # Like the annual-means,
 # the atmospheric concentrations including seasonality
 # are reasonably consistent between CMIP6 and CMIP7.
