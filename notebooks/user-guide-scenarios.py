@@ -15,10 +15,13 @@
 #     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
-#   title: 'CMIP Greenhouse Gas (GHG) Concentration Historical Dataset:
+#   title: 'CMIP Greenhouse Gas (GHG) Concentration Scenario Dataset:
 #
 #     Data Description and User Guide'
 # ---
+
+# %% [raw]
+# \usepackage(xurl)
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Overview
@@ -83,47 +86,49 @@ create_all_tables(engine)
 # The full method will be described in a forthcoming paper.
 # In brief, the method is:
 #
-# 1. for gases covered under the Montreal Protocol
-#    and whose concentration evolution is already specified
-#    in WMO 2022 (TODO, ref), we simply use the WMO 2022 concentrations
-# 2. for all other gases
-#     1. we start with harmonised, complete emissions sets
-#        for each scenario of interest
-#     2. we run MAGICC to translate these emissions
-#        into global-mean concentrations
-#         - MAGICC is run in the same configuration which was used in AR6
-#           (as described/evaluated in Cross-Chapter Box 7.1,
-#           https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/
-#           (TODO switch to footnote style)).
-#           This represents our best estimate, in line with the last IPCC report,
-#           of the concentrations that result from the emissions.
-#             - given that CMIP7 models have not run yet,
-#               this will almost by definition produce different concentrations
-#               than what the ESMs that run in emissions-driven mode
-#               ultimately produce as output.
-#               We look forward to nonetheless reading lots of papers saying,
-#               "CMIP7 input concentrations are biased up/down/whatever".
-#     3. we harmonise the global-mean concentrations to the historical concentrations
-#        using gradient-aware harmonisation
-#        (https://github.com/climate-resource/gradient-aware-harmonisation,
-#        TODO switch to footnotes)
-#        to ensure a smooth transition in both the absolute values and the gradient,
-#        improving on the CMIP6 data which had an abrupt jump in the gradient
-#        (most notable for methane, further details below)
-# 3. we use the same statistical models for seasonality and latitudinal gradients
-#    as were used over the historical period.
-#    These are then applied to the future, based on the same input drivers.
-#     - The one exception is CO<sub>2</sub>, which uses GPP as the input driver
-#       rather than a regression on a combined global-mean surface temperature
-#       and CO<sub>2</sub> concentration metric
-#       (as is used in the product that covers history)
+# 1. *retrieve concentrations* of GHG gases
+#
+#     a. for gases covered under the Montreal Protocol (TODO REF) and whose
+# concentration evolution is already specified in WMO 2022 (TODO, ref),
+# we simply use the WMO 2022 concentrations
+#     b. for all other gases, we
+#
+#         i. start with harmonised, complete emissions sets for each scenario
+# of interest
+#         ii. run MAGICC (TODO REF) to translate these emissions into
+# global-mean concentrations
+#            + MAGICC is run in the same configuration which was used in AR6
+# (as described/evaluated in Cross-Chapter Box 7.1[^1]). This represents our
+# best estimate, in line with the last IPCC report, of the concentrations that
+# result from the emissions. Note, given that CMIP7 models have not yet been
+# run, this will, almost by definition, produce different concentrations than
+# those outputed by the ESMs run in emissions-driven mode. We nonetheless look
+# forward to reading lots of papers saying, that "CMIP7 input concentrations
+# are biased up/down/whatever".
+#         iii. harmonise the global-mean concentrations to the historical
+# concentrations using gradient-aware harmonisation[^2] to ensure a smooth
+# transition in both the absolute values and the gradient, improving on the
+# CMIP6 data which had an abrupt jump in the gradient (most notable for
+# methane, further details below)
+#
+# 3. *seasonality and latitudinal gradients*: We use the same statistical
+# models for seasonality and latitudinal gradients as were used over the
+# historical period. These are then applied to the future, based on the same
+# input drivers.
+#     - one exception is CO<sub>2</sub>, which uses GPP as the input driver
+# rather than a regression on a combined global-mean surface temperature and
+# CO<sub>2</sub> concentration metric (as is used in the product that covers
+# history)
 #     - arguably we should harmonise the inputs to these models too.
-#       We don't do this step as such a harmonisation would only provide
-#       second-order corrections.
-# 4. we then combine the global-means, seasonality and latitudinal gradients
-#    to produce our complete, gridded projections
-# 5. we calculate our lower resolution products from the gridded product
-# 6. we release all the data
+# We don't do this step as such a harmonisation would only provide
+# second-order corrections.
+# 5. *combine the global-means, seasonality and latitudinal gradients* to
+# produce our complete, gridded projections
+# 6. *calculate lower resolution products* from the gridded product
+# 7. *release* all the data
+#
+# [^1]: https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/
+# [^2]: https://github.com/climate-resource/gradient-aware-harmonisation
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Finding and accessing the data
@@ -131,7 +136,8 @@ create_all_tables(engine)
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## ESGF
 #
-# The Earth System Grid Federation (ESGF) provides access to a range of climate data.
+# The Earth System Grid Federation (ESGF, TODO REF) provides
+# access to a range of climate data.
 #
 # The scenario data of interest here,
 # which is a draft dataset
@@ -139,26 +145,25 @@ create_all_tables(engine)
 # "institution ID" `CR`
 # and "source version" `0.1.0`
 # (also under "source IDs" of the form `CR-*-0-1-0`,
-# although this less useful as the ESGF search API
+# although this is less useful as the ESGF search API
 # does not appear to support glob/star expressions
 # for specific facet searches).
 #
 # It is possible to filter searches on ESGF
 # via the user interface.
-# Searches can often be encoded in URLs too
+# Searches can often be encoded in URLs[^3] too
 # (although these URLs sometimes move,
-# so we make no guarantee that this link will always be live)
-# e.g. [https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%220.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP6Plus%22%7D]()
-# (TODO move to footnote).
+# so we make no guarantee that this link will always be live).
 #
 # These datasets are a draft only.
-# The final datasets will take the same form.
-# However, the final numbers are currently being finalised
-# and the final names have been changed since the draft datasets were published,
+# The final datasets will maintain the same form; however,
+# the numbers are currently being finalised
+# and the final names have been changed since the draft datasets
+# were published,
 # so please take care to treat the values shown here as drafts only.
 #
-# To download the data, we recommend accessing it directly via the ESGF user interfaces
-# via links like the one above.
+# To download the data, we recommend accessing it directly via the
+# ESGF user interfaces via links as discussed above.
 # Alternately, there are tools dedicated to accessing ESGF data,
 # with two prominent examples being:
 #
@@ -166,6 +171,9 @@ create_all_tables(engine)
 # 2. intake-esgf: https://intake-esgf.readthedocs.io
 #
 # Please see these tools' docs for usage instructions.
+#
+# [^3]: An example URL: \url{https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%
+# 220.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP6Plus%22%7D}
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Zenodo
@@ -174,7 +182,7 @@ create_all_tables(engine)
 # and does not issue DOIs.
 # In order to provide more reliable, citable access to the data,
 # we will also provide the final scenario datasets on Zenodo
-# (although we have not done this step for the draft datasets).
+# (TODO REF, although we have not done this step for the draft datasets).
 # When ready, we will update this guide to use the final scenario data
 # and include the zenodo link to the source code and input data used to process it.
 
@@ -254,40 +262,44 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # (revisions of
 # [this paper](https://doi.org/10.5194/egusphere-2024-3765) are expected soon).
 # As above, note that the scenario IDs
-# have changed since publication of the draft dataset.
-# In the draft dataset, the scenario IDs are:
+# have changed since publication of the draft dataset. Table~\ref{tab:scenario_ids}
+# provides an overview
+# of the changes. Scenario IDs of the final datasets can be confirmed
+# [here](https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785).
 #
-# - `vllo`
-# - `vlho`
-# - `l`
-# - `ml`
-# - `m`
-# - `hl`
-# - `h`
+# **Table 1:** Mapping of draft scenario IDs to final scenario IDs.
 #
-# For the final datasets, the scenario IDs will be
-# (confirmed [here](https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785)):
+# \begin{table}[ht]
+# \centering
+# \caption{Mapping of draft scenario IDs to final scenario IDs}
+# \label{tab:scenario_ids}
+# \begin{tabular}{cc}
+# \hline
+# Draft dataset & Final dataset \\
+# \hline
+# vllo & vl \\
+# vlho & ln \\
+# l    & l  \\
+# ml   & ml \\
+# m    & m  \\
+# hl   & hl \\
+# h    & h  \\
+# \hline
+# \end{tabular}
+# \end{table}
 #
-# - `vl` (replacing `vllo`)
-# - `ln` (replacing `vlho`)
-# - `l`
-# - `ml`
-# - `m`
-# - `hl`
-# - `h`
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Grids and frequencies provided
 #
 # We provide five combinations of grids and time sampling
-# (also referred to as frequency,
+# (also referred to as *frequency*,
 # although this is a bit of a misuse as the units of frequency are per time,
 # which doesn't match the convention for these metadata values).
 # The grid and frequency information for each file can be found in its netCDF header
 # under the attributes `grid_label` (for grid) and `frequency` (for time sampling).
 # The `grid_label` and `frequency` also appear in each file's name,
 # which allows files to be filtered without needing to load them first.
-#
 # The five combinations of grid and time sampling are:
 #
 # 1. global-, annual-mean (`grid_label="gm"`, `frequency="yr"`)
@@ -354,7 +366,7 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # At present, we provide no analysis of the uncertainty associated with these datasets.
 #
 # On top of the uncertainties in the historical data
-# (which are, In radiative forcing terms, small),
+# (which are, in radiative forcing terms, small),
 # the scenario datasets are subject to uncertainties
 # from the modelling process required to produce them.
 # This means that, in radiative forcing terms, the uncertainty in these concentrations
@@ -463,7 +475,7 @@ for fp in sorted(ch4_yearly_global_fps)[::-1]:
 # As described above, the data is netCDF files.
 # This means that metadata can be trivially inspected
 # using a tool like `ncdump`.
-# As you can see, there is a lot of metadata included in these files.
+# There is a lot of metadata included in these files.
 # In general, you should not need to parse this metadata directly.
 # However, if you have specific questions,
 # please feel free to contact the emails given in the `contact` attribute.
@@ -647,9 +659,9 @@ plt.show()
 # ## Monthly-, latitudinally-resolved data
 #
 # We also provide data with spatial,
-# specifically latituindal, resolution.
-# This data comes on a 15-degree latituindal grid
-# (see below for details of the grid and latituindal bounds).
+# specifically latitudinal, resolution.
+# This data comes on a 15-degree latitudinal grid
+# (see below for details of the grid and latitudinal bounds).
 # These files are identified by the grid label `gnz`.
 # We only provide these files with monthly resolution.
 #
@@ -1392,20 +1404,20 @@ plt.show()
 # The file formats are generally close to CMIP6.
 # There are three key changes:
 #
-# 1. we have split the global-mean and hemispheric-mean data into separate files.
+# 1. the global-mean and hemispheric-mean data are splitted into separate files.
 #    In CMIP6, this data was in the same file (with a grid label of `GMNHSH`).
 #    We have split this for two reasons:
 #    a) `GMNHSH` is not a grid label recognised in the CMIP CVs and
 #    b) having global-mean and hemispheric-mean data in the same file
 #       required us to introduce a 'sector' coordinate,
 #       which was confusing and does not follow the CF-conventions.
-# 1. we have split the files into different time components.
+# 1. the files are splitted into different time components.
 #    The CMIP6 data had the scenarios and their extensions in a single file.
 #    The CMIP7 extensions are not defined yet,
 #    so the scenarios (up to 2100) will be in one file,
 #    with the extensions being in a separate file
 #    (and under separate source IDs).
-# 1. we have simplified the names of all the variables.
+# 1. the variable names were simplified.
 #    They are now simply the names of the gases,
 #    for example we now use "co2" rather than "mole_fraction_of_carbon_dioxide".
 #    A full mapping is provided below.
