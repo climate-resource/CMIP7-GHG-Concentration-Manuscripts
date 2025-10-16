@@ -70,17 +70,17 @@ class SearchQuery:
 
     project: str
     """
-    ESGF project(s) to search within
+    ESGF project to search within
     """
 
     variable: str | None = None
     """
-    Name of the variable(s) to search for
+    Name of the variable to search for
     """
 
     grid: str | None = None
     """
-    Grid label(s) to search for
+    Grid label to search for
     """
     # This could get super messy as grid names have changed over time,
     # might have to introduce simplified names for grids
@@ -88,17 +88,43 @@ class SearchQuery:
 
     time_sampling: str | None = None
     """
-    Time sampling(s) to search for
+    Time sampling to search for
     """
 
     cmip_era: str | None = None
     """
-    CMIP era(s) in which to search for data
+    CMIP era in which to search for data
     """
 
     source_id: str | None = None
     """
-    Source ID(s) to search for
+    Source ID to search for
+    """
+
+    # Ok, having now done this,
+    # I realise that we're just going
+    # to have to have different data models for different ESGF projects.
+    # The reason is that the meaning of their terms is actually different.
+    # In input4MIPs, source_id is both the source plus version info.
+    # In CMIP6, source is just the source,
+    # version info comes from the version information in the DRS.
+    # These are actually irreconcilable.
+    # We might want to put an extra layer of abstraction above this,
+    # but it will be imperfect so the lower layer needs to be easily accessible
+    # for when you want the actual model.
+    source_version: str | None = None
+    """
+    Source ID to search for
+    """
+
+    institution_id: str | None = None
+    """
+    Institution ID to search for
+    """
+
+    target_mip: str | None = None
+    """
+    Target MIP to search for
     """
 
     def to_esgf_seach_terms(self) -> dict[str, str]:

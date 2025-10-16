@@ -23,6 +23,9 @@ MAPPING_TO_GENERAL_TERMS = {
     "frequency": "time_sampling",
     "mip_era": "cmip_era",
     "source_id": "source_id",
+    "source_version": "source_version",
+    "institution_id": "institution_id",
+    "target_mip": "target_mip",
     # TODO: add drs_version in here
     # (have to somehow make a decision about
     # and be clear about the difference
@@ -82,6 +85,21 @@ class ESGFRawMetadataBase(SQLModel):
     # """
     # ID of the variable represented by the ESGF record
     # """
+
+    source_version: str
+    """
+    Source version of the record
+    """
+
+    institution_id: str
+    """
+    Institution ID of the record
+    """
+
+    target_mip: str
+    """
+    Target MIP of the record
+    """
 
 
 class ESGFRawMetadataDB(ESGFRawMetadataBase, table=True):

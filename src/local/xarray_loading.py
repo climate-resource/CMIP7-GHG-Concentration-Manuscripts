@@ -11,6 +11,7 @@ from typing import Callable
 
 import ncdata
 import xarray as xr
+import xarray.backends.api
 from ncdata.netcdf4 import from_nc4
 from ncdata.xarray import to_xarray
 
@@ -33,6 +34,7 @@ def load_xarray_from_esgf_dataset(  # noqa: PLR0912, PLR0913
     load_auxilliary_array_from_esgf_dataset: Callable[[ESGFDataset], xr.Dataset]
     | None = None,
     merge_auxilliary_ds: Callable[[list[xr.Dataset]], xr.Dataset] | None = None,
+    create_default_indexes: bool = True,
 ) -> xr.Dataset:
     """
     Load an [xr.Dataset][xarray.Dataset] from a [ESGFDataset][local.models.esgf.]
@@ -92,6 +94,9 @@ def load_xarray_from_esgf_dataset(  # noqa: PLR0912, PLR0913
 
         If not supplied, we use `partial(xr.merge, compat="broadcast_equals")`
 
+    create_default_indexes
+        Create default indexes on the result
+
     Returns
     -------
     :
@@ -112,14 +117,31 @@ def load_xarray_from_esgf_dataset(  # noqa: PLR0912, PLR0913
     if pre_to_xarray is not None:
         ncdatas = pre_to_xarray(ncdatas, esgf_dataset, fps)
 
+    time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
+    to_xr = partial(to_xarray, decode_times=time_coder)
     if len(ncdatas) > 1:
         ds = xr.concat(
-            [to_xarray(nc, use_cftime=True) for nc in ncdatas],
+            [to_xarray(nc, decode_times=time_coder) for nc in ncdatas],
             dim=concat_dim,
             data_vars=None,
         )
+
     else:
-        ds = to_xarray(ncdatas[0], use_cftime=True)
+        ds = to_xr(ncdatas[0])
+
+    if create_default_indexes:
+        # Ensure that the dataset has the right indexes too
+        # so that later operations (e.g. selecting) work.
+        ds = xarray.backends.api._maybe_create_default_indexes(ds)
+        # Note:
+        # The above is how xarray works.
+        # We have to add this in a custom way here
+        # because ncdata's `to_xarray` function uses a route
+        # that doesn't support this argument
+        # (maybe missing implementation here
+        # because the `set_indexes` argument isn't used:
+        # https://github.com/pydata/xarray/blob/3572f4e70f2b12ef9935c1f8c3c1b74045d2a092/xarray/backends/store.py#L36C9-L36C20
+        # ?)
 
     if post_to_xarray is not None:
         ds = post_to_xarray(ds, esgf_dataset, fps)

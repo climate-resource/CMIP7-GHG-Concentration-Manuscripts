@@ -12,4 +12,8 @@ MAPPING_FROM_GENERAL_TERMS = {
     "time_sampling": "frequency",
     "cmip_era": "mip_era",
     "source_id": "source_id",
+    # Imperfect as versioning is done differently across different projects.
+    "source_version": "source_version",
+    "institution_id": "institution_id",
+    "target_mip": "target_mip",
 }

@@ -88,7 +88,6 @@ def download(
 
         iterator_results = concurrent.futures.as_completed(futures)
 
-        breakpoint()
         res_l = [
             future.result()
             for future in tqdm.auto.tqdm(
