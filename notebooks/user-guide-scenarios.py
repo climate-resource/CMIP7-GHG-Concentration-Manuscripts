@@ -20,9 +20,6 @@
 #     Data Description and User Guide'
 # ---
 
-# %% [raw]
-# \usepackage(xurl)
-
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Overview
 #
@@ -172,8 +169,9 @@ create_all_tables(engine)
 #
 # Please see these tools' docs for usage instructions.
 #
-# [^3]: An example URL: \url{https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%
-# 220.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP6Plus%22%7D}
+# [^3]: An example URL: [https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%<br>
+# 220.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP6Plus%22%7D](
+# https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%220.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP6Plus%22%7D)
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Zenodo
@@ -262,12 +260,12 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # (revisions of
 # [this paper](https://doi.org/10.5194/egusphere-2024-3765) are expected soon).
 # As above, note that the scenario IDs
-# have changed since publication of the draft dataset. Table~\ref{tab:scenario_ids}
+# have changed since publication of the draft dataset. Table \ref{tab:scenario_ids}
 # provides an overview
 # of the changes. Scenario IDs of the final datasets can be confirmed
 # [here](https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785).
 #
-# **Table 1:** Mapping of draft scenario IDs to final scenario IDs.
+# **Table 4.1:** Mapping of draft scenario IDs to final scenario IDs.
 #
 # \begin{table}[ht]
 # \centering
@@ -277,8 +275,8 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # \hline
 # Draft dataset & Final dataset \\
 # \hline
-# vllo & vl \\
-# vlho & ln \\
+# \textbf{vllo} & \textbf{vl} \\
+# \textbf{vlho} & \textbf{ln} \\
 # l    & l  \\
 # ml   & ml \\
 # m    & m  \\
