@@ -895,7 +895,9 @@ ds_history_co2_yearly_global["co2"].sel(
     label=f"{ds_history_co2_yearly_global.attrs['source_id']} (history)",
 )
 ds_example_co2_yearly_global["co2"].sel(
-    time=time_sel_func(ds_example_co2_yearly_global["time"])
+    time=time_sel_func(
+        ds_example_co2_yearly_global["time"], start_year=2010, end_year=2030
+    )
 ).plot.scatter(
     ax=ax,
     edgecolors="none",
@@ -947,7 +949,9 @@ ds_history_co2_monthly_global["co2"].sel(
     label=f"{ds_history_co2_yearly_global.attrs['source_id']} (history)",
 )
 ds_example_co2_monthly_global["co2"].sel(
-    time=time_sel_func(ds_example_co2_monthly_global["time"])
+    time=time_sel_func(
+        ds_example_co2_monthly_global["time"], start_year=2010, end_year=2030
+    )
 ).plot.scatter(
     ax=ax,
     edgecolors="none",
