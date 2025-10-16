@@ -83,46 +83,50 @@ create_all_tables(engine)
 # The full method will be described in a forthcoming paper.
 # In brief, the method is:
 #
-# 1. *retrieve concentrations* of GHG gases
+# 1. **retrieve concentrations** of GHG gases
 #
-#     a. for gases covered under the Montreal Protocol (TODO REF) and whose
-# concentration evolution is already specified in WMO 2022 (TODO, ref),
-# we simply use the WMO 2022 concentrations
-#     b. for all other gases, we
+#     1. for gases covered under the Montreal Protocol (TODO REF) and whose
+#        concentration evolution is already specified in WMO 2022 (TODO, ref),
+#        we simply use the WMO 2022 concentrations
 #
-#         i. start with harmonised, complete emissions sets for each scenario
-# of interest
-#         ii. run MAGICC (TODO REF) to translate these emissions into
-# global-mean concentrations
-#            + MAGICC is run in the same configuration which was used in AR6
-# (as described/evaluated in Cross-Chapter Box 7.1[^1]). This represents our
-# best estimate, in line with the last IPCC report, of the concentrations that
-# result from the emissions. Note, given that CMIP7 models have not yet been
-# run, this will, almost by definition, produce different concentrations than
-# those outputed by the ESMs run in emissions-driven mode. We nonetheless look
-# forward to reading lots of papers saying, that "CMIP7 input concentrations
-# are biased up/down/whatever".
-#         iii. harmonise the global-mean concentrations to the historical
-# concentrations using gradient-aware harmonisation[^2] to ensure a smooth
-# transition in both the absolute values and the gradient, improving on the
-# CMIP6 data which had an abrupt jump in the gradient (most notable for
-# methane, further details below)
+#     1. for all other gases, we
 #
-# 3. *seasonality and latitudinal gradients*: We use the same statistical
-# models for seasonality and latitudinal gradients as were used over the
-# historical period. These are then applied to the future, based on the same
-# input drivers.
+#         1. start with harmonised, complete emissions sets for each scenario
+#            of interest
+#
+#         1. run MAGICC (TODO REF) to translate these emissions into
+#             global-mean concentrations
+#
+#            1. MAGICC is run in the same configuration which was used in AR6
+#              (as described/evaluated in Cross-Chapter Box 7.1[^1]).
+#              This represents our best estimate, in line with the last IPCC report,
+#              of the concentrations that result from the emissions.
+#              Note, given that CMIP7 models have not yet been run, this will,
+#              almost by definition, produce different concentrations
+#              than those outputed by the ESMs run in emissions-driven mode.
+#              We nonetheless look forward to reading lots of papers saying that
+#              "CMIP7 input concentrations are biased up/down/whatever".
+#         1. harmonise the global-mean concentrations to the historical
+#              concentrations using gradient-aware harmonisation[^2] to ensure a smooth
+#              transition in both the absolute values and the gradient, improving on the
+#              CMIP6 data which had an abrupt jump in the gradient (most notable for
+#              methane, further details below)
+#
+# 3. **seasonality and latitudinal gradients**: We use the same statistical
+#    models for seasonality and latitudinal gradients as were used over the
+#    historical period. These are then applied to the future, based on the same
+#    input drivers.
 #     - one exception is CO<sub>2</sub>, which uses GPP as the input driver
-# rather than a regression on a combined global-mean surface temperature and
-# CO<sub>2</sub> concentration metric (as is used in the product that covers
-# history)
+#       rather than a regression on a combined global-mean surface temperature and
+#       CO<sub>2</sub> concentration metric (as is used in the product that covers
+#       history)
 #     - arguably we should harmonise the inputs to these models too.
-# We don't do this step as such a harmonisation would only provide
-# second-order corrections.
-# 5. *combine the global-means, seasonality and latitudinal gradients* to
-# produce our complete, gridded projections
-# 6. *calculate lower resolution products* from the gridded product
-# 7. *release* all the data
+#       We don't do this step as such a harmonisation would only provide
+#       second-order corrections.
+# 5. **combine the global-means, seasonality and latitudinal gradients** to
+#    produce our complete, gridded projections
+# 6. **calculate lower resolution products** from the gridded product
+# 7. **release** all the data
 #
 # [^1]: https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/
 # [^2]: https://github.com/climate-resource/gradient-aware-harmonisation
@@ -1402,14 +1406,14 @@ plt.show()
 # The file formats are generally close to CMIP6.
 # There are three key changes:
 #
-# 1. the global-mean and hemispheric-mean data are splitted into separate files.
+# 1. the global-mean and hemispheric-mean data are split into separate files.
 #    In CMIP6, this data was in the same file (with a grid label of `GMNHSH`).
 #    We have split this for two reasons:
 #    a) `GMNHSH` is not a grid label recognised in the CMIP CVs and
 #    b) having global-mean and hemispheric-mean data in the same file
 #       required us to introduce a 'sector' coordinate,
 #       which was confusing and does not follow the CF-conventions.
-# 1. the files are splitted into different time components.
+# 1. the files are split into different time components.
 #    The CMIP6 data had the scenarios and their extensions in a single file.
 #    The CMIP7 extensions are not defined yet,
 #    so the scenarios (up to 2100) will be in one file,
