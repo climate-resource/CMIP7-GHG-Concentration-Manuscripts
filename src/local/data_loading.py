@@ -6,10 +6,13 @@ High-level helpers to hide the challenges of grabbing data from different source
 
 from __future__ import annotations
 
+import io
 from pathlib import Path
 from typing import Callable
 
+import cftime
 import ncdata
+import pandas as pd
 import sqlalchemy.engine.base
 import xarray as xr
 from sqlmodel import Session, select
@@ -239,6 +242,17 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
     :
         Loaded data
     """
+    if cmip_era == "CMIP5":
+        res = load_cmip5_dataset(
+            local_data_root_dir=local_data_root_dir,
+            ghg=ghg,
+            grid=grid,
+            time_sampling=time_sampling,
+            target_mip=target_mip,
+        )
+
+        return res
+
     # Check for values already in the database
     with Session(engine) as session:
         args_l = []
@@ -596,3 +610,105 @@ def get_ghg_dataset_local_files(  # noqa: PLR0913
     out = tuple(out_l)
 
     return out
+
+
+def load_cmip5_dataset(
+    local_data_root_dir: Path,
+    ghg: str,
+    grid: str,
+    time_sampling: str,
+    target_mip: str | None = None,
+) -> xr.Dataset:
+    """
+    Load CMIP5 dataset
+
+    Requires a custom function as the data is not stored as netCDF
+
+    Parameters
+    ----------
+    local_data_root_dir
+        Root directory in which local data is saved
+
+    ghg
+        Greenhouse gas for which to fetch data
+
+    grid
+        Grid on which to fetch the data
+
+    time_sampling
+        Time sampling to fetch
+
+    target_mip
+        Target MIP for which to retrieve data
+
+    Returns
+    -------
+    :
+        Loaded data
+    """
+    if grid != "gm":
+        raise NotImplementedError(grid)
+
+    if time_sampling != "yr":
+        raise NotImplementedError(time_sampling)
+
+    if target_mip != "CMIP":
+        raise NotImplementedError(target_mip)
+
+    source_id = "PIK-CMIP-2005"
+    raw_file = (
+        local_data_root_dir
+        / "rcp-concentrations"
+        / "20THCENTURY_MIDYEAR_CONCENTRATIONS.DAT"
+    )
+
+    ghg_raw_map = {
+        "co2": "CO2",
+        "ch4": "CH4",
+        "n2o": "N2O",
+        "hfc134aeq": "FGASSUMHFC134AEQ",
+        "cfc12eq": "MHALOSUMCFC12EQ",
+    }
+
+    with open(raw_file) as fh:
+        raw = fh.readlines()
+
+    for i, line in enumerate(raw):
+        if line.strip().startswith("UNITS"):
+            units_row = i
+            break
+
+    units_l = [v.strip() for v in raw[units_row].split(" ") if v]
+
+    block = io.StringIO(" \n".join(raw[38:]))
+    df_raw = pd.read_csv(block, sep=r"\s+")
+
+    units = units_l[df_raw.columns.tolist().index(ghg_raw_map[ghg])]
+
+    time = [cftime.DatetimeProlepticGregorian(y, 7, 15) for y in df_raw["YEARS"].values]
+
+    time_bnds = []
+    for y in df_raw["YEARS"].values:
+        vs = cftime.DatetimeProlepticGregorian(y, 1, 1)
+        ve = cftime.DatetimeProlepticGregorian(y + 1, 1, 1)
+        tmp = [vs, ve]
+        time_bnds.append(tmp)
+
+    res = xr.Dataset(
+        data_vars={
+            ghg: xr.DataArray(
+                df_raw[ghg_raw_map[ghg]].values,
+                dims=["time"],
+                coords=dict(time=time),
+                attrs=dict(units=units),
+            ),
+            "time_bnds": xr.DataArray(
+                time_bnds,
+                dims=["time", "bnds"],
+                coords=dict(time=time, bnds=[0, 1]),
+            ),
+        }
+    )
+    res.attrs["source_id"] = source_id
+
+    return res
