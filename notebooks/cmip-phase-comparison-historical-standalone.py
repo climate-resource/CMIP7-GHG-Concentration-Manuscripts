@@ -86,6 +86,7 @@ for gas in gases_to_show:
             "ghg": gas,
             "time_sampling": "yr",
             "grid": "gm",
+            "target_mip": "CMIP",
             "source_id": source_id,
             "cmip_era": cmip_era,
             "engine": engine,
@@ -102,20 +103,17 @@ for gas in gases_to_show:
         ds_gases_full_d[gas][cmip_era] = ds.compute()
 
 # %%
-# 1. add CMIP5 ingestion and loading
-# 2. load yearly, global-mean, make comparisons across CMIP5, CMIP6, CMIP7
-#    - plots on same axes
-#    - difference plots absolute
-#    - difference plots in ERF terms
-# 3. load monthly, global-mean, make comparisons across CMIP6 and CMIP7
-#    - plots on same axes
-#    - difference plots absolute
-#    - difference plots in ERF terms
-# 4. load monthly, latitudinal, make comparisons across CMIP6 and CMIP7
-#    - plots on same axes - faceted by latitude
-#    - difference plots absolute
-#    - difference plots in ERF terms
-assert False, "up to here"
+from openscm_units import unit_registry
+
+Q = unit_registry.Quantity
+
+RADIATIVE_EFFICIENCIES = {
+    "co2": Q(1.33e-5, "W / m^2 / ppb"),
+    "ch4": Q(3.88e-4, "W / m^2 / ppb"),
+    "n2o": Q(3.2e-3, "W / m^2 / ppb"),
+    "cfc12eq": Q(0.358, "W / m^2 / ppb"),
+    "hfc134aeq": Q(0.167, "W / m^2 / ppb"),
+}
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 from typing import Callable
@@ -149,53 +147,96 @@ def plot_overview_and_deltas(
     Plot overviews of timeseries and deltas between CMIP7 and CMIP6
     """
     for ax_name, ax in axes_d.items():
-        if ax_name.endswith("_delta"):
+        if "_delta" in ax_name:
             continue
 
         gas = ax_name
 
+        target_unit_conc = ds_d[gas]["CMIP7"][gas].attrs["units"]
+        target_unit_re = "W / m^2"
+
         for cmip_era, ds in ds_d[gas].items():
             label = f"{cmip_era} ({ds.attrs['source_id']})"
+            tmp = ds[gas].copy()
+            tmp.values = Q(tmp.values, tmp.attrs["units"]).to(target_unit_conc).m
             ds[gas].plot.scatter(
                 ax=axes_d[gas], label=label, alpha=0.7, edgecolors="none"
             )
 
         ax.legend()
         ax.set_title(gas)
-        ax.xaxis.set_tick_params(labelbottom=True)
+        ax.xaxis.set_tick_params(labelbottom=False)
+        ax.set_ylabel(target_unit_conc)
+        ax.set_xlabel(None)
 
         ax_delta = axes_d[f"{gas}_delta"]
 
-        da_cmip6 = ds_d[gas]["CMIP6"][gas]
         da_cmip7 = ds_d[gas]["CMIP7"][gas]
-        overlapping_times = np.intersect1d(da_cmip6["time"], da_cmip7["time"])
-        delta = da_cmip7.sel(time=overlapping_times) - da_cmip6.sel(
-            time=overlapping_times
-        )
-        ax_delta.set_title("CMIP7 - CMIP6", fontsize="small")
-        delta.plot.scatter(
-            ax=ax_delta,
-            color="tab:grey",
-            edgecolors="none",
-            s=10,
-        )
-        ax_delta.axhline(0.0, color="k", linestyle="--")
 
-        ax_delta.xaxis.set_tick_params(labelbottom=True)
+        for cmip_era, ds in ds_d[gas].items():
+            if cmip_era == "CMIP7":
+                continue
+
+            da_other = ds_d[gas][cmip_era][gas]
+            overlapping_times = np.intersect1d(da_other["time"], da_cmip7["time"])
+
+            da_cmip7_st = da_cmip7.sel(time=overlapping_times)
+            da_other_st = da_other.sel(time=overlapping_times)
+
+            delta = da_cmip7_st.copy()
+            tmp = Q(da_cmip7_st.values, da_cmip7_st.attrs["units"]) - Q(
+                da_other_st.values, da_other_st.attrs["units"]
+            )
+            delta.values = tmp.to(target_unit_conc).m
+
+            delta.plot.scatter(
+                ax=ax_delta,
+                label=f"CMIP7 - {cmip_era}",
+                edgecolors="none",
+                s=10,
+            )
+            ax_delta.axhline(0.0, color="k", linestyle="--")
+            ax_delta.legend()
+
+            ax_delta.xaxis.set_tick_params(labelbottom=False)
+            ax_delta.set_ylabel(target_unit_conc)
+            ax_delta.set_xlabel(None)
+
+            ax_delta_re = axes_d[f"{gas}_delta_re"]
+
+            tmp = RADIATIVE_EFFICIENCIES[gas] * Q(delta.values, delta.attrs["units"])
+            delta_re = delta.copy()
+            target_unit = "W / m^2"
+            delta_re.values = tmp.to(target_unit_re).m
+            delta_re.attrs["units"] = target_unit_re
+
+            delta_re.plot.scatter(
+                ax=ax_delta_re,
+                label=f"CMIP7 - {cmip_era}",
+                edgecolors="none",
+                s=10,
+            )
+            ax_delta_re.axhline(0.0, color="k", linestyle="--")
+
+            ax_delta_re.xaxis.set_tick_params(labelbottom=True)
+            ax_delta_re.set_ylabel(target_unit_re)
+            ax_delta_re.legend()
 
 
 plt_mosaic = [
     ["co2", "ch4", "n2o"],
     ["co2", "ch4", "n2o"],
     ["co2_delta", "ch4_delta", "n2o_delta"],
+    ["co2_delta_re", "ch4_delta_re", "n2o_delta_re"],
     ["cfc12eq", "hfc134aeq", ""],
     ["cfc12eq", "hfc134aeq", ""],
     ["cfc12eq_delta", "hfc134aeq_delta", ""],
+    ["cfc12eq_delta_re", "hfc134aeq_delta_re", ""],
 ]
 get_default_delta_mosaic = partial(
     plt.subplot_mosaic,
     mosaic=plt_mosaic,
-    figsize=(12, 8),
+    figsize=(16, 14),
     sharex=True,
 )
 
@@ -229,6 +270,24 @@ plot_overview_and_deltas(
 
 plt.tight_layout()
 plt.show()
+
+# %%
+
+# %%
+# 1. add CMIP5 ingestion and loading
+# 2. load yearly, global-mean, make comparisons across CMIP5, CMIP6, CMIP7
+#    - plots on same axes
+#    - difference plots absolute
+#    - difference plots in ERF terms
+# 3. load monthly, global-mean, make comparisons across CMIP6 and CMIP7
+#    - plots on same axes
+#    - difference plots absolute
+#    - difference plots in ERF terms
+# 4. load monthly, latitudinal, make comparisons across CMIP6 and CMIP7
+#    - plots on same axes - faceted by latitude
+#    - difference plots absolute
+#    - difference plots in ERF terms
+assert False, "up to here"
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # #### Atmospheric concentrations: Year 1750 - 2022
