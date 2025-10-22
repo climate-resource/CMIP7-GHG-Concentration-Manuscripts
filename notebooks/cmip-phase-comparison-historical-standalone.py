@@ -37,6 +37,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import nc_time_axis  # noqa: F401
 import numpy as np
+import tqdm.auto
 from local.data_loading import fetch_and_load_ghg_dataset
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
 from local.esgf.search.search_query import KnownIndexNode
@@ -102,6 +103,12 @@ for gas in gases_to_show:
         # compute to avoid dask weirdness
         ds_gases_full_d[gas][cmip_era] = ds.compute()
 
+# %% [markdown]
+# Values below come from Table 7.SM.7 of
+# IPCC AR7 WG1 Ch. 7 Supplementary Material[^4].
+#
+# [^4]: https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07_SM.pdf
+
 # %%
 from openscm_units import unit_registry
 
@@ -133,6 +140,21 @@ def sel_times(
         gas: {
             key: value.sel(time=sel_func(value["time"])) for key, value in tmp.items()
         }
+        for gas, tmp in ds_d.items()
+    }
+
+    return res
+
+
+def sel_lat(
+    ds_d: dict[str, dict[str, xr.Dataset]],
+    sel_func: Callable[[xr.DataArray], npt.NDArray[bool]],
+) -> dict[str, dict[str, xr.Dataset]]:
+    """
+    Select lat from our dictionary of [xr.Dataset][]'s
+    """
+    res = {
+        gas: {key: value.sel(lat=sel_func(value["lat"])) for key, value in tmp.items()}
         for gas, tmp in ds_d.items()
     }
 
@@ -206,7 +228,6 @@ def plot_overview_and_deltas(
 
             tmp = RADIATIVE_EFFICIENCIES[gas] * Q(delta.values, delta.attrs["units"])
             delta_re = delta.copy()
-            target_unit = "W / m^2"
             delta_re.values = tmp.to(target_unit_re).m
             delta_re.attrs["units"] = target_unit_re
 
@@ -225,11 +246,11 @@ def plot_overview_and_deltas(
 
 plt_mosaic = [
     ["co2", "ch4", "n2o"],
-    ["co2", "ch4", "n2o"],
+    # ["co2", "ch4", "n2o"],
     ["co2_delta", "ch4_delta", "n2o_delta"],
     ["co2_delta_re", "ch4_delta_re", "n2o_delta_re"],
     ["cfc12eq", "hfc134aeq", ""],
-    ["cfc12eq", "hfc134aeq", ""],
+    # ["cfc12eq", "hfc134aeq", ""],
     ["cfc12eq_delta", "hfc134aeq_delta", ""],
     ["cfc12eq_delta_re", "hfc134aeq_delta_re", ""],
 ]
@@ -257,7 +278,10 @@ def remove_empty_axes(
 
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Atmospheric concentrations: Year 1 - 2022
+# #### Global, annual-mean concentrations: Year 1 - 2022
+
+# %%
+plt.rcParams["axes.xmargin"] = 0
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
 fig, axes_d = get_default_delta_mosaic()
@@ -268,29 +292,23 @@ plot_overview_and_deltas(
     axes_d,
 )
 
+for ax in axes_d.values():
+    xticks = [
+        cftime.DatetimeProlepticGregorian(y, 1, 1) for y in np.arange(0, 2000, 500)
+    ]
+    ax.set_xticks(xticks)
+    ax.set_xticklabels([v.year for v in xticks])
+
 plt.tight_layout()
+plt.savefig("key-species-global-annual-changes-across-cmip-phases.png")
 plt.show()
 
-# %%
-
-# %%
-# 1. add CMIP5 ingestion and loading
-# 2. load yearly, global-mean, make comparisons across CMIP5, CMIP6, CMIP7
-#    - plots on same axes
-#    - difference plots absolute
-#    - difference plots in ERF terms
-# 3. load monthly, global-mean, make comparisons across CMIP6 and CMIP7
-#    - plots on same axes
-#    - difference plots absolute
-#    - difference plots in ERF terms
-# 4. load monthly, latitudinal, make comparisons across CMIP6 and CMIP7
-#    - plots on same axes - faceted by latitude
-#    - difference plots absolute
-#    - difference plots in ERF terms
-assert False, "up to here"
-
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Atmospheric concentrations: Year 1750 - 2022
+# #### Global, annual-mean concentrations: Year 1750 - 2022
+
+# %%
+# TODO: copy https://github.com/climate-resource/CMIP6-vs-CMIP7-GHG-Concentrations/blob/clean-up/notebooks/0101_demonstrate-cmip6-eq-issue.py
+# into this repo to demonstrate the issue with the equivalent species
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
 fig, axes_d = get_default_delta_mosaic()
@@ -301,12 +319,18 @@ plot_overview_and_deltas(
     sel_times(ds_gases_full_d, lambda x: x.dt.year >= min_year),
     axes_d,
 )
+for ax in axes_d.values():
+    xticks = [
+        cftime.DatetimeProlepticGregorian(y, 1, 1) for y in np.arange(1750, 2050, 50)
+    ]
+    ax.set_xticks(xticks)
+    ax.set_xticklabels([v.year for v in xticks])
 
 plt.tight_layout()
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Atmospheric concentrations: Year 1957 - 2022
+# #### Global, annual-mean concentrations: Year 1957 - 2022
 #
 # 1957 is the start of the Scripps ground-based record.
 # Before this, data is based on ice cores alone.
@@ -325,188 +349,23 @@ plot_overview_and_deltas(
 plt.tight_layout()
 plt.show()
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Approximate radiative effect: Year 1 - 2022
-#
-# As seen above, in atmospheric concentration terms
-# the differences are small.
-# However, this can be put on a common scale
-# by comparing the differences in radiative effect terms.
-# This gives an approximation of the size of the difference
-# that would be seen by an Earth System Model's (ESM's) radiation code.
-# This uses basic linear approximations,
-# assuming that the radiative effect of each gas
-# is simply its atmospheric concentration multiplied by a constant.
-# This isn't the same as effective radiative forcing (ERF).
-# For that comparison, see the later sections focussed on ERF.
-
 # %% [markdown]
-# Values below come from Table 7.SM.7 of
-# IPCC AR7 WG1 Ch. 7 Supplementary Material[^4].
-#
-# [^4]: https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07_SM.pdf
+# #### Global, monthly-mean concentrations: Year 1 - 2022
 
-# %% editable=true slideshow={"slide_type": ""}
-from openscm_units import unit_registry
-
-Q = unit_registry.Quantity
-
-RADIATIVE_EFFICIENCIES = {
-    "co2": Q(1.33e-5, "W / m^2 / ppb"),
-    "ch4": Q(3.88e-4, "W / m^2 / ppb"),
-    "n2o": Q(3.2e-3, "W / m^2 / ppb"),
-    "cfc12eq": Q(0.358, "W / m^2 / ppb"),
-    "hfc134aeq": Q(0.167, "W / m^2 / ppb"),
-}
-
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-ds_gases_full_radiative_effect_d = {}
-target_units = "W / m^2"
-for gas, gas_ds in ds_gases_full_d.items():
-    ds_gases_full_radiative_effect_d[gas] = {}
-    for mip_era, ds in gas_ds.items():
-        tmp = ds.copy()
-
-        tmp[gas][:] = (
-            (Q(tmp[gas].values, tmp[gas].attrs["units"]) * RADIATIVE_EFFICIENCIES[gas])
-            .to(target_units)
-            .m
-        )
-        tmp[gas].attrs["units"] = target_units
-        tmp[gas].attrs["long_name"] = "approx. radiative effect"
-
-        ds_gases_full_radiative_effect_d[gas][mip_era] = tmp
-
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
-fig, axes_d = get_default_delta_mosaic()
-axes_d = remove_empty_axes(axes_d)
-
-plot_overview_and_deltas(
-    ds_gases_full_radiative_effect_d,
-    axes_d,
-)
-
-for name, ax in axes_d.items():
-    if name.endswith("_delta"):
-        continue
-
-    ax.set_ylim([0, 6.0])
-
-plt.tight_layout()
-plt.show()
-
-# %% [markdown]
-# #### Approximate radiative effect: Year 1750 - 2022
-#
-# This is the period relevant for historical simulations in CMIP.
-
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
-fig, axes_d = get_default_delta_mosaic()
-axes_d = remove_empty_axes(axes_d)
-
-min_year = 1750
-plot_overview_and_deltas(
-    sel_times(ds_gases_full_radiative_effect_d, lambda x: x.dt.year >= min_year),
-    axes_d,
-)
-
-for name, ax in axes_d.items():
-    if name.endswith("_delta"):
-        continue
-
-    ax.set_ylim([0, 6.0])
-
-plt.tight_layout()
-plt.show()
-
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Approximate effective radiative forcing: Year 1750 - 2022
-#
-# The above isn't effective radiative forcing.
-# For that, you have to normalise the data to some reference year.
-# There are a few different choices for this reference year.
-# In IPCC reports, it is 1750 so that is what we show here.
-# It should be noted that some ESMs may make other choices,
-# but these would not have a great effect on the interpretation
-# of the difference between the CMIP6 and CMIP7 datasets.
-#
-# Note that this approximation is linear,
-# which is a particularly strong approximation for CO<sub>2</sub>
-# because of its logarithmic forcing nature.
-# We show this approximation here nonetheless
-# because it provides an order of magnitude estimate
-# for the change from CMIP6 in ERF terms.
-# The forthcoming manuscripts will explore the subtleties
-# of this quantification in more detail.
-
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-ds_gases_full_erf_d = {}
-reference_year = 1750
-for gas, gas_ds in ds_gases_full_radiative_effect_d.items():
-    ds_gases_full_erf_d[gas] = {}
-    for mip_era, ds in gas_ds.items():
-        tmp = ds.copy()
-
-        tmp[gas][:] = (
-            tmp[gas][:]
-            - tmp.sel(time=ds["time"].dt.year == reference_year)[gas][:].values
-        )
-        tmp[gas].attrs["long_name"] = "approx. ERF"
-        # tmp.attrs = ds.attrs
-
-        ds_gases_full_erf_d[gas][mip_era] = tmp
-
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
-fig, axes_d = get_default_delta_mosaic()
-axes_d = remove_empty_axes(axes_d)
-
-min_year = 1750
-plot_overview_and_deltas(
-    sel_times(ds_gases_full_erf_d, lambda x: x.dt.year >= min_year),
-    axes_d,
-)
-
-for name, ax in axes_d.items():
-    if name.endswith("_delta"):
-        continue
-
-    ax.set_ylim([0, 2.0])
-
-plt.tight_layout()
-plt.show()
-
-# %% [markdown]
-# In summary, in ERF terms, the differences from CMIP6 are very small.
-# For all gases, they are less than around 0.025 W / m<sup>2</sup>.
-# Compared to the estimated total greenhouse gas forcing and uncertainty in IPCC AR6
-# (see Section 7.3.5.2 of AR6 WG1 Chapter 7[^5]),
-# estimated to be 3.84 W / m<sup>2</sup>
-# (very likely range of 3.46 to 4.22 W / m<sup>2</sup>),
-# such differences are particularly small.
-#
-# [^5]: https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/
-
-# %% [markdown]
-# #### Atmospheric concentrations including seasonality: Year 2000 - 2022
-#
-# The final comparisons we show are atmospheric concentrations including seasonality.
-# Given that most greenhouse gases
-# are well-mixed with lifetimes much greater than a year,
-# these differences are unlikely to be of huge interest to ESMs.
-# However, for other applications, such seasonality differences may matter more.
-
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# %%
 ds_gases_full_monthly_d = {}
 for gas in gases_to_show:
     ds_gases_full_monthly_d[gas] = {}
     for source_id, cmip_era in (
         ("CR-CMIP-1-0-0", "CMIP7"),
         ("UoM-CMIP-1-2-0", "CMIP6"),
+        # (None, "CMIP5"),
     ):
         query_kwargs = {
             "ghg": gas,
             "time_sampling": "mon",
             "grid": "gm",
+            "target_mip": "CMIP",
             "source_id": source_id,
             "cmip_era": cmip_era,
             "engine": engine,
@@ -522,27 +381,194 @@ for gas in gases_to_show:
         # compute to avoid dask weirdness
         ds_gases_full_monthly_d[gas][cmip_era] = ds.compute()
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %%
 fig, axes_d = get_default_delta_mosaic()
 axes_d = remove_empty_axes(axes_d)
 
-min_year = 2000
-max_year = 2022
+# min_year = 1957
+min_year = 1990
+min_year = 1
+# min_year = 1750
 plot_overview_and_deltas(
-    sel_times(
-        ds_gases_full_monthly_d,
-        lambda x: (x.dt.year >= min_year) & (x.dt.year <= max_year),
-    ),
+    sel_times(ds_gases_full_monthly_d, lambda x: x.dt.year >= min_year),
     axes_d,
 )
+for ax in axes_d.values():
+    xticks = [
+        cftime.DatetimeProlepticGregorian(y, 1, 1)
+        # for y in np.arange(1750, 2050, 50)
+        # for y in np.arange(1750, 1760, 1)
+        for y in np.arange(1, 2050, 500)
+        # for y in np.arange(1, 20, 1)
+    ]
+    ax.set_xticks(xticks)
+    # ax.set_xlim(xticks[0], xticks[-1])
+    ax.set_xticklabels([v.year for v in xticks])
 
 plt.tight_layout()
 plt.show()
 
 # %% [markdown]
-# Like the annual-means,
-# the atmospheric concentrations including seasonality
-# are reasonably consistent between CMIP6 and CMIP7.
-# There are some areas of change.
-# Full details of these changes will be provided
-# in the forthcoming manuscripts.
+# #### Latitudinally-resolved, monthly-mean concentrations: Year 1 - 2022
+
+# %%
+gases_to_show = ["co2", "ch4"]
+ds_gases_full_monthly_lat_d = {}
+for gas in gases_to_show:
+    ds_gases_full_monthly_lat_d[gas] = {}
+    for source_id, cmip_era in (
+        ("CR-CMIP-1-0-0", "CMIP7"),
+        ("UoM-CMIP-1-2-0", "CMIP6"),
+        # (None, "CMIP5"),
+    ):
+        query_kwargs = {
+            "ghg": gas,
+            "time_sampling": "mon",
+            "grid": "gnz",
+            "target_mip": "CMIP",
+            "source_id": source_id,
+            "cmip_era": cmip_era,
+            "engine": engine,
+        }
+        ds = fetch_and_load(**query_kwargs)
+
+        # Unify time axis days to simplify
+        ds["time"] = [
+            cftime.DatetimeProlepticGregorian(v.year, v.month, 15)
+            for v in ds["time"].values
+        ]
+
+        # compute to avoid dask weirdness
+        ds_gases_full_monthly_lat_d[gas][cmip_era] = ds.compute()
+
+
+# %%
+def plot_lat_selection(
+    gas: str,
+    ds_d: dict[str, dict[str, xr.Dataset]],
+    ax: matplotlib.axes.Axes,
+    ax_delta: matplotlib.axes.Axes,
+    ax_delta_re: matplotlib.axes.Axes,
+) -> None:
+    """
+    Plot selection for a latitude-specific dataset
+    """
+    target_unit_conc = ds_d[gas]["CMIP7"][gas].attrs["units"]
+    target_unit_re = "W / m^2"
+
+    for cmip_era, ds in ds_d[gas].items():
+        label = f"{cmip_era} ({ds.attrs['source_id']})"
+        tmp = ds[gas].copy()
+        tmp.values = Q(tmp.values, tmp.attrs["units"]).to(target_unit_conc).m
+        ds[gas].plot.scatter(ax=ax, label=label, alpha=0.7, edgecolors="none")
+
+    ax.legend()
+    ax.set_title(
+        f"lat: {float(lat)}",
+        # fontsize="small",
+    )
+    ax.xaxis.set_tick_params(labelbottom=False)
+    ax.set_ylabel(target_unit_conc)
+    ax.set_xlabel(None)
+
+    da_cmip7 = ds_d[gas]["CMIP7"][gas]
+
+    for cmip_era, ds in ds_d[gas].items():
+        if cmip_era == "CMIP7":
+            continue
+
+        da_other = ds_d[gas][cmip_era][gas]
+        overlapping_times = np.intersect1d(da_other["time"], da_cmip7["time"])
+
+        da_cmip7_st = da_cmip7.sel(time=overlapping_times)
+        da_other_st = da_other.sel(time=overlapping_times)
+
+        delta = da_cmip7_st.copy()
+        tmp = Q(da_cmip7_st.values, da_cmip7_st.attrs["units"]) - Q(
+            da_other_st.values, da_other_st.attrs["units"]
+        )
+        delta.values = tmp.to(target_unit_conc).m
+
+        delta.plot.scatter(
+            ax=ax_delta,
+            label=f"CMIP7 - {cmip_era}",
+            edgecolors="none",
+            s=10,
+        )
+        ax_delta.axhline(0.0, color="k", linestyle="--")
+        ax_delta.legend()
+
+        ax_delta.xaxis.set_tick_params(labelbottom=False)
+        ax_delta.set_ylabel(target_unit_conc)
+        ax_delta.set_xlabel(None)
+        ax_delta.set_title(None)
+
+        tmp = RADIATIVE_EFFICIENCIES[gas] * Q(delta.values, delta.attrs["units"])
+        delta_re = delta.copy()
+        delta_re.values = tmp.to(target_unit_re).m
+        delta_re.attrs["units"] = target_unit_re
+
+        delta_re.plot.scatter(
+            ax=ax_delta_re,
+            label=f"CMIP7 - {cmip_era}",
+            edgecolors="none",
+            s=10,
+        )
+        ax_delta_re.axhline(0.0, color="k", linestyle="--")
+
+        ax_delta_re.xaxis.set_tick_params(labelbottom=True)
+        ax_delta_re.set_ylabel(target_unit_re)
+        ax_delta_re.legend()
+        ax_delta_re.set_title(None)
+
+
+# %%
+gas = "co2"
+# gas = "ch4"
+min_year = 1
+# min_year = 1750
+# min_year = 1850
+# min_year = 2000
+sel_times_func = lambda x: (x.dt.year >= min_year)  # noqa: E731
+# sel_times_func = lambda x: (x.dt.year >= min_year) & (x.dt.year <= min_year + 2)
+
+ncols = 4
+fig, axes = plt.subplots(ncols=ncols, nrows=9, figsize=(14, 16), sharex=True)
+ax_flat = axes.flatten()
+
+for i, lat in tqdm.auto.tqdm(
+    enumerate(ds_gases_full_monthly_lat_d[gas]["CMIP7"]["lat"][::-1]), leave=False
+):
+    ax_idx = i % ncols + 3 * ncols * (i // ncols)
+    # print(ax_idx)
+    ax = ax_flat[ax_idx]
+    ax_delta = ax_flat[ax_idx + ncols]
+    ax_delta_re = ax_flat[ax_idx + 2 * ncols]
+
+    plot_lat_selection(
+        gas=gas,
+        ds_d=sel_times(
+            sel_lat(ds_gases_full_monthly_lat_d, lambda x: x == lat),
+            sel_times_func,
+        ),
+        ax=ax,
+        ax_delta=ax_delta,
+        ax_delta_re=ax_delta_re,
+    )
+    # ax_flat[ax_idx].legend().remove()
+    if gas == "co2":
+        ax.set_ylim([250, 420])
+        ax_delta.set_ylim([-2.5, 4.5])
+        ax_delta_re.set_ylim([-0.03, 0.071])
+    elif gas == "ch4":
+        ax.set_ylim([600, 1900])
+        ax_delta.set_ylim([-70, 35])
+        ax_delta_re.set_ylim([-0.028, 0.02])
+    # # break
+
+plt.tight_layout()
+plt.savefig(f"{gas}_lat-monthly.png")
+plt.suptitle(gas, y=1.0)
+plt.show()
+
+# %%

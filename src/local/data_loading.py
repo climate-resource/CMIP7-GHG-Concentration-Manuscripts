@@ -24,6 +24,7 @@ from local.xarray_loading import load_xarray_from_esgf_dataset
 
 CMIP7_TO_CMIP6EQ_GRID_MAP = {
     "gm": "gr1-GMNHSH",
+    "gnz": "gn-15x360deg",
 }
 
 CMIP7_TO_CMIP6_VARIABLE_MAP = {
@@ -137,6 +138,8 @@ def fix_conventions_to_match_cmip7(
         # Realign grids to match how CMIP7 does it
         if esgf_dataset.grid == "gm":
             ds = ds.isel(sector=0).drop(["sector", "sector_bnds"])
+        elif esgf_dataset.grid == "gnz":
+            pass
         else:
             raise NotImplementedError(esgf_dataset.grid)
 
