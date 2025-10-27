@@ -69,8 +69,7 @@ create_all_tables(engine)
 # %% [markdown]
 # # Dataset construction
 #
-# The dataset is constructed following the methodology of
-# Meinshausen et al. (2017, REF-TODO).
+# The dataset is constructed following the methodology of [^m2017].
 # The methods are described in full in that paper
 # and will be clarified and described again
 # in the forthcoming manuscript describing this dataset's construction.
@@ -78,8 +77,8 @@ create_all_tables(engine)
 # In brief, the dataset for each greenhouse gas is constructed via the following steps:
 #
 # 1. collect as many ground-based observations as possible
-# 2. from ground-based networks such as the NOAA (TODO REF)
-#    and AGAGE (TODO REF) networks
+# 2. from ground-based networks such as the NOAA [^noaa-flask], [^noaa-in-situ]
+#    and AGAGE [^agage] networks
 #     - these are only available over the last few decades at most
 #       (less for some greenhouse gases)
 #     - these are spatially sparse because sampling stations
@@ -131,6 +130,11 @@ create_all_tables(engine)
 # but does provide machine-readable provenance information
 # (which is used to support links between all the input data
 # e.g. linking of the Zenodo archive underpinning this dataset).
+#
+# [^m2017]: https://doi.org/10.5194/gmd-10-2057-2017
+# [^noaa-flask]: https://doi.org/10.15138/wkgj-f215
+# [^noaa-in-situ]: https://doi.org/10.15138/yaf1-bk21
+# [^agage]: https://www-air.larc.nasa.gov/missions/agage/
 
 # %% [markdown]
 # # Finding and accessing the data
