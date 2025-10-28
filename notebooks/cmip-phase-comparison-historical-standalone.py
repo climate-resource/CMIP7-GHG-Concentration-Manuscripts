@@ -38,6 +38,7 @@ import matplotlib.pyplot as plt
 import nc_time_axis  # noqa: F401
 import numpy as np
 import tqdm.auto
+
 from local.data_loading import fetch_and_load_ghg_dataset
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
 from local.esgf.search.search_query import KnownIndexNode
@@ -300,7 +301,7 @@ for ax in axes_d.values():
     ax.set_xticklabels([v.year for v in xticks])
 
 plt.tight_layout()
-plt.savefig("key-species-global-annual-changes-across-cmip-phases.png")
+# plt.savefig("key-species-global-annual-changes-across-cmip-phases.png")
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -567,8 +568,13 @@ for i, lat in tqdm.auto.tqdm(
     # # break
 
 plt.tight_layout()
-plt.savefig(f"{gas}_lat-monthly.png")
+# plt.savefig(f"{gas}_lat-monthly.png")
 plt.suptitle(gas, y=1.0)
 plt.show()
 
-# %%
+# %% [markdown]
+# # Bibliography
+# ```{bibliography}
+# :style: plain
+# :filter: {"cmip-phase-comparison-historical-standalone"} & docnames
+# ```

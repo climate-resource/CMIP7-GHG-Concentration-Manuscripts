@@ -44,6 +44,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import nc_time_axis  # noqa: F401
 import numpy as np
+
 from local.data_loading import fetch_and_load_ghg_dataset, get_ghg_dataset_local_files
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
 from local.esgf.search.search_query import KnownIndexNode
@@ -70,7 +71,7 @@ create_all_tables(engine)
 # # Dataset construction
 #
 # The dataset is constructed following the methodology of
-# Meinshausen et al. (2017, REF-TODO).
+# {cite:t}`meinshausen_historical_2017`.
 # The methods are described in full in that paper
 # and will be clarified and described again
 # in the forthcoming manuscript describing this dataset's construction.
@@ -78,8 +79,10 @@ create_all_tables(engine)
 # In brief, the dataset for each greenhouse gas is constructed via the following steps:
 #
 # 1. collect as many ground-based observations as possible
-# 2. from ground-based networks such as the NOAA (TODO REF)
-#    and AGAGE (TODO REF) networks
+# 2. from ground-based networks such as the NOAA
+# {cite:p}`lan_atmospheric_co2_2025,lan_atmospheric_ch4_2025`
+#    and AGAGE
+# {cite:p}`prinn_history_2000,prinn2018history,rigby2008renewed,rigby2017role` networks
 #     - these are only available over the last few decades at most
 #       (less for some greenhouse gases)
 #     - these are spatially sparse because sampling stations
@@ -1232,3 +1235,10 @@ plt.show()
 # There are some areas of change.
 # Full details of these changes will be provided
 # in the forthcoming manuscripts.
+
+# %% [markdown]
+# # Bibliography
+# ```{bibliography}
+# :style: plain
+# :filter: {"user-guide-historical"} & docnames
+# ```

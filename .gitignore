@@ -24,7 +24,6 @@ __pycache__/
 
 # Notebooks (track as .py via jupytext instead)
 *.ipynb
-!book/*.ipynb
 
 # C extensions
 *.so

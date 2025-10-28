@@ -49,6 +49,7 @@ import pandas_indexing as pix
 import pandas_openscm
 import seaborn as sns
 import tqdm.auto
+
 from local.data_loading import (
     fetch_and_load_ghg_dataset,
     fetch_and_load_ghg_dataset_scenarios,
@@ -79,7 +80,7 @@ create_all_tables(engine)
 # # Dataset construction
 #
 # The dataset is constructed following a similar methodology
-# to Meinshausen et al. (2020, TODO REF).
+# to {cite:t}`meinshausen_shared_2020`.
 # The full method will be described in a forthcoming paper.
 # In brief, the method is:
 #
@@ -1949,3 +1950,10 @@ sns.relplot(
 )
 
 plt.show()
+
+# %% [markdown]
+# # Bibliography
+# ```{bibliography}
+# :style: plain
+# :filter: {"user-guide-scenarios"} & docnames
+# ```

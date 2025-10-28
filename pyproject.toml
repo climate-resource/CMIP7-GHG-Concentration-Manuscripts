@@ -47,9 +47,7 @@ formats = "ipynb,py:percent"
 src = [
     "src",
 ]
-exclude = [
-    "book/*"
-]
+
 [tool.ruff.lint]
 select = [
     "E",
@@ -76,8 +74,10 @@ ignore = [
     "E402",
     "S101",
 ]
-
-
+"scripts/*" = [
+    "S603",
+    "S607",
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

@@ -69,6 +69,10 @@ perhaps replacing the other instructions above as they may become redundant.
 -->
 
 ## Jupyter-book
+To convert jupytext `.py` files in `notebooks\` folder to `.md` files in `book\docs` folder, run
+```sh
+uv run python scripts/converter.py
+```
 
 To build jupyter-book, run
 ```sh
