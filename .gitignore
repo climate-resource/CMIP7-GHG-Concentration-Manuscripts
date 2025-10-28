@@ -1,3 +1,6 @@
+# Figures
+*.png
+
 # Data
 data/raw
 
