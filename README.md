@@ -68,6 +68,23 @@ Using `nbconvert` for converting notebooks to PDF requires the following install
 perhaps replacing the other instructions above as they may become redundant.
 -->
 
+## Jupyter-book
+
+To build jupyter-book, run
+```sh
+uv run jupyter-book build book/
+```
+
+To build PDF file, run
+```sh
+uv run jupyter-book build book/ --builder pdfhtml
+```
+
+or to build PDF with LaTeX, run
+```sh
+uv run jupyter-book build book/ --builder pdflatex
+```
+
 ## Development
 
 <!--- In bigger projects, we would recommend having separate docs where this

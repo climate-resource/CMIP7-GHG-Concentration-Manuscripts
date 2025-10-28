@@ -1,0 +1,10 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: intro
+chapters:
+- file: user-guide-scenarios
+- file: user-guide-historical
+- file: cmip-phase-comparison-historical-standalone
+- file: bibliography
