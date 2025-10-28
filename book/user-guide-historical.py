@@ -1234,6 +1234,9 @@ plt.show()
 # Full details of these changes will be provided
 # in the forthcoming manuscripts.
 
-# %% [bibliography]
+# %% [markdown]
+# ## Bibliography
+# ```{bibliography}
 # :style: plain
-# :filter: {"user-guide-historical"} & docnames
+# :filter: {"user-guide-scenarios"} & docnames
+# ```

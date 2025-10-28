@@ -572,4 +572,9 @@ plt.savefig(f"{gas}_lat-monthly.png")
 plt.suptitle(gas, y=1.0)
 plt.show()
 
-# %%
+# %% [markdown]
+# ## Bibliography
+# ```{bibliography}
+# :style: plain
+# :filter: {"user-guide-scenarios"} & docnames
+# ```

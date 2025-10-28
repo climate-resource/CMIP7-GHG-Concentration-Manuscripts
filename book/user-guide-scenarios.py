@@ -1951,6 +1951,9 @@ sns.relplot(
 
 plt.show()
 
-# %% [bibliography]
+# %% [markdown]
+# ## Bibliography
+# ```{bibliography}
 # :style: plain
 # :filter: {"user-guide-scenarios"} & docnames
+# ```
