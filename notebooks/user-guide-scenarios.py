@@ -21,7 +21,9 @@
 # ---
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# # Overview
+# # CMIP Greenhouse Gas (GHG) Concentration Scenario Dataset:
+# Data Description and User Guide
+# ## Overview
 #
 # Here we provide a short description of the draft scenario dataset
 # and a guide for users.
@@ -77,7 +79,7 @@ create_all_tables(engine)
 
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# # Dataset construction
+# ## Dataset construction
 #
 # The dataset is constructed following a similar methodology
 # to {cite:t}`meinshausen_shared_2020`.
@@ -133,10 +135,10 @@ create_all_tables(engine)
 # [^2]: https://github.com/climate-resource/gradient-aware-harmonisation
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# # Finding and accessing the data
+# ## Finding and accessing the data
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## ESGF
+# ### ESGF
 #
 # The Earth System Grid Federation (ESGF, TODO REF) provides
 # access to a range of climate data.
@@ -179,7 +181,7 @@ create_all_tables(engine)
 # https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%220.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP6Plus%22%7D)
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Zenodo
+# ### Zenodo
 #
 # While it aims to be, the ESGF is technically not a permanent archive
 # and does not issue DOIs.
@@ -190,10 +192,10 @@ create_all_tables(engine)
 # and include the zenodo link to the source code and input data used to process it.
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# # Data description
+# ## Data description
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Format
+# ### Format
 #
 # The data is provided in netCDF format [TODO citation].
 # This self-describing format allows the data
@@ -205,7 +207,7 @@ create_all_tables(engine)
 # which is split into multiple files).
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Scenario information
+# ### Scenario information
 #
 # Determining the scenario to which each dataset applies
 # is not trivial
@@ -293,7 +295,7 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 #
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Grids and frequencies provided
+# ### Grids and frequencies provided
 #
 # We provide five combinations of grids and time sampling
 # (also referred to as *frequency*,
@@ -312,7 +314,7 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # 1. 15-degree latitudinal, monthly-mean (`grid_label="gnz"`, `frequency="mon"`)
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Species provided
+# ### Species provided
 #
 # We provide concentrations for 43 greenhouse gas concentrations and species,
 # as well as three equivalent species.
@@ -344,18 +346,18 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 #     - other (3)
 #         - NF<sub>3</sub>, SF<sub>6</sub>, SO<sub>2</sub>F<sub>2</sub>
 #
-# ### Equivalent species
+# #### Equivalent species
 #
 # For most models, you will not use all 43 species.
 # As a result, we provide equivalent species too.
 # There are two options if you don't want to use all 43 species.
 #
-# #### Option 1
+# ##### Option 1
 #
 # Use CO<sub>2</sub>, CH<sub>4</sub>, N<sub>2</sub>O and CFC-12 directly.
 # Use CFC-11 equivalent to capture the radiative effect of all other species.
 #
-# #### Option 2
+# ##### Option 2
 #
 # Use CO<sub>2</sub>, CH<sub>4</sub> and N<sub>2</sub>O directly.
 # Use CFC-12 equivalent
@@ -364,7 +366,7 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # to capture the radiative effect of all other fluorinated gases.
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Uncertainty
+# ### Uncertainty
 #
 # At present, we provide no analysis of the uncertainty associated with these datasets.
 #
@@ -380,7 +382,7 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # (rather it is based on expert judgement and past experience).
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Differences compared to CMIP6
+# ### Differences compared to CMIP6
 #
 # There are two major differences from CMIP6.
 # The first is that the scenarios are different.
@@ -400,14 +402,14 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # and the scenario, model-based projections.
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# # User guide
+# ## User guide
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # Having downloaded the data, using it is relatively straightforward
 # (scenario identification issue discussed above notwithstanding).
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Annual-, global-mean data
+# ### Annual-, global-mean data
 #
 # We start with the annual-, global-mean data.
 # Like all our datasets, this is composed of one file per scenario,
@@ -510,7 +512,7 @@ ds_example_co2_yearly_global["co2"].plot.scatter(alpha=0.4)
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Space- and time-average nature of the data
+# ### Space- and time-average nature of the data
 #
 # All of our data represents the mean over each cell.
 # This is indicated by the `cell_methods` attribute
@@ -562,7 +564,7 @@ ax.grid()
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Monthly-, global-mean data
+# ### Monthly-, global-mean data
 #
 # If you want to have information at a finer level
 # of temporal detail, we also provide monthly files.
@@ -659,7 +661,7 @@ ax.grid()
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Monthly-, latitudinally-resolved data
+# ### Monthly-, latitudinally-resolved data
 #
 # We also provide data with spatial,
 # specifically latitudinal, resolution.
@@ -860,7 +862,7 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Transition from history
+# ### Transition from history
 #
 # Each dataset transitions smoothly from the historical data.
 
@@ -925,7 +927,7 @@ ax.legend()
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Monthly-, global-mean data
+# #### Monthly-, global-mean data
 #
 # Note that the transition from history to scenarios
 # is clearly wrong in the draft dataset.
@@ -979,7 +981,7 @@ ax.legend()
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Monthly-, 15-degree latitudinally binned data
+# #### Monthly-, 15-degree latitudinally binned data
 #
 # Note that the transition from history to scenarios
 # is clearly wrong in the draft dataset.
@@ -1065,14 +1067,14 @@ sns.relplot(
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Full scenario set
+# ### Full scenario set
 #
 # Having seen the transition for a single scenario,
 # we now show the full scenario set
 # including the transition from history.
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Annual-, global-mean data
+# #### Annual-, global-mean data
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 gases_to_show = ["co2", "ch4", "n2o", "cfc12eq", "hfc134aeq"]
@@ -1200,7 +1202,7 @@ sns.relplot(
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Monthly-, global-mean data
+# #### Monthly-, global-mean data
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 ds_gases_full_monthly_d = {}
@@ -1300,7 +1302,7 @@ sns.relplot(
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Monthly-, 15-degree latitudinal data
+# #### Monthly-, 15-degree latitudinal data
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 ds_gases_full_monthly_lat_d = {}
@@ -1400,9 +1402,9 @@ sns.relplot(
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Differences from CMIP6
+# ### Differences from CMIP6
 #
-# ### File formats and naming
+# #### File formats and naming
 #
 # The file formats are generally close to CMIP6.
 # There are three key changes:
@@ -1480,7 +1482,7 @@ plt.show()
 # ```
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Data comparisons
+# #### Data comparisons
 #
 # Comparing the data from CMIP6 and CMIP7 shows changes in two key areas:
 #
@@ -1488,7 +1490,7 @@ plt.show()
 # 2. the transition from historical to scenarios is more carefully harmonised
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Annual-, global-mean data
+# #### Annual-, global-mean data
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 scenario_group_map = {
@@ -1765,7 +1767,7 @@ sns.relplot(
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Monthly-, global-mean data
+# #### Monthly-, global-mean data
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 ds_gases_full_monthly_multi_phase_d = {}
@@ -1952,8 +1954,8 @@ sns.relplot(
 plt.show()
 
 # %% [markdown]
-# # Bibliography
+# ## Bibliography
 # ```{bibliography}
-# :style: plain
+# :style: unsrt
 # :filter: {"user-guide-scenarios"} & docnames
 # ```

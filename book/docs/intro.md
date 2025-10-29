@@ -1,4 +1,0 @@
-# Deliverables for ESA
-
-```{tableofcontents}
-```

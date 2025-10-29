@@ -21,7 +21,8 @@ title: 'CMIP Greenhouse Gas (GHG) Concentration Historical Dataset:
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# Overview
+# Data Description and User Guide
+## Overview
 
 Here we provide a short description of the historical dataset
 and a guide for users.
@@ -51,6 +52,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import nc_time_axis  # noqa: F401
 import numpy as np
+
 from local.data_loading import fetch_and_load_ghg_dataset, get_ghg_dataset_local_files
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
 from local.esgf.search.search_query import KnownIndexNode
@@ -70,19 +72,14 @@ sqlite_file = REPO_ROOT / "download-test-database.db"
 # # Obviously we wouldn't delete the database every time
 # # in production, but while experimenting it's handy
 # # to always start with a clean slate.
-# if sqlite_file.exists():
-#     sqlite_file.unlink()
+if sqlite_file.exists():
+    sqlite_file.unlink()
 
 engine = get_sqlite_engine(sqlite_file)
 create_all_tables(engine)
 ```
 
-```{raw-cell}
-\bibliographystyle{plain}
-\bibliography{references}
-```
-
-# Dataset construction
+## Dataset construction
 
 The dataset is constructed following the methodology of
 {cite:t}`meinshausen_historical_2017`.
@@ -93,8 +90,10 @@ in the forthcoming manuscript describing this dataset's construction.
 In brief, the dataset for each greenhouse gas is constructed via the following steps:
 
 1. collect as many ground-based observations as possible
-2. from ground-based networks such as the NOAA {cite:p}`lan_atmospheric_co2_2025,lan_atmospheric_ch4_2025`
-   and AGAGE {cite:p}`prinn_history_2000,prinn2018history,rigby2008renewed,rigby2017role` networks
+2. from ground-based networks such as the NOAA
+{cite:p}`lan_atmospheric_co2_2025,lan_atmospheric_ch4_2025`
+   and AGAGE
+{cite:p}`prinn_history_2000,prinn2018history,rigby2008renewed,rigby2017role` networks
     - these are only available over the last few decades at most
       (less for some greenhouse gases)
     - these are spatially sparse because sampling stations
@@ -149,11 +148,11 @@ e.g. linking of the Zenodo archive underpinning this dataset).
 
 +++
 
-# Finding and accessing the data
+## Finding and accessing the data
 
 +++ {"jp-MarkdownHeadingCollapsed": true}
 
-## ESGF
+### ESGF
 
 The **Earth System Grid Federation** (ESGF, REF-TODO) provides access to a
 range of climate data.
@@ -186,7 +185,7 @@ Please refer to the tools' docs for usage instructions.
 
 +++
 
-## Zenodo
+### Zenodo
 
 While it aims to be, the ESGF is technically not a permanent archive
 and does not issue DOIs.
@@ -197,11 +196,11 @@ can be found at https://doi.org/10.5281/zenodo.14892947.
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# Data description
+## Data description
 
 +++
 
-## Format
+### Format
 
 The data is provided in **netCDF format** [TODO citation].
 This self-describing format allows the data
@@ -217,7 +216,7 @@ the files can simply be concatenated in time.
 
 +++
 
-## Grids and frequencies provided
+### Grids and frequencies provided
 
 We provide five combinations of grids and time sampling
 (also referred to as frequency,
@@ -240,7 +239,7 @@ The five combinations of grid and time sampling are:
 
 +++
 
-## Species provided
+### Species provided
 
 We provide concentrations for 43 greenhouse gas concentrations and species,
 as well as three equivalent species.
@@ -272,18 +271,18 @@ The species are:
     - other (3)
         - NF<sub>3</sub>, SF<sub>6</sub>, SO<sub>2</sub>F<sub>2</sub>
 
-### Equivalent species
+#### Equivalent species
 
 For most models, you will not use all 43 species.
 As a result, we provide equivalent species too.
 There are two options if you don't want to use all 43 species.
 
-#### Option 1
+##### Option 1
 
 Use CO<sub>2</sub>, CH<sub>4</sub>, N<sub>2</sub>O and CFC-12 directly.
 Use CFC-11 equivalent to capture the radiative effect of all other species.
 
-#### Option 2
+##### Option 2
 
 Use CO<sub>2</sub>, CH<sub>4</sub> and N<sub>2</sub>O directly.
 Use CFC-12 equivalent
@@ -293,7 +292,7 @@ to capture the radiative effect of all other fluorinated gases.
 
 +++
 
-## Uncertainty
+### Uncertainty
 
 At present, we provide no analysis of the uncertainty associated with these datasets.
 In radiative forcing terms, the uncertainty in these concentrations
@@ -305,7 +304,7 @@ particularly as we shift from using surface flasks to relying on ice cores inste
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-## Differences compared to CMIP6
+### Differences compared to CMIP6
 
 At present, the changes from CMIP6 are minor,
 with the maximum difference in effective radiative forcing terms
@@ -316,7 +315,7 @@ and the forthcoming manuscript.
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# User guide
+## User guide
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
@@ -354,7 +353,7 @@ co2_yearly_global_fps = get_ghg_dataset_local_files(**query_kwargs_co2_yearly_gl
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-## Annual-, global-mean data
+### Annual-, global-mean data
 
 We start with the annual-, global-mean data.
 Like all our datasets, this is composed of three files,
@@ -436,7 +435,7 @@ slideshow:
   slide_type: ''
 tags: [remove_input]
 ---
-!ncdump -h {co2_yearly_global_fps[0]} | fold -w 80 -s
+# !ncdump -h {co2_yearly_global_fps[0]} | fold -w 80 -s
 ```
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
@@ -489,7 +488,7 @@ plt.show()
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-## Space- and time-average nature of the data
+### Space- and time-average nature of the data
 
 All of our data represents the mean over each cell.
 This is indicated by the `cell_methods` attribute
@@ -563,7 +562,7 @@ plt.show()
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-## Monthly-, global-mean data
+### Monthly-, global-mean data
 
 If you want to have information at a finer level
 of temporal detail, we also provide monthly files.
@@ -716,7 +715,7 @@ and potentially sub-daily trends (e.g. the diurnal cycle).
 
 +++
 
-## Monthly-, latitudinally-resolved data
+### Monthly-, latitudinally-resolved data
 
 We also provide data with spatial,
 specifically latituindal, resolution.
@@ -975,9 +974,9 @@ plt.show()
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-## Differences from CMIP6
+### Differences from CMIP6
 
-### File formats and naming
+#### File formats and naming
 
 The file formats are generally close to CMIP6.
 There are three key changes:
@@ -1006,7 +1005,7 @@ We do this because year zero doesn't exist in most calendars
 (and we want to avoid users of the data having to hack around this
 when using standard data analysis tools).
 
-#### Variable name mapping
+##### Variable name mapping
 
 ```python
 CMIP6_TO_CMIP7_VARIABLE_MAP = {
@@ -1062,7 +1061,7 @@ CMIP6_TO_CMIP7_VARIABLE_MAP = {
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-### Data comparisons
+#### Data comparisons
 
 Comparing the data from CMIP6 and CMIP7 shows minor changes
 (although doing this comparison requires a bit of care
@@ -1208,7 +1207,7 @@ def remove_empty_axes(
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-#### Atmospheric concentrations: Year 1 - 2022
+##### Atmospheric concentrations: Year 1 - 2022
 
 ```{code-cell}
 ---
@@ -1231,7 +1230,7 @@ plt.show()
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-#### Atmospheric concentrations: Year 1750 - 2022
+##### Atmospheric concentrations: Year 1750 - 2022
 
 ```{code-cell}
 ---
@@ -1255,7 +1254,7 @@ plt.show()
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-#### Atmospheric concentrations: Year 1957 - 2022
+##### Atmospheric concentrations: Year 1957 - 2022
 
 1957 is the start of the Scripps ground-based record.
 Before this, data is based on ice cores alone.
@@ -1282,7 +1281,7 @@ plt.show()
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-#### Approximate radiative effect: Year 1 - 2022
+##### Approximate radiative effect: Year 1 - 2022
 
 As seen above, in atmospheric concentration terms
 the differences are small.
@@ -1372,7 +1371,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-#### Approximate radiative effect: Year 1750 - 2022
+##### Approximate radiative effect: Year 1750 - 2022
 
 This is the period relevant for historical simulations in CMIP.
 
@@ -1404,7 +1403,7 @@ plt.show()
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-#### Approximate effective radiative forcing: Year 1750 - 2022
+##### Approximate effective radiative forcing: Year 1750 - 2022
 
 The above isn't effective radiative forcing.
 For that, you have to normalise the data to some reference year.
@@ -1485,7 +1484,7 @@ such differences are particularly small.
 
 +++
 
-#### Atmospheric concentrations including seasonality: Year 2000 - 2022
+##### Atmospheric concentrations including seasonality: Year 2000 - 2022
 
 The final comparisons we show are atmospheric concentrations including seasonality.
 Given that most greenhouse gases
@@ -1560,8 +1559,7 @@ in the forthcoming manuscripts.
 
 +++
 
-# Bibliography
 ```{bibliography}
-:style: plain
+:style: unsrt
 :filter: {"user-guide-historical"} & docnames
 ```

@@ -21,7 +21,9 @@
 # ---
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# # Overview
+# # CMIP Greenhouse Gas (GHG) Concentration Historical Dataset:
+# Comparison of CMIP Phases
+# ## Overview
 #
 # Here we make some standalone plots
 # that compare the historical concentrations over CMIP phases.
@@ -58,7 +60,7 @@ engine = get_sqlite_engine(sqlite_file)
 create_all_tables(engine)
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Data comparisons
+# ## Data comparisons
 #
 # Comparing the data from CMIP6 and CMIP7 shows minor changes
 # (although doing this comparison requires a bit of care
@@ -279,7 +281,7 @@ def remove_empty_axes(
 
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Global, annual-mean concentrations: Year 1 - 2022
+# ### Global, annual-mean concentrations: Year 1 - 2022
 
 # %%
 plt.rcParams["axes.xmargin"] = 0
@@ -305,7 +307,7 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Global, annual-mean concentrations: Year 1750 - 2022
+# ### Global, annual-mean concentrations: Year 1750 - 2022
 
 # %%
 # TODO: copy https://github.com/climate-resource/CMIP6-vs-CMIP7-GHG-Concentrations/blob/clean-up/notebooks/0101_demonstrate-cmip6-eq-issue.py
@@ -331,7 +333,7 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Global, annual-mean concentrations: Year 1957 - 2022
+# ### Global, annual-mean concentrations: Year 1957 - 2022
 #
 # 1957 is the start of the Scripps ground-based record.
 # Before this, data is based on ice cores alone.
@@ -351,7 +353,7 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown]
-# #### Global, monthly-mean concentrations: Year 1 - 2022
+# ### Global, monthly-mean concentrations: Year 1 - 2022
 
 # %%
 ds_gases_full_monthly_d = {}
@@ -410,7 +412,7 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown]
-# #### Latitudinally-resolved, monthly-mean concentrations: Year 1 - 2022
+# ### Latitudinally-resolved, monthly-mean concentrations: Year 1 - 2022
 
 # %%
 gases_to_show = ["co2", "ch4"]
@@ -571,10 +573,3 @@ plt.tight_layout()
 # plt.savefig(f"{gas}_lat-monthly.png")
 plt.suptitle(gas, y=1.0)
 plt.show()
-
-# %% [markdown]
-# # Bibliography
-# ```{bibliography}
-# :style: plain
-# :filter: {"cmip-phase-comparison-historical-standalone"} & docnames
-# ```

@@ -89,6 +89,14 @@ or to build PDF with LaTeX, run
 uv run jupyter-book build book/ --builder pdflatex
 ```
 
+If the `pdflatex`-command fails, the following work-around can be used to create a latex PDF:
+```sh
+run jupyter-book build book/ --builder latex
+cd book/_build/latex
+xelatex projectnamenotset.tex
+```
+The resulting PDF can be found in book/_build/latex/projectnamenotset.pdf
+
 ## Development
 
 <!--- In bigger projects, we would recommend having separate docs where this

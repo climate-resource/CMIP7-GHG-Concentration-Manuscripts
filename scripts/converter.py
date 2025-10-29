@@ -8,7 +8,7 @@ from pathlib import Path
 
 # Source and target directories
 source_dir = Path("notebooks")
-output_dir = Path("book/docs")
+output_dir = Path("book")
 
 # Make sure output directory exists
 output_dir.mkdir(parents=True, exist_ok=True)
