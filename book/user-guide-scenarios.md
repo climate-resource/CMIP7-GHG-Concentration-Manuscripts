@@ -2395,7 +2395,6 @@ sns.relplot(
 plt.show()
 ```
 
-## Bibliography
 ```{bibliography}
 :style: unsrt
 :filter: {"user-guide-scenarios"} & docnames
