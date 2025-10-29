@@ -21,8 +21,7 @@
 # ---
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# # CMIP Greenhouse Gas (GHG) Concentration Scenario Dataset:
-# Data Description and User Guide
+# # Data Description and User Guide
 # ## Overview
 #
 # Here we provide a short description of the draft scenario dataset
@@ -1954,7 +1953,6 @@ sns.relplot(
 plt.show()
 
 # %% [markdown]
-# ## Bibliography
 # ```{bibliography}
 # :style: unsrt
 # :filter: {"user-guide-scenarios"} & docnames

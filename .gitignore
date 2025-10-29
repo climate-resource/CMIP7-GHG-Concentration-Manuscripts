@@ -29,10 +29,7 @@ __pycache__/
 *.so
 
 # book
-book/_build/jupyter_execute
-book/_build/.doctrees
-book/_build/latex/*
-!book/_build/latex/*.pdf
+book/_build/
 
 # Distribution / packaging
 .Python

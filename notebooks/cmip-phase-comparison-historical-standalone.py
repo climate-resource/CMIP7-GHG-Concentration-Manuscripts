@@ -21,8 +21,7 @@
 # ---
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# # CMIP Greenhouse Gas (GHG) Concentration Historical Dataset:
-# Comparison of CMIP Phases
+# # Comparison of CMIP Phases
 # ## Overview
 #
 # Here we make some standalone plots

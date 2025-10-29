@@ -21,7 +21,7 @@ title: 'CMIP Greenhouse Gas (GHG) Concentration Scenario Dataset:
 
 +++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# CMIP Greenhouse Gas (GHG) Concentration Scenario Dataset: Data Description and User Guide
+# Data Description and User Guide
 ## Overview
 
 Here we provide a short description of the draft scenario dataset
@@ -57,8 +57,6 @@ import pandas_indexing as pix
 import pandas_openscm
 import seaborn as sns
 import tqdm.auto
-import numpy as np
-import numpy.typing as npt
 
 from local.data_loading import (
     fetch_and_load_ghg_dataset,
