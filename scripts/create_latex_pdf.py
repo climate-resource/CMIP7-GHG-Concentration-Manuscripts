@@ -107,8 +107,21 @@ def build_pdf(arg, title):
     if not tex_file.exists():
         sys.exit(f"❌ TeX file not found: {tex_file}")
 
+    with open(tex_file) as fh:
+        tex_raw = fh.read()
+
+    tex_raw = tex_raw.replace(
+        r"\end{document}",
+        "\\printbibliography[heading=bibintoc,title={Whole bibliography}]\n\\end{document}",
+    )
+    with open(tex_file, "w") as fh:
+        fh.write(tex_raw)
+
     run(f"xelatex {tex_file.name}", cwd=latex_dir)
+    shutil.copy(project_root / "book" / "references.bib", latex_dir / "references.bib")
+    run(f"biber {tex_file.name.replace('.tex', '.bcf')}", cwd=latex_dir)
     # second pass for updating cross-references
+    run(f"xelatex {tex_file.name}", cwd=latex_dir)
     run(f"xelatex {tex_file.name}", cwd=latex_dir)
 
     # Step 6: copy result

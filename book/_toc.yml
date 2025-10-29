@@ -1,5 +1,4 @@
 format: jb-book
 root: intro
-
 chapters:
-  - file: user-guide-historical
+- file: user-guide-historical

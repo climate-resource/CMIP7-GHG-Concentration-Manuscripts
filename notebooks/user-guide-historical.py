@@ -44,6 +44,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import nc_time_axis  # noqa: F401
 import numpy as np
+
 from local.data_loading import fetch_and_load_ghg_dataset, get_ghg_dataset_local_files
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
 from local.esgf.search.search_query import KnownIndexNode
@@ -67,10 +68,19 @@ create_all_tables(engine)
 # \bibliography{references}
 
 # %% [markdown]
+# ```{role} raw-latex(raw)
+# :format: latex
+# ```
+
+# %% [markdown]
 # # Dataset construction
 #
+# ```{raw} latex
 # The dataset is constructed following the methodology of
-# Meinshausen et al. (2017, REF-TODO).
+# \cite{meinshausen_historical_2017}.
+# ```
+# The dataset is constructed following the methodology of
+# {raw-latex}`\cite{meinshausen_historical_2017}`.
 # The methods are described in full in that paper
 # and will be clarified and described again
 # in the forthcoming manuscript describing this dataset's construction.
@@ -1232,3 +1242,8 @@ plt.show()
 # There are some areas of change.
 # Full details of these changes will be provided
 # in the forthcoming manuscripts.
+
+# %% [markdown]
+# ```{bibliography}
+# :filter: {"user-guide-historical"} & docnames
+# ```
