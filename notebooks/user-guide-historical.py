@@ -114,8 +114,7 @@ create_all_tables(engine)
 #        seasonality and latitudinal gradient used to construct the dataset
 #        from the output dataset. For this reason,
 #        we include these components separately
-#        in the [zenodo record](https://doi.org/10.5281/zenodo.14892947)
-#        [TODO better ref]
+#        in the zenodo record[^1](https://doi.org/10.5281/zenodo.14892947)
 #        that archives the output dataset,
 #        all its inputs and intermediate data prdoucts
 # 9. calculate annual-, hemispheric- and global-means
@@ -131,6 +130,8 @@ create_all_tables(engine)
 # but does provide machine-readable provenance information
 # (which is used to support links between all the input data
 # e.g. linking of the Zenodo archive underpinning this dataset).
+#
+# [^1]: https://doi.org/10.5281/zenodo.14892947
 
 # %% [markdown]
 # ## Finding and accessing the data
@@ -138,11 +139,11 @@ create_all_tables(engine)
 # %% [markdown] jp-MarkdownHeadingCollapsed=true
 # ### ESGF
 #
-# The **Earth System Grid Federation** (ESGF, REF-TODO) provides access to a
+# The **Earth System Grid Federation** (ESGF, {cite}`esgf_docs`) provides access to a
 # range of climate data.
 # The historical data of interest here,
 # which is the data to be used
-# for historical and piControl simulations within CMIP [TODO ref Dunne paper],
+# for historical and piControl simulations within CMIP {cite:p}`dunne2025evolving`,
 # can be found under the "source ID", `CR-CMIP-1-0-0`.
 # The concept of a "source ID" is a bit of a perculiar one
 # to CMIP forcings data.
@@ -173,7 +174,7 @@ create_all_tables(engine)
 # While it aims to be, the ESGF is technically not a permanent archive
 # and does not issue DOIs.
 # In order to provide more reliable, citable access to the data,
-# we also provide it on **Zenodo** (REF-TODO).
+# we also provide it on **Zenodo** {cite:p}`zenodo`.
 # The data, as well as all the source code and input data used to process it,
 # can be found at https://doi.org/10.5281/zenodo.14892947.
 
@@ -183,7 +184,7 @@ create_all_tables(engine)
 # %% [markdown]
 # ### Format
 #
-# The data is provided in **netCDF format** [TODO citation].
+# The data is provided in **netCDF format** {cite:p}`unidata_netcdf`.
 # This self-describing format allows the data
 # to be placed in the same file as metadata
 # (in the so-called "file header").
@@ -754,7 +755,8 @@ plt.show()
 # 1. we have split the global-mean and hemispheric-mean data into separate files.
 #    In CMIP6, this data was in the same file (with a grid label of `GMNHSH`).
 #    We have split this for two reasons:
-#    a) `GMNHSH` is not a grid label recognised in the CMIP CVs [REF-TODO] and
+#    a) `GMNHSH` is not a grid label recognised in the CMIP CVs
+# {cite:p}`wcrp_cmip_cvs_mip` and
 #    b) having global-mean and hemispheric-mean data in the same file
 #       required us to introduce a 'sector' coordinate,
 #       which was confusing and does not follow the CF-conventions.
