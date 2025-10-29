@@ -1,36 +1,43 @@
-# ---
-# jupyter:
-#   authors:
-#   - name: Zebedee Nicholls
-#   - name: Florence Bockting
-#   - name: Mika Plf{\"u}ger
-#   jupytext:
-#     notebook_metadata_filter: title,authors
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.17.3
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-#   title: 'CMIP Greenhouse Gas (GHG) Concentration Historical Dataset:
-#
-#     Data Description and User Guide'
-# ---
+---
+authors:
+- name: Zebedee Nicholls
+- name: Florence Bockting
+- name: Mika Plf{\"u}ger
+jupytext:
+  notebook_metadata_filter: title,authors
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.17.3
+kernelspec:
+  display_name: Python 3 (ipykernel)
+  language: python
+  name: python3
+title: 'CMIP Greenhouse Gas (GHG) Concentration Historical Dataset:
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# # Comparison of CMIP Phases
-# ## Overview
-#
-# Here we make some standalone plots
-# that compare the historical concentrations over CMIP phases.
+  Data Description and User Guide'
+---
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-# ## Imports
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# Comparison of CMIP Phases
+## Overview
+
+Here we make some standalone plots
+that compare the historical concentrations over CMIP phases.
+
++++ {"editable": true, "slideshow": {"slide_type": ""}, "tags": ["remove_cell"]}
+
+## Imports
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 from functools import partial
 
 import cftime
@@ -44,8 +51,15 @@ from local.data_loading import fetch_and_load_ghg_dataset
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
 from local.esgf.search.search_query import KnownIndexNode
 from local.paths import REPO_ROOT
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 local_data_root_dir = REPO_ROOT / "data" / "raw" / "esgf"
 local_data_root_dir.mkdir(exist_ok=True, parents=True)
 sqlite_file = REPO_ROOT / "download-test-database.db"
@@ -57,15 +71,17 @@ sqlite_file = REPO_ROOT / "download-test-database.db"
 
 engine = get_sqlite_engine(sqlite_file)
 create_all_tables(engine)
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Data comparisons
-#
-# Comparing the data from CMIP6 and CMIP7 shows minor changes
-# (although doing this comparison requires a bit of care
-# because of the changes in file formats).
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %%
+## Data comparisons
+
+Comparing the data from CMIP6 and CMIP7 shows minor changes
+(although doing this comparison requires a bit of care
+because of the changes in file formats).
+
+```{code-cell}
 fetch_and_load = partial(
     fetch_and_load_ghg_dataset,
     local_data_root_dir=local_data_root_dir,
@@ -74,8 +90,15 @@ fetch_and_load = partial(
     # source_id="UoM-CMIP-1-2-0",
     index_node=KnownIndexNode.ORNL,
 )
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 gases_to_show = ["co2", "ch4", "n2o", "cfc12eq", "hfc134aeq"]
 ds_gases_full_d = {}
 for gas in gases_to_show:
@@ -104,14 +127,14 @@ for gas in gases_to_show:
 
         # compute to avoid dask weirdness
         ds_gases_full_d[gas][cmip_era] = ds.compute()
+```
 
-# %% [markdown]
-# Values below come from Table 7.SM.7 of
-# IPCC AR7 WG1 Ch. 7 Supplementary Material[^4].
-#
-# [^4]: https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07_SM.pdf
+Values below come from Table 7.SM.7 of
+IPCC AR7 WG1 Ch. 7 Supplementary Material[^4].
 
-# %%
+[^4]: https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07_SM.pdf
+
+```{code-cell}
 from openscm_units import unit_registry
 
 Q = unit_registry.Quantity
@@ -123,8 +146,15 @@ RADIATIVE_EFFICIENCIES = {
     "cfc12eq": Q(0.358, "W / m^2 / ppb"),
     "hfc134aeq": Q(0.167, "W / m^2 / ppb"),
 }
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 from typing import Callable
 
 import numpy.typing as npt
@@ -277,15 +307,23 @@ def remove_empty_axes(
             v.remove()
 
     return res
+```
 
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Global, annual-mean concentrations: Year 1 - 2022
+### Global, annual-mean concentrations: Year 1 - 2022
 
-# %%
+```{code-cell}
 plt.rcParams["axes.xmargin"] = 0
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 fig, axes_d = get_default_delta_mosaic()
 axes_d = remove_empty_axes(axes_d)
 
@@ -304,15 +342,24 @@ for ax in axes_d.values():
 plt.tight_layout()
 # plt.savefig("key-species-global-annual-changes-across-cmip-phases.png")
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Global, annual-mean concentrations: Year 1750 - 2022
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %%
+### Global, annual-mean concentrations: Year 1750 - 2022
+
+```{code-cell}
 # TODO: copy https://github.com/climate-resource/CMIP6-vs-CMIP7-GHG-Concentrations/blob/clean-up/notebooks/0101_demonstrate-cmip6-eq-issue.py
 # into this repo to demonstrate the issue with the equivalent species
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 fig, axes_d = get_default_delta_mosaic()
 axes_d = remove_empty_axes(axes_d)
 
@@ -330,14 +377,22 @@ for ax in axes_d.values():
 
 plt.tight_layout()
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Global, annual-mean concentrations: Year 1957 - 2022
-#
-# 1957 is the start of the Scripps ground-based record.
-# Before this, data is based on ice cores alone.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+### Global, annual-mean concentrations: Year 1957 - 2022
+
+1957 is the start of the Scripps ground-based record.
+Before this, data is based on ice cores alone.
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 fig, axes_d = get_default_delta_mosaic()
 axes_d = remove_empty_axes(axes_d)
 
@@ -350,11 +405,11 @@ plot_overview_and_deltas(
 
 plt.tight_layout()
 plt.show()
+```
 
-# %% [markdown]
-# ### Global, monthly-mean concentrations: Year 1 - 2022
+### Global, monthly-mean concentrations: Year 1 - 2022
 
-# %%
+```{code-cell}
 ds_gases_full_monthly_d = {}
 for gas in gases_to_show:
     ds_gases_full_monthly_d[gas] = {}
@@ -382,8 +437,9 @@ for gas in gases_to_show:
 
         # compute to avoid dask weirdness
         ds_gases_full_monthly_d[gas][cmip_era] = ds.compute()
+```
 
-# %%
+```{code-cell}
 fig, axes_d = get_default_delta_mosaic()
 axes_d = remove_empty_axes(axes_d)
 
@@ -409,11 +465,11 @@ for ax in axes_d.values():
 
 plt.tight_layout()
 plt.show()
+```
 
-# %% [markdown]
-# ### Latitudinally-resolved, monthly-mean concentrations: Year 1 - 2022
+### Latitudinally-resolved, monthly-mean concentrations: Year 1 - 2022
 
-# %%
+```{code-cell}
 gases_to_show = ["co2", "ch4"]
 ds_gases_full_monthly_lat_d = {}
 for gas in gases_to_show:
@@ -442,9 +498,9 @@ for gas in gases_to_show:
 
         # compute to avoid dask weirdness
         ds_gases_full_monthly_lat_d[gas][cmip_era] = ds.compute()
+```
 
-
-# %%
+```{code-cell}
 def plot_lat_selection(
     gas: str,
     ds_d: dict[str, dict[str, xr.Dataset]],
@@ -522,9 +578,9 @@ def plot_lat_selection(
         ax_delta_re.set_ylabel(target_unit_re)
         ax_delta_re.legend()
         ax_delta_re.set_title(None)
+```
 
-
-# %%
+```{code-cell}
 gas = "co2"
 # gas = "ch4"
 min_year = 1
@@ -572,3 +628,4 @@ plt.tight_layout()
 # plt.savefig(f"{gas}_lat-monthly.png")
 plt.suptitle(gas, y=1.0)
 plt.show()
+```

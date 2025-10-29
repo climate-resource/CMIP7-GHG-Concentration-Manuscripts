@@ -68,6 +68,45 @@ Using `nbconvert` for converting notebooks to PDF requires the following install
 perhaps replacing the other instructions above as they may become redundant.
 -->
 
+## Jupyter-book
+Update deliverables in `notebooks\`.
+
+To make Latex-PDF of each deliverable, run
+```sh
+# historical datasets
+uv run python scripts/create_latex_pdf.py user-guide-historical "CMIP Greenhouse Gas (GHG) Concentration Historical Dataset"
+# scenarios dataset
+uv run python scripts/create_latex_pdf.py user-guide-scenarios "CMIP Greenhouse Gas (GHG) Concentration Scenarios Dataset"
+# standalone dataset
+uv run python scripts/create_latex_pdf.py cmip-phase-comparison-historical-standalone "CMIP Greenhouse Gas (GHG) Concentration Historical Dataset"
+```
+The deliverables are saved in `book\deliverables\`
+
+**General jupyter-book commands**
+
+To build jupyter-book, run
+```sh
+uv run jupyter-book build book/
+```
+
+To build PDF file, run
+```sh
+uv run jupyter-book build book/ --builder pdfhtml
+```
+
+or to build PDF with LaTeX, run
+```sh
+uv run jupyter-book build book/ --builder pdflatex
+```
+
+If the `pdflatex`-command fails, the following work-around can be used to create a latex PDF:
+```sh
+run jupyter-book build book/ --builder latex
+cd book/_build/latex
+xelatex projectnamenotset.tex # run 2 times to get cross-references updated
+```
+The resulting PDF can be found in book/_build/latex/projectnamenotset.pdf
+
 ## Development
 
 <!--- In bigger projects, we would recommend having separate docs where this

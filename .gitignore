@@ -28,6 +28,9 @@ __pycache__/
 # C extensions
 *.so
 
+# book
+book/_build/
+
 # Distribution / packaging
 .Python
 build/

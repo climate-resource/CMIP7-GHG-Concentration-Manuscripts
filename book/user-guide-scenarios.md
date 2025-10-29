@@ -1,40 +1,47 @@
-# ---
-# jupyter:
-#   authors:
-#   - name: Zebedee Nicholls
-#   - name: Florence Bockting
-#   - name: Mika Plf{\"u}ger
-#   jupytext:
-#     notebook_metadata_filter: title,authors
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.17.3
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-#   title: 'CMIP Greenhouse Gas (GHG) Concentration Scenario Dataset:
-#
-#     Data Description and User Guide'
-# ---
+---
+authors:
+- name: Zebedee Nicholls
+- name: Florence Bockting
+- name: Mika Plf{\"u}ger
+jupytext:
+  notebook_metadata_filter: title,authors
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.17.3
+kernelspec:
+  display_name: Python 3 (ipykernel)
+  language: python
+  name: python3
+title: 'CMIP Greenhouse Gas (GHG) Concentration Scenario Dataset:
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# # Data Description and User Guide
-# ## Overview
-#
-# Here we provide a short description of the draft scenario dataset
-# and a guide for users.
-# This is intended to provide a short introduction for users of the data.
-# The full details of the dataset's construction
-# and evaluation against other data sources
-# will be provided in the full manuscript which is being prepared.
+  Data Description and User Guide'
+---
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-# ## Imports
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# Data Description and User Guide
+## Overview
+
+Here we provide a short description of the draft scenario dataset
+and a guide for users.
+This is intended to provide a short introduction for users of the data.
+The full details of the dataset's construction
+and evaluation against other data sources
+will be provided in the full manuscript which is being prepared.
+
++++ {"editable": true, "slideshow": {"slide_type": ""}, "tags": ["remove_cell"]}
+
+## Imports
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 import calendar
 from functools import partial
 from typing import Any
@@ -59,11 +66,25 @@ from local.data_loading import (
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
 from local.esgf.search.search_query import KnownIndexNode
 from local.paths import REPO_ROOT
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 pandas_openscm.register_pandas_accessors()
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 local_data_root_dir = REPO_ROOT / "data" / "raw" / "esgf"
 local_data_root_dir.mkdir(exist_ok=True, parents=True)
 sqlite_file = REPO_ROOT / "download-test-scenario-database.db"
@@ -75,169 +96,180 @@ sqlite_file = REPO_ROOT / "download-test-scenario-database.db"
 
 engine = get_sqlite_engine(sqlite_file)
 create_all_tables(engine)
+```
 
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Dataset construction
-#
-# The dataset is constructed following a similar methodology
-# to {cite:t}`meinshausen_shared_2020`.
-# The full method will be described in a forthcoming paper.
-# In brief, the method is:
-#
-# 1. **retrieve concentrations** of GHG gases
-#
-#     1. for gases covered under the Montreal Protocol {cite:p}`montreal_protocol_1987`
-#        and whose concentration evolution is already specified in WMO 2022
-#        {cite:p}`hermanson2022wmo`, we simply use the WMO 2022 concentrations
-#
-#     1. for all other gases, we
-#
-#         1. start with harmonised, complete emissions sets for each scenario
-#            of interest
-#
-#         1. run MAGICC {cite:p}`meinshausen2011emulating1,meinshausen2011emulating2` to
-#            translate these emissions into global-mean concentrations
-#
-#            1. MAGICC is run in the same configuration which was used in AR6
-#              (as described/evaluated in Cross-Chapter Box 7.1[^1]).
-#              This represents our best estimate, in line with the last IPCC report,
-#              of the concentrations that result from the emissions.
-#              Note, given that CMIP7 models have not yet been run, this will,
-#              almost by definition, produce different concentrations
-#              than those outputed by the ESMs run in emissions-driven mode.
-#              We nonetheless look forward to reading lots of papers saying that
-#              "CMIP7 input concentrations are biased up/down/whatever".
-#         1. harmonise the global-mean concentrations to the historical
-#              concentrations using gradient-aware harmonisation[^2] to ensure a smooth
-#              transition in both the absolute values and the gradient, improving on the
-#              CMIP6 data which had an abrupt jump in the gradient (most notable for
-#              methane, further details below)
-#
-# 3. **seasonality and latitudinal gradients**: We use the same statistical
-#    models for seasonality and latitudinal gradients as were used over the
-#    historical period. These are then applied to the future, based on the same
-#    input drivers.
-#     - one exception is CO<sub>2</sub>, which uses GPP as the input driver
-#       rather than a regression on a combined global-mean surface temperature and
-#       CO<sub>2</sub> concentration metric (as is used in the product that covers
-#       history)
-#     - arguably we should harmonise the inputs to these models too.
-#       We don't do this step as such a harmonisation would only provide
-#       second-order corrections.
-# 5. **combine the global-means, seasonality and latitudinal gradients** to
-#    produce our complete, gridded projections
-# 6. **calculate lower resolution products** from the gridded product
-# 7. **release** all the data
-#
-# [^1]: https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/
-# [^2]: https://github.com/climate-resource/gradient-aware-harmonisation
+## Dataset construction
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Finding and accessing the data
+The dataset is constructed following a similar methodology
+to {cite:t}`meinshausen_shared_2020`.
+The full method will be described in a forthcoming paper.
+In brief, the method is:
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### ESGF
-#
-# The Earth System Grid Federation (ESGF, {cite:p}`esgf_docs`) provides
-# access to a range of climate data.
-#
-# The scenario data of interest here,
-# which is a draft dataset
-# can be found under "MIP era" `CMIP6Plus` (for draft datasets),
-# "institution ID" `CR`
-# and "source version" `0.1.0`
-# (also under "source IDs" of the form `CR-*-0-1-0`,
-# although this is less useful as the ESGF search API
-# does not appear to support glob/star expressions
-# for specific facet searches).
-#
-# It is possible to filter searches on ESGF
-# via the user interface.
-# Searches can often be encoded in URLs[^3] too
-# (although these URLs sometimes move,
-# so we make no guarantee that this link will always be live).
-#
-# These datasets are a draft only.
-# The final datasets will maintain the same form; however,
-# the numbers are currently being finalised
-# and the final names have been changed since the draft datasets
-# were published,
-# so please take care to treat the values shown here as drafts only.
-#
-# To download the data, we recommend accessing it directly via the
-# ESGF user interfaces via links as discussed above.
-# Alternately, there are tools dedicated to accessing ESGF data,
-# with two prominent examples being:
-#
-# 1. esgpull: https://esgf.github.io/esgf-download
-# 2. intake-esgf: https://intake-esgf.readthedocs.io
-#
-# Please see these tools' docs for usage instructions.
-#
-# [^3]: An example URL: [https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%<br>
-# 220.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP6Plus%22%7D](
-# https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%220.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP6Plus%22%7D)
+1. **retrieve concentrations** of GHG gases
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Zenodo
-#
-# While it aims to be, the ESGF is technically not a permanent archive
-# and does not issue DOIs.
-# In order to provide more reliable, citable access to the data,
-# we will also provide the final scenario datasets on Zenodo
-# ({cite:t}`zenodo`, although we have not done this step for the draft datasets).
-# When ready, we will update this guide to use the final scenario data
-# and include the zenodo link to the source code and input data used to process it.
+    1. for gases covered under the Montreal Protocol {cite:p}`montreal_protocol_1987` and whose
+       concentration evolution is already specified in WMO 2022 {cite:p}`hermanson2022wmo`,
+       we simply use the WMO 2022 concentrations
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## Data description
+    1. for all other gases, we
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Format
-#
-# The data is provided in netCDF format {cite:p}`unidata_netcdf`.
-# This self-describing format allows the data
-# to be placed in the same file as metadata
-# (in the so-called "file header").
-# The scenario datasets are only 78 years long,
-# so each scenario-specific dataset is provided in a single file
-# (unlike the historical dataset,
-# which is split into multiple files).
+        1. start with harmonised, complete emissions sets for each scenario
+           of interest
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Scenario information
-#
-# Determining the scenario to which each dataset applies
-# is not trivial
-# (there was [discussion](https://github.com/PCMDI/input4MIPs_CVs/discussions/64)
-# about how to make this more trivial,
-# but ultimately backwards-compatibility was prioritised).
-#
-# Each dataset is given a unique source ID.
-# This source ID appears both in the global attributes of the file
-# as well as in the filename (as the 5th underscore separated element).
-# The concept of a source ID is a bit of a perculiar one
-# to CMIP forcings data.
-# In practice, it is simply a unique identifier for a collection of datasets
-# (and it's best not to read more than that into it).
-#
-# As a result of the way that scenario data is handled in CMIP/input4MIPs,
-# the scenario name appears as part of the source ID,
-# rather than as a standalone attribute/identifier.
-# This means that its value must be extracted from the other parts of the source ID.
-# In general, this is not a trivial problem
-# (users of forcings data more generally are directed to
-# [input4mips-cvs.readthedocs.io/en/latest/extracting-scenario-from-source-id](https://input4mips-cvs.readthedocs.io/en/latest/extracting-scenario-from-source-id/)).
-# For the greenhouse gas concentrations,
-# the scenario identifier is simply
-# the second hyphen-separated element of the source ID.
-# For example, for the source ID `CR-ml-0-1-0`,
-# the scenario identifier is `ml`.
-# A Python function for doing this extraction is below.
+        1. run MAGICC {cite:p}`meinshausen2011emulating1,meinshausen2011emulating2` to translate these emissions into
+            global-mean concentrations
 
+           1. MAGICC is run in the same configuration which was used in AR6
+             (as described/evaluated in Cross-Chapter Box 7.1[^1]).
+             This represents our best estimate, in line with the last IPCC report,
+             of the concentrations that result from the emissions.
+             Note, given that CMIP7 models have not yet been run, this will,
+             almost by definition, produce different concentrations
+             than those outputed by the ESMs run in emissions-driven mode.
+             We nonetheless look forward to reading lots of papers saying that
+             "CMIP7 input concentrations are biased up/down/whatever".
+        1. harmonise the global-mean concentrations to the historical
+             concentrations using gradient-aware harmonisation[^2] to ensure a smooth
+             transition in both the absolute values and the gradient, improving on the
+             CMIP6 data which had an abrupt jump in the gradient (most notable for
+             methane, further details below)
 
-# %% editable=true slideshow={"slide_type": ""}
+3. **seasonality and latitudinal gradients**: We use the same statistical
+   models for seasonality and latitudinal gradients as were used over the
+   historical period. These are then applied to the future, based on the same
+   input drivers.
+    - one exception is CO<sub>2</sub>, which uses GPP as the input driver
+      rather than a regression on a combined global-mean surface temperature and
+      CO<sub>2</sub> concentration metric (as is used in the product that covers
+      history)
+    - arguably we should harmonise the inputs to these models too.
+      We don't do this step as such a harmonisation would only provide
+      second-order corrections.
+5. **combine the global-means, seasonality and latitudinal gradients** to
+   produce our complete, gridded projections
+6. **calculate lower resolution products** from the gridded product
+7. **release** all the data
+
+[^1]: https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/
+[^2]: https://github.com/climate-resource/gradient-aware-harmonisation
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+## Finding and accessing the data
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+### ESGF
+
+The Earth System Grid Federation (ESGF, {cite:p}`esgf_docs`) provides
+access to a range of climate data.
+
+The scenario data of interest here,
+which is a draft dataset
+can be found under "MIP era" `CMIP6Plus` (for draft datasets),
+"institution ID" `CR`
+and "source version" `0.1.0`
+(also under "source IDs" of the form `CR-*-0-1-0`,
+although this is less useful as the ESGF search API
+does not appear to support glob/star expressions
+for specific facet searches).
+
+It is possible to filter searches on ESGF
+via the user interface.
+Searches can often be encoded in URLs[^3] too
+(although these URLs sometimes move,
+so we make no guarantee that this link will always be live).
+
+These datasets are a draft only.
+The final datasets will maintain the same form; however,
+the numbers are currently being finalised
+and the final names have been changed since the draft datasets
+were published,
+so please take care to treat the values shown here as drafts only.
+
+To download the data, we recommend accessing it directly via the
+ESGF user interfaces via links as discussed above.
+Alternately, there are tools dedicated to accessing ESGF data,
+with two prominent examples being:
+
+1. esgpull: https://esgf.github.io/esgf-download
+2. intake-esgf: https://intake-esgf.readthedocs.io
+
+Please see these tools' docs for usage instructions.
+
+[^3]: An example URL: [https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%<br>
+220.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP6Plus%22%7D](
+https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%220.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP6Plus%22%7D)
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+### Zenodo
+
+While it aims to be, the ESGF is technically not a permanent archive
+and does not issue DOIs.
+In order to provide more reliable, citable access to the data,
+we will also provide the final scenario datasets on Zenodo
+({cite:t}`zenodo`, although we have not done this step for the draft datasets).
+When ready, we will update this guide to use the final scenario data
+and include the zenodo link to the source code and input data used to process it.
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+## Data description
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+### Format
+
+The data is provided in netCDF format {cite:p}`unidata_netcdf`.
+This self-describing format allows the data
+to be placed in the same file as metadata
+(in the so-called "file header").
+The scenario datasets are only 78 years long,
+so each scenario-specific dataset is provided in a single file
+(unlike the historical dataset,
+which is split into multiple files).
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+### Scenario information
+
+Determining the scenario to which each dataset applies
+is not trivial
+(there was [discussion](https://github.com/PCMDI/input4MIPs_CVs/discussions/64)
+about how to make this more trivial,
+but ultimately backwards-compatibility was prioritised).
+
+Each dataset is given a unique source ID.
+This source ID appears both in the global attributes of the file
+as well as in the filename (as the 5th underscore separated element).
+The concept of a source ID is a bit of a perculiar one
+to CMIP forcings data.
+In practice, it is simply a unique identifier for a collection of datasets
+(and it's best not to read more than that into it).
+
+As a result of the way that scenario data is handled in CMIP/input4MIPs,
+the scenario name appears as part of the source ID,
+rather than as a standalone attribute/identifier.
+This means that its value must be extracted from the other parts of the source ID.
+In general, this is not a trivial problem
+(users of forcings data more generally are directed to
+[input4mips-cvs.readthedocs.io/en/latest/extracting-scenario-from-source-id](https://input4mips-cvs.readthedocs.io/en/latest/extracting-scenario-from-source-id/)).
+For the greenhouse gas concentrations,
+the scenario identifier is simply
+the second hyphen-separated element of the source ID.
+For example, for the source ID `CR-ml-0-1-0`,
+the scenario identifier is `ml`.
+A Python function for doing this extraction is below.
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+---
 def extract_scenario_id(source_id: str) -> str:
     """
     Extract scenario ID from a GHG concentration source ID
@@ -257,176 +289,190 @@ def extract_scenario_id(source_id: str) -> str:
 
 print(f"{extract_scenario_id('CR-ml-0-1-0')=}")
 print(f"{extract_scenario_id('CR-l-0-1-0')=}")
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# These scenario IDs can then be used to find details of the complete scenario.
-# These details will be provided both via the CMIP CVs
-# (see https://github.com/WCRP-CMIP/CMIP7-CVs)
-# and the final ScenarioMIP paper
-# (revisions of
-# [this paper](https://doi.org/10.5194/egusphere-2024-3765) are expected soon).
-# As above, note that the scenario IDs
-# have changed since publication of the draft dataset. Table \ref{tab:scenario_ids}
-# provides an overview
-# of the changes. Scenario IDs of the final datasets can be confirmed
-# [here](https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785).
-#
-# **Table 4.1:** Mapping of draft scenario IDs to final scenario IDs.
-#
-# \begin{table}[ht]
-# \centering
-# \caption{Mapping of draft scenario IDs to final scenario IDs}
-# \label{tab:scenario_ids}
-# \begin{tabular}{cc}
-# \hline
-# Draft dataset & Final dataset \\
-# \hline
-# \textbf{vllo} & \textbf{vl} \\
-# \textbf{vlho} & \textbf{ln} \\
-# l    & l  \\
-# ml   & ml \\
-# m    & m  \\
-# hl   & hl \\
-# h    & h  \\
-# \hline
-# \end{tabular}
-# \end{table}
-#
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Grids and frequencies provided
-#
-# We provide five combinations of grids and time sampling
-# (also referred to as *frequency*,
-# although this is a bit of a misuse as the units of frequency are per time,
-# which doesn't match the convention for these metadata values).
-# The grid and frequency information for each file can be found in its netCDF header
-# under the attributes `grid_label` (for grid) and `frequency` (for time sampling).
-# The `grid_label` and `frequency` also appear in each file's name,
-# which allows files to be filtered without needing to load them first.
-# The five combinations of grid and time sampling are:
-#
-# 1. global-, annual-mean (`grid_label="gm"`, `frequency="yr"`)
-# 1. global-, monthly-mean (`grid_label="gm"`, `frequency="mon"`)
-# 1. hemispheric-, annual-mean (`grid_label="gr1z"`, `frequency="yr"`)
-# 1. hemispheric-, monthly-mean (`grid_label="gr1z"`, `frequency="mon"`)
-# 1. 15-degree latitudinal, monthly-mean (`grid_label="gnz"`, `frequency="mon"`)
+These scenario IDs can then be used to find details of the complete scenario.
+These details will be provided both via the CMIP CVs
+(see https://github.com/WCRP-CMIP/CMIP7-CVs)
+and the final ScenarioMIP paper
+(revisions of
+[this paper](https://doi.org/10.5194/egusphere-2024-3765) are expected soon).
+As above, note that the scenario IDs
+have changed since publication of the draft dataset. Table \ref{tab:scenario_ids}
+provides an overview
+of the changes. Scenario IDs of the final datasets can be confirmed
+[here](https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785).
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Species provided
-#
-# We provide concentrations for 43 greenhouse gas concentrations and species,
-# as well as three equivalent species.
-# The species are:
-#
-# <!-- Note: generated using `scripts/generate-ghg-listing.py` --->
-# - major greenhouse gases (3)
-#     - CH<sub>4</sub>, CO<sub>2</sub>, N<sub>2</sub>O
-# - ozone-depleting substances (17)
-#     - CFCs (5)
-#         - CFC-11, CFC-113, CFC-114, CFC-115, CFC-12
-#     - HCFCs (3)
-#         - HCFC-141b, HCFC-142b, HCFC-22
-#     - Halons (3)
-#         - Halon 1211, Halon 1301, Halon 2402
-#     - other ozone-depleting substances (6)
-#         - CCl<sub>4</sub>, CH<sub>2</sub>Cl<sub>2</sub>, CH<sub>3</sub>Br,
-#           CH<sub>3</sub>CCl<sub>3</sub>, CH<sub>3</sub>Cl, CHCl<sub>3</sub>
-# - ozone fluorinated compounds (23)
-#     - HFCs (11)
-#         - HFC-125, HFC-134a, HFC-143a, HFC-152a, HFC-227ea, HFC-23, HFC-236fa,
-#           HFC-245fa, HFC-32, HFC-365mfc, HFC-4310mee
-#     - PFCs (9)
-#         - C<sub>2</sub>F<sub>6</sub>, C<sub>3</sub>F<sub>8</sub>,
-#           C<sub>4</sub>F<sub>10</sub>, C<sub>5</sub>F<sub>12</sub>,
-#           C<sub>6</sub>F<sub>14</sub>, C<sub>7</sub>F<sub>16</sub>,
-#           C<sub>8</sub>F<sub>18</sub>, CC<sub>4</sub>F<sub>8</sub>,
-#           CF<sub>4</sub>
-#     - other (3)
-#         - NF<sub>3</sub>, SF<sub>6</sub>, SO<sub>2</sub>F<sub>2</sub>
-#
-# #### Equivalent species
-#
-# For most models, you will not use all 43 species.
-# As a result, we provide equivalent species too.
-# There are two options if you don't want to use all 43 species.
-#
-# ##### Option 1
-#
-# Use CO<sub>2</sub>, CH<sub>4</sub>, N<sub>2</sub>O and CFC-12 directly.
-# Use CFC-11 equivalent to capture the radiative effect of all other species.
-#
-# ##### Option 2
-#
-# Use CO<sub>2</sub>, CH<sub>4</sub> and N<sub>2</sub>O directly.
-# Use CFC-12 equivalent
-# to capture the radiative effect of all ozone depleting substances (ODSs)
-# and HFC-134a equivalent
-# to capture the radiative effect of all other fluorinated gases.
+**Table 4.1:** Mapping of draft scenario IDs to final scenario IDs.
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Uncertainty
-#
-# At present, we provide no analysis of the uncertainty associated with these datasets.
-#
-# On top of the uncertainties in the historical data
-# (which are, in radiative forcing terms, small),
-# the scenario datasets are subject to uncertainties
-# from the modelling process required to produce them.
-# This means that, in radiative forcing terms, the uncertainty in these concentrations
-# is much larger than the historical data.
-# Nonetheless, it is very likely to be small
-# compared to other uncertainties in the climate system,
-# but this statement is not presently based on any robust analysis
-# (rather it is based on expert judgement and past experience).
+\begin{table}[ht]
+\centering
+\caption{Mapping of draft scenario IDs to final scenario IDs}
+\label{tab:scenario_ids}
+\begin{tabular}{cc}
+\hline
+Draft dataset & Final dataset \\
+\hline
+\textbf{vllo} & \textbf{vl} \\
+\textbf{vlho} & \textbf{ln} \\
+l    & l  \\
+ml   & ml \\
+m    & m  \\
+hl   & hl \\
+h    & h  \\
+\hline
+\end{tabular}
+\end{table}
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Differences compared to CMIP6
-#
-# There are two major differences from CMIP6.
-# The first is that the scenarios are different.
-# By definition, this changes the concentrations.
-# (There is also no 1:1 mapping between CMIP6 and CMIP7 scenarios,
-# so the overall spacing and ensemble of scenarios is different too).
-# The second is the transition from the history, observation-based period
-# to the scenario, model-based projections.
-# In CMIP6, this transition simply occured over a single year.
-# In places, this led to notable changes in gradient at this transition point
-# (further analysis of this is provided below).
-# In CMIP7, we instead use a more sophisticated harmonisation algorithm
-# (using the [gradient-aware-harmonisation](https://github.com/climate-resource/gradient-aware-harmonisation)
-# package developed as part of the ESA project).
-# This leads to smoother, more realistic transitions
-# between the history, observation-based period
-# and the scenario, model-based projections.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ## User guide
+### Grids and frequencies provided
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# Having downloaded the data, using it is relatively straightforward
-# (scenario identification issue discussed above notwithstanding).
+We provide five combinations of grids and time sampling
+(also referred to as *frequency*,
+although this is a bit of a misuse as the units of frequency are per time,
+which doesn't match the convention for these metadata values).
+The grid and frequency information for each file can be found in its netCDF header
+under the attributes `grid_label` (for grid) and `frequency` (for time sampling).
+The `grid_label` and `frequency` also appear in each file's name,
+which allows files to be filtered without needing to load them first.
+The five combinations of grid and time sampling are:
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Annual-, global-mean data
-#
-# We start with the annual-, global-mean data.
-# Like all our datasets, this is composed of one file per scenario,
-# given seven files in total.
-#
-# For yearly data, the time labels in the filename are years
-# (for months, the month is included e.g. you will see `202201-210012`
-# rather than `2022-2100` in the filename,
-# the files also have different values for the `frequency` attribute).
-# Global-mean data is identified by the 'grid label' `gm`,
-# which appears in the filename.
-# Below we show the filenames for the CO<sub>2</sub> output.
-#
-# **Note: in the draft datasets, the time axis starts in 2023.
-# This will be updated to a 2022 start for the final datasets,
-# in line with the rest of the scenario datasets.**
+1. global-, annual-mean (`grid_label="gm"`, `frequency="yr"`)
+1. global-, monthly-mean (`grid_label="gm"`, `frequency="mon"`)
+1. hemispheric-, annual-mean (`grid_label="gr1z"`, `frequency="yr"`)
+1. hemispheric-, monthly-mean (`grid_label="gr1z"`, `frequency="mon"`)
+1. 15-degree latitudinal, monthly-mean (`grid_label="gnz"`, `frequency="mon"`)
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+### Species provided
+
+We provide concentrations for 43 greenhouse gas concentrations and species,
+as well as three equivalent species.
+The species are:
+
+<!-- Note: generated using `scripts/generate-ghg-listing.py` --->
+- major greenhouse gases (3)
+    - CH<sub>4</sub>, CO<sub>2</sub>, N<sub>2</sub>O
+- ozone-depleting substances (17)
+    - CFCs (5)
+        - CFC-11, CFC-113, CFC-114, CFC-115, CFC-12
+    - HCFCs (3)
+        - HCFC-141b, HCFC-142b, HCFC-22
+    - Halons (3)
+        - Halon 1211, Halon 1301, Halon 2402
+    - other ozone-depleting substances (6)
+        - CCl<sub>4</sub>, CH<sub>2</sub>Cl<sub>2</sub>, CH<sub>3</sub>Br,
+          CH<sub>3</sub>CCl<sub>3</sub>, CH<sub>3</sub>Cl, CHCl<sub>3</sub>
+- ozone fluorinated compounds (23)
+    - HFCs (11)
+        - HFC-125, HFC-134a, HFC-143a, HFC-152a, HFC-227ea, HFC-23, HFC-236fa,
+          HFC-245fa, HFC-32, HFC-365mfc, HFC-4310mee
+    - PFCs (9)
+        - C<sub>2</sub>F<sub>6</sub>, C<sub>3</sub>F<sub>8</sub>,
+          C<sub>4</sub>F<sub>10</sub>, C<sub>5</sub>F<sub>12</sub>,
+          C<sub>6</sub>F<sub>14</sub>, C<sub>7</sub>F<sub>16</sub>,
+          C<sub>8</sub>F<sub>18</sub>, CC<sub>4</sub>F<sub>8</sub>,
+          CF<sub>4</sub>
+    - other (3)
+        - NF<sub>3</sub>, SF<sub>6</sub>, SO<sub>2</sub>F<sub>2</sub>
+
+#### Equivalent species
+
+For most models, you will not use all 43 species.
+As a result, we provide equivalent species too.
+There are two options if you don't want to use all 43 species.
+
+##### Option 1
+
+Use CO<sub>2</sub>, CH<sub>4</sub>, N<sub>2</sub>O and CFC-12 directly.
+Use CFC-11 equivalent to capture the radiative effect of all other species.
+
+##### Option 2
+
+Use CO<sub>2</sub>, CH<sub>4</sub> and N<sub>2</sub>O directly.
+Use CFC-12 equivalent
+to capture the radiative effect of all ozone depleting substances (ODSs)
+and HFC-134a equivalent
+to capture the radiative effect of all other fluorinated gases.
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+### Uncertainty
+
+At present, we provide no analysis of the uncertainty associated with these datasets.
+
+On top of the uncertainties in the historical data
+(which are, in radiative forcing terms, small),
+the scenario datasets are subject to uncertainties
+from the modelling process required to produce them.
+This means that, in radiative forcing terms, the uncertainty in these concentrations
+is much larger than the historical data.
+Nonetheless, it is very likely to be small
+compared to other uncertainties in the climate system,
+but this statement is not presently based on any robust analysis
+(rather it is based on expert judgement and past experience).
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+### Differences compared to CMIP6
+
+There are two major differences from CMIP6.
+The first is that the scenarios are different.
+By definition, this changes the concentrations.
+(There is also no 1:1 mapping between CMIP6 and CMIP7 scenarios,
+so the overall spacing and ensemble of scenarios is different too).
+The second is the transition from the history, observation-based period
+to the scenario, model-based projections.
+In CMIP6, this transition simply occured over a single year.
+In places, this led to notable changes in gradient at this transition point
+(further analysis of this is provided below).
+In CMIP7, we instead use a more sophisticated harmonisation algorithm
+(using the [gradient-aware-harmonisation](https://github.com/climate-resource/gradient-aware-harmonisation)
+package developed as part of the ESA project).
+This leads to smoother, more realistic transitions
+between the history, observation-based period
+and the scenario, model-based projections.
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+## User guide
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+Having downloaded the data, using it is relatively straightforward
+(scenario identification issue discussed above notwithstanding).
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+### Annual-, global-mean data
+
+We start with the annual-, global-mean data.
+Like all our datasets, this is composed of one file per scenario,
+given seven files in total.
+
+For yearly data, the time labels in the filename are years
+(for months, the month is included e.g. you will see `202201-210012`
+rather than `2022-2100` in the filename,
+the files also have different values for the `frequency` attribute).
+Global-mean data is identified by the 'grid label' `gm`,
+which appears in the filename.
+Below we show the filenames for the CO<sub>2</sub> output.
+
+**Note: in the draft datasets, the time axis starts in 2023.
+This will be updated to a 2022 start for the final datasets,
+in line with the rest of the scenario datasets.**
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 # Ensure data is downloaded
 query_kwargs_co2_yearly_global = dict(
     ghg="co2",
@@ -451,102 +497,181 @@ _ = fetch_and_load(**query_kwargs_co2_yearly_global)
 
 # Get file paths
 co2_yearly_global_fps = get_ghg_dataset_local_files(**query_kwargs_co2_yearly_global)
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 for fp in sorted(co2_yearly_global_fps)[::-1]:
     print(f"- {fp.name}")
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# Output for other gases are named identically,
-# with `co2` being replaced by the other gas name.
-# For example, for methane the filenames are:
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+Output for other gases are named identically,
+with `co2` being replaced by the other gas name.
+For example, for methane the filenames are:
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 # Ensure data is downloaded
 query_kwargs_ch4_yearly_global = {
     **query_kwargs_co2_yearly_global,
     "ghg": "ch4",
 }
 _ = fetch_and_load(**query_kwargs_ch4_yearly_global)
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 # Get file paths
 ch4_yearly_global_fps = get_ghg_dataset_local_files(**query_kwargs_ch4_yearly_global)
 for fp in sorted(ch4_yearly_global_fps)[::-1]:
     print(f"- {fp.name}")
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# As described above, the data is netCDF files.
-# This means that metadata can be trivially inspected
-# using a tool like `ncdump`.
-# There is a lot of metadata included in these files.
-# In general, you should not need to parse this metadata directly.
-# However, if you have specific questions,
-# please feel free to contact the emails given in the `contact` attribute.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
-# !ncdump -h {co2_yearly_global_fps[0]} | fold -w 80 -s
+As described above, the data is netCDF files.
+This means that metadata can be trivially inspected
+using a tool like `ncdump`.
+There is a lot of metadata included in these files.
+In general, you should not need to parse this metadata directly.
+However, if you have specific questions,
+please feel free to contact the emails given in the `contact` attribute.
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# Using a tool like [xarray](https://github.com/pydata/xarray),
-# loading and working with the data is trivial.
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
+!ncdump -h {co2_yearly_global_fps[0]} | fold -w 80 -s
+```
 
-# %% editable=true slideshow={"slide_type": ""}
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+Using a tool like [xarray](https://github.com/pydata/xarray),
+loading and working with the data is trivial.
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+---
 import xarray as xr
 
 time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
 ds_example_co2_yearly_global = xr.open_dataset(
     co2_yearly_global_fps[-1], decode_times=time_coder
 )
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 # Force values to compute to avoid dask getting involved
 ds_example_co2_yearly_global = ds_example_co2_yearly_global.compute()
+```
 
-# %% editable=true slideshow={"slide_type": ""}
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+---
 ds_example_co2_yearly_global
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 ds_example_co2_yearly_global["co2"].plot.scatter(alpha=0.4)
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Space- and time-average nature of the data
-#
-# All of our data represents the mean over each cell.
-# This is indicated by the `cell_methods` attribute
-# of all of our output variables.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""}
+### Space- and time-average nature of the data
+
+All of our data represents the mean over each cell.
+This is indicated by the `cell_methods` attribute
+of all of our output variables.
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+---
 ds_example_co2_yearly_global["co2"].attrs["cell_methods"]
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# This mean is both in space and time.
-# The time bounds covered by each step
-# are specified by the `time_bnds` variable
-# (when there is spatial information,
-# equivalent `lat_bnds` and `lon_bnds`
-# information is also included).
-# This variable specifies the start (inclusive)
-# and end (exclusive) of the time period
-# covered by each data point.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""}
+This mean is both in space and time.
+The time bounds covered by each step
+are specified by the `time_bnds` variable
+(when there is spatial information,
+equivalent `lat_bnds` and `lon_bnds`
+information is also included).
+This variable specifies the start (inclusive)
+and end (exclusive) of the time period
+covered by each data point.
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+---
 ds_example_co2_yearly_global["time_bnds"]
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# As a result of the time average that the data represents,
-# it is inappropriate to plot this data
-# using a line plot
-# (the mean of the lines joining the points
-# is not the same as the data given in the files).
-# Instead, the data should be plotted (and used)
-# as a scatter or a step plot, as shown below.
-# (The same logic applies to any spatial plots
-# which could be created from our datasets
-# that include spatial dimensions).
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+As a result of the time average that the data represents,
+it is inappropriate to plot this data
+using a line plot
+(the mean of the lines joining the points
+is not the same as the data given in the files).
+Instead, the data should be plotted (and used)
+as a scatter or a step plot, as shown below.
+(The same logic applies to any spatial plots
+which could be created from our datasets
+that include spatial dimensions).
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 ds_plt = ds_example_co2_yearly_global.isel(time=slice(None, 5))
 
 fig, ax = plt.subplots(figsize=(8, 4))
@@ -561,58 +686,108 @@ ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
 
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Monthly-, global-mean data
-#
-# If you want to have information at a finer level
-# of temporal detail, we also provide monthly files.
-#
-# For monthly data, the time labels in the filename are months.
-# Below we show the filenames for the CO<sub>2</sub> output.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+### Monthly-, global-mean data
+
+If you want to have information at a finer level
+of temporal detail, we also provide monthly files.
+
+For monthly data, the time labels in the filename are months.
+Below we show the filenames for the CO<sub>2</sub> output.
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 # Ensure data is downloaded
 query_kwargs_co2_monthly_global = {
     **query_kwargs_co2_yearly_global,
     "time_sampling": "mon",
 }
 _ = fetch_and_load(**query_kwargs_co2_monthly_global)
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 # Get file paths
 co2_monthly_global_fps = get_ghg_dataset_local_files(**query_kwargs_co2_monthly_global)
 for fp in sorted(co2_monthly_global_fps)[::-1]:
     print(f"- {fp.name}")
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# Again, the data can be trivially loaded with [xarray](https://github.com/pydata/xarray).
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""}
+Again, the data can be trivially loaded with [xarray](https://github.com/pydata/xarray).
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+---
 ds_example_co2_monthly_global = xr.open_mfdataset(
     co2_monthly_global_fps[-1], decode_times=time_coder
 )
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 # Force values to compute to avoid dask getting involved
 ds_example_co2_monthly_global = ds_example_co2_monthly_global.compute()
+```
 
-# %% editable=true slideshow={"slide_type": ""}
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+---
 ds_example_co2_monthly_global
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# For this data, the time bounds show that each point
-# is the average a month, not a year.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""}
+For this data, the time bounds show that each point
+is the average a month, not a year.
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+---
 ds_example_co2_monthly_global["time_bnds"]
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# As above, as a result of the time average that the data represents,
-# it is inappropriate to plot this data using a line plot.
-# Scatter or step plots should be used instead.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+As above, as a result of the time average that the data represents,
+it is inappropriate to plot this data using a line plot.
+Scatter or step plots should be used instead.
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 ds_plt = ds_example_co2_monthly_global.isel(time=slice(None, 5 * 12))
 
 fig, ax = plt.subplots(figsize=(8, 4))
@@ -627,14 +802,22 @@ ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
 
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# The monthly data includes seasonality.
-# Plotting the monthly and yearly data
-# on the same axes makes particularly clear
-# why a line plot is inappropriate.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+The monthly data includes seasonality.
+Plotting the monthly and yearly data
+on the same axes makes particularly clear
+why a line plot is inappropriate.
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 fig, ax = plt.subplots(figsize=(8, 4))
 
 for ds_plt, label, colour in (
@@ -658,25 +841,33 @@ ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
 
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Monthly-, latitudinally-resolved data
-#
-# We also provide data with spatial,
-# specifically latitudinal, resolution.
-# This data comes on a 15-degree latitudinal grid
-# (see below for details of the grid and latitudinal bounds).
-# These files are identified by the grid label `gnz`.
-# We only provide these files with monthly resolution.
-#
-# For completeness, we note that we also provide hemispheric means.
-# These are not shown here,
-# but are identified by the grid label `gr1z`.
-#
-# Below we show the filenames for the latitudinally-resolved data
-# for CO<sub>2</sub>
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+### Monthly-, latitudinally-resolved data
+
+We also provide data with spatial,
+specifically latitudinal, resolution.
+This data comes on a 15-degree latitudinal grid
+(see below for details of the grid and latitudinal bounds).
+These files are identified by the grid label `gnz`.
+We only provide these files with monthly resolution.
+
+For completeness, we note that we also provide hemispheric means.
+These are not shown here,
+but are identified by the grid label `gr1z`.
+
+Below we show the filenames for the latitudinally-resolved data
+for CO<sub>2</sub>
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 # Ensure data is downloaded
 query_kwargs_co2_monthly_lat = {
     **query_kwargs_co2_yearly_global,
@@ -684,44 +875,86 @@ query_kwargs_co2_monthly_lat = {
     "grid": "gnz",
 }
 _ = fetch_and_load(**query_kwargs_co2_monthly_lat)
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 # Get file paths
 co2_monthly_lat_fps = get_ghg_dataset_local_files(**query_kwargs_co2_monthly_lat)
 for fp in sorted(co2_monthly_lat_fps)[::-1]:
     print(f"- {fp.name}")
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# Again, the data can be trivially loaded with [xarray](https://github.com/pydata/xarray).
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""}
+Again, the data can be trivially loaded with [xarray](https://github.com/pydata/xarray).
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+---
 ds_example_co2_monthly_lat = xr.open_mfdataset(
     co2_monthly_lat_fps[-1],
     decode_times=time_coder,
     data_vars=None,
     compat="no_conflicts",
 )
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 # Force values to compute to avoid dask getting involved
 ds_example_co2_monthly_lat = ds_example_co2_monthly_lat.compute()
+```
 
-# %% editable=true slideshow={"slide_type": ""}
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+---
 ds_example_co2_monthly_lat
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# For this data, the latitudinal bounds show the area
-# over which each point is the average.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""}
+For this data, the latitudinal bounds show the area
+over which each point is the average.
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+---
 ds_example_co2_monthly_lat["lat_bnds"]
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# As above, but this time for the spatial axis,
-# it is inappropriate to plot this data using a line plot.
-# Scatter or step plots should be used instead.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+As above, but this time for the spatial axis,
+it is inappropriate to plot this data using a line plot.
+Scatter or step plots should be used instead.
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 ds_plt = ds_example_co2_monthly_lat.isel(time=slice(None, 12))
 
 
@@ -777,13 +1010,21 @@ for month in range(10, 13):
 
 plt.tight_layout()
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# We can compare the global-mean data
-# to the data at each latitude.
-# The strength of the latitudinal gradient varies also by gas (not shown).
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+We can compare the global-mean data
+to the data at each latitude.
+The strength of the latitudinal gradient varies also by gas (not shown).
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 fig, ax = plt.subplots(figsize=(8, 4))
 
 time_slice = slice(None, 5 * 12)
@@ -818,12 +1059,20 @@ ax.grid()
 ax.set_title("")
 
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# The data can also be plotted in a so-called "magic carpet"
-# to see the variation in space and time simultaneously.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+The data can also be plotted in a so-called "magic carpet"
+to see the variation in space and time simultaneously.
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 fig = plt.figure(figsize=(8, 6))
 ax = fig.add_subplot(projection="3d")
 
@@ -859,16 +1108,25 @@ ax.view_init(15, -135, 0)
 
 plt.tight_layout()
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Transition from history
-#
-# Each dataset transitions smoothly from the historical data.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Annual-, global-mean data
+### Transition from history
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+Each dataset transitions smoothly from the historical data.
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+### Annual-, global-mean data
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 query_kwargs_co2_yearly_global_history = {
     **query_kwargs_co2_yearly_global,
     "cmip_era": "CMIP7",
@@ -887,8 +1145,15 @@ fetch_and_load_history = partial(
 ds_history_co2_yearly_global = fetch_and_load_history(
     **query_kwargs_co2_yearly_global_history
 ).compute()
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 fig, ax = plt.subplots()
 
 
@@ -924,15 +1189,23 @@ ax.set_xlim(cftime.DatetimeGregorian(2010, 1, 1), cftime.DatetimeGregorian(2030,
 ax.legend()
 
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Monthly-, global-mean data
-#
-# Note that the transition from history to scenarios
-# is clearly wrong in the draft dataset.
-# This will be fixed before the final dataset is published.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+#### Monthly-, global-mean data
+
+Note that the transition from history to scenarios
+is clearly wrong in the draft dataset.
+This will be fixed before the final dataset is published.
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 query_kwargs_co2_monthly_global_history = {
     **query_kwargs_co2_yearly_global_history,
     "time_sampling": "mon",
@@ -941,8 +1214,15 @@ query_kwargs_co2_monthly_global_history = {
 ds_history_co2_monthly_global = fetch_and_load_history(
     **query_kwargs_co2_monthly_global_history
 ).compute()
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 fig, ax = plt.subplots()
 
 
@@ -978,15 +1258,23 @@ ax.set_xlim(cftime.DatetimeGregorian(2010, 1, 1), cftime.DatetimeGregorian(2030,
 ax.legend()
 
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Monthly-, 15-degree latitudinally binned data
-#
-# Note that the transition from history to scenarios
-# is clearly wrong in the draft dataset.
-# This will be fixed before the final dataset is published.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+#### Monthly-, 15-degree latitudinally binned data
+
+Note that the transition from history to scenarios
+is clearly wrong in the draft dataset.
+This will be fixed before the final dataset is published.
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 # Get file paths
 query_kwargs_co2_monthly_lat_history = {
     **query_kwargs_co2_monthly_global_history,
@@ -996,9 +1284,15 @@ query_kwargs_co2_monthly_lat_history = {
 ds_history_co2_monthly_lat_history = fetch_and_load_history(
     **query_kwargs_co2_monthly_lat_history
 ).compute()
+```
 
-
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 def to_data_frame(
     ds: xr.Dataset,
     unstack_col: str,
@@ -1026,9 +1320,15 @@ def to_data_frame(
     res = res.openscm.eiim()
 
     return res
+```
 
-
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 pdf_l = [
     to_data_frame(
         ds_example_co2_monthly_lat,
@@ -1047,8 +1347,15 @@ pdf = pd.concat([v.reorder_levels(pdf_l[0].index.names) for v in pdf_l]).sort_in
 )
 pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 pdf
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 start_year = 2015
 end_year = 2030
 
@@ -1064,18 +1371,27 @@ sns.relplot(
 )
 
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Full scenario set
-#
-# Having seen the transition for a single scenario,
-# we now show the full scenario set
-# including the transition from history.
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Annual-, global-mean data
+### Full scenario set
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+Having seen the transition for a single scenario,
+we now show the full scenario set
+including the transition from history.
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+#### Annual-, global-mean data
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 gases_to_show = ["co2", "ch4", "n2o", "cfc12eq", "hfc134aeq"]
 ds_gases_full_yearly_d = {}
 for gas in gases_to_show:
@@ -1104,8 +1420,15 @@ for gas in gases_to_show:
 
         # compute to avoid dask weirdness
         ds_gases_full_yearly_d[gas][key] = ds.compute()
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 palette = {
     "history": "k",
     "history-cmip6": "tab:grey",
@@ -1144,8 +1467,15 @@ hue_order = [
     "vllo",
     "historical",
 ]
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 start_year = 1950
 
 pdf_l = [
@@ -1183,8 +1513,15 @@ pdf = pd.concat(
 ).sort_index(axis="columns")
 
 # pdf
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 sns.relplot(
     data=pdf.openscm.to_long_data(),
     x="time",
@@ -1199,11 +1536,19 @@ sns.relplot(
 )
 
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Monthly-, global-mean data
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+#### Monthly-, global-mean data
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 ds_gases_full_monthly_d = {}
 for gas in gases_to_show:
     ds_gases_full_monthly_d[gas] = {}
@@ -1231,8 +1576,15 @@ for gas in gases_to_show:
 
         # compute to avoid dask weirdness
         ds_gases_full_monthly_d[gas][key] = ds.compute()
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 start_year = 2015
 end_year = 2030
 
@@ -1282,8 +1634,15 @@ pdf = pd.concat(
 pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 
 # pdf
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 sns.relplot(
     data=pdf.openscm.to_long_data(),
     x="time",
@@ -1299,11 +1658,19 @@ sns.relplot(
 )
 
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Monthly-, 15-degree latitudinal data
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+#### Monthly-, 15-degree latitudinal data
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 ds_gases_full_monthly_lat_d = {}
 for gas in gases_to_show:
     ds_gases_full_monthly_lat_d[gas] = {}
@@ -1331,8 +1698,15 @@ for gas in gases_to_show:
 
         # compute to avoid dask weirdness
         ds_gases_full_monthly_lat_d[gas][key] = ds.compute()
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 start_year = 2015
 end_year = 2030
 
@@ -1382,8 +1756,15 @@ pdf = pd.concat(
 pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 
 # pdf
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 sns.relplot(
     data=pdf.loc[pix.isin(lat=[-82.5, 7.5, 82.5])].openscm.to_long_data(),
     x="time",
@@ -1399,99 +1780,109 @@ sns.relplot(
 )
 
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Differences from CMIP6
-#
-# #### File formats and naming
-#
-# The file formats are generally close to CMIP6.
-# There are three key changes:
-#
-# 1. the global-mean and hemispheric-mean data are split into separate files.
-#    In CMIP6, this data was in the same file (with a grid label of `GMNHSH`).
-#    We have split this for two reasons:
-#    a) `GMNHSH` is not a grid label recognised in the CMIP CVs and
-#    b) having global-mean and hemispheric-mean data in the same file
-#       required us to introduce a 'sector' coordinate,
-#       which was confusing and does not follow the CF-conventions.
-# 1. the files are split into different time components.
-#    The CMIP6 data had the scenarios and their extensions in a single file.
-#    The CMIP7 extensions are not defined yet,
-#    so the scenarios (up to 2100) will be in one file,
-#    with the extensions being in a separate file
-#    (and under separate source IDs).
-# 1. the variable names were simplified.
-#    They are now simply the names of the gases,
-#    for example we now use "co2" rather than "mole_fraction_of_carbon_dioxide".
-#    A full mapping is provided below.
-#
-# #### Variable name mapping
-#
-# ```python
-# CMIP6_TO_CMIP7_VARIABLE_MAP = {
-#     # name in CMIP6: name in CMIP7
-#     "mole_fraction_of_carbon_dioxide_in_air": "co2",
-#     "mole_fraction_of_methane_in_air": "ch4",
-#     "mole_fraction_of_nitrous_oxide_in_air": "n2o",
-#     "mole_fraction_of_c2f6_in_air": "c2f6",
-#     "mole_fraction_of_c3f8_in_air": "c3f8",
-#     "mole_fraction_of_c4f10_in_air": "c4f10",
-#     "mole_fraction_of_c5f12_in_air": "c5f12",
-#     "mole_fraction_of_c6f14_in_air": "c6f14",
-#     "mole_fraction_of_c7f16_in_air": "c7f16",
-#     "mole_fraction_of_c8f18_in_air": "c8f18",
-#     "mole_fraction_of_c_c4f8_in_air": "cc4f8",
-#     "mole_fraction_of_carbon_tetrachloride_in_air": "ccl4",
-#     "mole_fraction_of_cf4_in_air": "cf4",
-#     "mole_fraction_of_cfc11_in_air": "cfc11",
-#     "mole_fraction_of_cfc113_in_air": "cfc113",
-#     "mole_fraction_of_cfc114_in_air": "cfc114",
-#     "mole_fraction_of_cfc115_in_air": "cfc115",
-#     "mole_fraction_of_cfc12_in_air": "cfc12",
-#     "mole_fraction_of_ch2cl2_in_air": "ch2cl2",
-#     "mole_fraction_of_methyl_bromide_in_air": "ch3br",
-#     "mole_fraction_of_ch3ccl3_in_air": "ch3ccl3",
-#     "mole_fraction_of_methyl_chloride_in_air": "ch3cl",
-#     "mole_fraction_of_chcl3_in_air": "chcl3",
-#     "mole_fraction_of_halon1211_in_air": "halon1211",
-#     "mole_fraction_of_halon1301_in_air": "halon1301",
-#     "mole_fraction_of_halon2402_in_air": "halon2402",
-#     "mole_fraction_of_hcfc141b_in_air": "hcfc141b",
-#     "mole_fraction_of_hcfc142b_in_air": "hcfc142b",
-#     "mole_fraction_of_hcfc22_in_air": "hcfc22",
-#     "mole_fraction_of_hfc125_in_air": "hfc125",
-#     "mole_fraction_of_hfc134a_in_air": "hfc134a",
-#     "mole_fraction_of_hfc143a_in_air": "hfc143a",
-#     "mole_fraction_of_hfc152a_in_air": "hfc152a",
-#     "mole_fraction_of_hfc227ea_in_air": "hfc227ea",
-#     "mole_fraction_of_hfc23_in_air": "hfc23",
-#     "mole_fraction_of_hfc236fa_in_air": "hfc236fa",
-#     "mole_fraction_of_hfc245fa_in_air": "hfc245fa",
-#     "mole_fraction_of_hfc32_in_air": "hfc32",
-#     "mole_fraction_of_hfc365mfc_in_air": "hfc365mfc",
-#     "mole_fraction_of_hfc4310mee_in_air": "hfc4310mee",
-#     "mole_fraction_of_nf3_in_air": "nf3",
-#     "mole_fraction_of_sf6_in_air": "sf6",
-#     "mole_fraction_of_so2f2_in_air": "so2f2",
-#     "mole_fraction_of_cfc11eq_in_air": "cfc11eq",
-#     "mole_fraction_of_cfc12eq_in_air": "cfc12eq",
-#     "mole_fraction_of_hfc134aeq_in_air": "hfc134aeq",
-# }
-# ```
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Data comparisons
-#
-# Comparing the data from CMIP6 and CMIP7 shows changes in two key areas:
-#
-# 1. the scenarios are simply different
-# 2. the transition from historical to scenarios is more carefully harmonised
+### Differences from CMIP6
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Annual-, global-mean data
+#### File formats and naming
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+The file formats are generally close to CMIP6.
+There are three key changes:
+
+1. the global-mean and hemispheric-mean data are split into separate files.
+   In CMIP6, this data was in the same file (with a grid label of `GMNHSH`).
+   We have split this for two reasons:
+   a) `GMNHSH` is not a grid label recognised in the CMIP CVs and
+   b) having global-mean and hemispheric-mean data in the same file
+      required us to introduce a 'sector' coordinate,
+      which was confusing and does not follow the CF-conventions.
+1. the files are split into different time components.
+   The CMIP6 data had the scenarios and their extensions in a single file.
+   The CMIP7 extensions are not defined yet,
+   so the scenarios (up to 2100) will be in one file,
+   with the extensions being in a separate file
+   (and under separate source IDs).
+1. the variable names were simplified.
+   They are now simply the names of the gases,
+   for example we now use "co2" rather than "mole_fraction_of_carbon_dioxide".
+   A full mapping is provided below.
+
+#### Variable name mapping
+
+```python
+CMIP6_TO_CMIP7_VARIABLE_MAP = {
+    # name in CMIP6: name in CMIP7
+    "mole_fraction_of_carbon_dioxide_in_air": "co2",
+    "mole_fraction_of_methane_in_air": "ch4",
+    "mole_fraction_of_nitrous_oxide_in_air": "n2o",
+    "mole_fraction_of_c2f6_in_air": "c2f6",
+    "mole_fraction_of_c3f8_in_air": "c3f8",
+    "mole_fraction_of_c4f10_in_air": "c4f10",
+    "mole_fraction_of_c5f12_in_air": "c5f12",
+    "mole_fraction_of_c6f14_in_air": "c6f14",
+    "mole_fraction_of_c7f16_in_air": "c7f16",
+    "mole_fraction_of_c8f18_in_air": "c8f18",
+    "mole_fraction_of_c_c4f8_in_air": "cc4f8",
+    "mole_fraction_of_carbon_tetrachloride_in_air": "ccl4",
+    "mole_fraction_of_cf4_in_air": "cf4",
+    "mole_fraction_of_cfc11_in_air": "cfc11",
+    "mole_fraction_of_cfc113_in_air": "cfc113",
+    "mole_fraction_of_cfc114_in_air": "cfc114",
+    "mole_fraction_of_cfc115_in_air": "cfc115",
+    "mole_fraction_of_cfc12_in_air": "cfc12",
+    "mole_fraction_of_ch2cl2_in_air": "ch2cl2",
+    "mole_fraction_of_methyl_bromide_in_air": "ch3br",
+    "mole_fraction_of_ch3ccl3_in_air": "ch3ccl3",
+    "mole_fraction_of_methyl_chloride_in_air": "ch3cl",
+    "mole_fraction_of_chcl3_in_air": "chcl3",
+    "mole_fraction_of_halon1211_in_air": "halon1211",
+    "mole_fraction_of_halon1301_in_air": "halon1301",
+    "mole_fraction_of_halon2402_in_air": "halon2402",
+    "mole_fraction_of_hcfc141b_in_air": "hcfc141b",
+    "mole_fraction_of_hcfc142b_in_air": "hcfc142b",
+    "mole_fraction_of_hcfc22_in_air": "hcfc22",
+    "mole_fraction_of_hfc125_in_air": "hfc125",
+    "mole_fraction_of_hfc134a_in_air": "hfc134a",
+    "mole_fraction_of_hfc143a_in_air": "hfc143a",
+    "mole_fraction_of_hfc152a_in_air": "hfc152a",
+    "mole_fraction_of_hfc227ea_in_air": "hfc227ea",
+    "mole_fraction_of_hfc23_in_air": "hfc23",
+    "mole_fraction_of_hfc236fa_in_air": "hfc236fa",
+    "mole_fraction_of_hfc245fa_in_air": "hfc245fa",
+    "mole_fraction_of_hfc32_in_air": "hfc32",
+    "mole_fraction_of_hfc365mfc_in_air": "hfc365mfc",
+    "mole_fraction_of_hfc4310mee_in_air": "hfc4310mee",
+    "mole_fraction_of_nf3_in_air": "nf3",
+    "mole_fraction_of_sf6_in_air": "sf6",
+    "mole_fraction_of_so2f2_in_air": "so2f2",
+    "mole_fraction_of_cfc11eq_in_air": "cfc11eq",
+    "mole_fraction_of_cfc12eq_in_air": "cfc12eq",
+    "mole_fraction_of_hfc134aeq_in_air": "hfc134aeq",
+}
+```
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+#### Data comparisons
+
+Comparing the data from CMIP6 and CMIP7 shows changes in two key areas:
+
+1. the scenarios are simply different
+2. the transition from historical to scenarios is more carefully harmonised
+
++++ {"editable": true, "slideshow": {"slide_type": ""}}
+
+#### Annual-, global-mean data
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 scenario_group_map = {
     "h": "high",
     "hl": "high",
@@ -1533,8 +1924,15 @@ hue_order_incl_cmip6 = [
     "ssp126",
     "ssp119",
 ]
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 ds_gases_full_yearly_multi_phase_d = {}
 for gas in gases_to_show:
     ds_gases_full_yearly_multi_phase_d[gas] = {}
@@ -1564,8 +1962,15 @@ for gas in gases_to_show:
 
         # compute to avoid dask weirdness
         ds_gases_full_yearly_multi_phase_d[gas][key] = ds.compute()
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 start_year = 2000
 end_year = 2100
 pdf_l = [
@@ -1700,8 +2105,15 @@ for sg, sgdf in pdf_grouped.items():
 
 pdf = pd.concat([v.reorder_levels(tmp_l[0].index.names) for v in tmp_l])
 pdf
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 start_year = 2000
 end_year = 2100
 
@@ -1728,16 +2140,24 @@ sns.relplot(
 )
 
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# If we zoom in, the harmonisation issues in the CMIP6
-# data are more clear, most obviously for CH<sub>4</sub>
-# where the transition from history to scenarios
-# also includes a notable increase in the rate of change
-# that is independent of scenario
-# (i.e. is not driven by a change in emissions).
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+If we zoom in, the harmonisation issues in the CMIP6
+data are more clear, most obviously for CH<sub>4</sub>
+where the transition from history to scenarios
+also includes a notable increase in the rate of change
+that is independent of scenario
+(i.e. is not driven by a change in emissions).
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 start_year = 2005
 end_year = 2030
 
@@ -1764,11 +2184,19 @@ sns.relplot(
 )
 
 plt.show()
+```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Monthly-, global-mean data
++++ {"editable": true, "slideshow": {"slide_type": ""}}
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+#### Monthly-, global-mean data
+
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 ds_gases_full_monthly_multi_phase_d = {}
 for gas in gases_to_show:
     ds_gases_full_monthly_multi_phase_d[gas] = {}
@@ -1798,8 +2226,15 @@ for gas in gases_to_show:
 
         # compute to avoid dask weirdness
         ds_gases_full_monthly_multi_phase_d[gas][key] = ds.compute()
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_cell]
+---
 start_year = 2000
 end_year = 2100
 pdf_l = [
@@ -1923,8 +2358,15 @@ for sg, sgdf in pdf_grouped.items():
 pdf = pd.concat([v.reorder_levels(tmp_l[0].index.names) for v in tmp_l])
 pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 pdf
+```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+```{code-cell}
+---
+editable: true
+slideshow:
+  slide_type: ''
+tags: [remove_input]
+---
 start_year = 2010
 end_year = 2030
 
@@ -1951,9 +2393,9 @@ sns.relplot(
 )
 
 plt.show()
+```
 
-# %% [markdown]
-# ```{bibliography}
-# :style: unsrt
-# :filter: {"user-guide-scenarios"} & docnames
-# ```
+```{bibliography}
+:style: unsrt
+:filter: {"user-guide-scenarios"} & docnames
+```
