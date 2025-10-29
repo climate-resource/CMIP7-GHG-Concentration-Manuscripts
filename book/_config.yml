@@ -1,0 +1,38 @@
+title: CMIP Greenhouse Gas (GHG) Concentration Historical Dataset
+author: "Zebedee Nicholls, Florence Bockting, Mika Pfl\xFCger"
+description: This book contains the deliverables related to the CMIP forcings project.
+
+execute:
+  execute_notebooks: force
+  timeout: 300
+only_build_toc_files: true
+
+latex:
+  use_jupyterbook_latex: true
+  latex_engine: xelatex
+  latex_elements:
+    tocdepth: 4
+    preamble: '\setcounter{tocdepth}{4} '
+
+bibtex_bibfiles:
+  - references.bib
+
+repository:
+  url: https://github.com/climate-resource/CMIP7-GHG-Concentration-Manuscripts
+  path_to_book: book
+  branch: main
+
+html:
+  home_page_in_navbar: false
+  use_edit_page_button: true
+  use_repository_button: true
+  exclude_patterns:
+    - '**.ipynb'
+
+sphinx:
+  config:
+    bibtex_default_style: myapastyle
+    bibtex_reference_style: author_year_round
+  local_extensions:
+    apastyle: _ext/
+    bracket_citation_style: _ext/
