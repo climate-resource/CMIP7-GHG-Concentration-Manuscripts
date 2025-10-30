@@ -92,7 +92,10 @@ create_all_tables(engine)
 #     1. for all other gases, we
 #
 #         1. start with harmonised, complete emissions sets for each scenario
-#            of interest
+#            of interest.
+#
+#            - These are not publicly available yet, but will be released soon
+#              as part of the ongoing ScenarioMIP process
 #
 #         1. run MAGICC (TODO REF) to translate these emissions into
 #             global-mean concentrations
@@ -104,25 +107,28 @@ create_all_tables(engine)
 #              Note, given that CMIP7 models have not yet been run, this will,
 #              almost by definition, produce different concentrations
 #              than those outputed by the ESMs run in emissions-driven mode.
-#              We nonetheless look forward to reading lots of papers saying that
-#              "CMIP7 input concentrations are biased up/down/whatever".
 #         1. harmonise the global-mean concentrations to the historical
-#              concentrations using gradient-aware harmonisation[^2] to ensure a smooth
-#              transition in both the absolute values and the gradient, improving on the
-#              CMIP6 data which had an abrupt jump in the gradient (most notable for
-#              methane, further details below)
+#            concentrations using gradient-aware harmonisation[^2] to ensure a smooth
+#            transition in both the absolute values and the gradient, improving on the
+#            CMIP6 data which had an abrupt jump in the gradient (most notable for
+#            methane, further details below)
 #
 # 3. **seasonality and latitudinal gradients**: We use the same statistical
 #    models for seasonality and latitudinal gradients as were used over the
-#    historical period. These are then applied to the future, based on the same
-#    input drivers.
+#    historical period
+#    (these models are based on orthogonal function methods, linear regression
+#    and basic scaling arguments).
+#    These are then applied to the future, based on the same input drivers.
 #     - one exception is CO<sub>2</sub>, which uses GPP as the input driver
 #       rather than a regression on a combined global-mean surface temperature and
 #       CO<sub>2</sub> concentration metric (as is used in the product that covers
 #       history)
-#     - arguably we should harmonise the inputs to these models too.
+#     - arguably we should harmonise the inputs to these models too
+#       (where here, 'harmonise' means
+#       ensure a smooth transition from history to the future).
 #       We don't do this step as such a harmonisation would only provide
-#       second-order corrections.
+#       second-order corrections and harmonisation choices
+#       for quantities such as gross primary productivity are highly subjective.
 # 5. **combine the global-means, seasonality and latitudinal gradients** to
 #    produce our complete, gridded projections
 # 6. **calculate lower resolution products** from the gridded product
