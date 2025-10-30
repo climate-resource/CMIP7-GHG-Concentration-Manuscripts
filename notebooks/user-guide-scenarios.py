@@ -408,6 +408,7 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # (further analysis of this is provided below).
 # In CMIP7, we instead use a more sophisticated harmonisation algorithm
 # (using the [gradient-aware-harmonisation](https://github.com/climate-resource/gradient-aware-harmonisation)
+# [TODO link in footnote]
 # package developed as part of the ESA project).
 # This leads to smoother, more realistic transitions
 # between the history, observation-based period
