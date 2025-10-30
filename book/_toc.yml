@@ -1,4 +1,4 @@
 format: jb-book
 root: intro
 chapters:
-- file: user-guide-historical
+- file: cmip-phase-comparison-historical-standalone

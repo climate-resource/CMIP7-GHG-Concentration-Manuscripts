@@ -82,6 +82,7 @@ uv run python scripts/create_latex_pdf.py user-guide-scenarios "CMIP Greenhouse 
 uv run python scripts/create_latex_pdf.py cmip-phase-comparison-historical-standalone "CMIP Greenhouse Gas (GHG) Concentration Historical Dataset"
 ```
 The deliverables are saved in `book\deliverables\`
+(Sometimes there is an issue, if you run the command the first time. Just running it again might solve the problem.)
 
 **General jupyter-book commands**
 
