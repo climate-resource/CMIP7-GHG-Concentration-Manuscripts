@@ -218,6 +218,7 @@ create_all_tables(engine)
 # Determining the scenario to which each dataset applies
 # is not trivial
 # (there was [discussion](https://github.com/PCMDI/input4MIPs_CVs/discussions/64)
+# [TODO full URL in footnote]
 # about how to make this more trivial,
 # but ultimately backwards-compatibility was prioritised).
 #
@@ -271,12 +272,14 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # (see https://github.com/WCRP-CMIP/CMIP7-CVs)
 # and the final ScenarioMIP paper
 # (revisions of
-# [this paper](https://doi.org/10.5194/egusphere-2024-3765) are expected soon).
+# [this paper](https://doi.org/10.5194/egusphere-2024-3765) are expected soon
+# [TODO switch to ref]).
 # As above, note that the scenario IDs
 # have changed since publication of the draft dataset. Table \ref{tab:scenario_ids}
 # provides an overview
 # of the changes. Scenario IDs of the final datasets can be confirmed
-# [here](https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785).
+# [here](https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785)
+# [TODO URL in footnote].
 #
 # **Table 4.1:** Mapping of draft scenario IDs to final scenario IDs.
 #
