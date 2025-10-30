@@ -846,6 +846,8 @@ plt.show()
 # Comparing the data from CMIP6 and CMIP7 shows minor changes
 # (although doing this comparison requires a bit of care
 # because of the changes in file formats).
+# Further details and exploration of these differences
+# will be provided in a forthcoming paper.
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 gases_to_show = ["co2", "ch4", "n2o", "cfc12eq", "hfc134aeq"]

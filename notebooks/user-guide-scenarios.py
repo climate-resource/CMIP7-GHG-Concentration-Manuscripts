@@ -1491,7 +1491,10 @@ plt.show()
 # Comparing the data from CMIP6 and CMIP7 shows changes in two key areas:
 #
 # 1. the scenarios are simply different
+#
 # 2. the transition from historical to scenarios is more carefully harmonised
+# Further details and exploration of these differences
+# will be provided in a forthcoming paper.
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Annual-, global-mean data
