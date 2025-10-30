@@ -44,6 +44,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import nc_time_axis  # noqa: F401
 import numpy as np
+
 from local.data_loading import fetch_and_load_ghg_dataset, get_ghg_dataset_local_files
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
 from local.esgf.search.search_query import KnownIndexNode
@@ -70,7 +71,7 @@ create_all_tables(engine)
 # # Dataset construction
 #
 # The dataset is constructed following the methodology of
-# Meinshausen et al. (2017, REF-TODO).
+# {cite:t}`meinshausen_historical_2017`.
 # The methods are described in full in that paper
 # and will be clarified and described again
 # in the forthcoming manuscript describing this dataset's construction.
@@ -78,8 +79,11 @@ create_all_tables(engine)
 # In brief, the dataset for each greenhouse gas is constructed via the following steps:
 #
 # 1. collect as many ground-based observations as possible
-# 2. from ground-based networks such as the NOAA (TODO REF)
-#    and AGAGE (TODO REF) networks
+# 2. from ground-based networks such as the NOAA
+#    {cite:p}`lan_atmospheric_co2_2025,lan_atmospheric_ch4_2025`
+#    and AGAGE
+#    {cite:p}`prinn_history_2000,prinn2018history,rigby2008renewed,rigby2017role`
+#    networks
 #     - these are only available over the last few decades at most
 #       (less for some greenhouse gases)
 #     - these are spatially sparse because sampling stations
@@ -114,8 +118,7 @@ create_all_tables(engine)
 #        seasonality and latitudinal gradient used to construct the dataset
 #        from the output dataset. For this reason,
 #        we include these components separately
-#        in the [zenodo record](https://doi.org/10.5281/zenodo.14892947)
-#        [TODO better ref]
+#        in the zenodo record[^1]
 #        that archives the output dataset,
 #        all its inputs and intermediate data prdoucts
 # 9. calculate annual-, hemispheric- and global-means
@@ -131,18 +134,19 @@ create_all_tables(engine)
 # but does provide machine-readable provenance information
 # (which is used to support links between all the input data
 # e.g. linking of the Zenodo archive underpinning this dataset).
-
+#
+# [^1]: https://doi.org/10.5281/zenodo.14892947
 # %% [markdown]
 # # Finding and accessing the data
 
 # %% [markdown] jp-MarkdownHeadingCollapsed=true
 # ## ESGF
 #
-# The **Earth System Grid Federation** (ESGF, REF-TODO) provides access to a
+# The **Earth System Grid Federation** (ESGF, {cite:t}`esgf_docs`) provides access to a
 # range of climate data.
 # The historical data of interest here,
 # which is the data to be used
-# for historical and piControl simulations within CMIP [TODO ref Dunne paper],
+# for historical and piControl simulations within CMIP {cite:p}`dunne2025evolving`,
 # can be found under the "source ID", `CR-CMIP-1-0-0`.
 # The concept of a "source ID" is a bit of a perculiar one
 # to CMIP forcings data.
@@ -183,7 +187,7 @@ create_all_tables(engine)
 # %% [markdown]
 # ## Format
 #
-# The data is provided in **netCDF format** [TODO citation].
+# The data is provided in **netCDF format** {cite:p}`zenodo`.
 # This self-describing format allows the data
 # to be placed in the same file as metadata
 # (in the so-called "file header").
@@ -754,7 +758,8 @@ plt.show()
 # 1. we have split the global-mean and hemispheric-mean data into separate files.
 #    In CMIP6, this data was in the same file (with a grid label of `GMNHSH`).
 #    We have split this for two reasons:
-#    a) `GMNHSH` is not a grid label recognised in the CMIP CVs [REF-TODO] and
+#    a) `GMNHSH` is not a grid label recognised in the CMIP CVs
+#       {cite:p}`wcrp_cmip_cvs_mip` and
 #    b) having global-mean and hemispheric-mean data in the same file
 #       required us to introduce a 'sector' coordinate,
 #       which was confusing and does not follow the CF-conventions.
@@ -1232,3 +1237,9 @@ plt.show()
 # There are some areas of change.
 # Full details of these changes will be provided
 # in the forthcoming manuscripts.
+
+# %% [markdown]
+# ```{bibliography}
+# :style: unsrt
+# :filter: {"user-guide-historical"} & docnames
+# ```
