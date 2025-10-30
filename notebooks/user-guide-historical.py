@@ -63,29 +63,30 @@ sqlite_file = REPO_ROOT / "download-test-database.db"
 engine = get_sqlite_engine(sqlite_file)
 create_all_tables(engine)
 
-# %% [raw]
-# \bibliographystyle{plain}
-# \bibliography{references}
+# %% [markdown]
+# ```{role} raw-latex(raw)
+# :format: latex
+# ```
 
 # %% [markdown]
 # # Dataset construction
 #
 # The dataset is constructed following the methodology of
-# {cite:t}`meinshausen_historical_2017`.
+# {raw-latex}`\cite{meinshausen_historical_2017}`.
 # The methods are described in full in that paper
 # and will be clarified and described again
 # in the forthcoming manuscript describing this dataset's construction.
 #
 # In brief, the dataset for each greenhouse gas is constructed via the following steps
 # (for full details and code, see
-# TODO turn into footnote
-# [github.com/climate-resource/CMIP-GHG-Concentration-Generation](https://github.com/climate-resource/CMIP-GHG-Concentration-Generation)):
+# [github.com/climate-resource/CMIP-GHG-Concentration-Generation](https://github.com/climate-resource/CMIP-GHG-Concentration-Generation)[^gh-code]
+# ):
 #
 # 1. collect as many ground-based observations as possible
 # 2. from ground-based networks such as the NOAA
-#    {cite:p}`lan_atmospheric_co2_2025,lan_atmospheric_ch4_2025`
+#    {raw-latex}`\parencite{lan_atmospheric_co2_2025,lan_atmospheric_ch4_2025}`
 #    and AGAGE
-#    {cite:p}`prinn_history_2000,prinn2018history,rigby2008renewed,rigby2017role`
+#    {raw-latex}`\parencite{prinn_history_2000,prinn2018history,rigby2008renewed,rigby2017role}`
 #    networks
 #    (the full set of input sources are documented in the `references*`
 #    global attributes of the output files
@@ -97,10 +98,11 @@ create_all_tables(engine)
 #       (at most, usually around 30, often far fewer)
 # 4. bin the ground-based observations in space and time
 #    (15-degree latitudinal bins, 60-degree longitudinal bins, monthly time bins,
-#    following (TODO cite M17)),
+#    following {raw-latex}`\cite{meinshausen_historical_2017}`,
 #    averaging over input stations and observations that fall in the same cell
 # 5. interpolate the binned data in space using a standard 2D linear interpolation
-#    as in TODO cite M17, to derive a dataset with spatial coverage
+#    as in {raw-latex}`\cite{meinshausen_historical_2017}`,
+#    to derive a dataset with spatial coverage
 # 6. use the interpolated, ground-based data
 #    to derive a statistical model for seasonal variation and latitudinal gradients
 #    specific to each greenhouse gas
@@ -153,6 +155,7 @@ create_all_tables(engine)
 # [^agage]: https://www-air.larc.nasa.gov/missions/agage/
 #
 # [^1]: https://doi.org/10.5281/zenodo.14892947
+# [^gh-code]: https://github.com/climate-resource/CMIP-GHG-Concentration-Generation
 
 # %% [markdown]
 # # Finding and accessing the data
@@ -160,11 +163,12 @@ create_all_tables(engine)
 # %% [markdown] jp-MarkdownHeadingCollapsed=true
 # ## ESGF
 #
-# The **Earth System Grid Federation** (ESGF, {cite:t}`esgf_docs`) provides access to a
-# range of climate data.
+# The **Earth System Grid Federation** {raw-latex}`\parencite{esgf_docs}`
+# provides access to a range of climate data.
 # The historical data of interest here,
 # which is the data to be used
-# for historical and piControl simulations within CMIP {cite:p}`dunne2025evolving`,
+# for historical and piControl simulations within CMIP
+# {raw-latex}`\parencite{dunne2025evolving}`,
 # can be found under the "source ID", `CR-CMIP-1-0-0`.
 # The concept of a "source ID" is a bit of a perculiar one
 # to CMIP forcings data.
@@ -195,7 +199,7 @@ create_all_tables(engine)
 # While it aims to be, the ESGF is technically not a permanent archive
 # and does not issue DOIs.
 # In order to provide more reliable, citable access to the data,
-# we also provide it on **Zenodo** (REF-TODO).
+# we also provide it on **Zenodo** {raw-latex}`\parencite{zenodo}`.
 # The data, as well as all the source code and input data used to process it,
 # can be found at https://doi.org/10.5281/zenodo.14892947.
 
@@ -205,7 +209,7 @@ create_all_tables(engine)
 # %% [markdown]
 # ## Format
 #
-# The data is provided in **netCDF format** {cite:p}`zenodo`.
+# The data is provided in **netCDF format** {raw-latex}`\parencite{zenodo}`.
 # This self-describing format allows the data
 # to be placed in the same file as metadata
 # (in the so-called "file header").
@@ -777,14 +781,14 @@ plt.show()
 # As in CMIP6, we do not provide any vertical profiles.
 # For users who require such profiles,
 # we refer to the 'The vertical dimension' sub-header
-# in Section 4 of (TODO ref Meinshausen et al. 2017).
+# in Section 4 of {raw-latex}`\cite{meinshausen_historical_2017}`.
 # There are three key changes:
 #
 # 1. we have split the global-mean and hemispheric-mean data into separate files.
 #    In CMIP6, this data was in the same file (with a grid label of `GMNHSH`).
 #    We have split this for two reasons:
 #    a) `GMNHSH` is not a grid label recognised in the CMIP CVs
-#       {cite:p}`wcrp_cmip_cvs_mip` and
+#       {raw-latex}`\parencite{wcrp_cmip_cvs_mip}` and
 #    b) having global-mean and hemispheric-mean data in the same file
 #       required us to introduce a 'sector' coordinate,
 #       which was confusing and does not follow the CF-conventions.
@@ -1264,9 +1268,3 @@ plt.show()
 # There are some areas of change.
 # Full details of these changes will be provided
 # in the forthcoming manuscripts.
-
-# %% [markdown]
-# ```{bibliography}
-# :style: unsrt
-# :filter: {"user-guide-historical"} & docnames
-# ```

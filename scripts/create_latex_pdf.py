@@ -2,6 +2,7 @@
 create Latex PDF from jupytext in notebooks/
 """
 
+import copy
 import shutil
 import subprocess
 import sys
@@ -107,8 +108,30 @@ def build_pdf(arg, title):
     if not tex_file.exists():
         sys.exit(f"❌ TeX file not found: {tex_file}")
 
+    with open(tex_file) as fh:
+        tex_jupyter_book_l = [v.strip() for v in fh.readlines()]
+
+    tex_mod_l = copy.deepcopy(tex_jupyter_book_l)
+    # Assumes use of biber in preamble in _config.yml
+    for line in [
+        "",
+        "% Bibliography managed by biber.",
+        "% Command injected in `create_latex_pdf.py`",
+        r"\printbibliography[heading=bibintoc,title={References}]",
+        "",
+    ]:
+        tex_mod_l.insert(-1, line)
+
+    tex_mod = "\n".join(tex_mod_l)
+
+    with open(tex_file, "w") as fh:
+        fh.write(tex_mod)
+
     run(f"xelatex {tex_file.name}", cwd=latex_dir)
+    shutil.copy(project_root / "book" / "references.bib", latex_dir / "references.bib")
+    run(f"biber {tex_file.name.replace('.tex', '.bcf')}", cwd=latex_dir)
     # second pass for updating cross-references
+    run(f"xelatex {tex_file.name}", cwd=latex_dir)
     run(f"xelatex {tex_file.name}", cwd=latex_dir)
 
     # Step 6: copy result

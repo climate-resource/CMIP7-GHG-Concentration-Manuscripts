@@ -80,15 +80,16 @@ create_all_tables(engine)
 # # Dataset construction
 #
 # The dataset is constructed following a similar methodology
-# to {cite:t}`meinshausen_shared_2020`.
+# to {raw-latex}`\cite{meinshausen_shared_2020}`.
 # The full method will be described in a forthcoming paper.
 # In brief, the method is:
 #
 # 1. **retrieve concentrations** of GHG gases
 #
 #     1. for gases covered under the Montreal Protocol
-#        {cite:p}`montreal_protocol_1987` and whose concentration evolution is
-#        already specified in WMO 2022 {cite:p}`hermanson2022wmo`,
+#        {raw-latex}`\parencite{montreal_protocol_1987}`
+#        and whose concentration evolution is
+#        already specified in WMO 2022 {raw-latex}`parencite{hermanson2022wmo}`,
 #        we simply use the WMO 2022 concentrations
 #
 #     1. for all other gases, we
@@ -99,7 +100,8 @@ create_all_tables(engine)
 #            - These are not publicly available yet, but will be released soon
 #              as part of the ongoing ScenarioMIP process
 #
-#         1. run MAGICC {cite:p}`meinshausen2011emulating1,meinshausen2011emulating2`
+#         1. run MAGICC
+#            {raw-latex}`\parencite{meinshausen2011emulating1,meinshausen2011emulating2}`
 #            to translate these emissions into global-mean concentrations
 #
 #            1. MAGICC is run in the same configuration which was used in AR6
@@ -145,8 +147,8 @@ create_all_tables(engine)
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## ESGF
 #
-# The Earth System Grid Federation (ESGF, {cite:t}`esgf_docs`) provides
-# access to a range of climate data.
+# The **Earth System Grid Federation** {raw-latex}`\parencite{esgf_docs}`
+# provides access to a range of climate data.
 #
 # The scenario data of interest here,
 # which is a draft dataset
@@ -195,7 +197,8 @@ create_all_tables(engine)
 # and does not issue DOIs.
 # In order to provide more reliable, citable access to the data,
 # we will also provide the final scenario datasets on Zenodo
-# ({cite:t}`zenodo`, although we have not done this step for the draft datasets).
+# {raw-latex}`\parencite{zenodo}`,
+# although we have not done this step for the draft datasets).
 # When ready, we will update this guide to use the final scenario data
 # and include the zenodo link to the source code and input data used to process it.
 
@@ -205,7 +208,7 @@ create_all_tables(engine)
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Format
 #
-# The data is provided in netCDF format {cite:p}`unidata_netcdf`.
+# The data is provided in netCDF format {raw-latex}`\parencite{unidata_netcdf}`.
 # This self-describing format allows the data
 # to be placed in the same file as metadata
 # (in the so-called "file header").

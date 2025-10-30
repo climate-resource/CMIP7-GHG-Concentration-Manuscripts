@@ -25,8 +25,5 @@ html:
   - '**.ipynb'
 sphinx:
   config:
-    bibtex_default_style: myapastyle
-    bibtex_reference_style: author_year_round
-  local_extensions:
-    apastyle: _ext/
-    bracket_citation_style: _ext/
+    latex_elements:
+      preamble: "\\usepackage[backend=biber, style=apa]{biblatex} \n\\addbibresource{references.bib}\n"
