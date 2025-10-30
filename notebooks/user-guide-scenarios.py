@@ -347,19 +347,22 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 #
 # For most models, you will not use all 43 species.
 # As a result, we provide equivalent species too.
+# These are provided in separate files,
+# with the variable using the suffix `eq`.
 # There are two options if you don't want to use all 43 species.
 #
 # #### Option 1
 #
 # Use CO<sub>2</sub>, CH<sub>4</sub>, N<sub>2</sub>O and CFC-12 directly.
-# Use CFC-11 equivalent to capture the radiative effect of all other species.
+# Use CFC-11 equivalent (variable name `cfc11eq`)
+# to capture the radiative effect of all other species.
 #
 # #### Option 2
 #
 # Use CO<sub>2</sub>, CH<sub>4</sub> and N<sub>2</sub>O directly.
-# Use CFC-12 equivalent
+# Use CFC-12 equivalent (variable name `cfc12eq`)
 # to capture the radiative effect of all ozone depleting substances (ODSs)
-# and HFC-134a equivalent
+# and HFC-134a equivalent (variable name `hfc134aeq`)
 # to capture the radiative effect of all other fluorinated gases.
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
