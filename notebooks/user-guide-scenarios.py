@@ -273,7 +273,18 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # and the final ScenarioMIP paper
 # (revisions of
 # [this paper](https://doi.org/10.5194/egusphere-2024-3765) are expected soon
-# [TODO switch to ref]).
+# [TODO switch to ref]
+# @Article{egusphere-2024-3765,
+# AUTHOR = {van Vuuren, D. and O'Neill, B. and Tebaldi, C. and Chini, L. and Friedlingstein, P. and Hasegawa, T. and Riahi, K. and Sanderson, B. and Govindasamy, B. and Bauer, N. and Eyring, V. and Fall, C. and Frieler, K. and Gidden, M. and Gohar, L. and Jones, A. and King, A. and Knutti, R. and Kriegler, E. and Lawrence, P. and Lennard, C. and Lowe, J. and Mathison, C. and Mehmood, S. and Prado, L. and Zhang, Q. and Rose, S. and Ruane, A. and Schleussner, C.-F. and Seferian, R. and Sillmann, J. and Smith, C. and S\"orensson, A. and Panickal, S. and Tachiiri, K. and Vaughan, N. and Vishwanathan, S. and Yokohata, T. and Ziehn, T.},
+# TITLE = {The Scenario Model Intercomparison Project for CMIP7 (ScenarioMIP-CMIP7)},
+# JOURNAL = {EGUsphere},
+# VOLUME = {2025},
+# YEAR = {2025},
+# PAGES = {1--38},
+# URL = {https://egusphere.copernicus.org/preprints/2025/egusphere-2024-3765/},
+# DOI = {10.5194/egusphere-2024-3765}
+# }
+# ).
 # As above, note that the scenario IDs
 # have changed since publication of the draft dataset. Table \ref{tab:scenario_ids}
 # provides an overview
