@@ -62,6 +62,7 @@ uv run jupyter lab
 Using `nbconvert` for converting notebooks to PDF requires the following installations:
   + **Pandoc** see https://pandoc.org/installing.html
   + **LaTeX** see https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex
+    + see https://jupyterbook.org/en/stable/advanced/pdf.html#installation-and-setup
     + If you are Windows user and use MiKTeX (https://miktex.org/howto/install-miktex) it might be necessary to set `xelatex` additionally on the PATH
 
 <!--- Other documentation and instructions can then be added here as you go,
