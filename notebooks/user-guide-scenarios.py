@@ -49,6 +49,7 @@ import pandas_indexing as pix
 import pandas_openscm
 import seaborn as sns
 import tqdm.auto
+
 from local.data_loading import (
     fetch_and_load_ghg_dataset,
     fetch_and_load_ghg_dataset_scenarios,
@@ -79,14 +80,15 @@ create_all_tables(engine)
 # # Dataset construction
 #
 # The dataset is constructed following a similar methodology
-# to Meinshausen et al. (2020, TODO REF).
+# to {cite:t}`meinshausen_shared_2020`.
 # The full method will be described in a forthcoming paper.
 # In brief, the method is:
 #
 # 1. **retrieve concentrations** of GHG gases
 #
-#     1. for gases covered under the Montreal Protocol (TODO REF) and whose
-#        concentration evolution is already specified in WMO 2022 (TODO, ref),
+#     1. for gases covered under the Montreal Protocol
+#        {cite:p}`montreal_protocol_1987` and whose concentration evolution is
+#        already specified in WMO 2022 {cite:p}`hermanson2022wmo`,
 #        we simply use the WMO 2022 concentrations
 #
 #     1. for all other gases, we
@@ -97,8 +99,8 @@ create_all_tables(engine)
 #            - These are not publicly available yet, but will be released soon
 #              as part of the ongoing ScenarioMIP process
 #
-#         1. run MAGICC (TODO REF) to translate these emissions into
-#             global-mean concentrations
+#         1. run MAGICC {cite:p}`meinshausen2011emulating1,meinshausen2011emulating2`
+#            to translate these emissions into global-mean concentrations
 #
 #            1. MAGICC is run in the same configuration which was used in AR6
 #              (as described/evaluated in Cross-Chapter Box 7.1[^1]).
@@ -143,7 +145,7 @@ create_all_tables(engine)
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## ESGF
 #
-# The Earth System Grid Federation (ESGF, TODO REF) provides
+# The Earth System Grid Federation (ESGF, {cite:t}`esgf_docs`) provides
 # access to a range of climate data.
 #
 # The scenario data of interest here,
@@ -193,7 +195,7 @@ create_all_tables(engine)
 # and does not issue DOIs.
 # In order to provide more reliable, citable access to the data,
 # we will also provide the final scenario datasets on Zenodo
-# (TODO REF, although we have not done this step for the draft datasets).
+# ({cite:t}`zenodo`, although we have not done this step for the draft datasets).
 # When ready, we will update this guide to use the final scenario data
 # and include the zenodo link to the source code and input data used to process it.
 
@@ -203,7 +205,7 @@ create_all_tables(engine)
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Format
 #
-# The data is provided in netCDF format [TODO citation].
+# The data is provided in netCDF format {cite:p}`unidata_netcdf`.
 # This self-describing format allows the data
 # to be placed in the same file as metadata
 # (in the so-called "file header").
@@ -286,32 +288,27 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # }
 # ).
 # As above, note that the scenario IDs
-# have changed since publication of the draft dataset. Table \ref{tab:scenario_ids}
-# provides an overview
+# have changed since publication of the draft dataset.
+# {numref}`Table {number} <tab:scenario_ids>` provides an overview
 # of the changes. Scenario IDs of the final datasets can be confirmed
 # [here](https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785)
 # [TODO URL in footnote].
 #
-# **Table 4.1:** Mapping of draft scenario IDs to final scenario IDs.
+# ```{table} Mapping of draft scenario IDs to final scenario IDs
+# :width: auto
+# :align: center
+# :name: tab:scenario_ids
 #
-# \begin{table}[ht]
-# \centering
-# \caption{Mapping of draft scenario IDs to final scenario IDs}
-# \label{tab:scenario_ids}
-# \begin{tabular}{cc}
-# \hline
-# Draft dataset & Final dataset \\
-# \hline
-# \textbf{vllo} & \textbf{vl} \\
-# \textbf{vlho} & \textbf{ln} \\
-# l    & l  \\
-# ml   & ml \\
-# m    & m  \\
-# hl   & hl \\
-# h    & h  \\
-# \hline
-# \end{tabular}
-# \end{table}
+# | Draft dataset | Final dataset |
+# |:-------------:|:-------------:|
+# | **vllo**      | **vl**        |
+# | **vlho**      | **ln**        |
+# |     l         |    l          |
+# |     ml        |   ml          |
+# |     m         |   m           |
+# |     hl        |   hl          |
+# |     h         |    h          |
+# ```
 #
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -1983,3 +1980,9 @@ sns.relplot(
 )
 
 plt.show()
+
+# %% [markdown]
+# ```{bibliography}
+# :style: unsrt
+# :filter: {"user-guide-scenarios"} & docnames
+# ```
