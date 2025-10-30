@@ -74,23 +74,34 @@ create_all_tables(engine)
 # and will be clarified and described again
 # in the forthcoming manuscript describing this dataset's construction.
 #
-# In brief, the dataset for each greenhouse gas is constructed via the following steps:
+# In brief, the dataset for each greenhouse gas is constructed via the following steps
+# (for full details and code, see
+# TODO turn into footnote
+# [github.com/climate-resource/CMIP-GHG-Concentration-Generation](https://github.com/climate-resource/CMIP-GHG-Concentration-Generation)):
 #
 # 1. collect as many ground-based observations as possible
 # 2. from ground-based networks such as the NOAA [^noaa-flask], [^noaa-in-situ]
 #    and AGAGE [^agage] networks
+#    (the full set of input sources are documented in the `references*`
+#    global attributes of the output files
+#    and will be discussed in more detail in a forthcoming paper)
 #     - these are only available over the last few decades at most
 #       (less for some greenhouse gases)
 #     - these are spatially sparse because sampling stations
 #       are discrete points and there are not an infinite number of stations
 #       (at most, usually around 30, often far fewer)
-# 4. bin the ground-based observations in space and time,
+# 4. bin the ground-based observations in space and time
+#    (15-degree latitudinal bins, 60-degree longitudinal bins, monthly time bins,
+#    following (TODO cite M17)),
 #    averaging over input stations and observations that fall in the same cell
-# 5. interpolate the binned data in space, to derive a dataset with spatial coverage
+# 5. interpolate the binned data in space using a standard 2D linear interpolation
+#    as in TODO cite M17, to derive a dataset with spatial coverage
 # 6. use the interpolated, ground-based data
 #    to derive a statistical model for seasonal variation and latitudinal gradients
 #    specific to each greenhouse gas
-#      - the exact form of the statistical model varies by gas,
+#      - the exact form of the statistical model varies by gas
+#        (we use empirical orthogonal function methods,
+#        linear regression and basic scaling arguments)
 #        but is generally driven by either concentrations of the gas itself,
 #        global-mean temperature or purely statistical regressions/extensions
 # 7. use the models, plus ice core or other proxy records,
@@ -99,6 +110,7 @@ create_all_tables(engine)
 #      - where ice cores or proxy records are not available,
 #        purely statistical extrapolations are used instead
 #      - the extension varies by gas,
+#        (we use optimisation, linear regression and spline interpolation),
 #        aiming to make use of as much information as is possible
 #        e.g. hemisphere specific ice core information
 #        and the latitudinal gradient
