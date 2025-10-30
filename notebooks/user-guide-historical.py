@@ -756,6 +756,10 @@ plt.show()
 # ### File formats and naming
 #
 # The file formats are generally close to CMIP6.
+# As in CMIP6, we do not provide any vertical profiles.
+# For users who require such profiles,
+# we refer to the 'The vertical dimension' sub-header
+# in Section 4 of (TODO ref Meinshausen et al. 2017).
 # There are three key changes:
 #
 # 1. we have split the global-mean and hemispheric-mean data into separate files.
