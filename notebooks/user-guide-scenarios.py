@@ -1601,7 +1601,7 @@ pdf_l = [
             .groupby("time.year")
             .mean(),
             unstack_col="year",
-            assign_metadata={"ghg": ghg, "cmip_era": "CMIP7"},
+            assign_metadata={"ghg": ghg, "cmip_era": "CMIP7 draft (i.e. CMIP6Plus)"},
         ).openscm.update_index_levels_from_other(
             {"experiment": ("scenario", lambda x: x)}
         ),
@@ -1724,7 +1724,7 @@ sns.relplot(
     style="cmip_era",
     # markers={"CMIP6": ".", "CMIP7": "o"},
     # edgecolors="none",
-    markers={"CMIP6": "+", "CMIP7": 4},
+    markers={"CMIP6": "+", "CMIP7": 4, "CMIP7 draft (i.e. CMIP6Plus)": 4},
     hue_order=hue_order_incl_cmip6,
     kind="scatter",
     row="ghg",
@@ -1760,7 +1760,7 @@ sns.relplot(
     style="cmip_era",
     # markers={"CMIP6": ".", "CMIP7": "o"},
     # edgecolors="none",
-    markers={"CMIP6": "+", "CMIP7": 4},
+    markers={"CMIP6": "+", "CMIP7": 4, "CMIP7 draft (i.e. CMIP6Plus)": 4},
     hue_order=hue_order_incl_cmip6,
     kind="scatter",
     row="ghg",
@@ -1832,7 +1832,7 @@ pdf_l = [
                 )
             ),
             unstack_col="time",
-            assign_metadata={"ghg": ghg, "cmip_era": "CMIP7"},
+            assign_metadata={"ghg": ghg, "cmip_era": "CMIP7 draft (i.e. CMIP6Plus)"},
         ).openscm.update_index_levels_from_other(
             {"experiment": ("scenario", lambda x: x)}
         ),
@@ -1947,7 +1947,7 @@ sns.relplot(
     style="cmip_era",
     # markers={"CMIP6": ".", "CMIP7": "o"},
     # edgecolors="none",
-    markers={"CMIP6": "+", "CMIP7": 4},
+    markers={"CMIP6": "+", "CMIP7": 4, "CMIP7 draft (i.e. CMIP6Plus)": 4},
     hue_order=hue_order_incl_cmip6,
     kind="scatter",
     row="ghg",
