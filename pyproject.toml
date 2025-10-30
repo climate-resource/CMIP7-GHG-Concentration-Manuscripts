@@ -22,6 +22,8 @@ dependencies = [
     "openscm-units>=0.6.3",
     "pandas-indexing>=0.6.3",
     "pandas-openscm>=0.9.0",
+    "jupyter-book>=1.0.4.post1",
+    "playwright>=1.55.0",
 ]
 name = "local"
 version = "0.1.0"
@@ -39,6 +41,14 @@ source-include = [
 
 [tool.jupytext]
 formats = "ipynb,py:percent"
+
+[tool.ruff]
+src = [
+    "src",
+]
+exclude = [
+    "_ext",
+]
 
 [tool.ruff.lint]
 select = [
@@ -66,7 +76,11 @@ ignore = [
     "E402",
     "S101",
 ]
-
+"scripts/*" = [
+    "S602",
+    "S603",
+    "S607",
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
