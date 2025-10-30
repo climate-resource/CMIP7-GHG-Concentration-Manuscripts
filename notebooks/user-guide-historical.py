@@ -132,7 +132,7 @@ create_all_tables(engine)
 #        seasonality and latitudinal gradient used to construct the dataset
 #        from the output dataset. For this reason,
 #        we include these components separately
-#        in the zenodo record[^1]
+#        in the zenodo record[^zenodo-record]
 #        that archives the output dataset,
 #        all its inputs and intermediate data prdoucts
 # 9. calculate annual-, hemispheric- and global-means
@@ -149,12 +149,7 @@ create_all_tables(engine)
 # (which is used to support links between all the input data
 # e.g. linking of the Zenodo archive underpinning this dataset).
 #
-# [^m2017]: https://doi.org/10.5194/gmd-10-2057-2017
-# [^noaa-flask]: https://doi.org/10.15138/wkgj-f215
-# [^noaa-in-situ]: https://doi.org/10.15138/yaf1-bk21
-# [^agage]: https://www-air.larc.nasa.gov/missions/agage/
-#
-# [^1]: https://doi.org/10.5281/zenodo.14892947
+# [^zenodo-record]: https://doi.org/10.5281/zenodo.14892947
 # [^gh-code]: https://github.com/climate-resource/CMIP-GHG-Concentration-Generation
 
 # %% [markdown]

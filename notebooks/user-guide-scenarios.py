@@ -75,6 +75,10 @@ sqlite_file = REPO_ROOT / "download-test-scenario-database.db"
 engine = get_sqlite_engine(sqlite_file)
 create_all_tables(engine)
 
+# %% [markdown]
+# ```{role} raw-latex(raw)
+# :format: latex
+# ```
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Dataset construction
@@ -222,8 +226,7 @@ create_all_tables(engine)
 #
 # Determining the scenario to which each dataset applies
 # is not trivial
-# (there was [discussion](https://github.com/PCMDI/input4MIPs_CVs/discussions/64)
-# [TODO full URL in footnote]
+# (there was [discussion](https://github.com/PCMDI/input4MIPs_CVs/discussions/64)[^gh-discussion-input4mips-cvs-64]
 # about how to make this more trivial,
 # but ultimately backwards-compatibility was prioritised).
 #
@@ -248,6 +251,8 @@ create_all_tables(engine)
 # For example, for the source ID `CR-ml-0-1-0`,
 # the scenario identifier is `ml`.
 # A Python function for doing this extraction is below.
+#
+# [^gh-discussion-input4mips-cvs-64]: https://github.com/PCMDI/input4MIPs_CVs/discussions/64
 
 
 # %% editable=true slideshow={"slide_type": ""}
@@ -276,26 +281,13 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # These details will be provided both via the CMIP CVs
 # (see https://github.com/WCRP-CMIP/CMIP7-CVs)
 # and the final ScenarioMIP paper
-# (revisions of
-# [this paper](https://doi.org/10.5194/egusphere-2024-3765) are expected soon
-# [TODO switch to ref]
-# @Article{egusphere-2024-3765,
-# AUTHOR = {van Vuuren, D. and O'Neill, B. and Tebaldi, C. and Chini, L. and Friedlingstein, P. and Hasegawa, T. and Riahi, K. and Sanderson, B. and Govindasamy, B. and Bauer, N. and Eyring, V. and Fall, C. and Frieler, K. and Gidden, M. and Gohar, L. and Jones, A. and King, A. and Knutti, R. and Kriegler, E. and Lawrence, P. and Lennard, C. and Lowe, J. and Mathison, C. and Mehmood, S. and Prado, L. and Zhang, Q. and Rose, S. and Ruane, A. and Schleussner, C.-F. and Seferian, R. and Sillmann, J. and Smith, C. and S\"orensson, A. and Panickal, S. and Tachiiri, K. and Vaughan, N. and Vishwanathan, S. and Yokohata, T. and Ziehn, T.},
-# TITLE = {The Scenario Model Intercomparison Project for CMIP7 (ScenarioMIP-CMIP7)},
-# JOURNAL = {EGUsphere},
-# VOLUME = {2025},
-# YEAR = {2025},
-# PAGES = {1--38},
-# URL = {https://egusphere.copernicus.org/preprints/2025/egusphere-2024-3765/},
-# DOI = {10.5194/egusphere-2024-3765}
-# }
-# ).
+# (revisions of {raw-latex}`\cite{van_vuuren_scenariomip_2025}`
+#  are expected soon).
 # As above, note that the scenario IDs
 # have changed since publication of the draft dataset.
 # {numref}`Table {number} <tab:scenario_ids>` provides an overview
 # of the changes. Scenario IDs of the final datasets can be confirmed
-# [here](https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785)
-# [TODO URL in footnote].
+# [here](https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785)[^scenario-id-final-comment].
 #
 # ```{table} Mapping of draft scenario IDs to final scenario IDs
 # :width: auto
@@ -313,6 +305,7 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # |     h         |    h          |
 # ```
 #
+# [^scenario-id-final-comment]: https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Grids and frequencies provided
@@ -418,12 +411,13 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # In places, this led to notable changes in gradient at this transition point
 # (further analysis of this is provided below).
 # In CMIP7, we instead use a more sophisticated harmonisation algorithm
-# (using the [gradient-aware-harmonisation](https://github.com/climate-resource/gradient-aware-harmonisation)
-# [TODO link in footnote]
+# (using the [gradient-aware-harmonisation](https://github.com/climate-resource/gradient-aware-harmonisation)[^gah]
 # package developed as part of the ESA project).
 # This leads to smoother, more realistic transitions
 # between the history, observation-based period
 # and the scenario, model-based projections.
+#
+# [^gah]: https://github.com/climate-resource/gradient-aware-harmonisation
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # User guide
@@ -1434,7 +1428,7 @@ plt.show()
 # As in CMIP6, we do not provide any vertical profiles.
 # For users who require such profiles,
 # we refer to the 'The vertical dimension' sub-header
-# in Section 4 of (TODO ref Meinshausen et al. 2017).
+# in Section 4 of {raw-latex}`\cite{meinshausen_historical_2017}.
 # There are three key changes:
 #
 # 1. the global-mean and hemispheric-mean data are split into separate files.
