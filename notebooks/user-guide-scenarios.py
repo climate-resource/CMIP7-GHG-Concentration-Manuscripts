@@ -168,6 +168,9 @@ create_all_tables(engine)
 # and the final names have been changed since the draft datasets
 # were published,
 # so please take care to treat the values shown here as drafts only.
+# The final set of datasets to use will be documented on
+# the input4MIPs-CVs web page, with this particular anchor being the best to follow:
+# [https://input4mips-cvs.readthedocs.io/en/latest/dataset-overviews/#cmip7_1]().
 #
 # To download the data, we recommend accessing it directly via the
 # ESGF user interfaces via links as discussed above.
