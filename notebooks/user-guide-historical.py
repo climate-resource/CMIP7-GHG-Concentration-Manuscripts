@@ -44,6 +44,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import nc_time_axis  # noqa: F401
 import numpy as np
+from myst_nb import glue
 
 from local.data_loading import fetch_and_load_ghg_dataset, get_ghg_dataset_local_files
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
@@ -411,9 +412,23 @@ ds_co2_yearly_global = ds_co2_yearly_global.compute()
 # %% editable=true slideshow={"slide_type": ""}
 ds_co2_yearly_global
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
-ds_co2_yearly_global["co2"].plot.scatter(alpha=0.4)
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+fig, ax = plt.subplots(figsize=(1, 1))
+ds_co2_yearly_global["co2"].plot.scatter(alpha=0.4, ax=ax)
+glue("ds_co2_yearly_global_fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds_co2_yearly_global_fig
+# ---
+# figwidth: 15px
+# width: 15px
+# name: "ds_co2_yearly_global_fig"
+# ---
+#
+# Atmospheric CO{raw-latex}`\textsubscript{2}` concentrations from year 1 to 2022
+# in our dataset.
+# ```
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Space- and time-average nature of the data
@@ -451,7 +466,7 @@ ds_co2_yearly_global["time_bnds"]
 # which could be created from our datasets
 # that include spatial dimensions).
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 ds_plt = ds_co2_yearly_global.isel(time=slice(-5, None))
 
 fig, ax = plt.subplots(figsize=(8, 4))
@@ -465,7 +480,21 @@ ax.set_xticks(xticks)
 ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
 
+glue("ds_co2_monthly_step_fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds_co2_monthly_step_fig
+# ---
+# width: 150px
+# name: "ds_co2_monthly_step_fig"
+# ---
+#
+# Illustration of the fact that each data point
+# represents the average over its time bounds, not instantaneous values.
+# As a result, it should be plotted with steps or scatters
+# rather than an interpolated line.
+# ```
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Monthly-, global-mean data
