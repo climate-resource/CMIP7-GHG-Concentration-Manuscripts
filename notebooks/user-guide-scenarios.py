@@ -109,14 +109,15 @@ create_all_tables(engine)
 #            to translate these emissions into global-mean concentrations
 #
 #            1. MAGICC is run in the same configuration which was used in AR6
-#              (as described/evaluated in Cross-Chapter Box 7.1[^1]).
+#              (as described/evaluated in Cross-Chapter Box 7.1
+#              {raw-latex}`\parencite{IPCC_2021_WGI_Ch_7}`).
 #              This represents our best estimate, in line with the last IPCC report,
 #              of the concentrations that result from the emissions.
 #              Note, given that CMIP7 models have not yet been run, this will,
 #              almost by definition, produce different concentrations
 #              than those outputed by the ESMs run in emissions-driven mode.
 #         1. harmonise the global-mean concentrations to the historical
-#            concentrations using gradient-aware harmonisation[^2] to ensure a smooth
+#            concentrations using gradient-aware harmonisation[^gah] to ensure a smooth
 #            transition in both the absolute values and the gradient, improving on the
 #            CMIP6 data which had an abrupt jump in the gradient (most notable for
 #            methane, further details below)
@@ -141,9 +142,6 @@ create_all_tables(engine)
 #    produce our complete, gridded projections
 # 6. **calculate lower resolution products** from the gridded product
 # 7. **release** all the data
-#
-# [^1]: https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/
-# [^2]: https://github.com/climate-resource/gradient-aware-harmonisation
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Finding and accessing the data
@@ -166,7 +164,7 @@ create_all_tables(engine)
 #
 # It is possible to filter searches on ESGF
 # via the user interface.
-# Searches can often be encoded in URLs[^3] too
+# Searches can often be encoded in URLs[^esgf-url-example] too
 # (although these URLs sometimes move,
 # so we make no guarantee that this link will always be live).
 #
@@ -190,7 +188,7 @@ create_all_tables(engine)
 #
 # Please see these tools' docs for usage instructions.
 #
-# [^3]: An example URL: [https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%<br>
+# [^esgf-url-example]: An example URL: [https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%<br>
 # 220.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP6Plus%22%7D](
 # https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%220.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP6Plus%22%7D)
 

@@ -5,7 +5,7 @@ Generate GHG listing for use in markdown
 from pathlib import Path
 
 
-def main():  # noqa: PLR0912, PLR0915
+def main():  # noqa: PLR0912
     """Generate the listing"""
     read_path = (
         Path(__file__).parents[2]
@@ -57,11 +57,13 @@ def main():  # noqa: PLR0912, PLR0915
 
         if not any(v in out for v in ("HFC", "HCFC", "Halon", "CFC")):
             for i in range(20)[::-1]:
-                out = out.replace(str(i), f"<sub>{i}</sub>")
+                out = out.replace(str(i), f"{{raw-latex}}`\\textsubscript{{{i}}}`")
                 out = (
-                    out.replace("<sub><sub>", "<sub>")
-                    .replace("</sub></sub>", "</sub>")
-                    .replace("</sub><sub>", "")
+                    out.replace(
+                        "{raw-latex}`\\textsubscript{{raw-latex}", "{raw-latex}"
+                    )
+                    .replace("}`}`", "}`")
+                    .replace("}`{raw-latex}`\\textsubscript{", "")
                 )
 
         if d.name in ("co2", "ch4", "n2o"):

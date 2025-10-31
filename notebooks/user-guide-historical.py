@@ -171,7 +171,7 @@ create_all_tables(engine)
 # (and it's best not to read more than that into it).
 #
 # It is possible to filter searches on ESGF
-# via the user interface (see ESGF user guides[^1]).
+# via the user interface (see ESGF user guides[^esgf-user-guides-url]).
 # Alternatively, searches can be encoded in URLs. However, a caveat with this
 # approach is that URLs sometimes move, so we make no guarantee that this link
 # will always be live. An example provides the following link:
@@ -181,12 +181,13 @@ create_all_tables(engine)
 # To download the data, we recommend accessing it directly via the ESGF user interfaces
 # via links like the one above.
 # Alternately, there are tools dedicated to accessing ESGF data,
-# with two prominent examples being **esgpull**[^2] and **intake-esgf**[^3].
+# with two prominent examples being **esgpull**[^esgpull-url]
+# and **intake-esgf**[^intake-esgf-url].
 # Please refer to the tools' docs for usage instructions.
 #
-# [^1]: https://esgf.github.io/esgf-user-support/user_guide.html#data-search-and-download
-# [^2]: https://esgf.github.io/esgf-download
-# [^3]: https://intake-esgf.readthedocs.io
+# [^esgf-user-guides-url]: https://esgf.github.io/esgf-user-support/user_guide.html#data-search-and-download
+# [^esgpull-url]: https://esgf.github.io/esgf-download
+# [^intake-esgf-url]: https://intake-esgf.readthedocs.io
 
 # %% [markdown]
 # ## Zenodo
@@ -246,7 +247,7 @@ create_all_tables(engine)
 #
 # <!-- Note: generated using `scripts/generate-ghg-listing.py` --->
 # - major greenhouse gases (3)
-#     - CH<sub>4</sub>, CO<sub>2</sub>, N<sub>2</sub>O
+#     - CH{raw-latex}`\textsubscript{4}`, CO{raw-latex}`\textsubscript{2}`, N{raw-latex}`\textsubscript{2}`O
 # - ozone-depleting substances (17)
 #     - CFCs (5)
 #         - CFC-11, CFC-113, CFC-114, CFC-115, CFC-12
@@ -255,20 +256,14 @@ create_all_tables(engine)
 #     - Halons (3)
 #         - Halon 1211, Halon 1301, Halon 2402
 #     - other ozone-depleting substances (6)
-#         - CCl<sub>4</sub>, CH<sub>2</sub>Cl<sub>2</sub>, CH<sub>3</sub>Br,
-#           CH<sub>3</sub>CCl<sub>3</sub>, CH<sub>3</sub>Cl, CHCl<sub>3</sub>
+#         - CCl{raw-latex}`\textsubscript{4}`, CH{raw-latex}`\textsubscript{2}`Cl{raw-latex}`\textsubscript{2}`, CH{raw-latex}`\textsubscript{3}`Br, CH{raw-latex}`\textsubscript{3}`CCl{raw-latex}`\textsubscript{3}`, CH{raw-latex}`\textsubscript{3}`Cl, CHCl{raw-latex}`\textsubscript{3}`
 # - ozone fluorinated compounds (23)
 #     - HFCs (11)
-#         - HFC-125, HFC-134a, HFC-143a, HFC-152a, HFC-227ea, HFC-23, HFC-236fa,
-#           HFC-245fa, HFC-32, HFC-365mfc, HFC-4310mee
+#         - HFC-125, HFC-134a, HFC-143a, HFC-152a, HFC-227ea, HFC-23, HFC-236fa, HFC-245fa, HFC-32, HFC-365mfc, HFC-4310mee
 #     - PFCs (9)
-#         - C<sub>2</sub>F<sub>6</sub>, C<sub>3</sub>F<sub>8</sub>,
-#           C<sub>4</sub>F<sub>10</sub>, C<sub>5</sub>F<sub>12</sub>,
-#           C<sub>6</sub>F<sub>14</sub>, C<sub>7</sub>F<sub>16</sub>,
-#           C<sub>8</sub>F<sub>18</sub>, CC<sub>4</sub>F<sub>8</sub>,
-#           CF<sub>4</sub>
+#         - C{raw-latex}`\textsubscript{2}`F{raw-latex}`\textsubscript{6}`, C{raw-latex}`\textsubscript{3}`F{raw-latex}`\textsubscript{8}`, C{raw-latex}`\textsubscript{4}`F{raw-latex}`\textsubscript{10}`, C{raw-latex}`\textsubscript{5}`F{raw-latex}`\textsubscript{12}`, C{raw-latex}`\textsubscript{6}`F{raw-latex}`\textsubscript{14}`, C{raw-latex}`\textsubscript{7}`F{raw-latex}`\textsubscript{16}`, C{raw-latex}`\textsubscript{8}`F{raw-latex}`\textsubscript{18}`, CC{raw-latex}`\textsubscript{4}`F{raw-latex}`\textsubscript{8}`, CF{raw-latex}`\textsubscript{4}`
 #     - other (3)
-#         - NF<sub>3</sub>, SF<sub>6</sub>, SO<sub>2</sub>F<sub>2</sub>
+#         - NF{raw-latex}`\textsubscript{3}`, SF{raw-latex}`\textsubscript{6}`, SO{raw-latex}`\textsubscript{2}`F{raw-latex}`\textsubscript{2}`
 #
 # ### Equivalent species
 #
@@ -280,13 +275,13 @@ create_all_tables(engine)
 #
 # #### Option 1
 #
-# Use CO<sub>2</sub>, CH<sub>4</sub>, N<sub>2</sub>O and CFC-12 directly.
+# Use CO{raw-latex}`\textsubscript{2}`, CH{raw-latex}`\textsubscript{4}`, N{raw-latex}`\textsubscript{2}`O and CFC-12 directly.
 # Use CFC-11 equivalent (variable name `cfc11eq`)
 # to capture the radiative effect of all other species.
 #
 # #### Option 2
 #
-# Use CO<sub>2</sub>, CH<sub>4</sub> and N<sub>2</sub>O directly.
+# Use CO{raw-latex}`\textsubscript{2}`, CH{raw-latex}`\textsubscript{4}` and N{raw-latex}`\textsubscript{2}`O directly.
 # Use CFC-12 equivalent (variable name `cfc12eq`)
 # to capture the radiative effect of all ozone depleting substances (ODSs)
 # and HFC-134a equivalent (variable name `hfc134aeq`)
@@ -308,7 +303,7 @@ create_all_tables(engine)
 #
 # At present, the changes from CMIP6 are minor,
 # with the maximum difference in effective radiative forcing terms
-# being 0.05 W / m<sup>2</sup>
+# being 0.05 W / m{raw-latex}`\textsuperscript{2}`
 # (and generally much smaller than this, particularly after 1850).
 # For more details, see the plots in the user guide below
 # and the forthcoming manuscript.
@@ -360,7 +355,7 @@ co2_yearly_global_fps = get_ghg_dataset_local_files(**query_kwargs_co2_yearly_gl
 # the files also have different values for the `frequency` attribute).
 # Global-mean data is identified by the 'grid label' `gm`,
 # which appears in the filename.
-# Below we show the filenames for the CO<sub>2</sub> output.
+# Below we show the filenames for the CO{raw-latex}`\textsubscript{2}` output.
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
 for fp in co2_yearly_global_fps:
@@ -478,7 +473,7 @@ plt.show()
 # Like the global datasets, these come in three files.
 #
 # For monthly data, the time labels in the filename are months.
-# Below we show the filenames for the CO<sub>2</sub> output.
+# Below we show the filenames for the CO{raw-latex}`\textsubscript{2}` output.
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 # Ensure data is downloaded
@@ -585,7 +580,7 @@ plt.show()
 # but are identified by the grid label `gr1z`.
 #
 # Below we show the filenames for the latitudinally-resolved data
-# for CO<sub>2</sub>
+# for CO{raw-latex}`\textsubscript{2}`
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 # Ensure data is downloaded
@@ -1059,9 +1054,8 @@ plt.show()
 
 # %% [markdown]
 # Values below come from Table 7.SM.7 of
-# IPCC AR7 WG1 Ch. 7 Supplementary Material[^4].
-#
-# [^4]: https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07_SM.pdf
+# IPCC AR6 WG1 Ch. 7 Supplementary Material
+# {raw-latex}`\parencite{IPCC_2021_WGI_Ch_7_SM}`.
 
 # %% editable=true slideshow={"slide_type": ""}
 from openscm_units import unit_registry
@@ -1148,7 +1142,7 @@ plt.show()
 # of the difference between the CMIP6 and CMIP7 datasets.
 #
 # Note that this approximation is linear,
-# which is a particularly strong approximation for CO<sub>2</sub>
+# which is a particularly strong approximation for CO{raw-latex}`\textsubscript{2}`
 # because of its logarithmic forcing nature.
 # We show this approximation here nonetheless
 # because it provides an order of magnitude estimate
@@ -1194,14 +1188,13 @@ plt.show()
 
 # %% [markdown]
 # In summary, in ERF terms, the differences from CMIP6 are very small.
-# For all gases, they are less than around 0.025 W / m<sup>2</sup>.
+# For all gases, they are less than around 0.025 W / m{raw-latex}`\textsuperscript{2}`.
 # Compared to the estimated total greenhouse gas forcing and uncertainty in IPCC AR6
-# (see Section 7.3.5.2 of AR6 WG1 Chapter 7[^5]),
-# estimated to be 3.84 W / m<sup>2</sup>
-# (very likely range of 3.46 to 4.22 W / m<sup>2</sup>),
+# (see Section 7.3.5.2 of AR6 WG1 Chapter 7
+# {raw-latex}`\parencite{IPCC_2021_WGI_Ch_7}`)
+# estimated to be 3.84 W / m{raw-latex}`\textsuperscript{2}`
+# (very likely range of 3.46 to 4.22 W / m{raw-latex}`\textsuperscript{2}`),
 # such differences are particularly small.
-#
-# [^5]: https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/
 
 # %% [markdown]
 # #### Atmospheric concentrations including seasonality: Year 2000 - 2022
