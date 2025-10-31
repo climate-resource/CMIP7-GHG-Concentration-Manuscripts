@@ -396,6 +396,7 @@ for fp in ch4_yearly_global_fps:
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # Using a tool like [xarray](https://github.com/pydata/xarray)[^xarray-url],
 # loading and working with the data is trivial.
+# The resulting plot is shown in {numref}`Figure %s <ds-co2-yearly-global-fig>`.
 #
 # [^xarray-url]: https://github.com/pydata/xarray
 
@@ -412,18 +413,19 @@ ds_co2_yearly_global = ds_co2_yearly_global.compute()
 # %% editable=true slideshow={"slide_type": ""}
 ds_co2_yearly_global
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-fig, ax = plt.subplots(figsize=(1, 1))
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_output"]
+fig, ax = plt.subplots(figsize=(6, 3))
 ds_co2_yearly_global["co2"].plot.scatter(alpha=0.4, ax=ax)
-glue("ds_co2_yearly_global_fig", fig, display=False)
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+glue("ds-co2-yearly-global-fig", fig, display=False)
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ```{glue:figure} ds_co2_yearly_global_fig
+# ```{glue:figure} ds-co2-yearly-global-fig
 # ---
-# figwidth: 15px
-# width: 15px
-# name: "ds_co2_yearly_global_fig"
+# width: 500px
+# name: "ds-co2-yearly-global-fig"
 # ---
 #
 # Atmospheric CO{raw-latex}`\textsubscript{2}` concentrations from year 1 to 2022
@@ -461,7 +463,8 @@ ds_co2_yearly_global["time_bnds"]
 # (the mean of the lines joining the points
 # is not the same as the data given in the files).
 # Instead, the data should be plotted (and used)
-# as a scatter or a step plot, as shown below.
+# as a scatter or a step plot
+# ({numref}`Figure %s <ds_co2_monthly_step_fig>`).
 # (The same logic applies to any spatial plots
 # which could be created from our datasets
 # that include spatial dimensions).
@@ -486,7 +489,7 @@ plt.show()
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ```{glue:figure} ds_co2_monthly_step_fig
 # ---
-# width: 150px
+# width: 500px
 # name: "ds_co2_monthly_step_fig"
 # ---
 #
@@ -545,9 +548,10 @@ ds_co2_monthly_global["time_bnds"]
 # %% [markdown]
 # As above, as a result of the time average that the data represents,
 # it is inappropriate to plot this data using a line plot.
-# Scatter or step plots should be used instead.
+# Scatter or step plots should be used instead
+# ({numref}`Figure %s <ds-co2-monthly-global-fig>`).
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 ds_plt = ds_co2_monthly_global.isel(time=slice(-5 * 12, None))
 
 fig, ax = plt.subplots(figsize=(8, 4))
@@ -561,15 +565,30 @@ ax.set_xticks(xticks)
 ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
 
+glue("ds-co2-monthly-global-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-co2-monthly-global-fig
+# ---
+# width: 500px
+# name: "ds-co2-monthly-global-fig"
+# ---
+#
+# Illustration of the monthly mean nature of the monthly datasets.
+# Each value represents the average over its time bounds, not instantaneous values.
+# As a result, they should be plotted with steps or scatters
+# rather than an interpolated line.
+# ```
 
 # %% [markdown]
 # The monthly data includes seasonality.
 # Plotting the monthly and yearly data
 # on the same axes makes particularly clear
-# why a line plot is inappropriate.
+# why a line plot is inappropriate
+# ({numref}`Figure %s <ds-co2-monthly-global-vs-yearly-fig>`).
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig, ax = plt.subplots(figsize=(8, 4))
 
 for ds_plt, label, colour in (
@@ -588,7 +607,20 @@ ax.set_xticks(xticks)
 ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
 
+glue("ds-co2-monthly-global-vs-yearly-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-co2-monthly-global-vs-yearly-fig
+# ---
+# width: 500px
+# name: "ds-co2-monthly-global-vs-yearly-fig"
+# ---
+#
+# Monthly-mean compared to annual-mean datasets.
+# Here illustrated with the CO{raw-latex}`\textsubscript{2}` dataset,
+# but the same idea applies to all greenhouse gases.
+# ```
 
 # %% [markdown]
 # At present, we do not provide data at a higher temporal resolution than monthly.
@@ -653,9 +685,10 @@ ds_co2_monthly_lat["lat_bnds"]
 # %% [markdown]
 # As above, but this time for the spatial axis,
 # it is inappropriate to plot this data using a line plot.
-# Scatter or step plots should be used instead.
+# Scatter or step plots should be used instead
+# ({numref}`Figure %s <ds-co2-monthly-lat-fig>`).
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 ds_plt = ds_co2_monthly_lat.isel(time=slice(-12, None))
 
 
@@ -710,14 +743,32 @@ for month in range(10, 13):
 # ax.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
 
 plt.tight_layout()
+
+glue("ds-co2-monthly-lat-fig", fig, display=False)
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-co2-monthly-lat-fig
+# ---
+# width: 600px
+# name: "ds-co2-monthly-lat-fig"
+# ---
+#
+# Illustration of the spatial mean nature of the latitudinally-resolved datasets
+# (here shown for the year 2022 for CO{raw-latex}`\textsubscript{2}`
+# but the same idea applies to all latitudinally-resolved datasets).
+# Each value represents the average over its latitude bounds, not point values.
+# As a result, they should be plotted with steps or scatters
+# rather than an interpolated line.
+# ```
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # We can compare the global-mean data
-# to the data at each latitude.
+# to the data at each latitude
+# ({numref}`Figure %s <ds-co2-monthly-lat-v-global-fig>`).
 # The strength of the latitudinal gradient varies also by gas (not shown).
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig, ax = plt.subplots(figsize=(8, 4))
 
 time_slice = slice(-5 * 12, None)
@@ -750,13 +801,29 @@ ax.set_xticks(xticks)
 ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
 
+glue("ds-co2-monthly-lat-v-global-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-co2-monthly-lat-v-global-fig
+# ---
+# width: 550px
+# name: "ds-co2-monthly-lat-v-global-fig"
+# ---
+#
+# Comparison of global-, monthly-mean data with latitudinally-resolved, monthly-mean data
+# for CO{raw-latex}`\textsubscript{2}`.
+# The latitudinal variation, particularly the inverted seasonality in the two hemispheres,
+# is a notable feature of the dataset.
+# ```
 
 # %% [markdown]
 # The data can also be plotted in a so-called "magic carpet"
-# to see the variation in space and time simultaneously.
+# to see the variation in space and time simultaneously
+# ({numref}`Figure %s <ds-co2-magic-carpet-fig>`).
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig = plt.figure(figsize=(8, 6))
 ax = fig.add_subplot(projection="3d")
 
@@ -791,7 +858,20 @@ tmp.plot.surface(
 ax.view_init(15, -135, 0)
 
 plt.tight_layout()
+glue("ds-co2-magic-carpet-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-co2-magic-carpet-fig
+# ---
+# width: 500px
+# name: "ds-co2-magic-carpet-fig"
+# ---
+#
+# So-called 'magic carpet' plot.
+# This illustrates the variation in time and space simultaneously.
+# Here this is illustrated with the CO{raw-latex}`\textsubscript{2}` dataset.
+# ```
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Differences from CMIP6
@@ -883,6 +963,8 @@ plt.show()
 #     "mole_fraction_of_hfc134aeq_in_air": "hfc134aeq",
 # }
 # ```
+#
+# {raw-latex}`\newpage`
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Data comparisons
@@ -1021,7 +1103,7 @@ def remove_empty_axes(
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # #### Atmospheric concentrations: Year 1 - 2022
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig, axes_d = get_default_delta_mosaic()
 axes_d = remove_empty_axes(axes_d)
 
@@ -1031,12 +1113,34 @@ plot_overview_and_deltas(
 )
 
 plt.tight_layout()
+glue("cmip6-v-cmip7-year-1-2022-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} cmip6-v-cmip7-year-1-2022-fig
+# ---
+# width: 600px
+# name: "cmip6-v-cmip7-year-1-2022-fig"
+# ---
+#
+# CMIP6 vs. CMIP7 for the time period from year 1 to 2022.
+# For each pair of plots, the top panel shows the datasets' absolute values,
+# the bottom panel shows the difference (CMIP7 minus CMIP6).
+# We show the major three greenhouse gases,
+# CO{raw-latex}`\textsubscript{2}`,
+# CH{raw-latex}`\textsubscript{4}` and
+# N{raw-latex}`\textsubscript{2}`O,
+# and then represent the effect of all other greenhouse gases
+# via the equivalent species
+# CFC-12 equivalent and HFC-134a equivalent.
+# ```
+#
+# {raw-latex}`\newpage`
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # #### Atmospheric concentrations: Year 1750 - 2022
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig, axes_d = get_default_delta_mosaic()
 axes_d = remove_empty_axes(axes_d)
 
@@ -1047,7 +1151,29 @@ plot_overview_and_deltas(
 )
 
 plt.tight_layout()
+glue("cmip6-v-cmip7-year-1750-2022-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} cmip6-v-cmip7-year-1750-2022-fig
+# ---
+# width: 600px
+# name: "cmip6-v-cmip7-year-1750-2022-fig"
+# ---
+#
+# CMIP6 vs. CMIP7 for the time period from year 1750 to 2022.
+# For each pair of plots, the top panel shows the datasets' absolute values,
+# the bottom panel shows the difference (CMIP7 minus CMIP6).
+# We show the major three greenhouse gases,
+# CO{raw-latex}`\textsubscript{2}`,
+# CH{raw-latex}`\textsubscript{4}` and
+# N{raw-latex}`\textsubscript{2}`O,
+# and then represent the effect of all other greenhouse gases
+# via the equivalent species
+# CFC-12 equivalent and HFC-134a equivalent.
+# ```
+#
+# {raw-latex}`\newpage`
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # #### Atmospheric concentrations: Year 1957 - 2022
@@ -1055,7 +1181,7 @@ plt.show()
 # 1957 is the start of the Scripps ground-based record.
 # Before this, data is based on ice cores alone.
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig, axes_d = get_default_delta_mosaic()
 axes_d = remove_empty_axes(axes_d)
 
@@ -1066,7 +1192,29 @@ plot_overview_and_deltas(
 )
 
 plt.tight_layout()
+glue("cmip6-v-cmip7-year-1957-2022-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} cmip6-v-cmip7-year-1957-2022-fig
+# ---
+# width: 600px
+# name: "cmip6-v-cmip7-year-1957-2022-fig"
+# ---
+#
+# CMIP6 vs. CMIP7 for the time period from year 1957 to 2022.
+# For each pair of plots, the top panel shows the datasets' absolute values,
+# the bottom panel shows the difference (CMIP7 minus CMIP6).
+# We show the major three greenhouse gases,
+# CO{raw-latex}`\textsubscript{2}`,
+# CH{raw-latex}`\textsubscript{4}` and
+# N{raw-latex}`\textsubscript{2}`O,
+# and then represent the effect of all other greenhouse gases
+# via the equivalent species
+# CFC-12 equivalent and HFC-134a equivalent.
+# ```
+#
+# {raw-latex}`\newpage`
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # #### Approximate radiative effect: Year 1 - 2022
@@ -1074,7 +1222,11 @@ plt.show()
 # As seen above, in atmospheric concentration terms
 # the differences are small.
 # However, this can be put on a common scale
-# by comparing the differences in radiative effect terms.
+# by comparing the differences in radiative effect terms
+# (
+# {numref}`Figure %s <cmip6-v-cmip7-year-1-2022-re-fig>`,
+# and {numref}`Figure %s <cmip6-v-cmip7-year-1750-2022-re-fig>`
+# ).
 # This gives an approximation of the size of the difference
 # that would be seen by an Earth System Model's (ESM's) radiation code.
 # This uses basic linear approximations,
@@ -1119,8 +1271,12 @@ for gas, gas_ds in ds_gases_full_d.items():
 
         ds_gases_full_radiative_effect_d[gas][mip_era] = tmp
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
-fig, axes_d = get_default_delta_mosaic()
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+fig, axes_d = plt.subplot_mosaic(
+    mosaic=plt_mosaic,
+    figsize=(12, 12),
+    sharex=True,
+)
 axes_d = remove_empty_axes(axes_d)
 
 plot_overview_and_deltas(
@@ -1135,15 +1291,44 @@ for name, ax in axes_d.items():
     ax.set_ylim([0, 6.0])
 
 plt.tight_layout()
+glue("cmip6-v-cmip7-year-1-2022-re-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} cmip6-v-cmip7-year-1-2022-re-fig
+# ---
+# width: 600px
+# name: "cmip6-v-cmip7-year-1-2022-re-fig"
+# ---
+#
+# CMIP6 vs. CMIP7 for the time period from year 1 to 2022
+# in radiative effect terms.
+# For each pair of plots, the top panel shows the datasets
+# in radiative effect terms i.e. the product of the concentration
+# and its radiative efficiency.
+# The bottom panel shows the difference (CMIP7 minus CMIP6).
+# We show the major three greenhouse gases,
+# CO{raw-latex}`\textsubscript{2}`,
+# CH{raw-latex}`\textsubscript{4}` and
+# N{raw-latex}`\textsubscript{2}`O,
+# and then represent the effect of all other greenhouse gases
+# via the equivalent species
+# CFC-12 equivalent and HFC-134a equivalent.
+# ```
+#
+# {raw-latex}`\newpage`
 
 # %% [markdown]
 # #### Approximate radiative effect: Year 1750 - 2022
 #
 # This is the period relevant for historical simulations in CMIP.
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
-fig, axes_d = get_default_delta_mosaic()
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+fig, axes_d = plt.subplot_mosaic(
+    mosaic=plt_mosaic,
+    figsize=(12, 12),
+    sharex=True,
+)
 axes_d = remove_empty_axes(axes_d)
 
 min_year = 1750
@@ -1159,7 +1344,24 @@ for name, ax in axes_d.items():
     ax.set_ylim([0, 6.0])
 
 plt.tight_layout()
+glue("cmip6-v-cmip7-year-1750-2022-re-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} cmip6-v-cmip7-year-1750-2022-re-fig
+# ---
+# width: 600px
+# name: "cmip6-v-cmip7-year-1750-2022-re-fig"
+# ---
+#
+# CMIP6 vs. CMIP7 for the time period from year 1750 to 2022
+# in radiative effect terms
+# (see caption of
+# {numref}`Figure %s <cmip6-v-cmip7-year-1-2022-re-fig>`
+# for details).
+# ```
+#
+# {raw-latex}`\newpage`
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # #### Approximate effective radiative forcing: Year 1750 - 2022
@@ -1175,8 +1377,9 @@ plt.show()
 # Note that this approximation is linear,
 # which is a particularly strong approximation for CO{raw-latex}`\textsubscript{2}`
 # because of its logarithmic forcing nature.
-# We show this approximation here nonetheless
-# because it provides an order of magnitude estimate
+# We show this approximation here
+# ({numref}`Figure %s <cmip6-v-cmip7-year-1750-2022-erf-fig>`)
+# nonetheless because it provides an order of magnitude estimate
 # for the change from CMIP6 in ERF terms.
 # The forthcoming manuscripts will explore the subtleties
 # of this quantification in more detail.
@@ -1198,7 +1401,7 @@ for gas, gas_ds in ds_gases_full_radiative_effect_d.items():
 
         ds_gases_full_erf_d[gas][mip_era] = tmp
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig, axes_d = get_default_delta_mosaic()
 axes_d = remove_empty_axes(axes_d)
 
@@ -1215,7 +1418,31 @@ for name, ax in axes_d.items():
     ax.set_ylim([0, 2.0])
 
 plt.tight_layout()
+glue("cmip6-v-cmip7-year-1750-2022-erf-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} cmip6-v-cmip7-year-1750-2022-erf-fig
+# ---
+# width: 600px
+# name: "cmip6-v-cmip7-year-1750-2022-erf-fig"
+# ---
+#
+# CMIP6 vs. CMIP7 for the time period from year 1759 to 2022
+# in approximate effective radiative forcing terms.
+# For each pair of plots, the top panel shows the datasets
+# in approximate effective radiative forcing terms.
+# The bottom panel shows the difference (CMIP7 minus CMIP6).
+# We show the major three greenhouse gases,
+# CO{raw-latex}`\textsubscript{2}`,
+# CH{raw-latex}`\textsubscript{4}` and
+# N{raw-latex}`\textsubscript{2}`O,
+# and then represent the effect of all other greenhouse gases
+# via the equivalent species
+# CFC-12 equivalent and HFC-134a equivalent.
+# ```
+#
+# {raw-latex}`\newpage`
 
 # %% [markdown]
 # In summary, in ERF terms, the differences from CMIP6 are very small.
@@ -1230,7 +1457,8 @@ plt.show()
 # %% [markdown]
 # #### Atmospheric concentrations including seasonality: Year 2000 - 2022
 #
-# The final comparisons we show are atmospheric concentrations including seasonality.
+# The final comparisons we show are atmospheric concentrations including seasonality
+# ({numref}`Figure %s <cmip6-v-cmip7-year-2000-2022-seasonality-fig>`)
 # Given that most greenhouse gases
 # are well-mixed with lifetimes much greater than a year,
 # these differences are unlikely to be of huge interest to ESMs.
@@ -1263,7 +1491,7 @@ for gas in gases_to_show:
         # compute to avoid dask weirdness
         ds_gases_full_monthly_d[gas][cmip_era] = ds.compute()
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig, axes_d = get_default_delta_mosaic()
 axes_d = remove_empty_axes(axes_d)
 
@@ -1278,7 +1506,29 @@ plot_overview_and_deltas(
 )
 
 plt.tight_layout()
+glue("cmip6-v-cmip7-year-2000-2022-seasonality-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} cmip6-v-cmip7-year-2000-2022-seasonality-fig
+# ---
+# width: 600px
+# name: "cmip6-v-cmip7-year-2000-2022-seasonality-fig"
+# ---
+#
+# CMIP6 vs. CMIP7 for the time period from year 2000 to 2022.
+# The shown dataset is the global-, monthly-mean dataset
+# i.e. includes seasonality.
+# For each pair of plots, the top panel shows the datasets' absolute values,
+# the bottom panel shows the difference (CMIP7 minus CMIP6).
+# We show the major three greenhouse gases,
+# CO{raw-latex}`\textsubscript{2}`,
+# CH{raw-latex}`\textsubscript{4}` and
+# N{raw-latex}`\textsubscript{2}`O,
+# and then represent the effect of all other greenhouse gases
+# via the equivalent species
+# CFC-12 equivalent and HFC-134a equivalent.
+# ```
 
 # %% [markdown]
 # Like the annual-means,

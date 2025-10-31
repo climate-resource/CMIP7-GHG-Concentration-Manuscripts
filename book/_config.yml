@@ -26,4 +26,5 @@ html:
 sphinx:
   config:
     latex_elements:
-      preamble: "\\usepackage[backend=biber, style=apa]{biblatex} \n\\addbibresource{references.bib}\n"
+      preamble: "\\usepackage[backend=biber, style=apa]{biblatex} \n\\addbibresource{references.bib}\n\
+        \n\\addto\\captionsenglish{\\renewcommand{\\figurename}{Figure }}"
