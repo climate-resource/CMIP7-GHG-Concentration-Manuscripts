@@ -505,8 +505,10 @@ for fp in sorted(ch4_yearly_global_fps)[::-1]:
 # !ncdump -h {co2_yearly_global_fps[0]} | fold -w 80 -s
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# Using a tool like [xarray](https://github.com/pydata/xarray),
+# Using a tool like [xarray](https://github.com/pydata/xarray)[^xarray-url],
 # loading and working with the data is trivial.
+#
+# [^xarray-url]: https://github.com/pydata/xarray
 
 # %% editable=true slideshow={"slide_type": ""}
 import xarray as xr
