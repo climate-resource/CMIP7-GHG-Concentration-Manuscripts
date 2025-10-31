@@ -56,23 +56,23 @@ The file `notebooks/{notebook_stem}.py` must exist."""
     # i.e. there aren't any untracked clashes we need to commit.
     current_branch = repo.active_branch
 
-    # repo.git.checkout(compare_against)
-    # print(f"Checked out {compare_against}")
-    # shutil.rmtree("book/_build/latex")
-    # run(f'uv run python scripts/create_latex_pdf.py {notebook_stem} "{out_title}"')
-    # run("git checkout -- book")
-    # if (diff_dir / compare_against).exists():
-    #     shutil.rmtree(diff_dir / compare_against)
-    # shutil.copytree("book/_build/latex", diff_dir / compare_against)
-    #
-    # repo.git.checkout(current_branch)
-    # print("Checked out the current branch")
-    # shutil.rmtree("book/_build/latex")
-    # run(f'uv run python scripts/create_latex_pdf.py {notebook_stem} "{out_title}"')
-    # run("git checkout -- book")
-    # if (diff_dir / current_branch.name).exists():
-    #     shutil.rmtree(diff_dir / current_branch.name)
-    # shutil.copytree("book/_build/latex", diff_dir / current_branch.name)
+    repo.git.checkout(compare_against)
+    print(f"Checked out {compare_against}")
+    shutil.rmtree("book/_build/latex")
+    run(f'uv run python scripts/create_latex_pdf.py {notebook_stem} "{out_title}"')
+    run("git checkout -- book")
+    if (diff_dir / compare_against).exists():
+        shutil.rmtree(diff_dir / compare_against)
+    shutil.copytree("book/_build/latex", diff_dir / compare_against)
+
+    repo.git.checkout(current_branch)
+    print("Checked out the current branch")
+    shutil.rmtree("book/_build/latex")
+    run(f'uv run python scripts/create_latex_pdf.py {notebook_stem} "{out_title}"')
+    run("git checkout -- book")
+    if (diff_dir / current_branch.name).exists():
+        shutil.rmtree(diff_dir / current_branch.name)
+    shutil.copytree("book/_build/latex", diff_dir / current_branch.name)
 
     pwd = os.getcwd()
     os.chdir(diff_dir)
