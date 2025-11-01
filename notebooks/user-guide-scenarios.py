@@ -49,6 +49,7 @@ import pandas_indexing as pix
 import pandas_openscm
 import seaborn as sns
 import tqdm.auto
+from myst_nb import glue
 
 from local.data_loading import (
     fetch_and_load_ghg_dataset,
@@ -416,6 +417,8 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # and the scenario, model-based projections.
 #
 # [^gah]: https://github.com/climate-resource/gradient-aware-harmonisation
+#
+# TODO: move formatting differences bit up here
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # User guide
@@ -507,6 +510,7 @@ for fp in sorted(ch4_yearly_global_fps)[::-1]:
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # Using a tool like [xarray](https://github.com/pydata/xarray)[^xarray-url],
 # loading and working with the data is trivial.
+# The resulting plot is shown in {numref}`Figure %s <ds-co2-yearly-global-fig>`.
 #
 # [^xarray-url]: https://github.com/pydata/xarray
 
@@ -525,9 +529,22 @@ ds_example_co2_yearly_global = ds_example_co2_yearly_global.compute()
 # %% editable=true slideshow={"slide_type": ""}
 ds_example_co2_yearly_global
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+fig, ax = plt.subplots(figsize=(6, 3))
 ds_example_co2_yearly_global["co2"].plot.scatter(alpha=0.4)
+glue("ds-co2-yearly-global-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-co2-yearly-global-fig
+# ---
+# width: 500px
+# name: "ds-co2-yearly-global-fig"
+# ---
+#
+# Atmospheric CO{raw-latex}`\textsubscript{2}` concentrations from year 2023 to 2100
+# in one of our future forcing datasets.
+# ```
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Space- and time-average nature of the data
@@ -560,12 +577,13 @@ ds_example_co2_yearly_global["time_bnds"]
 # (the mean of the lines joining the points
 # is not the same as the data given in the files).
 # Instead, the data should be plotted (and used)
-# as a scatter or a step plot, as shown below.
+# as a scatter or a step plot
+# ({numref}`Figure %s <ds_co2_yearly_step_fig>`).
 # (The same logic applies to any spatial plots
 # which could be created from our datasets
 # that include spatial dimensions).
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 ds_plt = ds_example_co2_yearly_global.isel(time=slice(None, 5))
 
 fig, ax = plt.subplots(figsize=(8, 4))
@@ -579,7 +597,21 @@ ax.set_xticks(xticks)
 ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
 
+glue("ds_co2_yearly_step_fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds_co2_yearly_step_fig
+# ---
+# width: 500px
+# name: "ds_co2_yearly_step_fig"
+# ---
+#
+# Illustration of the fact that each data point
+# represents the average over its time bounds, not instantaneous values.
+# As a result, it should be plotted with steps or scatters
+# rather than an interpolated line.
+# ```
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Monthly-, global-mean data
@@ -629,9 +661,10 @@ ds_example_co2_monthly_global["time_bnds"]
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # As above, as a result of the time average that the data represents,
 # it is inappropriate to plot this data using a line plot.
-# Scatter or step plots should be used instead.
+# Scatter or step plots should be used instead
+# ({numref}`Figure %s <ds-co2-monthly-global-fig>`).
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 ds_plt = ds_example_co2_monthly_global.isel(time=slice(None, 5 * 12))
 
 fig, ax = plt.subplots(figsize=(8, 4))
@@ -645,15 +678,30 @@ ax.set_xticks(xticks)
 ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
 
+glue("ds-co2-monthly-global-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-co2-monthly-global-fig
+# ---
+# width: 500px
+# name: "ds-co2-monthly-global-fig"
+# ---
+#
+# Illustration of the monthly mean nature of the monthly datasets.
+# Each value represents the average over its time bounds, not instantaneous values.
+# As a result, they should be plotted with steps or scatters
+# rather than an interpolated line.
+# ```
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # The monthly data includes seasonality.
 # Plotting the monthly and yearly data
 # on the same axes makes particularly clear
-# why a line plot is inappropriate.
+# why a line plot is inappropriate
+# ({numref}`Figure %s <ds-co2-monthly-global-vs-yearly-fig>`).
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig, ax = plt.subplots(figsize=(8, 4))
 
 for ds_plt, label, colour in (
@@ -676,14 +724,27 @@ ax.set_xticks(xticks)
 ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
 
+glue("ds-co2-monthly-global-vs-yearly-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-co2-monthly-global-vs-yearly-fig
+# ---
+# width: 500px
+# name: "ds-co2-monthly-global-vs-yearly-fig"
+# ---
+#
+# Monthly-mean compared to annual-mean datasets.
+# Here illustrated with the CO{raw-latex}`\textsubscript{2}` dataset,
+# but the same idea applies to all greenhouse gases.
+# ```
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Monthly-, latitudinally-resolved data
 #
 # We also provide data with spatial,
-# specifically latitudinal, resolution.
-# This data comes on a 15-degree latitudinal grid
+# specifically latituindal, resolution.
+# This data comes on a 15-degree latituindal grid
 # (see below for details of the grid and latitudinal bounds).
 # These files are identified by the grid label `gnz`.
 # We only provide these files with monthly resolution.
@@ -693,7 +754,7 @@ plt.show()
 # but are identified by the grid label `gr1z`.
 #
 # Below we show the filenames for the latitudinally-resolved data
-# for CO<sub>2</sub>
+# for CO{raw-latex}`\textsubscript{2}`
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 # Ensure data is downloaded
@@ -738,9 +799,10 @@ ds_example_co2_monthly_lat["lat_bnds"]
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # As above, but this time for the spatial axis,
 # it is inappropriate to plot this data using a line plot.
-# Scatter or step plots should be used instead.
+# Scatter or step plots should be used instead
+# ({numref}`Figure %s <ds-co2-monthly-lat-fig>`).
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 ds_plt = ds_example_co2_monthly_lat.isel(time=slice(None, 12))
 
 
@@ -795,14 +857,32 @@ for month in range(10, 13):
 # ax.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
 
 plt.tight_layout()
+
+glue("ds-co2-monthly-lat-fig", fig, display=False)
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-co2-monthly-lat-fig
+# ---
+# width: 600px
+# name: "ds-co2-monthly-lat-fig"
+# ---
+#
+# Illustration of the spatial mean nature of the latitudinally-resolved datasets
+# (here shown for the year 2023 for CO{raw-latex}`\textsubscript{2}`
+# but the same idea applies to all latitudinally-resolved datasets).
+# Each value represents the average over its latitude bounds, not point values.
+# As a result, they should be plotted with steps or scatters
+# rather than an interpolated line.
+# ```
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # We can compare the global-mean data
-# to the data at each latitude.
+# to the data at each latitude
+# ({numref}`Figure %s <ds-co2-monthly-lat-v-global-fig>`).
 # The strength of the latitudinal gradient varies also by gas (not shown).
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig, ax = plt.subplots(figsize=(8, 4))
 
 time_slice = slice(None, 5 * 12)
@@ -836,13 +916,28 @@ ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
 ax.set_title("")
 
+glue("ds-co2-monthly-lat-v-global-fig", fig, display=False)
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# The data can also be plotted in a so-called "magic carpet"
-# to see the variation in space and time simultaneously.
+# ```{glue:figure} ds-co2-monthly-lat-v-global-fig
+# ---
+# width: 550px
+# name: "ds-co2-monthly-lat-v-global-fig"
+# ---
+#
+# Comparison of global-, monthly-mean data with latitudinally-resolved, monthly-mean data
+# for CO{raw-latex}`\textsubscript{2}`.
+# The latitudinal variation, particularly the inverted seasonality in the two hemispheres,
+# is a notable feature of the dataset.
+# ```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# The data can also be plotted in a so-called "magic carpet"
+# to see the variation in space and time simultaneously
+# ({numref}`Figure %s <ds-co2-magic-carpet-fig>`).
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig = plt.figure(figsize=(8, 6))
 ax = fig.add_subplot(projection="3d")
 
@@ -877,7 +972,20 @@ tmp.plot.surface(
 ax.view_init(15, -135, 0)
 
 plt.tight_layout()
+glue("ds-co2-magic-carpet-fig", fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-co2-magic-carpet-fig
+# ---
+# width: 500px
+# name: "ds-co2-magic-carpet-fig"
+# ---
+#
+# So-called 'magic carpet' plot.
+# This illustrates the variation in time and space simultaneously.
+# Here this is illustrated with the CO{raw-latex}`\textsubscript{2}` dataset.
+# ```
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Transition from history
@@ -886,6 +994,9 @@ plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Annual-, global-mean data
+#
+# We start with the annual- , global-mean data
+# ({numref}`Figure %s <ds-co2-transition-from-history-yearly-fig>`).
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 query_kwargs_co2_yearly_global_history = {
@@ -907,7 +1018,7 @@ ds_history_co2_yearly_global = fetch_and_load_history(
     **query_kwargs_co2_yearly_global_history
 ).compute()
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig, ax = plt.subplots()
 
 
@@ -941,11 +1052,32 @@ ds_example_co2_yearly_global["co2"].sel(
 
 ax.set_xlim(cftime.DatetimeGregorian(2010, 1, 1), cftime.DatetimeGregorian(2030, 1, 1))
 ax.legend()
-
+glue("ds-co2-transition-from-history-yearly-fig", fig, display=False)
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-co2-transition-from-history-yearly-fig
+# ---
+# width: 500px
+# name: "ds-co2-transition-from-history-yearly-fig"
+# ---
+#
+# Transition from the historical dataset to the future
+# in the global-, annual-mean dataset.
+# The transition is smooth, preserving both the absolute value and gradient
+# at the transition point (also known as the 'harmonisation point').
+# Here this is illustrated with the CO{raw-latex}`\textsubscript{2}` dataset
+# for a single scenario.
+# The same idea applies to all greenhouse gases and scenarios.
+# ```
+#
+# {raw-latex}`\newpage`
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Monthly-, global-mean data
+#
+# Next we consider the monthly, global-mean data
+# ({numref}`Figure %s <ds-co2-transition-from-history-monthly-fig>`).
 #
 # Note that the transition from history to scenarios
 # is clearly wrong in the draft dataset.
@@ -961,7 +1093,7 @@ ds_history_co2_monthly_global = fetch_and_load_history(
     **query_kwargs_co2_monthly_global_history
 ).compute()
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig, ax = plt.subplots()
 
 
@@ -995,11 +1127,34 @@ ds_example_co2_monthly_global["co2"].sel(
 
 ax.set_xlim(cftime.DatetimeGregorian(2010, 1, 1), cftime.DatetimeGregorian(2030, 1, 1))
 ax.legend()
-
+glue("ds-co2-transition-from-history-monthly-fig", fig, display=False)
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-co2-transition-from-history-monthly-fig
+# ---
+# width: 500px
+# name: "ds-co2-transition-from-history-monthly-fig"
+# ---
+#
+# Transition from the historical dataset to the future
+# in the global-, monthly-mean dataset.
+# The transition is smooth
+# (or will be, once a known bug is fixed),
+# preserving both the absolute value and gradient
+# at the transition point (also known as the 'harmonisation point').
+# Here this is illustrated with the CO{raw-latex}`\textsubscript{2}` dataset
+# for a single scenario.
+# The same idea applies to all greenhouse gases and scenarios.
+# ```
+#
+# {raw-latex}`\newpage`
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Monthly-, 15-degree latitudinally binned data
+#
+# Next we consider the monthly, latitudinally-resolved data
+# ({numref}`Figure %s <ds-co2-transition-from-history-monthly-lat-fig>`).
 #
 # Note that the transition from history to scenarios
 # is clearly wrong in the draft dataset.
@@ -1067,11 +1222,11 @@ pdf = pd.concat([v.reorder_levels(pdf_l[0].index.names) for v in pdf_l]).sort_in
 pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 pdf
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 start_year = 2015
 end_year = 2030
 
-sns.relplot(
+fg = sns.relplot(
     data=pdf.loc[:, start_year:end_year].openscm.to_long_data(),
     x="time",
     y="value",
@@ -1080,9 +1235,41 @@ sns.relplot(
     col_order=sorted(pdf.index.get_level_values("lat").unique())[::-1],
     kind="scatter",
     hue="experiment",
+    height=2.5,
+    aspect=1.0,
 )
 
+unit_l = pdf.index.get_level_values("unit").unique()
+if len(unit_l) > 1:
+    raise AssertionError(unit_l)
+unit = unit_l[0]
+for ax in fg.axes.flatten():
+    if ax.get_ylabel():
+        ax.set_ylabel(unit)
+
+
+glue("ds-co2-transition-from-history-monthly-lat-fig", fg.fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""} magic_args="[markdown] editable=true slideshow={\"slide_type\": \"\"}"
+# ```{glue:figure} ds-co2-transition-from-history-monthly-lat-fig
+# ---
+# width: 500px
+# name: "ds-co2-transition-from-history-monthly-lat-fig"
+# ---
+#
+# Transition from the historical dataset to the future
+# in the global-, latitudinally-resolved dataset.
+# The transition is smooth
+# (or will be, once a known bug is fixed),
+# preserving both the absolute value and gradient
+# at the transition point (also known as the 'harmonisation point').
+# Here this is illustrated with the CO{raw-latex}`\textsubscript{2}` dataset
+# for a single scenario.
+# The same idea applies to all greenhouse gases and scenarios.
+# ```
+#
+# {raw-latex}`\newpage`
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Full scenario set
@@ -1093,6 +1280,9 @@ plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Annual-, global-mean data
+#
+# We start with the annual-, global-mean data
+# ({numref}`Figure %s <scenarios-yearly-fig>`).
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 gases_to_show = ["co2", "ch4", "n2o", "cfc12eq", "hfc134aeq"]
@@ -1203,8 +1393,10 @@ pdf = pd.concat(
 
 # pdf
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
-sns.relplot(
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+col = "ghg"
+
+fg = sns.relplot(
     data=pdf.openscm.to_long_data(),
     x="time",
     y="value",
@@ -1212,12 +1404,41 @@ sns.relplot(
     palette=palette,
     hue_order=hue_order,
     kind="scatter",
-    col="ghg",
+    col=col,
     col_wrap=3,
     facet_kws=dict(sharey=False),
+    height=2.5,
+    aspect=1.0,
 )
 
+for ax in fg.axes.flatten():
+    col_val = ax.get_title().split(f"{col} = ")[1]
+    unit_l = (
+        pdf.loc[pix.ismatch(**{col: col_val})].index.get_level_values("unit").unique()
+    )
+    if len(unit_l) > 1:
+        raise AssertionError(unit_l)
+    unit = unit_l[0]
+    ax.set_ylabel(unit)
+
+glue("scenarios-yearly-fig", fg.fig, display=False)
 plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} scenarios-yearly-fig
+# ---
+# width: 500px
+# name: "scenarios-yearly-fig"
+# ---
+#
+# Full set of scenarios including the
+# transition from the historical period to the future/projection period
+# in the global-, annual-mean datasets.
+# Note that the scenario names differ from the draft ones shown here,
+# see ({numref}`Table {number} <tab:scenario_ids>`).
+# ```
+#
+# {raw-latex}`\newpage`
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Monthly-, global-mean data

@@ -464,7 +464,7 @@ ds_co2_yearly_global["time_bnds"]
 # is not the same as the data given in the files).
 # Instead, the data should be plotted (and used)
 # as a scatter or a step plot
-# ({numref}`Figure %s <ds_co2_monthly_step_fig>`).
+# ({numref}`Figure %s <ds_co2_yearly_step_fig>`).
 # (The same logic applies to any spatial plots
 # which could be created from our datasets
 # that include spatial dimensions).
@@ -483,14 +483,14 @@ ax.set_xticks(xticks)
 ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
 
-glue("ds_co2_monthly_step_fig", fig, display=False)
+glue("ds_co2_yearly_step_fig", fig, display=False)
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ```{glue:figure} ds_co2_monthly_step_fig
+# ```{glue:figure} ds_co2_yearly_step_fig
 # ---
 # width: 500px
-# name: "ds_co2_monthly_step_fig"
+# name: "ds_co2_yearly_step_fig"
 # ---
 #
 # Illustration of the fact that each data point
@@ -545,7 +545,7 @@ ds_co2_monthly_global
 # %% editable=true slideshow={"slide_type": ""}
 ds_co2_monthly_global["time_bnds"]
 
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # As above, as a result of the time average that the data represents,
 # it is inappropriate to plot this data using a line plot.
 # Scatter or step plots should be used instead
@@ -581,7 +581,7 @@ plt.show()
 # rather than an interpolated line.
 # ```
 
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # The monthly data includes seasonality.
 # Plotting the monthly and yearly data
 # on the same axes makes particularly clear
@@ -628,7 +628,7 @@ plt.show()
 # however this requires careful consideration of daily
 # and potentially sub-daily trends (e.g. the diurnal cycle).
 
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Monthly-, latitudinally-resolved data
 #
 # We also provide data with spatial,
@@ -682,7 +682,7 @@ ds_co2_monthly_lat
 # %% editable=true slideshow={"slide_type": ""}
 ds_co2_monthly_lat["lat_bnds"]
 
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # As above, but this time for the spatial axis,
 # it is inappropriate to plot this data using a line plot.
 # Scatter or step plots should be used instead
@@ -817,7 +817,7 @@ plt.show()
 # is a notable feature of the dataset.
 # ```
 
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # The data can also be plotted in a so-called "magic carpet"
 # to see the variation in space and time simultaneously
 # ({numref}`Figure %s <ds-co2-magic-carpet-fig>`).
@@ -1530,7 +1530,7 @@ plt.show()
 # CFC-12 equivalent and HFC-134a equivalent.
 # ```
 
-# %% [markdown]
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # Like the annual-means,
 # the atmospheric concentrations including seasonality
 # are reasonably consistent between CMIP6 and CMIP7.
