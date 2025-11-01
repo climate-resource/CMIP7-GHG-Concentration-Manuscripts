@@ -1,4 +1,4 @@
-title: CMIP Greenhouse Gas (GHG) Concentration Historical Dataset
+title: CMIP Greenhouse Gas (GHG) Concentration Scenarios Dataset
 author: "Zebedee Nicholls, Florence Bockting, Mika Pfl\xFCger"
 description: This book contains the deliverables related to the CMIP forcings project.
 execute:
@@ -25,8 +25,6 @@ html:
   - '**.ipynb'
 sphinx:
   config:
-    bibtex_default_style: myapastyle
-    bibtex_reference_style: author_year_round
-  local_extensions:
-    apastyle: _ext/
-    bracket_citation_style: _ext/
+    latex_elements:
+      preamble: "\\usepackage[backend=biber, style=apa]{biblatex} \n\\addbibresource{references.bib}\n\
+        \n\\addto\\captionsenglish{\\renewcommand{\\figurename}{Figure }}"
