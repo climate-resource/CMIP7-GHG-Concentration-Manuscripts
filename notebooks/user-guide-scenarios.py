@@ -94,7 +94,7 @@ create_all_tables(engine)
 #     1. for gases covered under the Montreal Protocol
 #        {raw-latex}`\parencite{montreal_protocol_1987}`
 #        and whose concentration evolution is
-#        already specified in WMO 2022 {raw-latex}`parencite{hermanson2022wmo}`,
+#        already specified in WMO 2022 {raw-latex}`\parencite{hermanson2022wmo}`,
 #        we simply use the WMO 2022 concentrations
 #
 #     1. for all other gases, we
@@ -824,8 +824,8 @@ plt.show()
 # ## Monthly-, latitudinally-resolved data
 #
 # We also provide data with spatial,
-# specifically latituindal, resolution.
-# This data comes on a 15-degree latituindal grid
+# specifically latitudinal, resolution.
+# This data comes on a 15-degree latitudinal grid
 # (see below for details of the grid and latitudinal bounds).
 # These files are identified by the grid label `gnz`.
 # We only provide these files with monthly resolution.
