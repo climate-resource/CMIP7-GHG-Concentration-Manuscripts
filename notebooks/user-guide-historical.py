@@ -99,7 +99,7 @@ create_all_tables(engine)
 #       (at most, usually around 30, often far fewer)
 # 4. bin the ground-based observations in space and time
 #    (15-degree latitudinal bins, 60-degree longitudinal bins, monthly time bins,
-#    following {raw-latex}`\cite{meinshausen_historical_2017}`,
+#    following {raw-latex}`\cite{meinshausen_historical_2017}`),
 #    averaging over input stations and observations that fall in the same cell
 # 5. interpolate the binned data in space using a standard 2D linear interpolation
 #    as in {raw-latex}`\cite{meinshausen_historical_2017}`,
@@ -1223,10 +1223,8 @@ plt.show()
 # the differences are small.
 # However, this can be put on a common scale
 # by comparing the differences in radiative effect terms
-# (
-# {numref}`Figure %s <cmip6-v-cmip7-year-1-2022-re-fig>`,
-# and {numref}`Figure %s <cmip6-v-cmip7-year-1750-2022-re-fig>`
-# ).
+# ({numref}`Figure %s <cmip6-v-cmip7-year-1-2022-re-fig>`,
+# and {numref}`Figure %s <cmip6-v-cmip7-year-1750-2022-re-fig>`).
 # This gives an approximation of the size of the difference
 # that would be seen by an Earth System Model's (ESM's) radiation code.
 # This uses basic linear approximations,
