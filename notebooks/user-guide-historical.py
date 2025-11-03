@@ -73,14 +73,14 @@ create_all_tables(engine)
 # # Dataset construction
 #
 # The dataset is constructed following the methodology of
-# {raw-latex}`\cite{meinshausen_historical_2017}`.
+# {raw-latex}`\citet{meinshausen_historical_2017}`.
 # The methods are described in full in that paper
 # and will be clarified and described again
 # in the forthcoming manuscript describing this dataset's construction.
 #
 # In brief, the dataset for each greenhouse gas is constructed via the following steps
 # (for full details and code, see
-# [github.com/climate-resource/CMIP-GHG-Concentration-Generation](https://github.com/climate-resource/CMIP-GHG-Concentration-Generation)[^gh-code]
+# [github.com/climate-resource/CMIP-GHG-Concentration-Generation](https://github.com/climate-resource/CMIP-GHG-Concentration-Generation)
 # ):
 #
 # 1. collect as many ground-based observations as possible
@@ -98,11 +98,11 @@ create_all_tables(engine)
 #       are discrete points and there are not an infinite number of stations
 #       (at most, usually around 30, often far fewer)
 # 4. bin the ground-based observations in space and time
-#    (15-degree latitudinal bins, 60-degree longitudinal bins, monthly time bins,
-#    following {raw-latex}`\cite{meinshausen_historical_2017}`),
+#    `\citep[15-degree latitudinal bins, 60-degree longitudinal bins, monthly time bins,
+#    following {raw-latex}][]{meinshausen_historical_2017}`,
 #    averaging over input stations and observations that fall in the same cell
 # 5. interpolate the binned data in space using a standard 2D linear interpolation
-#    as in {raw-latex}`\cite{meinshausen_historical_2017}`,
+#    as in {raw-latex}`\citet{meinshausen_historical_2017}`,
 #    to derive a dataset with spatial coverage
 # 6. use the interpolated, ground-based data
 #    to derive a statistical model for seasonal variation and latitudinal gradients
@@ -151,7 +151,6 @@ create_all_tables(engine)
 # e.g. linking of the Zenodo archive underpinning this dataset).
 #
 # [^zenodo-record]: https://doi.org/10.5281/zenodo.14892947
-# [^gh-code]: https://github.com/climate-resource/CMIP-GHG-Concentration-Generation
 
 # %% [markdown]
 # # Finding and accessing the data
@@ -882,7 +881,7 @@ plt.show()
 # As in CMIP6, we do not provide any vertical profiles.
 # For users who require such profiles,
 # we refer to the 'The vertical dimension' sub-header
-# in Section 4 of {raw-latex}`\cite{meinshausen_historical_2017}`.
+# in Section 4 of {raw-latex}`\citet{meinshausen_historical_2017}`.
 # There are three key changes:
 #
 # 1. we have split the global-mean and hemispheric-mean data into separate files.
@@ -1223,7 +1222,7 @@ plt.show()
 # the differences are small.
 # However, this can be put on a common scale
 # by comparing the differences in radiative effect terms
-# ({numref}`Figure %s <cmip6-v-cmip7-year-1-2022-re-fig>`,
+# ({numref}`Figure %s <cmip6-v-cmip7-year-1-2022-re-fig>`
 # and {numref}`Figure %s <cmip6-v-cmip7-year-1750-2022-re-fig>`).
 # This gives an approximation of the size of the difference
 # that would be seen by an Earth System Model's (ESM's) radiation code.
@@ -1446,8 +1445,7 @@ plt.show()
 # In summary, in ERF terms, the differences from CMIP6 are very small.
 # For all gases, they are less than around 0.025 W / m{raw-latex}`\textsuperscript{2}`.
 # Compared to the estimated total greenhouse gas forcing and uncertainty in IPCC AR6
-# (see Section 7.3.5.2 of AR6 WG1 Chapter 7
-# {raw-latex}`\parencite{IPCC_2021_WGI_Ch_7}`)
+# {raw-latex}`\citep[see Section 7.3.5.2 of AR6 WG1 Chapter 7,][]{IPCC_2021_WGI_Ch_7}`
 # estimated to be 3.84 W / m{raw-latex}`\textsuperscript{2}`
 # (very likely range of 3.46 to 4.22 W / m{raw-latex}`\textsuperscript{2}`),
 # such differences are particularly small.
@@ -1456,7 +1454,7 @@ plt.show()
 # #### Atmospheric concentrations including seasonality: Year 2000 - 2022
 #
 # The final comparisons we show are atmospheric concentrations including seasonality
-# ({numref}`Figure %s <cmip6-v-cmip7-year-2000-2022-seasonality-fig>`)
+# ({numref}`Figure %s <cmip6-v-cmip7-year-2000-2022-seasonality-fig>`).
 # Given that most greenhouse gases
 # are well-mixed with lifetimes much greater than a year,
 # these differences are unlikely to be of huge interest to ESMs.

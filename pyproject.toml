@@ -50,6 +50,7 @@ src = [
 ]
 exclude = [
     "_ext",
+    "notebooks",
 ]
 
 [tool.ruff.lint]
