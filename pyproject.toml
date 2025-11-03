@@ -50,7 +50,6 @@ src = [
 ]
 exclude = [
     "_ext",
-    "notebooks",
 ]
 
 [tool.ruff.lint]
@@ -77,6 +76,7 @@ ignore = [
 "notebooks/*" = [
     "D100",
     "E402",
+    "E501",
     "S101",
 ]
 "scripts/*" = [
