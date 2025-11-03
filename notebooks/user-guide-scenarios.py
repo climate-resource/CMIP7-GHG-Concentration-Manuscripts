@@ -3,7 +3,7 @@
 #   authors:
 #   - name: Zebedee Nicholls
 #   - name: Florence Bockting
-#   - name: Mika Plf{\"u}ger
+#   - name: Mika Pfl{\"u}ger
 #   jupytext:
 #     notebook_metadata_filter: title,authors
 #     text_representation:
@@ -85,7 +85,7 @@ create_all_tables(engine)
 # # Dataset construction
 #
 # The dataset is constructed following a similar methodology
-# to {raw-latex}`\cite{meinshausen_shared_2020}`.
+# to {raw-latex}`\textcite{meinshausen_shared_2020}`.
 # The full method will be described in a forthcoming paper.
 # In brief, the method is:
 #
@@ -110,8 +110,7 @@ create_all_tables(engine)
 #            to translate these emissions into global-mean concentrations
 #
 #            1. MAGICC is run in the same configuration which was used in AR6
-#              (as described/evaluated in Cross-Chapter Box 7.1
-#              {raw-latex}`\parencite{IPCC_2021_WGI_Ch_7}`).
+#              {raw-latex}`\parencite[as described/evaluated in Cross-Chapter Box 7.1][]{IPCC_2021_WGI_Ch_7}`.
 #              This represents our best estimate, in line with the last IPCC report,
 #              of the concentrations that result from the emissions.
 #              Note, given that CMIP7 models have not yet been run, this will,
@@ -280,7 +279,7 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # These details will be provided both via the CMIP CVs
 # (see https://github.com/WCRP-CMIP/CMIP7-CVs)
 # and the final ScenarioMIP paper
-# (revisions of {raw-latex}`\cite{van_vuuren_scenariomip_2025}`
+# (revisions of {raw-latex}`\textcite{van_vuuren_scenariomip_2025}`
 #  are expected soon).
 # As above, note that the scenario IDs
 # have changed since publication of the draft dataset.

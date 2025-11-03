@@ -76,6 +76,7 @@ ignore = [
 "notebooks/*" = [
     "D100",
     "E402",
+    "E501",
     "S101",
 ]
 "scripts/*" = [

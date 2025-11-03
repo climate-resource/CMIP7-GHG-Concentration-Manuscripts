@@ -108,9 +108,9 @@ def build_pdf(arg, title):
     if not tex_file.exists():
         sys.exit(f"❌ TeX file not found: {tex_file}")
 
-    with open(tex_file) as fh:
+    with open(tex_file, encoding="utf-8") as fh:
         tex_jupyter_book_l = [v.strip() for v in fh.readlines()]
-
+    print("until here")
     tex_mod_l = copy.deepcopy(tex_jupyter_book_l)
     # Assumes use of biber in preamble in _config.yml
     for line in [
@@ -124,7 +124,7 @@ def build_pdf(arg, title):
 
     tex_mod = "\n".join(tex_mod_l)
 
-    with open(tex_file, "w") as fh:
+    with open(tex_file, "w", encoding="utf-8") as fh:
         fh.write(tex_mod)
 
     run(f"xelatex {tex_file.name}", cwd=latex_dir)
