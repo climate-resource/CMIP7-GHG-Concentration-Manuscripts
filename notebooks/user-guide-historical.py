@@ -73,7 +73,7 @@ create_all_tables(engine)
 # # Dataset construction
 #
 # The dataset is constructed following the methodology of
-# {raw-latex}`\citet{meinshausen_historical_2017}`.
+# {raw-latex}`\textcite{meinshausen_historical_2017}`.
 # The methods are described in full in that paper
 # and will be clarified and described again
 # in the forthcoming manuscript describing this dataset's construction.
@@ -98,11 +98,11 @@ create_all_tables(engine)
 #       are discrete points and there are not an infinite number of stations
 #       (at most, usually around 30, often far fewer)
 # 4. bin the ground-based observations in space and time
-#    `\citep[15-degree latitudinal bins, 60-degree longitudinal bins, monthly time bins,
+#    `\parencite[15-degree latitudinal bins, 60-degree longitudinal bins, monthly time bins,
 #    following {raw-latex}][]{meinshausen_historical_2017}`,
 #    averaging over input stations and observations that fall in the same cell
 # 5. interpolate the binned data in space using a standard 2D linear interpolation
-#    as in {raw-latex}`\citet{meinshausen_historical_2017}`,
+#    as in {raw-latex}`\textcite{meinshausen_historical_2017}`,
 #    to derive a dataset with spatial coverage
 # 6. use the interpolated, ground-based data
 #    to derive a statistical model for seasonal variation and latitudinal gradients
@@ -882,7 +882,7 @@ plt.show()
 # As in CMIP6, we do not provide any vertical profiles.
 # For users who require such profiles,
 # we refer to the 'The vertical dimension' sub-header
-# in Section 4 of {raw-latex}`\citet{meinshausen_historical_2017}`.
+# in Section 4 of {raw-latex}`\textcite{meinshausen_historical_2017}`.
 # There are three key changes:
 #
 # 1. we have split the global-mean and hemispheric-mean data into separate files.
@@ -1446,7 +1446,7 @@ plt.show()
 # In summary, in ERF terms, the differences from CMIP6 are very small.
 # For all gases, they are less than around 0.025 W / m{raw-latex}`\textsuperscript{2}`.
 # Compared to the estimated total greenhouse gas forcing and uncertainty in IPCC AR6
-# {raw-latex}`\citep[see Section 7.3.5.2 of AR6 WG1 Chapter 7,][]{IPCC_2021_WGI_Ch_7}`
+# {raw-latex}`\parencite[see Section 7.3.5.2 of AR6 WG1 Chapter 7,][]{IPCC_2021_WGI_Ch_7}`
 # estimated to be 3.84 W / m{raw-latex}`\textsuperscript{2}`
 # (very likely range of 3.46 to 4.22 W / m{raw-latex}`\textsuperscript{2}`),
 # such differences are particularly small.
