@@ -124,7 +124,7 @@ def build_pdf(arg, title):
 
     tex_mod = "\n".join(tex_mod_l)
 
-    with open(tex_file, "w") as fh:
+    with open(tex_file, "w", encoding="utf-8") as fh:
         fh.write(tex_mod)
 
     run(f"xelatex {tex_file.name}", cwd=latex_dir)
