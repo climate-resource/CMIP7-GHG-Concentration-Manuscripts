@@ -81,7 +81,7 @@ create_all_tables(engine)
 # In brief, the dataset for each greenhouse gas is constructed via the following steps
 # (for full details and code, see GitHub repository
 # [CMIP-GHG-Concentration-Generation](https://github.com/climate-resource/CMIP-GHG-Concentration-Generation)
-# )[1]:
+# )[^gh-code]:
 #
 # 1. collect as many ground-based observations as possible
 # 2. from ground-based networks such as the NOAA
@@ -151,7 +151,7 @@ create_all_tables(engine)
 # e.g. linking of the Zenodo archive underpinning this dataset).
 #
 # [^zenodo-record]: https://doi.org/10.5281/zenodo.14892947
-# [^1]: https://github.com/climate-resource/CMIP-GHG-Concentration-Generation
+# [^gh-code]: https://github.com/climate-resource/CMIP-GHG-Concentration-Generation
 
 # %% [markdown]
 # # Finding and accessing the data
