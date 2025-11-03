@@ -98,8 +98,8 @@ create_all_tables(engine)
 #       are discrete points and there are not an infinite number of stations
 #       (at most, usually around 30, often far fewer)
 # 4. bin the ground-based observations in space and time
-#    `\parencite[15-degree latitudinal bins, 60-degree longitudinal bins, monthly time bins,
-#    following {raw-latex}][]{meinshausen_historical_2017}`,
+#    {raw-latex}`\parencite[15-degree latitudinal bins, 60-degree longitudinal bins, monthly time bins,
+#    following][]{meinshausen_historical_2017}`,
 #    averaging over input stations and observations that fall in the same cell
 # 5. interpolate the binned data in space using a standard 2D linear interpolation
 #    as in {raw-latex}`\textcite{meinshausen_historical_2017}`,
