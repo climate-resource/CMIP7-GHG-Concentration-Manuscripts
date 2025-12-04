@@ -315,19 +315,24 @@ plt.show()
 fig, axes_d = get_default_delta_mosaic()
 axes_d = remove_empty_axes(axes_d)
 
-min_year = 1750
+# min_year = 1750
+min_year = 1765
 plot_overview_and_deltas(
     sel_times(ds_gases_full_d, lambda x: x.dt.year >= min_year),
     axes_d,
 )
 for ax in axes_d.values():
     xticks = [
-        cftime.DatetimeProlepticGregorian(y, 1, 1) for y in np.arange(1750, 2050, 50)
+        cftime.DatetimeProlepticGregorian(y, 1, 1)
+        for y in np.arange(min_year, 2050, 50)
     ]
     ax.set_xticks(xticks)
     ax.set_xticklabels([v.year for v in xticks])
 
 plt.tight_layout()
+plt.savefig(
+    "figures/key-species-global-annual-changes-across-cmip-phases_post_1765.png"
+)
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -387,8 +392,9 @@ fig, axes_d = get_default_delta_mosaic()
 axes_d = remove_empty_axes(axes_d)
 
 # min_year = 1957
-min_year = 1990
-min_year = 1
+min_year = 1765
+# min_year = 1990
+# min_year = 1
 # min_year = 1750
 plot_overview_and_deltas(
     sel_times(ds_gases_full_monthly_d, lambda x: x.dt.year >= min_year),
@@ -397,9 +403,9 @@ plot_overview_and_deltas(
 for ax in axes_d.values():
     xticks = [
         cftime.DatetimeProlepticGregorian(y, 1, 1)
-        # for y in np.arange(1750, 2050, 50)
+        for y in np.arange(min_year, 2050, 50)
         # for y in np.arange(1750, 1760, 1)
-        for y in np.arange(1, 2050, 500)
+        # for y in np.arange(1, 2050, 500)
         # for y in np.arange(1, 20, 1)
     ]
     ax.set_xticks(xticks)
@@ -407,6 +413,7 @@ for ax in axes_d.values():
     ax.set_xticklabels([v.year for v in xticks])
 
 plt.tight_layout()
+plt.savefig("figures/co2_lat-monthly-post-1765.png")
 plt.show()
 
 # %% [markdown]
@@ -444,12 +451,13 @@ for gas in gases_to_show:
 
 
 # %%
-def plot_lat_selection(
+def plot_lat_selection(  # noqa: PLR0913
     gas: str,
     ds_d: dict[str, dict[str, xr.Dataset]],
     ax: matplotlib.axes.Axes,
     ax_delta: matplotlib.axes.Axes,
     ax_delta_re: matplotlib.axes.Axes,
+    show_id_in_label: bool = True,
 ) -> None:
     """
     Plot selection for a latitude-specific dataset
@@ -458,7 +466,10 @@ def plot_lat_selection(
     target_unit_re = "W / m^2"
 
     for cmip_era, ds in ds_d[gas].items():
-        label = f"{cmip_era} ({ds.attrs['source_id']})"
+        if show_id_in_label:
+            label = f"{cmip_era} ({ds.attrs['source_id']})"
+        else:
+            label = f"{cmip_era}"
         tmp = ds[gas].copy()
         tmp.values = Q(tmp.values, tmp.attrs["units"]).to(target_unit_conc).m
         ds[gas].plot.scatter(ax=ax, label=label, alpha=0.7, edgecolors="none")
@@ -526,7 +537,8 @@ def plot_lat_selection(
 # %%
 gas = "co2"
 # gas = "ch4"
-min_year = 1
+min_year = 1765
+# min_year = 1
 # min_year = 1750
 # min_year = 1850
 # min_year = 2000
@@ -534,7 +546,9 @@ sel_times_func = lambda x: (x.dt.year >= min_year)  # noqa: E731
 # sel_times_func = lambda x: (x.dt.year >= min_year) & (x.dt.year <= min_year + 2)
 
 ncols = 4
-fig, axes = plt.subplots(ncols=ncols, nrows=9, figsize=(14, 16), sharex=True)
+nrows = 9
+figsize = (14, 16)  # orig
+fig, axes = plt.subplots(ncols=ncols, nrows=nrows, figsize=figsize, sharex=True)
 ax_flat = axes.flatten()
 
 for i, lat in tqdm.auto.tqdm(
@@ -555,6 +569,7 @@ for i, lat in tqdm.auto.tqdm(
         ax=ax,
         ax_delta=ax_delta,
         ax_delta_re=ax_delta_re,
+        show_id_in_label=False,
     )
     # ax_flat[ax_idx].legend().remove()
     if gas == "co2":
@@ -569,5 +584,6 @@ for i, lat in tqdm.auto.tqdm(
 
 plt.tight_layout()
 # plt.savefig(f"{gas}_lat-monthly.png")
+plt.savefig(f"figures/{gas}_lat-monthly-post-1765.png")
 plt.suptitle(gas, y=1.0)
 plt.show()
