@@ -2042,20 +2042,25 @@ fg = sns.relplot(
     hue="experiment",
     palette=palette,
     style="cmip_era",
-    # markers={"CMIP6": ".", "CMIP7": "o"},
-    # edgecolors="none",
-    markers={"CMIP6": "+", "CMIP7": 4, "CMIP7 draft (i.e. CMIP6Plus)": 4},
+    markers={"CMIP6": "+", "CMIP7": 5, "CMIP7 draft (i.e. CMIP6Plus)": 5},
+    # edgecolor="none",
+    alpha=0.6,
+    s=50,
     hue_order=hue_order_incl_cmip6,
     kind="scatter",
     row=row,
     col="scenario_group",
     col_order=["low", "continuing-trends", "high"],
     facet_kws=dict(sharey=False),
-    s=100,
-    alpha=0.8,
     height=2.0,
     aspect=2.0,
 )
+
+for h in fg._legend.legend_handles:
+    if h.get_label() == "CMIP6":
+        h.set_marker("+")
+        h.set_alpha(1.0)
+        h.set_markeredgewidth(1.0)
 
 for ax in fg.axes.flatten():
     if ax.get_ylabel():
@@ -2115,20 +2120,25 @@ fg = sns.relplot(
     hue="experiment",
     palette=palette,
     style="cmip_era",
-    # markers={"CMIP6": ".", "CMIP7": "o"},
-    # edgecolors="none",
-    markers={"CMIP6": "+", "CMIP7": 4, "CMIP7 draft (i.e. CMIP6Plus)": 4},
+    markers={"CMIP6": "+", "CMIP7": 5, "CMIP7 draft (i.e. CMIP6Plus)": 5},
+    # edgecolor="none",
+    alpha=0.6,
+    s=50,
     hue_order=hue_order_incl_cmip6,
     kind="scatter",
     row=row,
     col="scenario_group",
     col_order=["low", "continuing-trends", "high"],
     facet_kws=dict(sharey=False),
-    s=100,
-    alpha=0.8,
     height=2.0,
     aspect=2.0,
 )
+
+for h in fg._legend.legend_handles:
+    if h.get_label() == "CMIP6":
+        h.set_marker("+")
+        h.set_alpha(1.0)
+        h.set_markeredgewidth(1.0)
 
 for ax in fg.axes.flatten():
     if ax.get_ylabel():
@@ -2342,17 +2352,16 @@ fg = sns.relplot(
     hue="experiment",
     palette=palette,
     style="cmip_era",
-    # markers={"CMIP6": ".", "CMIP7": "o"},
-    # edgecolors="none",
-    markers={"CMIP6": "+", "CMIP7": 4, "CMIP7 draft (i.e. CMIP6Plus)": 4},
+    markers={"CMIP6": "+", "CMIP7": 5, "CMIP7 draft (i.e. CMIP6Plus)": 5},
+    # edgecolor="none",
+    alpha=0.6,
+    s=50,
     hue_order=hue_order_incl_cmip6,
     kind="scatter",
     row=row,
     col="scenario_group",
     col_order=["low", "continuing-trends", "high"],
     facet_kws=dict(sharey=False),
-    s=30,
-    alpha=0.8,
     height=2.0,
     aspect=2.0,
 )
@@ -2370,6 +2379,12 @@ for ax in fg.axes.flatten():
             raise AssertionError(unit_l)
         unit = unit_l[0]
         ax.set_ylabel(unit)
+
+for h in fg._legend.legend_handles:
+    if h.get_label() == "CMIP6":
+        h.set_marker("+")
+        h.set_alpha(1.0)
+        h.set_markeredgewidth(1.0)
 
 # plt.tight_layout()
 glue("scenarios-cmip-comparison-monthly-fig", fg.fig, display=False)
