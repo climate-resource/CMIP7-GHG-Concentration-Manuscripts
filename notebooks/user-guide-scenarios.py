@@ -188,8 +188,8 @@ create_all_tables(engine)
 # Please see these tools' docs for usage instructions.
 #
 # [^esgf-url-example]: An example URL: [https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%<br>
-# 220.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP6Plus%22%7D](
-# https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%220.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP6Plus%22%7D)
+# 221.0.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP7%22%7D](
+# https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%221.0.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP7%22%7D)
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Zenodo
@@ -1365,9 +1365,9 @@ palette = {
     "historical": "k",
     "historical-cmip6": "tab:grey",
     "vl": "#24a4ff",
-    "vllo": "#24a4ff",
+    # "vllo": "#24a4ff",
     "ln": "#4a0daf",
-    "vlho": "#4a0daf",
+    # "vlho": "#4a0daf",
     "l": "#00cc69",
     "ml": "#f5ac00",
     "m": "#ffa9dc",
@@ -1390,10 +1390,10 @@ hue_order = [
     "hl",
     "m",
     "ml",
-    "l",
-    # "ln",
-    "vlho",
-    # "vl",
+    # "l",
+    "ln",
+    # "vlho",
+    "vl",
     "vllo",
     "historical",
 ]
@@ -1445,8 +1445,8 @@ fg = sns.relplot(
     x="time",
     y="value",
     hue="experiment",
-    palette=palette,
-    hue_order=hue_order,
+    palette={k: v for k, v in palette.items() if k in pdf.pix.unique("experiment")},
+    hue_order=[v for v in hue_order if v in pdf.pix.unique("experiment")],
     kind="scatter",
     col=col,
     col_wrap=3,
@@ -1497,7 +1497,7 @@ for gas in gases_to_show:
     ds_gases_full_monthly_d[gas] = {}
     for key, target_mip, source_version, institution_id, cmip_era in (
         ("history", "CMIP", "1.0.0", "CR", "CMIP7"),
-        ("scenarios", "ScenarioMIP", "0.1.0", "CR", "CMIP6Plus"),
+        ("scenarios", "ScenarioMIP", "1.0.0", "CR", "CMIP7"),
     ):
         query_kwargs = {
             "ghg": gas,
@@ -1579,8 +1579,8 @@ fg = sns.relplot(
     x="time",
     y="value",
     hue="experiment",
-    palette=palette,
-    hue_order=hue_order,
+    palette={k: v for k, v in palette.items() if k in pdf.pix.unique("experiment")},
+    hue_order=[v for v in hue_order if v in pdf.pix.unique("experiment")],
     kind="scatter",
     col=col,
     col_wrap=3,
@@ -1633,7 +1633,7 @@ for gas in gases_to_show:
     ds_gases_full_monthly_lat_d[gas] = {}
     for key, target_mip, source_version, institution_id, cmip_era in (
         ("history", "CMIP", "1.0.0", "CR", "CMIP7"),
-        ("scenarios", "ScenarioMIP", "0.1.0", "CR", "CMIP6Plus"),
+        ("scenarios", "ScenarioMIP", "1.0.0", "CR", "CMIP7"),
     ):
         query_kwargs = {
             "ghg": gas,
@@ -1716,8 +1716,8 @@ fg = sns.relplot(
     x="time",
     y="value",
     hue="experiment",
-    palette=palette,
-    hue_order=hue_order,
+    palette={k: v for k, v in palette.items() if k in pdf.pix.unique("experiment")},
+    hue_order=[v for v in hue_order if v in pdf.pix.unique("experiment")],
     kind="scatter",
     row=row,
     col=col,
@@ -1990,13 +1990,6 @@ for sg, sgdf in pdf_grouped.items():
 
 pdf = pd.concat([v.reorder_levels(tmp_l[0].index.names) for v in tmp_l])
 pdf
-
-# %%
-(
-    pdf.loc[
-        :, (pdf.columns >= start_year) & (pdf.columns <= end_year + 1)
-    ].openscm.to_long_data()
-)["experiment"].unique()
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 start_year = 2000
