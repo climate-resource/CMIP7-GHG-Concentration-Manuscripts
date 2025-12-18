@@ -152,12 +152,11 @@ create_all_tables(engine)
 # The **Earth System Grid Federation** {raw-latex}`\parencite{esgf_docs}`
 # provides access to a range of climate data.
 #
-# The scenario data of interest here,
-# which is a draft dataset
-# can be found under "MIP era" `CMIP6Plus` (for draft datasets),
+# The scenario data of interest here
+# can be found under "MIP era" `CIMP7`,
 # "institution ID" `CR`
-# and "source version" `0.1.0`
-# (also under "source IDs" of the form `CR-*-0-1-0`,
+# and "source version" `1.0.0`
+# (also under "source IDs" of the form `CR-*-1-0-0`,
 # although this is less useful as the ESGF search API
 # does not appear to support glob/star expressions
 # for specific facet searches).
@@ -246,7 +245,7 @@ create_all_tables(engine)
 # For the greenhouse gas concentrations,
 # the scenario identifier is simply
 # the second hyphen-separated element of the source ID.
-# For example, for the source ID `CR-ml-0-1-0`,
+# For example, for the source ID `CR-ml-1-0-0`,
 # the scenario identifier is `ml`.
 # A Python function for doing this extraction is below.
 #
@@ -271,8 +270,8 @@ def extract_scenario_id(source_id: str) -> str:
     return source_id.split("-")[1]
 
 
-print(f"{extract_scenario_id('CR-ml-0-1-0')=}")
-print(f"{extract_scenario_id('CR-l-0-1-0')=}")
+print(f"{extract_scenario_id('CR-ml-1-0-0')=}")
+print(f"{extract_scenario_id('CR-l-1-0-0')=}")
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # These scenario IDs can then be used to find details of the complete scenario.
@@ -281,29 +280,8 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # and the final ScenarioMIP paper
 # (revisions of {raw-latex}`\textcite{van_vuuren_scenariomip_2025}`
 #  are expected soon).
-# As above, note that the scenario IDs
-# have changed since publication of the draft dataset.
-# {numref}`Table {number} <tab:scenario_ids>` provides an overview
-# of the changes. Scenario IDs of the final datasets can be confirmed
+# Scenario IDs of the final datasets can be confirmed
 # [here](https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785)[^scenario-id-final-comment].
-#
-# ```{table} Mapping of draft scenario IDs to final scenario IDs
-# ---
-# width: 200px
-# align: center
-# name: tab:scenario_ids
-# ---
-#
-# | Draft dataset | Final dataset |
-# |:-------------:|:-------------:|
-# | **vllo**      | **vl**        |
-# | **vlho**      | **ln**        |
-# |     l         |    l          |
-# |     ml        |   ml          |
-# |     m         |   m           |
-# |     hl        |   hl          |
-# |     h         |    h          |
-# ```
 #
 # [^scenario-id-final-comment]: https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785
 
@@ -521,10 +499,6 @@ print(f"{extract_scenario_id('CR-l-0-1-0')=}")
 # Global-mean data is identified by the 'grid label' `gm`,
 # which appears in the filename.
 # Below we show the filenames for the CO{raw-latex}`\textsubscript{2}` output.
-#
-# **Note: in the draft datasets, the time axis starts in 2023.
-# This will be updated to a 2022 start for the final datasets,
-# in line with the rest of the scenario datasets.**
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 # Ensure data is downloaded
@@ -532,8 +506,8 @@ query_kwargs_co2_yearly_global = dict(
     ghg="co2",
     time_sampling="yr",
     grid="gm",
-    cmip_era="CMIP6Plus",
-    source_version="0.1.0",
+    cmip_era="CMIP7",
+    source_version="1.0.0",
     institution_id="CR",
     target_mip="ScenarioMIP",
     engine=engine,
@@ -622,7 +596,7 @@ plt.show()
 # name: "ds-co2-yearly-global-fig"
 # ---
 #
-# Atmospheric CO{raw-latex}`\textsubscript{2}` concentrations from year 2023 to 2100
+# Atmospheric CO{raw-latex}`\textsubscript{2}` concentrations from year 2022 to 2100
 # in one of our future forcing datasets.
 # ```
 
@@ -672,7 +646,7 @@ ds_plt["co2"].plot.scatter(ax=ax)
 for bounds, val in zip(ds_plt["time_bnds"].values, ds_plt["co2"].values):
     ax.plot(bounds, [val, val], color="tab:blue", linewidth=1.0, alpha=0.7)
 
-xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2023, 2029)]
+xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2022, 2028)]
 ax.set_xticks(xticks)
 ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
@@ -753,7 +727,7 @@ ds_plt["co2"].plot.scatter(ax=ax)
 for bounds, val in zip(ds_plt["time_bnds"].values, ds_plt["co2"].values):
     ax.plot(bounds, [val, val], color="tab:blue", linewidth=1.0, alpha=0.7)
 
-xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2023, 2029)]
+xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2022, 2028)]
 ax.set_xticks(xticks)
 ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
@@ -799,7 +773,7 @@ for ds_plt, label, colour in (
 
 ax.legend()
 
-xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2023, 2029)]
+xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2022, 2028)]
 ax.set_xticks(xticks)
 ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
@@ -928,12 +902,12 @@ for time in ds_plt["time"]:
     axes_d[label].set_title(label, fontsize="small")
 
 for month in [1, 4, 7, 10]:
-    axes_d[f"2023 - {calendar.month_name[month]}"].set_ylabel(
+    axes_d[f"2022 - {calendar.month_name[month]}"].set_ylabel(
         "Latitude (degrees north)"
     )
 
 for month in range(10, 13):
-    axes_d[f"2023 - {calendar.month_name[month]}"].set_xlabel("co2 [ppm]")
+    axes_d[f"2022 - {calendar.month_name[month]}"].set_xlabel("co2 [ppm]")
 # ax.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
 
 plt.tight_layout()
@@ -949,7 +923,7 @@ plt.show()
 # ---
 #
 # Illustration of the spatial mean nature of the latitudinally-resolved datasets
-# (here shown for the year 2023 for CO{raw-latex}`\textsubscript{2}`
+# (here shown for the year 2022 for CO{raw-latex}`\textsubscript{2}`
 # but the same idea applies to all latitudinally-resolved datasets).
 # Each value represents the average over its latitude bounds, not point values.
 # As a result, they should be plotted with steps or scatters
@@ -990,7 +964,7 @@ for i, lat in enumerate(sorted(ds_all_lats["lat"])[::-1]):
 
 ax.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
 
-xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2023, 2029)]
+xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2022, 2028)]
 ax.set_xticks(xticks)
 ax.set_xlim(xticks[0], xticks[-1])
 ax.grid()
@@ -1158,10 +1132,6 @@ plt.show()
 #
 # Next we consider the monthly, global-mean data
 # ({numref}`Figure %s <ds-co2-transition-from-history-monthly-fig>`).
-#
-# Note that the transition from history to scenarios
-# is clearly wrong in the draft dataset.
-# This will be fixed before the final dataset is published.
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 query_kwargs_co2_monthly_global_history = {
@@ -1219,8 +1189,7 @@ plt.show()
 #
 # Transition from the historical dataset to the future
 # in the global-, monthly-mean dataset.
-# The transition is smooth
-# (or will be, once a known bug is fixed),
+# The transition is smooth,
 # preserving both the absolute value and gradient
 # at the transition point (also known as the 'harmonisation point').
 # Here this is illustrated with the CO{raw-latex}`\textsubscript{2}` dataset
@@ -1235,10 +1204,6 @@ plt.show()
 #
 # Next we consider the monthly, latitudinally-resolved data
 # ({numref}`Figure %s <ds-co2-transition-from-history-monthly-lat-fig>`).
-#
-# Note that the transition from history to scenarios
-# is clearly wrong in the draft dataset.
-# This will be fixed before the final dataset is published.
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 # Get file paths
@@ -1300,7 +1265,7 @@ pdf = pd.concat([v.reorder_levels(pdf_l[0].index.names) for v in pdf_l]).sort_in
     axis="columns"
 )
 pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
-pdf
+# pdf
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 start_year = 2015
@@ -1340,8 +1305,7 @@ plt.show()
 #
 # Transition from the historical dataset to the future
 # in the global-, latitudinally-resolved dataset.
-# The transition is smooth
-# (or will be, once a known bug is fixed),
+# The transition is smooth,
 # preserving both the absolute value and gradient
 # at the transition point (also known as the 'harmonisation point').
 # Here this is illustrated with the CO{raw-latex}`\textsubscript{2}` dataset
@@ -1371,7 +1335,7 @@ for gas in gases_to_show:
     ds_gases_full_yearly_d[gas] = {}
     for key, target_mip, source_version, institution_id, cmip_era in (
         ("history", "CMIP", "1.0.0", "CR", "CMIP7"),
-        ("scenarios", "ScenarioMIP", "0.1.0", "CR", "CMIP6Plus"),
+        ("scenarios", "ScenarioMIP", "1.0.0", "CR", "CMIP7"),
     ):
         query_kwargs = {
             "ghg": gas,
@@ -1511,11 +1475,11 @@ plt.show()
 # name: "scenarios-yearly-fig"
 # ---
 #
-# Full set of scenarios including the
+# Finalised scenarios including the
 # transition from the historical period to the future/projection period
 # in the global-, annual-mean datasets.
-# Note that the final scenario names will differ from the draft ones shown here,
-# (see {numref}`Table {number} <tab:scenario_ids>`).
+# Some scenarios are still being finalised,
+# hence do not yet appear here.
 # ```
 #
 # {raw-latex}`\newpage`
@@ -1646,11 +1610,11 @@ plt.show()
 # name: "scenarios-monthly-fig"
 # ---
 #
-# Full set of scenarios including the
+# Finalised scenarios including the
 # transition from the historical period to the future/projection period
 # in the monthly-, annual-mean datasets.
-# Note that the final scenario names will differ from the draft ones shown here,
-# (see {numref}`Table {number} <tab:scenario_ids>`).
+# Some scenarios are still being finalised,
+# hence do not yet appear here.
 # ```
 #
 # {raw-latex}`\newpage`
@@ -1743,7 +1707,7 @@ pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 
 # pdf
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# %% editable=true slideshow={"slide_type": ""}
 col = "lat"
 row = "ghg"
 
@@ -1788,11 +1752,11 @@ plt.show()
 # name: "scenarios-monthly-lat-fig"
 # ---
 #
-# Full set of scenarios including the
+# Finalised scenarios including the
 # transition from the historical period to the future/projection period
 # in the monthly-, latitudinally-resolved datasets.
-# Note that the final scenario names will differ from the draft ones shown here,
-# (see {numref}`Table {number} <tab:scenario_ids>`).
+# Some scenarios are still being finalised,
+# hence do not yet appear here.
 # ```
 #
 # {raw-latex}`\newpage`
@@ -1830,10 +1794,10 @@ scenario_group_map = {
     "ssp434": "continuing-trends",
     "ssp245": "continuing-trends",
     "l": "low",
-    # "vl": "low",
-    # "ln": "low",
-    "vllo": "low",
-    "vlho": "low",
+    "vl": "low",
+    "ln": "low",
+    # "vllo": "low",
+    # "vlho": "low",
     "ssp126": "low",
     "ssp119": "low",
     "historical": "historical",
@@ -1845,10 +1809,10 @@ hue_order_incl_cmip6 = [
     "m",
     "ml",
     "l",
-    # "ln",
-    "vlho",
-    # "vl",
-    "vllo",
+    "ln",
+    # "vlho",
+    "vl",
+    # "vllo",
     "historical",
     "ssp585",
     "ssp534-over",
@@ -1866,7 +1830,7 @@ for gas in gases_to_show:
     ds_gases_full_yearly_multi_phase_d[gas] = {}
     for key, target_mip, source_version, institution_id, cmip_era in (
         ("history-cmip7", "CMIP", "1.0.0", "CR", "CMIP7"),
-        ("scenarios-cmip7", "ScenarioMIP", "0.1.0", "CR", "CMIP6Plus"),
+        ("scenarios-cmip7", "ScenarioMIP", "1.0.0", "CR", "CMIP7"),
         ("history-cmip6", "CMIP", "1.2.0", "UoM", "CMIP6"),
         ("scenarios-cmip6", "ScenarioMIP", "1.2.1", "UoM", "CMIP6"),
     ):
@@ -1919,7 +1883,7 @@ pdf_l = [
             .groupby("time.year")
             .mean(),
             unstack_col="year",
-            assign_metadata={"ghg": ghg, "cmip_era": "CMIP7 draft (i.e. CMIP6Plus)"},
+            assign_metadata={"ghg": ghg, "cmip_era": "CMIP7"},
         ).openscm.update_index_levels_from_other(
             {"experiment": ("scenario", lambda x: x)}
         ),
@@ -2027,6 +1991,13 @@ for sg, sgdf in pdf_grouped.items():
 pdf = pd.concat([v.reorder_levels(tmp_l[0].index.names) for v in tmp_l])
 pdf
 
+# %%
+(
+    pdf.loc[
+        :, (pdf.columns >= start_year) & (pdf.columns <= end_year + 1)
+    ].openscm.to_long_data()
+)["experiment"].unique()
+
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 start_year = 2000
 end_year = 2100
@@ -2040,13 +2011,13 @@ fg = sns.relplot(
     x="time",
     y="value",
     hue="experiment",
-    palette=palette,
+    palette={k: v for k, v in palette.items() if k in pdf.pix.unique("experiment")},
+    hue_order=[v for v in hue_order_incl_cmip6 if v in pdf.pix.unique("experiment")],
     style="cmip_era",
-    markers={"CMIP6": "+", "CMIP7": 5, "CMIP7 draft (i.e. CMIP6Plus)": 5},
+    markers={"CMIP6": "+", "CMIP7": 5},
     # edgecolor="none",
     alpha=0.6,
     s=50,
-    hue_order=hue_order_incl_cmip6,
     kind="scatter",
     row=row,
     col="scenario_group",
@@ -2089,8 +2060,7 @@ plt.show()
 #
 # Comparison of CMIP6 and CMIP7 history and scenarios
 # in the global-, annual-mean datasets.
-# Note that the final scenario names will differ from the draft ones shown here,
-# (see {numref}`Table {number} <tab:scenario_ids>`).
+# Note that the only some CMIP7 scenarios have been finalised.
 # ```
 #
 # {raw-latex}`\newpage`
@@ -2118,13 +2088,13 @@ fg = sns.relplot(
     x="time",
     y="value",
     hue="experiment",
-    palette=palette,
+    palette={k: v for k, v in palette.items() if k in pdf.pix.unique("experiment")},
+    hue_order=[v for v in hue_order_incl_cmip6 if v in pdf.pix.unique("experiment")],
     style="cmip_era",
-    markers={"CMIP6": "+", "CMIP7": 5, "CMIP7 draft (i.e. CMIP6Plus)": 5},
+    markers={"CMIP6": "+", "CMIP7": 5},
     # edgecolor="none",
     alpha=0.6,
     s=50,
-    hue_order=hue_order_incl_cmip6,
     kind="scatter",
     row=row,
     col="scenario_group",
@@ -2168,6 +2138,7 @@ plt.show()
 # Comparison of CMIP6 and CMIP7 history and scenarios
 # in the global-, annual-mean datasets
 # over the time period from 2005 to 2030.
+# Note that the only some CMIP7 scenarios have been finalised.
 # The harmonisation issue present in the CMIP6 dataset
 # explains the jump in CH{raw-latex}`\textsubscript{4}`
 # between the history and the scenarios.
@@ -2187,7 +2158,7 @@ for gas in gases_to_show:
     ds_gases_full_monthly_multi_phase_d[gas] = {}
     for key, target_mip, source_version, institution_id, cmip_era in (
         ("history-cmip7", "CMIP", "1.0.0", "CR", "CMIP7"),
-        ("scenarios-cmip7", "ScenarioMIP", "0.1.0", "CR", "CMIP6Plus"),
+        ("scenarios-cmip7", "ScenarioMIP", "1.0.0", "CR", "CMIP7"),
         ("history-cmip6", "CMIP", "1.2.0", "UoM", "CMIP6"),
         ("scenarios-cmip6", "ScenarioMIP", "1.2.1", "UoM", "CMIP6"),
     ):
@@ -2237,7 +2208,7 @@ pdf_l = [
                 )
             ),
             unstack_col="time",
-            assign_metadata={"ghg": ghg, "cmip_era": "CMIP7 draft (i.e. CMIP6Plus)"},
+            assign_metadata={"ghg": ghg, "cmip_era": "CMIP7"},
         ).openscm.update_index_levels_from_other(
             {"experiment": ("scenario", lambda x: x)}
         ),
@@ -2337,7 +2308,7 @@ pdf = pd.concat([v.reorder_levels(tmp_l[0].index.names) for v in tmp_l])
 pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 pdf
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# %% editable=true slideshow={"slide_type": ""}
 start_year = 2012
 end_year = 2025
 
@@ -2350,13 +2321,13 @@ fg = sns.relplot(
     x="time",
     y="value",
     hue="experiment",
-    palette=palette,
+    palette={k: v for k, v in palette.items() if k in pdf.pix.unique("experiment")},
+    hue_order=[v for v in hue_order_incl_cmip6 if v in pdf.pix.unique("experiment")],
     style="cmip_era",
-    markers={"CMIP6": "+", "CMIP7": 5, "CMIP7 draft (i.e. CMIP6Plus)": 5},
+    markers={"CMIP6": "+", "CMIP7": 5},
     # edgecolor="none",
     alpha=0.6,
     s=50,
-    hue_order=hue_order_incl_cmip6,
     kind="scatter",
     row=row,
     col="scenario_group",
@@ -2399,6 +2370,5 @@ plt.show()
 #
 # Comparison of CMIP6 and CMIP7 history and scenarios
 # in the global-, monthly-mean datasets.
-# Note that the final scenario names will differ from the draft ones shown here,
-# (see {numref}`Table {number} <tab:scenario_ids>`).
+# Note that the only some CMIP7 scenarios have been finalised.
 # ```
