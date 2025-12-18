@@ -1707,7 +1707,7 @@ pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 
 # pdf
 
-# %% editable=true slideshow={"slide_type": ""}
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 col = "lat"
 row = "ghg"
 
@@ -2301,7 +2301,7 @@ pdf = pd.concat([v.reorder_levels(tmp_l[0].index.names) for v in tmp_l])
 pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 pdf
 
-# %% editable=true slideshow={"slide_type": ""}
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 start_year = 2012
 end_year = 2025
 
