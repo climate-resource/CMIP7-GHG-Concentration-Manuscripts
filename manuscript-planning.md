@@ -97,7 +97,25 @@ Notes from reading Meinshausen at al 2020 (M20): https://gmd.copernicus.org/arti
     - roll straight off the end of historical, to ensure consistency with scenario emissions (which are harmonised to 2023 values) [find a better way to word and explain this]
     - lean on M20 for methods re extending seasonality and lat. gradients
     - refer to other papers for emissions harmonisation and infilling (use emissions-driven for everything for running MAGICC, slight inconsistency from prescribing the concentrations that are generated in other ways, but ok, minor and these are sensible boundary conditions, not the only answer)
-    - harmonisation
+    - extensions based on extended emissions (refer to other paper, again slight inconsistency as above, ok)
+    - harmonisation of concentrations: gradient preserving
+
+- results
+    - general observations (?) e.g. where co2 is up/down and ranges, same for ch4, n2o, ODSs, other f-gases
+    - radiative forcing
+    - don't repeat tables of output
+    - comparison with CMIP6
+
+- discussion
+    - reasons for differences with CMIP6
+    - don't discuss recent obs, save that for extension paper
+    - changes in context of long-term records
+    - no ESM simluations for lat. gradients and seasonality
+    - harmonisation still not perfect
+
+- limitations (can also blend with discussion)
+    - limited number of scenarios, relative to 'full range' (use non-markers and maybe AR6 db for 'full range')
+    - sequential scenario generation process i.e. best-estimate after CMIP7 will certainly differ from the 'pre CMIP7 ESM runs' we provide here. Can't be avoided, don't @ us
 
 - climate paper abstract
     - range of warming (and ERF ?) outcomes and comparison to CMIP6
