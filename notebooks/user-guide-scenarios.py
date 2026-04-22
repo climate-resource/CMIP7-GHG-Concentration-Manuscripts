@@ -155,8 +155,8 @@ create_all_tables(engine)
 # The scenario data of interest here
 # can be found under "MIP era" `CIMP7`,
 # "institution ID" `CR`
-# and "source version" `1.0.0`
-# (also under "source IDs" of the form `CR-*-1-0-0`,
+# and "source version" `1.1.0`
+# (also under "source IDs" of the form `CR-*-1-1-0`,
 # although this is less useful as the ESGF search API
 # does not appear to support glob/star expressions
 # for specific facet searches).
@@ -188,8 +188,8 @@ create_all_tables(engine)
 # Please see these tools' docs for usage instructions.
 #
 # [^esgf-url-example]: An example URL: [https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%<br>
-# 221.0.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP7%22%7D](
-# https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%221.0.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP7%22%7D)
+# 221.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP7%22%7D](
+# https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%22source_version%22%3A%221.1.0%22%2C%22institution_id%22%3A%22CR%22%2C%22mip_era%22%3A%22CMIP7%22%7D)
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Zenodo
@@ -245,7 +245,7 @@ create_all_tables(engine)
 # For the greenhouse gas concentrations,
 # the scenario identifier is simply
 # the second hyphen-separated element of the source ID.
-# For example, for the source ID `CR-ml-1-0-0`,
+# For example, for the source ID `CR-ml-1-1-0`,
 # the scenario identifier is `ml`.
 # A Python function for doing this extraction is below.
 #
@@ -270,8 +270,8 @@ def extract_scenario_id(source_id: str) -> str:
     return source_id.split("-")[1]
 
 
-print(f"{extract_scenario_id('CR-ml-1-0-0')=}")
-print(f"{extract_scenario_id('CR-l-1-0-0')=}")
+print(f"{extract_scenario_id('CR-ml-1-1-0')=}")
+print(f"{extract_scenario_id('CR-l-1-1-0')=}")
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # These scenario IDs can then be used to find details of the complete scenario.
@@ -507,7 +507,7 @@ query_kwargs_co2_yearly_global = dict(
     time_sampling="yr",
     grid="gm",
     cmip_era="CMIP7",
-    source_version="1.0.0",
+    source_version="1.1.0",
     institution_id="CR",
     target_mip="ScenarioMIP",
     engine=engine,
@@ -1335,7 +1335,7 @@ for gas in gases_to_show:
     ds_gases_full_yearly_d[gas] = {}
     for key, target_mip, source_version, institution_id, cmip_era in (
         ("history", "CMIP", "1.0.0", "CR", "CMIP7"),
-        ("scenarios", "ScenarioMIP", "1.0.0", "CR", "CMIP7"),
+        ("scenarios", "ScenarioMIP", "1.1.0", "CR", "CMIP7"),
     ):
         query_kwargs = {
             "ghg": gas,
@@ -1497,7 +1497,7 @@ for gas in gases_to_show:
     ds_gases_full_monthly_d[gas] = {}
     for key, target_mip, source_version, institution_id, cmip_era in (
         ("history", "CMIP", "1.0.0", "CR", "CMIP7"),
-        ("scenarios", "ScenarioMIP", "1.0.0", "CR", "CMIP7"),
+        ("scenarios", "ScenarioMIP", "1.1.0", "CR", "CMIP7"),
     ):
         query_kwargs = {
             "ghg": gas,
@@ -1633,7 +1633,7 @@ for gas in gases_to_show:
     ds_gases_full_monthly_lat_d[gas] = {}
     for key, target_mip, source_version, institution_id, cmip_era in (
         ("history", "CMIP", "1.0.0", "CR", "CMIP7"),
-        ("scenarios", "ScenarioMIP", "1.0.0", "CR", "CMIP7"),
+        ("scenarios", "ScenarioMIP", "1.1.0", "CR", "CMIP7"),
     ):
         query_kwargs = {
             "ghg": gas,
@@ -1707,7 +1707,7 @@ pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 
 # pdf
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# %% editable=true slideshow={"slide_type": ""}
 col = "lat"
 row = "ghg"
 
@@ -1830,7 +1830,7 @@ for gas in gases_to_show:
     ds_gases_full_yearly_multi_phase_d[gas] = {}
     for key, target_mip, source_version, institution_id, cmip_era in (
         ("history-cmip7", "CMIP", "1.0.0", "CR", "CMIP7"),
-        ("scenarios-cmip7", "ScenarioMIP", "1.0.0", "CR", "CMIP7"),
+        ("scenarios-cmip7", "ScenarioMIP", "1.1.0", "CR", "CMIP7"),
         ("history-cmip6", "CMIP", "1.2.0", "UoM", "CMIP6"),
         ("scenarios-cmip6", "ScenarioMIP", "1.2.1", "UoM", "CMIP6"),
     ):
@@ -2151,7 +2151,7 @@ for gas in gases_to_show:
     ds_gases_full_monthly_multi_phase_d[gas] = {}
     for key, target_mip, source_version, institution_id, cmip_era in (
         ("history-cmip7", "CMIP", "1.0.0", "CR", "CMIP7"),
-        ("scenarios-cmip7", "ScenarioMIP", "1.0.0", "CR", "CMIP7"),
+        ("scenarios-cmip7", "ScenarioMIP", "1.1.0", "CR", "CMIP7"),
         ("history-cmip6", "CMIP", "1.2.0", "UoM", "CMIP6"),
         ("scenarios-cmip6", "ScenarioMIP", "1.2.1", "UoM", "CMIP6"),
     ):
@@ -2301,7 +2301,7 @@ pdf = pd.concat([v.reorder_levels(tmp_l[0].index.names) for v in tmp_l])
 pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 pdf
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# %% editable=true slideshow={"slide_type": ""}
 start_year = 2012
 end_year = 2025
 
