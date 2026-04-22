@@ -23,7 +23,7 @@
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Overview
 #
-# Here we provide a short description of the draft scenario dataset
+# Here we provide a short description of the scenario dataset
 # and a guide for users.
 # This is intended to provide a short introduction for users of the data.
 # The full details of the dataset's construction
@@ -167,16 +167,6 @@ create_all_tables(engine)
 # (although these URLs sometimes move,
 # so we make no guarantee that this link will always be live).
 #
-# These datasets are a draft only.
-# The final datasets will maintain the same form; however,
-# the numbers are currently being finalised
-# and the final names have been changed since the draft datasets
-# were published,
-# so please take care to treat the values shown here as drafts only.
-# The final set of datasets to use will be documented on
-# the input4MIPs-CVs web page, with this particular anchor being the best to follow:
-# [https://input4mips-cvs.readthedocs.io/en/latest/dataset-overviews/#cmip7_1]().
-#
 # To download the data, we recommend accessing it directly via the
 # ESGF user interfaces via links as discussed above.
 # Alternately, there are tools dedicated to accessing ESGF data,
@@ -197,11 +187,9 @@ create_all_tables(engine)
 # While it aims to be, the ESGF is technically not a permanent archive
 # and does not issue DOIs.
 # In order to provide more reliable, citable access to the data,
-# we will also provide the final scenario datasets on Zenodo
+# we have also provided the final scenario datasets on Zenodo
 # {raw-latex}`\parencite{zenodo}`,
-# although we have not done this step for the draft datasets).
-# When ready, we will update this guide to use the final scenario data
-# and include the zenodo link to the source code and input data used to process it.
+# see [https://doi.org/10.5281/zenodo.18690744](https://doi.org/10.5281/zenodo.18690744).
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Data description
@@ -573,7 +561,8 @@ import xarray as xr
 
 time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
 ds_example_co2_yearly_global = xr.open_dataset(
-    co2_yearly_global_fps[-1], decode_times=time_coder
+    next(v for v in co2_yearly_global_fps if "ext" not in str(v)),
+    decode_times=time_coder,
 )
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
@@ -695,7 +684,8 @@ for fp in sorted(co2_monthly_global_fps)[::-1]:
 
 # %% editable=true slideshow={"slide_type": ""}
 ds_example_co2_monthly_global = xr.open_mfdataset(
-    co2_monthly_global_fps[-1], decode_times=time_coder
+    next(v for v in co2_monthly_global_fps if "ext" not in str(v)),
+    decode_times=time_coder,
 )
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
@@ -830,7 +820,7 @@ for fp in sorted(co2_monthly_lat_fps)[::-1]:
 
 # %% editable=true slideshow={"slide_type": ""}
 ds_example_co2_monthly_lat = xr.open_mfdataset(
-    co2_monthly_lat_fps[-1],
+    next(v for v in co2_monthly_lat_fps if "ext" not in str(v)),
     decode_times=time_coder,
     data_vars=None,
     compat="no_conflicts",
@@ -1328,6 +1318,8 @@ plt.show()
 # We start with the annual-, global-mean data
 # ({numref}`Figure %s <scenarios-yearly-fig>`).
 
+# %%
+
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 gases_to_show = ["co2", "ch4", "n2o", "cfc12eq", "hfc134aeq"]
 ds_gases_full_yearly_d = {}
@@ -1356,7 +1348,14 @@ for gas in gases_to_show:
         ]
 
         # compute to avoid dask weirdness
-        ds_gases_full_yearly_d[gas][key] = ds.compute()
+        ds = ds.compute()
+
+        # avoid extensions
+        ds = ds.sel(
+            scenario=[v for v in ds["scenario"].values if "ext" not in v]
+        ).dropna("time")
+
+        ds_gases_full_yearly_d[gas][key] = ds
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 palette = {
@@ -1365,9 +1364,7 @@ palette = {
     "historical": "k",
     "historical-cmip6": "tab:grey",
     "vl": "#24a4ff",
-    # "vllo": "#24a4ff",
     "ln": "#4a0daf",
-    # "vlho": "#4a0daf",
     "l": "#00cc69",
     "ml": "#f5ac00",
     "m": "#ffa9dc",
@@ -1390,11 +1387,9 @@ hue_order = [
     "hl",
     "m",
     "ml",
-    # "l",
+    "l",
     "ln",
-    # "vlho",
     "vl",
-    "vllo",
     "historical",
 ]
 
@@ -1475,11 +1470,9 @@ plt.show()
 # name: "scenarios-yearly-fig"
 # ---
 #
-# Finalised scenarios including the
+# Scenarios including the
 # transition from the historical period to the future/projection period
 # in the global-, annual-mean datasets.
-# Some scenarios are still being finalised,
-# hence do not yet appear here.
 # ```
 #
 # {raw-latex}`\newpage`
@@ -1518,7 +1511,14 @@ for gas in gases_to_show:
         ]
 
         # compute to avoid dask weirdness
-        ds_gases_full_monthly_d[gas][key] = ds.compute()
+        ds = ds.compute()
+
+        # avoid extensions
+        ds = ds.sel(
+            scenario=[v for v in ds["scenario"].values if "ext" not in v]
+        ).dropna("time")
+
+        ds_gases_full_monthly_d[gas][key] = ds
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 start_year = 2020
@@ -1610,11 +1610,9 @@ plt.show()
 # name: "scenarios-monthly-fig"
 # ---
 #
-# Finalised scenarios including the
+# Scenarios including the
 # transition from the historical period to the future/projection period
 # in the monthly-, annual-mean datasets.
-# Some scenarios are still being finalised,
-# hence do not yet appear here.
 # ```
 #
 # {raw-latex}`\newpage`
@@ -1654,7 +1652,14 @@ for gas in gases_to_show:
         ]
 
         # compute to avoid dask weirdness
-        ds_gases_full_monthly_lat_d[gas][key] = ds.compute()
+        ds = ds.compute()
+
+        # avoid extensions
+        ds = ds.sel(
+            scenario=[v for v in ds["scenario"].values if "ext" not in v]
+        ).dropna("time")
+
+        ds_gases_full_monthly_lat_d[gas][key] = ds
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 start_year = 2020
@@ -1752,11 +1757,9 @@ plt.show()
 # name: "scenarios-monthly-lat-fig"
 # ---
 #
-# Finalised scenarios including the
+# Scenarios including the
 # transition from the historical period to the future/projection period
 # in the monthly-, latitudinally-resolved datasets.
-# Some scenarios are still being finalised,
-# hence do not yet appear here.
 # ```
 #
 # {raw-latex}`\newpage`
@@ -1796,8 +1799,6 @@ scenario_group_map = {
     "l": "low",
     "vl": "low",
     "ln": "low",
-    # "vllo": "low",
-    # "vlho": "low",
     "ssp126": "low",
     "ssp119": "low",
     "historical": "historical",
@@ -1810,9 +1811,7 @@ hue_order_incl_cmip6 = [
     "ml",
     "l",
     "ln",
-    # "vlho",
     "vl",
-    # "vllo",
     "historical",
     "ssp585",
     "ssp534-over",
@@ -1853,7 +1852,14 @@ for gas in gases_to_show:
         ]
 
         # compute to avoid dask weirdness
-        ds_gases_full_yearly_multi_phase_d[gas][key] = ds.compute()
+        ds = ds.compute()
+
+        # avoid extensions
+        ds = ds.sel(
+            scenario=[v for v in ds["scenario"].values if "ext" not in v]
+        ).dropna("time")
+
+        ds_gases_full_yearly_multi_phase_d[gas][key] = ds
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 start_year = 2000
@@ -2053,7 +2059,6 @@ plt.show()
 #
 # Comparison of CMIP6 and CMIP7 history and scenarios
 # in the global-, annual-mean datasets.
-# Note that the only some CMIP7 scenarios have been finalised.
 # ```
 #
 # {raw-latex}`\newpage`
@@ -2131,12 +2136,9 @@ plt.show()
 # Comparison of CMIP6 and CMIP7 history and scenarios
 # in the global-, annual-mean datasets
 # over the time period from 2005 to 2030.
-# Note that the only some CMIP7 scenarios have been finalised.
 # The harmonisation issue present in the CMIP6 dataset
 # explains the jump in CH{raw-latex}`\textsubscript{4}`
 # between the history and the scenarios.
-# Note that the final scenario names will differ from the draft ones shown here,
-# (see {numref}`Table {number} <tab:scenario_ids>`).
 # ```
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -2174,7 +2176,14 @@ for gas in gases_to_show:
         ]
 
         # compute to avoid dask weirdness
-        ds_gases_full_monthly_multi_phase_d[gas][key] = ds.compute()
+        ds = ds.compute()
+
+        # avoid extensions
+        ds = ds.sel(
+            scenario=[v for v in ds["scenario"].values if "ext" not in v]
+        ).dropna("time")
+
+        ds_gases_full_monthly_multi_phase_d[gas][key] = ds
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 start_year = 2000
@@ -2363,5 +2372,4 @@ plt.show()
 #
 # Comparison of CMIP6 and CMIP7 history and scenarios
 # in the global-, monthly-mean datasets.
-# Note that the only some CMIP7 scenarios have been finalised.
 # ```
