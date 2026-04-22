@@ -515,7 +515,9 @@ _ = fetch_and_load(**query_kwargs_co2_yearly_global)
 co2_yearly_global_fps = get_ghg_dataset_local_files(**query_kwargs_co2_yearly_global)
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
-for fp in sorted(co2_yearly_global_fps)[::-1]:
+for fp in sorted(co2_yearly_global_fps):
+    if "ext" in fp.name:
+        continue
     print(f"- {fp.name}")
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -534,7 +536,9 @@ _ = fetch_and_load(**query_kwargs_ch4_yearly_global)
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
 # Get file paths
 ch4_yearly_global_fps = get_ghg_dataset_local_files(**query_kwargs_ch4_yearly_global)
-for fp in sorted(ch4_yearly_global_fps)[::-1]:
+for fp in sorted(ch4_yearly_global_fps):
+    if "ext" in fp.name:
+        continue
     print(f"- {fp.name}")
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -547,7 +551,7 @@ for fp in sorted(ch4_yearly_global_fps)[::-1]:
 # please feel free to contact the emails given in the `contact` attribute.
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
-# !ncdump -h {co2_yearly_global_fps[0]} | fold -w 80 -s
+# !ncdump -h {next(v for v in co2_yearly_global_fps if "ext" not in v.name)} | fold -w 80 -s
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # Using a tool like [xarray](https://github.com/pydata/xarray)[^xarray-url],
@@ -556,12 +560,18 @@ for fp in sorted(ch4_yearly_global_fps)[::-1]:
 #
 # [^xarray-url]: https://github.com/pydata/xarray
 
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+file_to_open = next(v for v in co2_yearly_global_fps if "ext" not in str(v))
+
+# %% editable=true slideshow={"slide_type": ""}
+file_to_open.name
+
 # %% editable=true slideshow={"slide_type": ""}
 import xarray as xr
 
 time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
 ds_example_co2_yearly_global = xr.open_dataset(
-    next(v for v in co2_yearly_global_fps if "ext" not in str(v)),
+    file_to_open,
     decode_times=time_coder,
 )
 
@@ -676,15 +686,24 @@ _ = fetch_and_load(**query_kwargs_co2_monthly_global)
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
 # Get file paths
 co2_monthly_global_fps = get_ghg_dataset_local_files(**query_kwargs_co2_monthly_global)
-for fp in sorted(co2_monthly_global_fps)[::-1]:
+for fp in sorted(co2_monthly_global_fps):
+    if "ext" in fp.name:
+        continue
+
     print(f"- {fp.name}")
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # Again, the data can be trivially loaded with [xarray](https://github.com/pydata/xarray).
 
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+file_to_open = next(v for v in co2_monthly_global_fps if "ext" not in str(v))
+
+# %% editable=true slideshow={"slide_type": ""}
+file_to_open.name
+
 # %% editable=true slideshow={"slide_type": ""}
 ds_example_co2_monthly_global = xr.open_mfdataset(
-    next(v for v in co2_monthly_global_fps if "ext" not in str(v)),
+    file_to_open,
     decode_times=time_coder,
 )
 
@@ -812,15 +831,24 @@ _ = fetch_and_load(**query_kwargs_co2_monthly_lat)
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_input"]
 # Get file paths
 co2_monthly_lat_fps = get_ghg_dataset_local_files(**query_kwargs_co2_monthly_lat)
-for fp in sorted(co2_monthly_lat_fps)[::-1]:
+for fp in sorted(co2_monthly_lat_fps):
+    if "ext" in fp.name:
+        continue
+
     print(f"- {fp.name}")
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # Again, the data can be trivially loaded with [xarray](https://github.com/pydata/xarray).
 
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+file_to_open = next(v for v in co2_monthly_lat_fps if "ext" not in str(v))
+
+# %% editable=true slideshow={"slide_type": ""}
+file_to_open.name
+
 # %% editable=true slideshow={"slide_type": ""}
 ds_example_co2_monthly_lat = xr.open_mfdataset(
-    next(v for v in co2_monthly_lat_fps if "ext" not in str(v)),
+    file_to_open,
     decode_times=time_coder,
     data_vars=None,
     compat="no_conflicts",
@@ -1318,8 +1346,6 @@ plt.show()
 # We start with the annual-, global-mean data
 # ({numref}`Figure %s <scenarios-yearly-fig>`).
 
-# %%
-
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 gases_to_show = ["co2", "ch4", "n2o", "cfc12eq", "hfc134aeq"]
 ds_gases_full_yearly_d = {}
@@ -1712,7 +1738,7 @@ pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 
 # pdf
 
-# %% editable=true slideshow={"slide_type": ""}
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 col = "lat"
 row = "ghg"
 
@@ -2310,7 +2336,7 @@ pdf = pd.concat([v.reorder_levels(tmp_l[0].index.names) for v in tmp_l])
 pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 pdf
 
-# %% editable=true slideshow={"slide_type": ""}
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 start_year = 2012
 end_year = 2025
 
