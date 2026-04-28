@@ -55,6 +55,7 @@ def main(
         references_bib_file_out = output.parent / references_bib_file.name
 
     base_config = yaml.safe_load(base.read_text(encoding="utf-8"))
+    latex_targetname = f"{source_file.stem}.tex"
 
     res = {
         **base_config,
@@ -70,6 +71,12 @@ def main(
     }
     res["repository"]["path_to_book"] = str(
         source_file.absolute().relative_to(REPO_ROOT)
+    )
+    # Avoid Sphinx's default fallback of "Project name not set", which
+    # generates projectnamenotset.tex for LaTeX builds.
+    res.setdefault("sphinx", {}).setdefault("config", {})["project"] = title
+    res.setdefault("latex", {}).setdefault("latex_documents", {})["targetname"] = (
+        latex_targetname
     )
     output.parent.mkdir(exist_ok=True, parents=True)
     output.write_text(yaml.dump(res, sort_keys=True), encoding="utf-8")

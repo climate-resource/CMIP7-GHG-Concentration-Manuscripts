@@ -50,8 +50,8 @@ def main(
 
     tex_mod = "\n".join(tex_mod_l)
 
-    # TODO: use actual name once we find this bug projectnamenotset bug
-    source_tmp = source.parent / "source-mod.tex"
+    source_tmp_stem = f"{source.stem}-prepped"
+    source_tmp = source.parent / f"{source_tmp_stem}.tex"
     with open(source_tmp, "w", encoding="utf-8") as fh:
         fh.write(tex_mod)
 
@@ -74,8 +74,7 @@ def main(
         f"xelatex {source_tmp.name}", shell=True, cwd=source_tmp.parent, check=True
     )
 
-    # TODO: update when we fix the naming bug
-    built_pdf = source_tmp.parent / "source-mod.pdf"
+    built_pdf = source_tmp.parent / f"{source_tmp_stem}.pdf"
     if not built_pdf.exists():
         raise FileNotFoundError(built_pdf)
 

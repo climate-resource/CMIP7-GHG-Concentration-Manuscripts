@@ -15,30 +15,36 @@ function check_output() {
 
 }
 
-mkdir -p build/cmip-phase-comparison-historical-standalone/
-uv run jupytext --to myst notebooks/cmip-phase-comparison-historical-standalone.py --output build/cmip-phase-comparison-historical-standalone/cmip-phase-comparison-historical-standalone.md
+stem="cmip-phase-comparison-historical-standalone"
+build_dir="build/${stem}"
+source_md="${build_dir}/${stem}.md"
+source_tex="${build_dir}/_build/_page/${stem}/latex/${stem}.tex"
+output_pdf="${build_dir}/${stem}.pdf"
+
+mkdir -p "${build_dir}/"
+uv run jupytext --to myst "notebooks/${stem}.py" --output "${source_md}"
 check_output "Convert \`.py\` notebook file to myst with jupytext"
 
 uv run python scripts/write-jupyter-book-config.py \
     --base jupyter-book/base-config.yaml \
-    --output build/cmip-phase-comparison-historical-standalone/config.yaml \
+    --output "${build_dir}/config.yaml" \
     --title "Comparison of CMIP6 and CMIP7 historical datasets" \
     --description "Comparison of the CMIP6 and CMIP7 historical greenhouse gas concentration forcing datasets." \
     --references-bib-file references/references.bib \
-    --source-file build/cmip-phase-comparison-historical-standalone/cmip-phase-comparison-historical-standalone.md
+    --source-file "${source_md}"
 check_output "Write config file"
 
 uv run jupyter-book build -v \
-    build/cmip-phase-comparison-historical-standalone/cmip-phase-comparison-historical-standalone.md \
+    "${source_md}" \
     --builder latex \
-    --config build/cmip-phase-comparison-historical-standalone/config.yaml \
-    --path-output build/cmip-phase-comparison-historical-standalone/
+    --config "${build_dir}/config.yaml" \
+    --path-output "${build_dir}/"
 check_output "Convert myst to latex with jupyter-book"
 
 uv run python scripts/compile-jupyter-book-latex.py \
-    --source build/cmip-phase-comparison-historical-standalone/_build/_page/cmip-phase-comparison-historical-standalone/latex/projectnamenotset.tex \
-    --output build/cmip-phase-comparison-historical-standalone/cmip-phase-comparison-historical-standalone.pdf \
-    --references-bib-file build/cmip-phase-comparison-historical-standalone/references.bib
+    --source "${source_tex}" \
+    --output "${output_pdf}" \
+    --references-bib-file "${build_dir}/references.bib"
 check_output "Compile latex to pdf"
 
-echo "Output file is in build/cmip-phase-comparison-historical-standalone/cmip-phase-comparison-historical-standalone.pdf"
+echo "Output file is in ${output_pdf}"
