@@ -1,6 +1,9 @@
-# My Python repo
-<!--- Adding a one-line description of what this repository is for here may be
-helpful -->
+TODO: update
+# CMIP7 Greenhouse Gas Concentration Forcing Manuscripts
+
+In this repository, we generate manuscripts and other documentation
+related to the CMIP7 greenhouse gas concentration forcing.
+
 <!---
 
 We recommend having a status line in your repo to tell anyone who stumbles
@@ -19,7 +22,7 @@ on your repository where you're up to. Some suggested options:
 
 ## Status
 
-- prototype: the project is just starting up and the code is all prototype
+- development: the project is actively being worked on
 
 ## Installation
 
@@ -60,16 +63,44 @@ uv run jupyter lab
 **Additional requirements**
 
 Using `nbconvert` for converting notebooks to PDF requires the following installations:
-  + **Pandoc** see https://pandoc.org/installing.html
-  + **LaTeX** see https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex
-    + see https://jupyterbook.org/en/stable/advanced/pdf.html#installation-and-setup
-    + If you are Windows user and use MiKTeX (https://miktex.org/howto/install-miktex) it might be necessary to set `xelatex` additionally on the PATH
 
-<!--- Other documentation and instructions can then be added here as you go,
-perhaps replacing the other instructions above as they may become redundant.
--->
+- **Pandoc** see https://pandoc.org/installing.html
+- **LaTeX** see https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex
+    - see https://jupyterbook.org/en/stable/advanced/pdf.html#installation-and-setup
+    - If you are Windows user and use MiKTeX (https://miktex.org/howto/install-miktex) it might be necessary to set `xelatex` additionally on the PATH
 
-## Jupyter-book
+## Creating outputs
+
+### Historical data user guide
+
+```sh
+# Update the config in scripts/create-historical-user-guide.sh as you wish before running
+uv run bash scripts/create-historical-user-guide.sh
+```
+
+### Standalone comparison of CMIP6 and CMIP7 historical data
+
+```sh
+# Update the config in scripts/create-historical-user-guide.sh as you wish before running
+uv run bash scripts/create-standalone-cmip6-cmip7-historical-comparison.sh
+```
+
+### Scenario data user guide
+
+```sh
+# Update the config in scripts/create-historical-user-guide.sh as you wish before running
+uv run bash scripts/create-scenario-user-guide.sh
+```
+
+### Differences between versions of documents
+
+```sh
+# Update the config in scripts/create-historical-user-guide.sh as you wish before running
+uv run bash scripts/create-diff.sh
+```
+
+TODO: delete all below here
+
 Update deliverables in `notebooks\`.
 
 To make Latex-PDF of each deliverable, run
@@ -121,14 +152,15 @@ repository, without tests etc. so there are no development-only dependencies).
 
 ### Contributing
 
-This is a very thin repository. There aren't any strict guidelines for
-contributing, partly because we don't know what we're trying to achieve (we're
-just exploring). If you would like to contribute, it is best to raise an issue
+This is a very thin repository.
+There aren't any strict guidelines for contributing.
+If you would like to contribute, it is best to raise an issue
 to discuss what you want to do (without a discussion, we can't guarantee that
 any contribution can actually be used).
-<!--- You may want to update this section as the project evolves. -->
 
 ### Repository structure
+
+TODO: update
 
 The repository is very basic. It imposes no structure on you so you can layout
 your Python files, notebooks etc. in any way you wish. We do have a basic
@@ -170,6 +202,15 @@ In this repository, we use the following tools:
     (for more thoughts on the usefulness of Jupytext, see
     [tips and tricks: Jupytext](https://gitlab.com/znicholls/mullet-rse/-/blob/main/book/tips-and-tricks/managing-notebooks-jupytext.md))
         - this avoids nasty merge conflicts and incomprehensible diffs
+- [jupyter-book](https://jupyterbook.org/) to help us convert jupyter notebooks to latex
+    - we don't use the full functionality of jupyter book.
+      Our outputs are standalone PDFs, so we really just use jupyter-book
+      to help with [gluing](https://jupyterbook.org/v1/content/executable/output-insert.html)
+      figures and numbers,
+      as well as managing the
+      [inclusion/exclusion of cell inputs/outputs](https://jupyterbook.org/v1/interactive/hiding.html).
+      We then cut the output latex into latex documents ourselves,
+      massaging to match requirements e.g. journal templates.
 
 ## Original template
 

@@ -15,9 +15,7 @@
 #     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
-#   title: 'CMIP Greenhouse Gas (GHG) Concentration Historical Dataset:
-#
-#     Data Description and User Guide'
+#   title: 'Comparison of CMIP6 and CMIP7 historical GHG concentration forcing'
 # ---
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
