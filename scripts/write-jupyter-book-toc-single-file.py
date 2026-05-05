@@ -30,7 +30,9 @@ def main(
         Path, typer.Option(help="Path to the source file we will compile")
     ],
 ) -> None:
-    # Also need this intro file for some reason...
+    # Also need this intro file to get the headers to behave
+    # (It is dropped when converting to latex,
+    # but it gets the headers to appear correctly).
     with open(source_file.parent / "intro.md", "w") as fh:
         fh.write("# Introduction")
 
