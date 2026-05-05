@@ -15,7 +15,7 @@
 #     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
-#   title: 'Comparison of CMIP6 and CMIP7 historical GHG concentration forcing'
+#   title: Comparison of CMIP6 and CMIP7 historical GHG concentration forcing
 # ---
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -328,9 +328,9 @@ for ax in axes_d.values():
     ax.set_xticklabels([v.year for v in xticks])
 
 plt.tight_layout()
-plt.savefig(
-    "figures/key-species-global-annual-changes-across-cmip-phases_post_1765.png"
-)
+# plt.savefig(
+#     "figures/key-species-global-annual-changes-across-cmip-phases_post_1765.png"
+# )
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -411,7 +411,7 @@ for ax in axes_d.values():
     ax.set_xticklabels([v.year for v in xticks])
 
 plt.tight_layout()
-plt.savefig("figures/co2_lat-monthly-post-1765.png")
+# plt.savefig("figures/co2_lat-monthly-post-1765.png")
 plt.show()
 
 # %% [markdown]
@@ -582,6 +582,6 @@ for i, lat in tqdm.auto.tqdm(
 
 plt.tight_layout()
 # plt.savefig(f"{gas}_lat-monthly.png")
-plt.savefig(f"figures/{gas}_lat-monthly-post-1765.png")
+# plt.savefig(f"figures/{gas}_lat-monthly-post-1765.png")
 plt.suptitle(gas, y=1.0)
 plt.show()
