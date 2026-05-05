@@ -175,9 +175,10 @@ create_all_tables(engine)
 # via the user interface (see ESGF user guides[^esgf-user-guides-url]).
 # Alternatively, searches can be encoded in URLs. However, a caveat with this
 # approach is that URLs sometimes move, so we make no guarantee that this link
-# will always be live. An example provides the following link:
+# will always be live. The following link provides an example of a search
+# that is encoded in a URL:
 #
-# > [https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%2ource_id%22%3A%22CR-CMIP-1-0-0%22%7D]()
+# > [esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%2ource_id%22%3A%22CR-CMIP-1-0-0%22%7D](https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%2ource_id%22%3A%22CR-CMIP-1-0-0%22%7D)
 #
 # To download the data, we recommend accessing it directly via the ESGF user interfaces
 # via links like the one above.

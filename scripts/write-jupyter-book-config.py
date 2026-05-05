@@ -41,6 +41,10 @@ def main(
     source_file: Annotated[
         Path, typer.Option(help="Path to the source file we will compile")
     ],
+    source_file_raw: Annotated[
+        Path,
+        typer.Option(help="Path to the raw source file (which exists in the git repo)"),
+    ],
     references_bib_file_out: Annotated[
         Path | None,
         typer.Option(
@@ -70,7 +74,7 @@ def main(
         ],
     }
     res["repository"]["path_to_book"] = str(
-        source_file.absolute().relative_to(REPO_ROOT)
+        source_file_raw.absolute().relative_to(REPO_ROOT)
     )
     # Avoid Sphinx's default fallback of "Project name not set", which
     # generates projectnamenotset.tex for LaTeX builds.
