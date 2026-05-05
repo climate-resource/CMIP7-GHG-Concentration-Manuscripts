@@ -21,7 +21,11 @@ from local.esgf.esgf_dataset_collection import ESGFDatasetCollection
 from local.esgf.search.input4MIPs import (
     MAPPING_FROM_GENERAL_TERMS as MAPPING_FROM_GENERAL_TERMS_INPUT4MIPS,
 )
-from local.esgf.search.query import query_esgf
+from local.esgf.search.query import (
+    DEFAULT_SEARCH_RETRY_CONFIG,
+    SearchRetryConfig,
+    query_esgf,
+)
 
 
 class KnownIndexNode(StrEnum):
@@ -128,6 +132,9 @@ class SearchQuery:
     """
 
     def to_esgf_seach_terms(self) -> dict[str, str]:
+        """
+        Convert the query to ESGF search API terms
+        """
         if self.project == "input4MIPs":
             mapping = MAPPING_FROM_GENERAL_TERMS_INPUT4MIPS
         else:
@@ -144,18 +151,26 @@ class SearchQuery:
         index_node: str,
         distrib: bool = True,
         limit: int = 1_000,
+        retry_config: SearchRetryConfig | None = DEFAULT_SEARCH_RETRY_CONFIG,
     ) -> ESGFDatasetCollection:
-        pass
-        # TODO: docstring
         """
-        Should the query be distributed?
+        Get the ESGF search results for this query
 
-        I.e. look at results both on the index node and other nodes?
-        """
-        """
-        Maximum amount of results to retrieve
-        """
+        Parameters
+        ----------
+        index_node
+            Index node to use for searching
 
+        distrib
+            Should the query be distributed? I.e. look at results both on the index
+            node and other nodes?
+
+        limit
+            Maximum amount of results to retrieve
+
+        retry_config
+            Retry configuration to use for the request
+        """
         esgf_search_terms = self.to_esgf_seach_terms()
 
         esgf_dataset_collection = query_esgf(
@@ -163,6 +178,7 @@ class SearchQuery:
             query_terms=esgf_search_terms,
             distrib=distrib,
             limit=limit,
+            retry_config=retry_config,
         )
 
         return esgf_dataset_collection

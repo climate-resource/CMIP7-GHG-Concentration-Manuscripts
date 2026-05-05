@@ -26,6 +26,7 @@ dependencies = [
     "playwright>=1.55.0",
     "typer>=0.20.0",
     "gitpython>=3.1.45",
+    "httpx-retries>=0.4.6",
 ]
 name = "local"
 version = "0.1.0"
