@@ -99,7 +99,7 @@ def download_file_parallel_progress_helper(
     # I think this is where it's clear that async would have been a better choice
     # because we could avoid creating the client everytime.
     # TODO: allow user to inject retry logic.
-    transport = RetryTransport(retry=Retry(total=10, backoff_factor=0.72))
+    transport = RetryTransport(retry=Retry(total=15, backoff_factor=0.72))
     with httpx.Client(transport=transport) as client:
         with (
             tempfile.TemporaryDirectory() as td,
