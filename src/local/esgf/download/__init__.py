@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 import httpx
 import tqdm.auto
+from httpx_retries import Retry, RetryTransport
 
 if TYPE_CHECKING:
     from local.esgf.models import ESGFFile
@@ -26,11 +27,13 @@ if TYPE_CHECKING:
 def download_files_parallel_progress(
     esgf_files: Iterable[ESGFFile], n_processes: int = 3
 ) -> tuple[Path, ...]:
+    # Doing this with async code rather than threads may be smarter
+    # https://www.python-httpx.org/async/
     thread_positions = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=n_processes) as pool:
         futures = []
         for esgf_file in esgf_files:
-            # TODO: split out node handling rather than hard-coding DKZR
+            # TODO: split out node handling rather than hard-coding
             access_url = [
                 v
                 for v in esgf_file.esgf_file_access_urls
@@ -93,30 +96,35 @@ def download_file_parallel_progress_helper(
     else:
         desc = url
 
-    with (
-        tempfile.TemporaryDirectory() as td,
-        httpx.stream("GET", url, follow_redirects=True) as request,
-    ):
-        tmpf = Path(td) / out_path.name
+    # I think this is where it's clear that async would have been a better choice
+    # because we could avoid creating the client everytime.
+    # TODO: allow user to inject retry logic.
+    transport = RetryTransport(retry=Retry(total=10, backoff_factor=0.72))
+    with httpx.Client(transport=transport) as client:
         with (
-            open(tmpf, "wb") as fh,
-            tqdm.auto.tqdm(
-                desc=desc,
-                total=size,
-                miniters=1,
-                unit="B",
-                unit_scale=True,
-                unit_divisor=2**10,
-                position=thread_positions[thread_id],
-                leave=False,
-            ) as pbar,
+            tempfile.TemporaryDirectory() as td,
+            client.stream("GET", url, follow_redirects=True) as request,
         ):
-            for chunk in request.iter_bytes(chunk_size=2**17):
-                fh.write(chunk)
-                pbar.update(len(chunk))
+            tmpf = Path(td) / out_path.name
+            with (
+                open(tmpf, "wb") as fh,
+                tqdm.auto.tqdm(
+                    desc=desc,
+                    total=size,
+                    miniters=1,
+                    unit="B",
+                    unit_scale=True,
+                    unit_divisor=2**10,
+                    position=thread_positions[thread_id],
+                    leave=False,
+                ) as pbar,
+            ):
+                for chunk in request.iter_bytes(chunk_size=2**17):
+                    fh.write(chunk)
+                    pbar.update(len(chunk))
 
-        # If we got to here, can move the tempfile to our destination file
-        out_path.parent.mkdir(exist_ok=True, parents=True)
-        shutil.move(tmpf, out_path)
+            # If we got to here, can move the tempfile to our destination file
+            out_path.parent.mkdir(exist_ok=True, parents=True)
+            shutil.move(tmpf, out_path)
 
     return out_path

@@ -500,7 +500,7 @@ def fetch_and_load_ghg_dataset_scenarios(  # noqa: PLR0913
         res_l.append(tmp)
 
     # Yuck hard-coded stuff we wouldn't want in a general tool
-    res = xr.concat(res_l, "scenario")
+    res = xr.concat(res_l, "scenario", join="outer")
     return res
 
 
@@ -527,7 +527,12 @@ def get_scenario(ds: xr.Dataset) -> str:
             res = "historical"
 
     else:
-        res = ds.attrs["source_id"].split("-")[1]
+        source_id = ds.attrs["source_id"]
+        if "ext" in source_id:
+            res = "-".join(source_id.split("-")[1:3])
+
+        else:
+            res = source_id.split("-")[1]
 
     return res
 

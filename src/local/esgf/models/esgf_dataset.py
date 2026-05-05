@@ -235,6 +235,7 @@ class ESGFDataset(ESGFDatasetNoLinks):
         local_files = tuple(
             (
                 *local_files_split["available_locally"],
+                # TODO: allow specification of number of processes from higher-levels
                 *download_files_parallel_progress(
                     local_files_split["not_available_locally"]
                 ),
