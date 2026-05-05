@@ -18,7 +18,7 @@ while getopts "s:t:d:" OPTION; do
     t) title="${OPTARG}" ;;
     d) description="${OPTARG}" ;;
     *)
-        echo "usage: $0 [-s source-file] [-d description] [-t title]" >&2
+        echo "usage: $0 -s source-file -d description -t title" >&2
         exit 1
         ;;
     esac
