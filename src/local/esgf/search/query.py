@@ -4,15 +4,45 @@ Query ESGF
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, TypeVar
 
 import httpx
+from httpx_retries import Retry, RetryTransport
 from loguru import logger
 
 from local.esgf.esgf_dataset_collection import ESGFDatasetCollection
 from local.esgf.models import ESGFDataset, ESGFFileAccessURL
 
 T = TypeVar("T")
+
+
+@dataclass(frozen=True)
+class SearchRetryConfig:
+    """
+    Retry configuration for ESGF search requests
+
+    By default, this retries the transient exceptions handled by
+    [httpx-retries][], including [httpx.RemoteProtocolError][].
+    """
+
+    total: int = 5
+    """
+    Maximum number of retries after the first request
+    """
+
+    backoff_factor: float = 0.5
+    """
+    Exponential backoff factor between retries
+    """
+
+    max_backoff_wait: float = 30.0
+    """
+    Maximum time to sleep between retry attempts
+    """
+
+
+DEFAULT_SEARCH_RETRY_CONFIG = SearchRetryConfig()
 
 
 # TODO: think about how to organise this mapping etc.
@@ -23,12 +53,17 @@ def query_esgf(
     query_terms: dict[str, tuple[str, ...]],
     distrib: bool = True,
     limit: int = 1000,
+    retry_config: SearchRetryConfig | None = DEFAULT_SEARCH_RETRY_CONFIG,
 ) -> ESGFDatasetCollection:
+    """
+    Query ESGF and parse the file results into datasets
+    """
     raw_response = query_esgf_files(
         endpoint=endpoint,
         query_terms=query_terms,
         distrib=distrib,
         limit=limit,
+        retry_config=retry_config,
     )
 
     esgf_dataset_collection = parse_raw_esgf_search_result(
@@ -43,10 +78,14 @@ def query_esgf_files(
     query_terms: dict[str, tuple[str, ...]],
     distrib: bool = True,
     limit: int = 1000,
+    retry_config: SearchRetryConfig | None = DEFAULT_SEARCH_RETRY_CONFIG,
     # TODO: support other configuration options?
     # Much longer list here:
     # https://esgf.github.io/esg-search/ESGF_Search_RESTful_API.html#the-esgf-search-restful-api
 ) -> httpx.Response:
+    """
+    Query ESGF for file records
+    """
     # Query files
     # Then process them later into results
     # that are grouped by dataset etc.
@@ -61,7 +100,25 @@ def query_esgf_files(
         "type": result_type,
     }
     logger.debug(f"Querying {endpoint} with {params=}")
-    response = httpx.get(endpoint, params=params)
+    if retry_config is None:
+        client = httpx.Client()
+    else:
+        retry = Retry(
+            total=retry_config.total,
+            backoff_factor=retry_config.backoff_factor,
+            max_backoff_wait=retry_config.max_backoff_wait,
+        )
+        transport = RetryTransport(retry=retry)
+        client = httpx.Client(transport=transport)
+
+    try:
+        response = client.get(endpoint, params=params)
+    except httpx.HTTPError as exc:
+        msg = f"Error raised while trying to access {endpoint} with {params=}"
+        raise AssertionError(msg) from exc
+    finally:
+        client.close()
+
     logger.debug(f"Query URL: {response.url}")
     try:
         response.raise_for_status()
@@ -73,6 +130,9 @@ def query_esgf_files(
 
 
 def get_single_value(ind: dict[Any, Any], key: Any) -> T:
+    """
+    Get a single value from a potentially list-valued ESGF field
+    """
     res = ind[key]
     if isinstance(res, list):
         if len(res) != 1:
@@ -87,6 +147,9 @@ def get_single_value(ind: dict[Any, Any], key: Any) -> T:
 def parse_raw_esgf_search_result(
     raw_search_json: dict[str, Any],
 ) -> ESGFDatasetCollection:
+    """
+    Parse a raw ESGF search response into a dataset collection
+    """
     # work out which dataset each file belongs to
     # parse everything into dataset/ESGFDataset objects
 

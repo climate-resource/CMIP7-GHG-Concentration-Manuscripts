@@ -19,7 +19,11 @@ from sqlmodel import Session, select
 
 from local.esgf.esgf_dataset_collection import ESGFDatasetCollection
 from local.esgf.models import ESGFDataset, ESGFDatasetDB
-from local.esgf.search import SearchQuery
+from local.esgf.search import (
+    DEFAULT_SEARCH_RETRY_CONFIG,
+    SearchQuery,
+    SearchRetryConfig,
+)
 from local.xarray_loading import load_xarray_from_esgf_dataset
 
 CMIP7_TO_CMIP6EQ_GRID_MAP = {
@@ -194,6 +198,7 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
     source_version: str | None = None,
     institution_id: str | None = None,
     target_mip: str | None = None,
+    search_retry_config: SearchRetryConfig | None = DEFAULT_SEARCH_RETRY_CONFIG,
     load_xr_dataset: Callable[[ESGFDataset], xr.Dataset] = load_cmip_ghg_ds,
 ) -> xr.Dataset:
     """
@@ -236,6 +241,9 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
 
     target_mip
         Target MIP for which to retrieve data
+
+    search_retry_config
+        Retry configuration to use when querying ESGF
 
     load_xr_dataset
         Function to use to load an [xr.Dataset][xarray.Dataset]
@@ -312,7 +320,10 @@ def fetch_and_load_ghg_dataset(  # noqa: PLR0913
             institution_id=institution_id,
             target_mip=target_mip,
         )
-        esgf_dataset_collection = query.get_results(index_node=index_node)
+        esgf_dataset_collection = query.get_results(
+            index_node=index_node,
+            retry_config=search_retry_config,
+        )
 
         if cmip_era == "CMIP6":
             # Make sure that next step will hold
@@ -361,6 +372,7 @@ def fetch_and_load_ghg_dataset_scenarios(  # noqa: PLR0913
     source_version: str | None = None,
     institution_id: str | None = None,
     target_mip: str | None = None,
+    search_retry_config: SearchRetryConfig | None = DEFAULT_SEARCH_RETRY_CONFIG,
     load_xr_dataset: Callable[[ESGFDataset], xr.Dataset] = load_cmip_ghg_ds,
 ) -> xr.Dataset:
     """
@@ -403,6 +415,9 @@ def fetch_and_load_ghg_dataset_scenarios(  # noqa: PLR0913
 
     target_mip
         Target MIP for which to retrieve data
+
+    search_retry_config
+        Retry configuration to use when querying ESGF
 
     load_xr_dataset
         Function to use to load an [xr.Dataset][xarray.Dataset]
@@ -468,7 +483,10 @@ def fetch_and_load_ghg_dataset_scenarios(  # noqa: PLR0913
             institution_id=institution_id,
             target_mip=target_mip,
         )
-        esgf_dataset_collection = query.get_results(index_node=index_node)
+        esgf_dataset_collection = query.get_results(
+            index_node=index_node,
+            retry_config=search_retry_config,
+        )
 
         if cmip_era == "CMIP6":
             for i in range(len(esgf_dataset_collection.esgf_datasets)):
