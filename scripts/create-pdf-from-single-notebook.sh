@@ -61,8 +61,9 @@ stem="${source_filename%.*}"
 
 build_dir="build/${stem}"
 source_md="${build_dir}/${stem}.md"
-source_tex="${build_dir}/_build/latex/${stem}.tex"
+source_tex="${build_dir}/_build/_page/${stem}/latex/${stem}.tex"
 output_pdf="${build_dir}/${stem}.pdf"
+output_pdfs_grouped_dir="output-pdfs"
 
 mkdir -p "${build_dir}/"
 uv run jupytext --to myst "${source_filepath}" --output "${source_md}"
@@ -81,7 +82,7 @@ check_output "Write config file"
 pwd=$(pwd)
 # So stupid, --config has to be absolute so sphinx doesn't explode
 uv run jupyter-book build -v \
-    "${build_dir}/" \
+    "${source_md}" \
     --builder latex \
     --config "${pwd}/${build_dir}/config.yaml" \
     --path-output "${build_dir}/"
@@ -94,3 +95,9 @@ uv run python scripts/compile-jupyter-book-latex.py \
 check_output "Compile latex to pdf"
 
 echo "Output file is in ${output_pdf}"
+
+mkdir -p "${output_pdfs_grouped_dir}"
+cp "${output_pdf}" "${output_pdfs_grouped_dir}"/"$(basename "${output_pdf}")"
+check_output "Copy output pdf to ${output_pdfs_grouped_dir}"
+
+echo "Output file is also in ${output_pdfs_grouped_dir}"
