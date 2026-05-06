@@ -55,8 +55,11 @@ sqlite_file = REPO_ROOT / "download-test-database.db"
 engine = get_sqlite_engine(sqlite_file)
 create_all_tables(engine)
 
+# %%
+sqlite_file
+
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Data comparisons
+# ## Data comparisons
 #
 # Comparing the data from CMIP6 and CMIP7 shows minor changes
 # (although doing this comparison requires a bit of care
@@ -277,7 +280,7 @@ def remove_empty_axes(
 
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Global, annual-mean concentrations: Year 1 - 2022
+# ### Global, annual-mean concentrations: Year 1 - 2022
 
 # %%
 plt.rcParams["axes.xmargin"] = 0
@@ -303,7 +306,7 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Global, annual-mean concentrations: Year 1750 - 2022
+# ### Global, annual-mean concentrations: Year 1750 - 2022
 
 # %%
 # TODO: copy https://github.com/climate-resource/CMIP6-vs-CMIP7-GHG-Concentrations/blob/clean-up/notebooks/0101_demonstrate-cmip6-eq-issue.py
@@ -334,7 +337,7 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Global, annual-mean concentrations: Year 1957 - 2022
+# ### Global, annual-mean concentrations: Year 1957 - 2022
 #
 # 1957 is the start of the Scripps ground-based record.
 # Before this, data is based on ice cores alone.
@@ -354,7 +357,7 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown]
-# #### Global, monthly-mean concentrations: Year 1 - 2022
+# ### Global, monthly-mean concentrations: Year 1 - 2022
 
 # %%
 ds_gases_full_monthly_d = {}
@@ -415,7 +418,7 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown]
-# #### Latitudinally-resolved, monthly-mean concentrations: Year 1 - 2022
+# ### Latitudinally-resolved, monthly-mean concentrations: Year 1 - 2022
 
 # %%
 gases_to_show = ["co2", "ch4"]
