@@ -22,14 +22,18 @@ def do_basic_replacements(
     """
     res = copy.deepcopy(start)
     for old, new in (
+        (
+            r"\documentclass[journal abbreviation, manuscript]{copernicus}",
+            r"\documentclass[gmd, manuscript]{copernicus}",
+        ),
         (r"\title{TEXT}", rf"\title{{{metadata['title_info']['title']}}}"),
         (
             r"\runningtitle{TEXT}",
             rf"\runningtitle{{{metadata['title_info']['running_title']}}}",
         ),
         (
-            r"\documentclass[journal abbreviation, manuscript]{copernicus}",
-            r"\documentclass[gmd, manuscript]{copernicus}",
+            r"\runningauthor{TEXT}",
+            rf"\runningauthor{{{metadata['authors'][0]['surname']} et al.}}",
         ),
         (
             r"\bibliography{example.bib}",
@@ -37,6 +41,60 @@ def do_basic_replacements(
         ),
     ):
         res = res.replace(old, new)
+
+    return res
+
+
+def insert_after_tag(
+    start: str, to_insert: str | list[str] | tuple[str, ...], tag: str
+) -> str:
+    """
+    Insert text after a given tag
+    """
+    if isinstance(to_insert, str):
+        to_insert = to_insert.splitlines()
+
+    res_l = []
+    found_tag = False
+    for line in start.splitlines():
+        res_l.append(line)
+        if tag in line:
+            res_l.extend(to_insert)
+            found_tag = True
+
+    if not found_tag:
+        msg = f"Did not find {tag=} in the text"
+        raise AssertionError(msg)
+
+    return "\n".join(res_l)
+
+
+def insert_author_list_and_affiliations(start: str, metadata: dict[str, Any]) -> str:
+    """Insert author list into the text"""
+    affiliations = {
+        key: (value, i + 1)
+        for i, (key, value) in enumerate(metadata["affiliations"].items())
+    }
+
+    author_entries = []
+    for author in metadata["authors"]:
+        author_affiliations = ",".join(
+            str(affiliations[key][1]) for key in author["affiliations"]
+        )
+        if author.get("correspondence_author", False):
+            author_text = rf"\Author[{author_affiliations}][{author['email']}]{{{author['given_name']}}}{{{author['surname']}}}"  # noqa: E501
+        else:
+            author_text = rf"\Author[{author_affiliations}]{{{author['given_name']}}}{{{author['surname']}}}"  # noqa: E501
+
+        author_entries.append(author_text)
+
+    res = insert_after_tag(start, author_entries, "<author-start>")
+
+    affiliations_entries = [
+        rf"\affil[{i}]{{{address}}}" for address, i in affiliations.values()
+    ]
+    res = insert_after_tag(res, affiliations_entries, "<affiliation-start>")
+    # breakpoint()
 
     return res
 
@@ -129,8 +187,255 @@ def main(  # noqa: PLR0913
         raw, metadata_values, references_bib_stem=references_bib_file.stem
     )
 
-    # Insert a dummy citation for now
-    res = res.replace(r"\maketitle", (r"\maketitle" "\n\\citet{dunne2025evolving}"))
+    res = insert_author_list_and_affiliations(res, metadata_values)
+
+    # Dummy content for now
+    res = insert_after_tag(res, "Abstract text", tag="<abstract-start>")
+    res = insert_after_tag(
+        res, r"As discussed in \citet{dunne2025evolving}", tag="<introduction-start>"
+    )
+    res = insert_after_tag(
+        res,
+        r"""\section{Methods}
+
+Methods here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+
+
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+
+
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+
+
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+
+
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+
+
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+Line here.
+""",
+        tag="<body-start>",
+    )
+    res = insert_after_tag(
+        res, r"As discussed in \citet{dunne2025evolving}", tag="<conclusions-start>"
+    )
+
+    res = res.replace(
+        r"\authorcontribution{TEXT}",
+        r"\codedataavailability{Code and data availability info}",
+    )
+    res = res.replace(
+        r"\authorcontribution{TEXT}",
+        r"\authorcontribution{Author contribution descriptions}",
+    )
+    res = res.replace(
+        r"\competinginterests{TEXT}",
+        r"\competinginterests{No competing interests}",
+    )
+
+    res = insert_after_tag(
+        res, "Acknowledgements go here", tag="<acknowledgements-start>"
+    )
 
     latex_dir = build_dir / "latex"
     latex_dir.mkdir(exist_ok=True, parents=True)

@@ -1,3 +1,28 @@
 [title_info]
 title = "Greenhouse gas concentration forcing for the CMIP7 historical and pre-industrial control experiments"
 running_title = "GHG forcing for CMIP7 DECK experiments"
+
+[[authors]]
+given_name = "Zebedee"
+surname = "Nicholls"
+email = "zebedee.nicholls@climate-resource.com"
+correspondence_author = true
+affiliations = ["crs", "cr", "uom-sgeas", "iiasa-ece"]
+
+[[authors]]
+given_name = "Malte"
+surname = "Meinshausen"
+email = "malte.meinshausen@unimelb.edu.au"
+affiliations = ["cr", "uom-sgeas"]
+
+[[authors]]
+given_name = "Mika"
+surname = 'Pfl\"uger'
+email = "mika.pflueger@climate-resource.com"
+affiliations = ["crs"]
+
+[affiliations]
+crs = "Climate Resource S, Berlin, Germany"
+cr =  "Climate Resource, Melbourne, Australia"
+uom-sgeas = "School of Geography, Earth and Atmospheric Sciences, the University of Melbourne, Melbourne, Victoria, Australia"
+iiasa-ece = "Energy, Climate and Environment Program, International Institute for Applied Systems Analysis (IIASA), 2361 Laxenburg, Austria"

@@ -22,15 +22,15 @@
 \runningauthor{TEXT}
 
 
-% <author-start>
 % \Author[affil]{given_name}{surname}
 % \Author[][EMAIL]{}{} %% correspondence author
 % \Author[]{}{}
+% <author-start>
 
-% <affiliation-start>
 %% The [] brackets identify the author with the corresponding affiliation. 1, 2, 3, etc. should be inserted.
 % \affil[]{ADDRESS}
 % \affil[]{ADDRESS}
+% <affiliation-start>
 
 %% These dates will be inserted by Copernicus Publications during the typesetting process.
 \received{}
@@ -43,17 +43,15 @@
 
 \maketitle
 
-% Abstract inserted like this
-% \begin{abstract}
-% TEXT
-% \end{abstract}
+\begin{abstract}
+% <abstract-start>
+\end{abstract}
 
 % Probably don't need this
 % \copyrightstatement{TEXT} %% This section is optional and can be used for copyright transfers.
 
-% Introduction inserted like this
-% \introduction  %% \introduction[modified heading if necessary]
-% TEXT
+\introduction  %% \introduction[modified heading if necessary]
+% <introduction-start>
 
 % Sections like this
 % \section{HEADING}
@@ -68,9 +66,10 @@
 % TEXT
 %
 %
-% Conclusion like this
-% \conclusions  %% \conclusions[modified heading if necessary]
-% TEXT
+% <body-start>
+
+\conclusions  %% \conclusions[modified heading if necessary]
+% <conclusions-start>
 
 % Availability statements like this
 %
@@ -80,7 +79,8 @@
 % \dataavailability{TEXT} %% use this section when having only data sets available
 %
 %
-% \codedataavailability{TEXT} %% use this section when having data sets and software code available
+% use this section when having data sets and software code available
+\codedataavailability{TEXT}
 %
 %
 % \sampleavailability{TEXT} %% use this section when having geoscientific samples available
@@ -112,15 +112,17 @@
 
 % Dislcaimers etc. like this
 %
-% \authorcontribution{TEXT} %% this section is mandatory
+% this section is mandatory
+\authorcontribution{TEXT}
 %
-% \competinginterests{TEXT} %% this section is mandatory even if you declare that no competing interests are present
+% this section is mandatory even if you declare that no competing interests are present
+\competinginterests{TEXT}
 %
 % \disclaimer{TEXT} %% optional section
 %
-% \begin{acknowledgements}
-% TEXT
-% \end{acknowledgements}
+\begin{acknowledgements}
+% <acknowledgements-start>
+\end{acknowledgements}
 
 %% Since the Copernicus LaTeX package includes the BibTeX style file copernicus.bst,
 %% authors experienced with BibTeX only have to include the following two lines:
