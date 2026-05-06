@@ -2,7 +2,7 @@
 authors = [
     { name = "Zebedee Nicholls", email = "zebedee.nicholls@climate-resource.com"},
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
     "pre-commit>=3.3.1",
     "jupyterlab>=4.0.0",

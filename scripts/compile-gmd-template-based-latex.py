@@ -1,10 +1,11 @@
 """
-Compile jupyter-book latex to PDF
+Compile a GMD-templated based latex document to PDF
 """
 
 import copy
 import shutil
 import subprocess
+import tomllib
 from pathlib import Path
 from typing import Annotated
 
@@ -14,12 +15,32 @@ REPO_ROOT = Path(__file__).parents[1]
 
 
 def main(
-    source: Annotated[
+    metadata: Annotated[
         Path,
         typer.Option(
-            help="Path to the source file",
+            help="Path to the metadata file",
             dir_okay=False,
             file_okay=True,
+        ),
+    ],
+    references_bib_file: Annotated[
+        Path, typer.Option(help="Bibtex references file to use")
+    ],
+    copernicus_template_dir: Annotated[
+        Path,
+        typer.Option(
+            help="Path in which the copernicus latex template was extracted",
+            dir_okay=True,
+            file_okay=False,
+        ),
+    ],
+    clean_copernicus_template_filename: Annotated[
+        str,
+        typer.Option(
+            help=(
+                "Name of the clean copernicus template file "
+                "(must be in `copernicus_template_dir`)"
+            )
         ),
     ],
     output: Annotated[
@@ -30,13 +51,14 @@ def main(
             file_okay=True,
         ),
     ],
-    references_bib_file: Annotated[
-        Path, typer.Option(help="Bibtex references file to use")
-    ],
 ) -> None:
     """
-    Compile the jupyter-book latex files to PDF
+    Compile the PDF
     """
+    with open(metadata, "rb") as fh:
+        metadata_values = tomllib.load(fh)
+
+    breakpoint()
     with open(source, encoding="utf-8") as fh:
         tex_jupyter_book_l = [v.strip() for v in fh.readlines()]
 
