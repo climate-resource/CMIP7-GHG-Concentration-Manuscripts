@@ -16,10 +16,12 @@ repo_root="$(cd "${script_dir}/.." && pwd)"
 cd "${repo_root}"
 
 latex_metadata_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/metadata.toml"
-references_bib="${repo_root}/reference/references.bib"
+references_bib="${repo_root}/references/references.bib"
 
-clean_copernicus_template_filename="templace_clean.tex"
+clean_copernicus_template_filename="template_clean.tex"
 copernicus_latex_template_dir="${repo_root}/copernicus-latex-package"
+
+build_dir="${repo_root}/build/historical-ghg-forcing-for-cmip7"
 
 output_pdf_dir="${repo_root}/compiled-manuscripts"
 output_pdf="${output_pdf_dir}/historical-ghg-forcing-for-cmip7.pdf"
@@ -36,6 +38,7 @@ uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --references-bib-file "${references_bib}" \
     --copernicus-template-dir "${copernicus_latex_template_dir}" \
     --clean-copernicus-template-filename "${clean_copernicus_template_filename}" \
+    --build-dir "${build_dir}" \
     --output "${output_pdf}"
 
 echo "Output file is in ${output_pdf}"

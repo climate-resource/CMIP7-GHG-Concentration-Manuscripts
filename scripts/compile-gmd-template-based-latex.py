@@ -7,14 +7,70 @@ import shutil
 import subprocess
 import tomllib
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 
 REPO_ROOT = Path(__file__).parents[1]
 
 
-def main(
+def do_basic_replacements(
+    start: str, metadata: dict[str, Any], references_bib_stem: str
+) -> str:
+    """
+    Do basic replacements
+    """
+    res = copy.deepcopy(start)
+    for old, new in (
+        (r"\title{TEXT}", rf"\title{{{metadata['title_info']['title']}}}"),
+        (
+            r"\runningtitle{TEXT}",
+            rf"\runningtitle{{{metadata['title_info']['running_title']}}}",
+        ),
+        (
+            r"\documentclass[journal abbreviation, manuscript]{copernicus}",
+            r"\documentclass[gmd, manuscript]{copernicus}",
+        ),
+        (
+            r"\bibliography{example.bib}",
+            rf"\bibliography{{{references_bib_stem}}}",
+        ),
+    ):
+        res = res.replace(old, new)
+
+    return res
+
+
+def copy_template_files(template_dir: Path, build_dir: Path) -> None:
+    """Copy template files into the latex build dir"""
+    for fn in [
+        "copernicus.bst",
+        "copernicus.cls",
+        "copernicus.cfg",
+        "pdfscreen.sty",
+        "pdfscreencop.sty",
+    ]:
+        shutil.copy2(template_dir / fn, build_dir / fn)
+
+
+def aux_file_has_citations(aux_file: Path) -> bool:
+    """Check whether BibTeX has citation entries to process"""
+    if not aux_file.exists():
+        return False
+
+    return any(
+        line.startswith(r"\citation")
+        for line in aux_file.read_text(encoding="utf-8").splitlines()
+    )
+
+
+def remove_stale_latex_artifacts(latex_main: Path) -> None:
+    """Remove outputs that can otherwise be reused from an earlier build."""
+    for suffix in [".aux", ".bbl", ".bcf", ".blg", ".log", ".out", ".pdf", ".run.xml"]:
+        latex_main.with_suffix(suffix).unlink(missing_ok=True)
+
+
+def main(  # noqa: PLR0913
     metadata: Annotated[
         Path,
         typer.Option(
@@ -43,6 +99,14 @@ def main(
             )
         ),
     ],
+    build_dir: Annotated[
+        Path,
+        typer.Option(
+            help="Path in which to the build is being done",
+            dir_okay=True,
+            file_okay=False,
+        ),
+    ],
     output: Annotated[
         Path,
         typer.Option(
@@ -58,48 +122,53 @@ def main(
     with open(metadata, "rb") as fh:
         metadata_values = tomllib.load(fh)
 
-    breakpoint()
-    with open(source, encoding="utf-8") as fh:
-        tex_jupyter_book_l = [v.strip() for v in fh.readlines()]
+    with open(copernicus_template_dir / clean_copernicus_template_filename) as fh:
+        raw = fh.read()
 
-    tex_mod_l = copy.deepcopy(tex_jupyter_book_l)
-    # Assumes use of biber in preamble
-    for line in [
-        "",
-        "% Bibliography managed by biber.",
-        "% Command injected in `create_latex_pdf.py`",
-        r"\printbibliography[heading=bibintoc,title={References}]",
-        "",
-    ]:
-        tex_mod_l.insert(-1, line)
-
-    tex_mod = "\n".join(tex_mod_l)
-
-    source_tmp_stem = f"{source.stem}-prepped"
-    source_tmp = source.parent / f"{source_tmp_stem}.tex"
-    with open(source_tmp, "w", encoding="utf-8") as fh:
-        fh.write(tex_mod)
-
-    subprocess.run(
-        f"xelatex {source_tmp.name}", shell=True, cwd=source_tmp.parent, check=True
+    res = do_basic_replacements(
+        raw, metadata_values, references_bib_stem=references_bib_file.stem
     )
 
-    shutil.copy(references_bib_file, source_tmp.parent / references_bib_file.name)
+    # Insert a dummy citation for now
+    res = res.replace(r"\maketitle", (r"\maketitle" "\n\\citet{dunne2025evolving}"))
+
+    latex_dir = build_dir / "latex"
+    latex_dir.mkdir(exist_ok=True, parents=True)
+
+    latex_main = latex_dir / "main.tex"
+    with open(latex_main, "w") as fh:
+        fh.write(res)
+
+    remove_stale_latex_artifacts(latex_main)
+
+    copy_template_files(template_dir=copernicus_template_dir, build_dir=latex_dir)
+    shutil.copy2(references_bib_file, latex_main.parent / references_bib_file.name)
+
     subprocess.run(
-        f"biber {source_tmp.name.replace('.tex', '.bcf')}",
-        shell=True,
-        cwd=source_tmp.parent,
+        ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", latex_main.name],
+        cwd=latex_main.parent,
         check=True,
     )
 
+    if aux_file_has_citations(latex_main.with_suffix(".aux")):
+        subprocess.run(
+            ["bibtex", latex_main.stem],
+            cwd=latex_main.parent,
+            check=True,
+        )
+
     subprocess.run(
-        f"xelatex {source_tmp.name}", shell=True, cwd=source_tmp.parent, check=True
+        ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", latex_main.name],
+        cwd=latex_main.parent,
+        check=True,
     )
     subprocess.run(
-        f"xelatex {source_tmp.name}", shell=True, cwd=source_tmp.parent, check=True
+        ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", latex_main.name],
+        cwd=latex_main.parent,
+        check=True,
     )
 
-    built_pdf = source_tmp.parent / f"{source_tmp_stem}.pdf"
+    built_pdf = latex_main.parent / f"{latex_main.stem}.pdf"
     if not built_pdf.exists():
         raise FileNotFoundError(built_pdf)
 
