@@ -15,7 +15,9 @@ repo_root="$(cd "${script_dir}/.." && pwd)"
 
 cd "${repo_root}"
 
+abstract_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/abstract.tex"
 latex_metadata_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/metadata.toml"
+replacements_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/replacements.yaml"
 references_bib="${repo_root}/references/references.bib"
 
 clean_copernicus_template_filename="template_clean.tex"
@@ -32,8 +34,10 @@ mkdir -p "${output_pdf_dir}/"
 #   - caching in the python (just have user config to set the caching for each step with basic decorators)
 
 # create pdf or dump out to a single text file (that can then be dumped onto google docs, maybe easiest to do this with AI)
-#   - caching here would be cool based on changes to the input hashes or content excluding comments, but maybe overkill?
+#   - caching here would be cool based on changes to the input hashes or content excluding comments, but likely overkill for many steps
 uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
+    --abstract "${abstract_file}" \
+    --replacements "${replacements_file}" \
     --metadata "${latex_metadata_file}" \
     --references-bib-file "${references_bib}" \
     --copernicus-template-dir "${copernicus_latex_template_dir}" \

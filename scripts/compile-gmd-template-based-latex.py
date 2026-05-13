@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import typer
+import yaml
 
 REPO_ROOT = Path(__file__).parents[1]
 
@@ -99,6 +100,25 @@ def insert_author_list_and_affiliations(start: str, metadata: dict[str, Any]) ->
     return res
 
 
+def apply_replacements(in_text: str, replacements_file: Path) -> str:
+    """
+    Apply replacements from our replacements file
+    """
+    replacements = yaml.safe_load(replacements_file.read_text())
+
+    out = copy.deepcopy(in_text)
+    for old, new in replacements.items():
+        out = out.replace(old, new)
+
+    return out
+
+
+def remove_stale_latex_artifacts(latex_main: Path) -> None:
+    """Remove outputs that can otherwise be reused from an earlier build."""
+    for suffix in [".aux", ".bbl", ".bcf", ".blg", ".log", ".out", ".pdf", ".run.xml"]:
+        latex_main.with_suffix(suffix).unlink(missing_ok=True)
+
+
 def copy_template_files(template_dir: Path, build_dir: Path) -> None:
     """Copy template files into the latex build dir"""
     for fn in [
@@ -122,13 +142,40 @@ def aux_file_has_citations(aux_file: Path) -> bool:
     )
 
 
-def remove_stale_latex_artifacts(latex_main: Path) -> None:
-    """Remove outputs that can otherwise be reused from an earlier build."""
-    for suffix in [".aux", ".bbl", ".bcf", ".blg", ".log", ".out", ".pdf", ".run.xml"]:
-        latex_main.with_suffix(suffix).unlink(missing_ok=True)
-
-
 def main(  # noqa: PLR0913
+    abstract: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Path to the abstract file. "
+                "It will be used as-is so this file must not contain any headers."
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
+    # introduction file - must not contain any headers
+    # sections - can be more than one, should use headers, used in order given
+    # conclusions file - must not contain any headers
+    # code and data availability - must not contain any headers
+    # author contributions - must not contain any headers
+    # competing interests - must not contain any headers
+    # acknowledgements - must not contain any headers
+    # replacements file - allows us to do last minute replacements
+    replacements: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Path to a yaml file which defines replacements to apply "
+                "before compiling the latex. "
+                "Allows us to use short-hand without annoying copernicus, "
+                "who don't want us to define special commands "
+                "in the latex we give them."
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
     metadata: Annotated[
         Path,
         typer.Option(
@@ -190,7 +237,7 @@ def main(  # noqa: PLR0913
     res = insert_author_list_and_affiliations(res, metadata_values)
 
     # Dummy content for now
-    res = insert_after_tag(res, "Abstract text", tag="<abstract-start>")
+    res = insert_after_tag(res, abstract.read_text(), tag="<abstract-start>")
     res = insert_after_tag(
         res, r"As discussed in \citet{dunne2025evolving}", tag="<introduction-start>"
     )
@@ -421,7 +468,7 @@ Line here.
     )
 
     res = res.replace(
-        r"\authorcontribution{TEXT}",
+        r"\codedataavailability{TEXT}",
         r"\codedataavailability{Code and data availability info}",
     )
     res = res.replace(
@@ -436,6 +483,8 @@ Line here.
     res = insert_after_tag(
         res, "Acknowledgements go here", tag="<acknowledgements-start>"
     )
+
+    res = apply_replacements(res, replacements)
 
     latex_dir = build_dir / "latex"
     latex_dir.mkdir(exist_ok=True, parents=True)
