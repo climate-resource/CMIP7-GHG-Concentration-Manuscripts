@@ -5,7 +5,9 @@ Compile a GMD-templated based latex document to PDF
 import copy
 import shutil
 import subprocess
+import textwrap
 import tomllib
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -70,14 +72,21 @@ def insert_after_tag(
     return "\n".join(res_l)
 
 
-def insert_author_list_and_affiliations(start: str, metadata: dict[str, Any]) -> str:
+def get_source_file_str(source_file: Path) -> str:
+    """Get a string to insert in the compiled latex so we can see the original source"""
+    return f"% Source file: {source_file.relative_to(REPO_ROOT)}"
+
+
+def insert_author_list_and_affiliations(
+    start: str, metadata: dict[str, Any], metadata_file: Path
+) -> str:
     """Insert author list into the text"""
     affiliations = {
         key: (value, i + 1)
         for i, (key, value) in enumerate(metadata["affiliations"].items())
     }
 
-    author_entries = []
+    author_entries = [get_source_file_str(metadata_file)]
     for author in metadata["authors"]:
         author_affiliations = ",".join(
             str(affiliations[key][1]) for key in author["affiliations"]
@@ -92,20 +101,29 @@ def insert_author_list_and_affiliations(start: str, metadata: dict[str, Any]) ->
     res = insert_after_tag(start, author_entries, "<author-start>")
 
     affiliations_entries = [
-        rf"\affil[{i}]{{{address}}}" for address, i in affiliations.values()
+        get_source_file_str(metadata_file),
+        *(rf"\affil[{i}]{{{address}}}" for address, i in affiliations.values()),
     ]
     res = insert_after_tag(res, affiliations_entries, "<affiliation-start>")
-    # breakpoint()
 
     return res
 
 
-def apply_replacements(in_text: str, replacements_file: Path) -> str:
+def insert_file_content_after_tag(in_text: str, filepath: Path, tag: str) -> str:
+    """
+    Insert file content after a specific tag
+    """
+    to_insert = f"{get_source_file_str(filepath)}\n{filepath.read_text()}"
+
+    res = insert_after_tag(in_text, to_insert, tag=tag)
+
+    return res
+
+
+def apply_replacements(in_text: str, replacements: Mapping[str, str]) -> str:
     """
     Apply replacements from our replacements file
     """
-    replacements = yaml.safe_load(replacements_file.read_text())
-
     out = copy.deepcopy(in_text)
     for old, new in replacements.items():
         out = out.replace(old, new)
@@ -148,20 +166,112 @@ def main(  # noqa: PLR0913
         typer.Option(
             help=(
                 "Path to the abstract file. "
-                "It will be used as-is so this file must not contain any headers."
+                "It will be used as-is. "
+                "The file must not contain any headers, they come from the template."
             ),
             dir_okay=False,
             file_okay=True,
         ),
     ],
-    # introduction file - must not contain any headers
-    # sections - can be more than one, should use headers, used in order given
-    # conclusions file - must not contain any headers
-    # code and data availability - must not contain any headers
-    # author contributions - must not contain any headers
-    # competing interests - must not contain any headers
-    # acknowledgements - must not contain any headers
-    # replacements file - allows us to do last minute replacements
+    introduction: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Path to the introduction file. "
+                "It will be used as-is. "
+                "The file must not contain any headers, they come from the template."
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
+    section: Annotated[
+        list[Path],
+        typer.Option(
+            help=(
+                "Path to use for the body sections. "
+                "This can be supplied multiple times. "
+                "The files are used in the order they are provided to the CLI. "
+                "The files are used as-is and should contain headers as needed. "
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
+    extra: Annotated[
+        list[Path],
+        typer.Option(
+            help=(
+                "Paths to copy into the build directory, "
+                "but not include in the `main.tex` file. "
+                "These are useful "
+                r"if you use \input or \include commands in your latex "
+                "(so the files need to be in the build directory, "
+                "but it is left to latex to add the content). "
+                "Replacements are applied to this files as part of the copying process."
+            )
+        ),
+    ],
+    conclusion: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Path to the conclusion file. "
+                "It will be used as-is. "
+                "The file must not contain any headers, they come from the template."
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
+    code_and_data_availability: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Path to the code and data availability file. "
+                "It will be used as-is. "
+                "The file must not contain any headers, they come from the template."
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
+    author_contribution: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Path to the author contribution file. "
+                "It will be used as-is. "
+                "The file must not contain any headers, they come from the template."
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
+    competing_interests: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Path to the competing interests file. "
+                "It will be used as-is. "
+                "The file must not contain any headers, they come from the template."
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
+    acknowledgements: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Path to the acknowledgements file. "
+                "It will be used as-is. "
+                "The file must not contain any headers, they come from the template."
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
     replacements: Annotated[
         Path,
         typer.Option(
@@ -234,257 +344,39 @@ def main(  # noqa: PLR0913
         raw, metadata_values, references_bib_stem=references_bib_file.stem
     )
 
-    res = insert_author_list_and_affiliations(res, metadata_values)
-
-    # Dummy content for now
-    res = insert_after_tag(res, abstract.read_text(), tag="<abstract-start>")
-    res = insert_after_tag(
-        res, r"As discussed in \citet{dunne2025evolving}", tag="<introduction-start>"
-    )
-    res = insert_after_tag(
-        res,
-        r"""\section{Methods}
-
-Methods here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-
-
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-
-
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-
-
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-
-
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-
-
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-Line here.
-""",
-        tag="<body-start>",
-    )
-    res = insert_after_tag(
-        res, r"As discussed in \citet{dunne2025evolving}", tag="<conclusions-start>"
+    res = insert_author_list_and_affiliations(
+        res, metadata_values, metadata_file=metadata
     )
 
-    res = res.replace(
-        r"\codedataavailability{TEXT}",
-        r"\codedataavailability{Code and data availability info}",
+    res = insert_file_content_after_tag(res, abstract, tag="<abstract-start>")
+    res = insert_file_content_after_tag(res, introduction, tag="<introduction-start>")
+
+    section_text = "\n\n".join(
+        f"{get_source_file_str(sf)}\n{sf.read_text()}" for sf in section
     )
-    res = res.replace(
-        r"\authorcontribution{TEXT}",
-        r"\authorcontribution{Author contribution descriptions}",
-    )
-    res = res.replace(
-        r"\competinginterests{TEXT}",
-        r"\competinginterests{No competing interests}",
+    res = insert_after_tag(res, section_text, tag="<body-start>")
+
+    res = insert_file_content_after_tag(res, conclusion, tag="<conclusions-start>")
+
+    for start_code, source_file in (
+        ("codedataavailability", code_and_data_availability),
+        ("authorcontribution", author_contribution),
+        ("competinginterests", competing_interests),
+    ):
+        to_replace = rf"\{start_code}{{TEXT}}"
+        source_text = source_file.read_text()
+        replacement_text = f"{get_source_file_str(source_file)}\n{source_text}"
+        replacement = to_replace.replace(
+            "TEXT", f"\n{textwrap.indent(replacement_text, prefix = 4 * ' ')}\n"
+        )
+        res = res.replace(to_replace, replacement)
+
+    res = insert_file_content_after_tag(
+        res, acknowledgements, tag="<acknowledgements-start>"
     )
 
-    res = insert_after_tag(
-        res, "Acknowledgements go here", tag="<acknowledgements-start>"
-    )
-
-    res = apply_replacements(res, replacements)
+    replacements_map = yaml.safe_load(replacements.read_text())
+    res = apply_replacements(res, replacements_map)
 
     latex_dir = build_dir / "latex"
     latex_dir.mkdir(exist_ok=True, parents=True)
@@ -497,6 +389,11 @@ Line here.
 
     copy_template_files(template_dir=copernicus_template_dir, build_dir=latex_dir)
     shutil.copy2(references_bib_file, latex_main.parent / references_bib_file.name)
+
+    for extra_file in extra:
+        raw = extra_file.read_text()
+        mapped = apply_replacements(raw, replacements_map)
+        (latex_dir / extra_file.name).write_text(mapped)
 
     subprocess.run(
         ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", latex_main.name],

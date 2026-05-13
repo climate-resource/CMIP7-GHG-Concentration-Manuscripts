@@ -16,6 +16,16 @@ repo_root="$(cd "${script_dir}/.." && pwd)"
 cd "${repo_root}"
 
 abstract_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/abstract.tex"
+introduction_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/introduction.tex"
+methods_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods.tex"
+methods_subfile="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods-detail.tex"
+results_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/results.tex"
+code_and_data_availability_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/code-and-data-availability.tex"
+author_contribution_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/author-contribution.tex"
+competing_interests_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/competing-interests.tex"
+acknowledgments_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/acknowledgements.tex"
+
+conclusion_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/conclusion.tex"
 latex_metadata_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/metadata.toml"
 replacements_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/replacements.yaml"
 references_bib="${repo_root}/references/references.bib"
@@ -37,6 +47,15 @@ mkdir -p "${output_pdf_dir}/"
 #   - caching here would be cool based on changes to the input hashes or content excluding comments, but likely overkill for many steps
 uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --abstract "${abstract_file}" \
+    --introduction "${introduction_file}" \
+    --section "${methods_file}" \
+    --extra "${methods_subfile}" \
+    --section "${results_file}" \
+    --conclusion "${conclusion_file}" \
+    --code-and-data-availability "${code_and_data_availability_file}" \
+    --author-contribution "${author_contribution_file}" \
+    --competing-interests "${competing_interests_file}" \
+    --acknowledgements "${acknowledgments_file}" \
     --replacements "${replacements_file}" \
     --metadata "${latex_metadata_file}" \
     --references-bib-file "${references_bib}" \
