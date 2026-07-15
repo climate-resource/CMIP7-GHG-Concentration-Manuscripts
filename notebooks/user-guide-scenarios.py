@@ -1738,7 +1738,7 @@ pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 
 # pdf
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# %% editable=true slideshow={"slide_type": ""}
 col = "lat"
 row = "ghg"
 
@@ -2029,32 +2029,43 @@ end_year = 2100
 
 row = "ghg"
 
+sizes = {"CMIP6": 25, "CMIP7": 60}
+markers = {"CMIP6": "+", "CMIP7": 5}
+
 fg = sns.relplot(
     data=pdf.loc[
-        :, (pdf.columns >= start_year) & (pdf.columns <= end_year + 1)
+        :,
+        (pdf.columns >= start_year) & (pdf.columns <= end_year + 1),
+        # pix.isin(ghg="n2o"), (pdf.columns >= start_year) & (pdf.columns <= end_year + 1),
     ].openscm.to_long_data(),
+    # height=4.0,
+    # aspect=1.0,
+    height=2.0,
+    aspect=2.0,
     x="time",
     y="value",
     hue="experiment",
     palette={k: v for k, v in palette.items() if k in pdf.pix.unique("experiment")},
     hue_order=[v for v in hue_order_incl_cmip6 if v in pdf.pix.unique("experiment")],
     style="cmip_era",
-    markers={"CMIP6": "+", "CMIP7": 5},
-    # edgecolor="none",
-    alpha=0.6,
-    s=50,
     kind="scatter",
     row=row,
     col="scenario_group",
     col_order=["low", "continuing-trends", "high"],
     facet_kws=dict(sharey=False),
-    height=2.0,
-    aspect=2.0,
+    markers=markers,
+    size="cmip_era",
+    sizes=sizes,
+    alpha=0.5,
 )
 
 for h in fg._legend.legend_handles:
     if h.get_label() == "CMIP6":
-        h.set_marker("+")
+        h.set_marker(markers["CMIP6"])
+        h.set_alpha(1.0)
+        h.set_markeredgewidth(1.0)
+    if h.get_label() == "CMIP7":
+        h.set_marker(markers["CMIP7"])
         h.set_alpha(1.0)
         h.set_markeredgewidth(1.0)
 
@@ -2336,7 +2347,7 @@ pdf = pd.concat([v.reorder_levels(tmp_l[0].index.names) for v in tmp_l])
 pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
 pdf
 
-# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# %% editable=true slideshow={"slide_type": ""}
 start_year = 2012
 end_year = 2025
 
