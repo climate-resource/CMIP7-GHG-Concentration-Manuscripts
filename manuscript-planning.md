@@ -19,9 +19,10 @@ Notes from reading Meinshausen at al 2017 (M17): https://gmd.copernicus.org/arti
         - lots of 'time pressure tied our hands' in here
     - if you need explanation/justification for methods, refer back to Meinshausen et al. 2017
     - missing halon in historical dataset
+        - note ERF difference as tiny, therefore not ideal, but not a reason to re-write/re-run
     - don't compare the seasonal cycle and latitudinal gradient from CMIP6 ESMs (unless I have way more time than I expected/I'm really wanting to test some CMIP data handling setup)
     - "Given the negligible radiative forcing from ..., this uncertainty does not affect the overall results."
-    - get placeholder link from Jared so we can put link in the paper then build when it suits us
+    - get placeholder link for providing results from Jared so we can put link in the paper then build when it suits us
 
     - introduction
         - CMIP context

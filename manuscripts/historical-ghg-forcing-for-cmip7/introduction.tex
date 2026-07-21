@@ -1,2 +1,57 @@
-Introduction content here.
-As discussed in \citet{dunne2025evolving}
+- CMIP is happening
+- models require boundary conditions i.e. forcings
+- lots of forcings being produced [ref special issue?]
+- here we describe the atmospheric greenhouse gas concentration forcings
+    - iteration on CMIP6. Underlying intended methodology is the same, but has been re-implemented so can be differences
+
+The seventh phase of the Coupled Model Intercomparison Project (CMIP7), the world's major project for running and comparing Earth System Models (ESMs), is underway \citet{dunne2025evolving}.
+A key part of model intercomparison is standardisation: ensuring that assumptions which should be common across models are indeed common so that the differences which emerge are due to factors of interest.
+To support this standardisation, a significant effort is invested in standardisation of model boundary conditions [TODO check whether we have an overview or similar to cite here].
+These boundary conditions are referred to as forcings, because they drive the model's response (and play a role analogous to a force, if one thinks in terms of a force and response model).
+
+[TODO see if I can find some papers to refer to which give more context on how this process has been handled over time with a single sentence making that point]
+
+For the world's most comprehensive climate models, there are a large range of input forcings [TODO cite various other forcing papers after "e.g.", also see if I can find a paper with a good overview of model inputs over time].
+In this paper, we document the atmospheric greenhouse gas concentration forcings to be used for the CMIP7 historical experiment (and other related experiments).
+
+The requirements of CMIP forcings are unique.
+To start with, forcings data must be complete i.e. have globally complete spatial coverage and no gaps in time from 1850 (or earlier) until as close to the present-day as possible.
+This means that forcings providers must make a number of choices to fill gaps in observational data, both spatially and temporally.
+These choices usually mean that forcings will differ from the raw data products that underpin them.
+These differences should not be taken as a sign that the raw data is problematic
+(on the contrary, the raw data is usually the better source, if you can use it),
+but are a sign that the process of creating a temporally and spatially complete data product comes with compromises.
+In practice, these gaps are usually filled by including data from a number of different sources,
+meaning that most forcings are composite data products.
+Combining data from multiple sources also comes with a number of subjective choices.
+In addition to the complete data coverage requirement, in the CMIP7 experimental design,
+only one forcing dataset will be used in compulusory experiments.
+As a result, there is no consideration of uncertainty in the forcing datasets.
+This compels forcings providers to make choices:
+providing multiple datasets and letting users choose based on their own use case is not an option.
+In practice, forcings providers try to produce the best-estimate data product that they can,
+based on their knowledge of the underlying data products and the CMIP use case.
+However, forcings products should not be viewed as an authoritative set of global observations.
+They are a best-estimate, suitable for the CMIP exercise, but they do not imply that one product is better than an another or that the numbers they provide are better than those from observational exercises.
+Finally, CMIP forcings are used in the CMIP exercise.
+This has two key consequences: 1) the data targets application in ESM simulations, rather than other specialised uses and 2) the data must be produced under significant time pressure.
+As a result, issues which are unlikely to have a notable impact on ESM simulations are usually ignored, not closely investigated or not fixed.
+In any given forcing dataset, there are likely to be underlying choices which, were the forcings to be produced for a different context, would be different.
+These should not be taken as a sign that the forcing dataset is wrong, but they are often a sign that the forcing dataset may not be the most appropriate input dataset for a different use case and that a different dataset or some post-processing might be required to make the dataset work for a different use case.
+
+Separate section: goal of this study/greenhouse gas forcing data requirements?
+
+- CMIP time pressure
+    - have to move and publish quickly (hence this paper comes out after data has been published)
+- CMIP experiment design: lots of experiments
+    - here we describe the historical dataset. Supports historical simulation plus piControl via repeating of 1850 values
+        - this drives temporal requirement
+        - we include data from earlier periods, however this is subject to little variation: data may not be most appropriate for pre-1850 studies
+    - number of other experiments use variations on this (e.g. hist-GHG, piClim-CH4). We don't discuss these here, use beyond historical and piControl is for community MIPs to decide
+- used in an earth system model
+    - drives spatially complete requirement
+        - models can't use NaN
+        - standardisation means that we make the interpolation choice so that individual ESM teams don't all make slightly different choices
+    - drives precision we care about
+        - differences of <0.01 W/m^2 have almost zero impact on climate simulations, we don't check below this level in any serious way
+- goal of this study: a temporally (at least 1850-2021), spatially (global coverage) complete dataset that can be used for ESM simulations (check down to around 0.01 W / m2, around 1ppm CO2)
