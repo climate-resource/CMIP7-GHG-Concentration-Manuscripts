@@ -17,6 +17,7 @@ cd "${repo_root}"
 
 abstract_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/abstract.tex"
 introduction_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/introduction.tex"
+output_requirements_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/output-requirements.tex"
 methods_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods.tex"
 methods_subfile="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods-detail.tex"
 results_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/results.tex"
@@ -48,6 +49,7 @@ mkdir -p "${output_pdf_dir}/"
 uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --abstract "${abstract_file}" \
     --introduction "${introduction_file}" \
+    --section "${output_requirements_file}" \
     --section "${methods_file}" \
     --extra "${methods_subfile}" \
     --section "${results_file}" \
