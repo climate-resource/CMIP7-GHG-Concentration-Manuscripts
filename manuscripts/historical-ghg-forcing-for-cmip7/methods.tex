@@ -1,6 +1,93 @@
 \section{Methods}
 
-Some methods here about CO_2 and CH_4.
+To derive our dataset, we largely follow the methods described in \citet{meinshausen_historical_2017}.
+However, we have made changes in a number of places
+so we describe the method in full,
+while also highlighting places of clear divergence.
+
+\subsection{General approach}
+
+In line with \citet{meinshausen_historical_2017},
+the general approach is to first create a dataset with monthly temporal resolution
+and 15\textdegree latitudinal spatial resolution
+(but no longitudinal resolution).
+We refer to this as our `native resolution'.
+From our native resolution, we can then create higher and lower resolution data products (see [TODO: forward refernence]).
+
+To create our native resolution dataset, we sum three components:
+
+\begin{enumerate}
+  \item Global-, annual-mean concentrations
+  \item Seasonal variations
+  \item Latitudinal gradient
+\end{enumerate}
+
+In order to take this sum,
+all three components must already have the same time dimension
+(monthly timesteps in our case).
+This introduces the first subtlety: while our approach is based on a timeseries of global-, annual-mean concentrations,
+this timeseries has to be interpolated to monthly timesteps
+in order to avoid the change from year to year resulting in step changes between December of one year and January of the next.
+The same interpolation requirement applies to the latitudinal gradient
+(which is initially calculated on a yearly timestep, see [TODO forward ref]).
+
+In addition to the time dimension consistency requirement, seasonality can vary by latitude.
+As a result, the latitudinal variation of seasonality must be calculated
+(i.e. seasonality must have a "latitude" dimension)
+before taking the sum.
+
+Thus, in practice, we calculate each dataset according to equation \ref{eq:native-resolution-sum}.
+
+\begin{equation}
+    \label{eq:native-resolution-sum}
+    gn(y, m, l) = gm(y, m) + lg(y, m, l) + s(y, m, l)
+\end{equation}
+where $gn$ is the native resolution dataset value
+(`gn' is the `grid label' used for such output on ESGF, so we re-use it here for convenience and consistency with the published output, see [TODO forward ref]),
+$y$ is the year in which the value applies,
+$m$ is the month in which the value applies,
+$l$ is the latitude at which the value applies,
+$gm$ is the global-, annual-mean derived value (and is broadcast across all latitudes),
+$lg$ is the latitudinal gradient contribution
+and $s$ is the seasonality contribution.
+
+The key choices are about how we arrive at $gm$, $lg$ and $s$ for each greenhouse gas species in our dataset.
+We describe the different methods in the following sections.
+
+\subsection{Calculating the general components}
+
+\subsubsection{CO_2}
+
+CO_2 has the longest observational record of all the greenhouse gases included in our dataset.
+It is also the largest driver of climate change to date [TODO citation], hence has the most available observations.
+Finally, atmospheric CO_2 concentrations are driven by the carbon cycle,
+which has led to the introduction of extra complexity in the calculation of the input components,
+with the aim of better representing the variations seen in the observational record.
+
+We begin by collecting observations of surface CO_2 concentrations from the NOAA observational networks.
+We bin these observations into 15\textdegree latitudinal, 60\textdegree longitudinal and monthly temporal bins.
+Within each bin, we firstly take the mean of all measurements that come from the same network
+(where, for NOAA, we treat the in-situ and surface flask measurements as separate networks),
+station and measurement method.
+[TODO figure out what different measurement methods are]
+As a result, each network, station and measurement method gets an equal weight in each bin,
+irrespective of how many measurements that network-station-measurement made in the bin.
+Then, we take the average over network, station and measurement method
+to get a single value in each bin.
+
+The surface observational network does not cover the entire globe [TODO: figure],
+hence the next step is to interpolate the available measurements to get complete spatial coverage.
+
+- decision about which timesteps we can interpolate for
+- use max. number of months for which we can create continuous timeseries
+- do stupid linear interpolation [TODO check what scipy griddata does exactly, note that we use linear interpolation and 'wrap around' to ensure we don't get unwanted edge effects]
+
+
+\begin{enumerate}
+  \item NOAA
+  \item Seasonality (year, month, latitude)
+  \item Latitudinal gradient (year, month, latitude)
+\end{enumerate}
 
 For all GHGs, we need three things:
 

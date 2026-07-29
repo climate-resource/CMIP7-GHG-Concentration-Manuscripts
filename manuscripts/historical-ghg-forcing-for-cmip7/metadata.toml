@@ -21,6 +21,19 @@ surname = 'Pfl\"uger'
 email = "mika.pflueger@climate-resource.com"
 affiliations = ["crs"]
 
+[[authors]]
+given_name = "Anna"
+surname = 'Lanteri'
+email = "anna.lanteri@climate-resource.com"
+affiliations = ["crs"]
+
+[[authors]]
+given_name = "Florence"
+surname = 'Bockting'
+email = "tbd@invalid.com"
+# TBD current affiliation
+affiliations = ["crs"]
+
 [affiliations]
 crs = "Climate Resource S, Berlin, Germany"
 cr =  "Climate Resource, Melbourne, Australia"
