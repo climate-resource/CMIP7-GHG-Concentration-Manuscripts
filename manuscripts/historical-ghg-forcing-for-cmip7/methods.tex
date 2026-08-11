@@ -61,7 +61,7 @@ We describe the different methods in the following sections.
 CO_2 has the longest observational record of all the greenhouse gases included in our dataset.
 It is also the largest driver of climate change to date [TODO citation], hence has the most available observations.
 Finally, atmospheric CO_2 concentrations are driven by the carbon cycle,
-which has led to the introduction of extra complexity in the calculation of the input components,
+which led to the introduction of extra complexity in the calculation of the input components,
 with the aim of better representing the variations seen in the observational record.
 
 We begin by collecting observations of surface CO_2 concentrations from the NOAA observational networks.
@@ -77,11 +77,123 @@ to get a single value in each bin.
 
 The surface observational network does not cover the entire globe [TODO: figure],
 hence the next step is to interpolate the available measurements to get complete spatial coverage.
+We specify that at least five data points are required for us to do spatial interpolation
+and we must have data points in both the most northern and most southern latitudinal box.
+This is clearly a relatively low data requirement,
+but higher thresholds result in a significant amount of the observational record being discarded.
+More robust interpolation methods are an area for future work [TODO: forward ref].
+We then take the longest (in time) dataset that is continuous.
+In this dataset, that meant that we used data from 1981 to 2023 (both inclusive).
 
-- decision about which timesteps we can interpolate for
-- use max. number of months for which we can create continuous timeseries
-- do stupid linear interpolation [TODO check what scipy griddata does exactly, note that we use linear interpolation and 'wrap around' to ensure we don't get unwanted edge effects]
+% \subsubsubsection{Spatial interpolation}
 
+We use 2D interpolation
+to go from the coverage provided by the underlying observational networks
+to complete global coverage.
+The 2D interpolation is linear barycentric interpolation,
+as implemented in scipy's griddata function [TODO ref scipy].
+Before interpolating, we put the data on a grid that is `wrapped around' to avoid edge effects.
+In practice, this means that we duplicate the data three times
+and place these three copies next to each other in the longitudinal direction.
+As a result, each point in the central `copy' `sees' its closest neighbours, irrespective of its longitude.
+After interpolating, we throw away the outer `copies'
+and are left with an `edge effect free' interpolated dataset over the domain of interest.
+
+% \subsubsubsection{PCA}
+
+We then take our spatially complete dataset and perform principal component analysis.
+
+% \subsubsubsubsection{zonal mean}
+
+The first step is to calculate the longitudinal (zonal) mean.
+This is done using a basic mean as each grid cell has the same area for a given latitude.
+
+% \subsubsubsubsection{global-, annual-mean}
+
+The second step is to calculate the global-, annual-mean.
+We do this using an area-weighted mean
+and then an annual-mean.
+We weight each month equally.
+Weighting the months by their length would make a minor difference,
+but requires assuming that the processed data is truly representative of the entire month.
+We don't make that assumption because we often have point measurements
+i.e. measurements taken at a particular point in time
+and grouping them in months is a necessary processing step
+that should not be taken to mean
+that the monthly values robustly represent the average over the entire month, given the month's length.
+
+% \subsubsubsubsection{latitudinal gradient}
+
+The third step is to calculate our latitudinal gradient.
+We do this by first calculating the residuals at each latitude,
+i.e. the difference between the annual-mean of the longitudinal mean and the global-, annual-mean.
+On these residuals, we then perform principal component analysis.
+We do this by using numpy's [TODO ref] singular value decomposition function (numpy.linalg.svd [TODO figure out monospace font]).
+We translate the singular value decomposition output into two parts.
+The first is our empirical orthogonal functions (EOFs) ([TODO check name in M17] referred to as principal components in M17).
+These quantify the spatial, in this case latitudinal, variation in the dataset (and are a function of latitude only).
+The second is our principal components (PCs) ([TODO check name in M17] referred to as principal component scores in M17).
+These quantify the temporal variation in the dataset (and are a function of year only).
+If all EOFs are retained, then the product of the EOFs and the PCs
+reproduces the residuals we started with exactly.
+However, following \citet{meinshausen_historical_2017}
+we only retain the first two EOFs as these are sufficient
+to reproduce the residuals to within 1~ppm CO_2 (and are usually much closer than this).
+[TODO figure]
+
+% \subsubsubsubsection{seasonality}
+
+The fourth step is to calculate our seasonality.
+We do this by first calculating the residuals at each time and latitude.
+The first component in this calculation is our longitudinal mean (dimensions (year, month, lat)).
+The second component is the annual-mean at each latitude,
+interpolated to monthly timesteps (as a result, this data also has dimensions (year, month, lat)).
+We then calculate the residuals by subtracting the monthly-interpolated annual-mean at each latitude
+from the longitudinal mean.
+The interpolation to monthly timesteps is necessary
+so that the residuals do not include step changes at each year boundary
+(i.e. transition from December of year $Y$ to January of year $Y + 1$).
+The seasonality is the average of these residuals over all available years
+and thus has dimensions (month, lat).
+
+On top of this seasonality, we also calculate EOFs and PCs for the change in seasonality over time.
+These are calculated by taking the seasonality and residuals from the previous step.
+We then calculate the difference between these two, which we call `seasonality anomalies'.
+We then perform singular value decomposition on these seasonality anomalies
+(this is done by stacking the data so it has one dimension which is year
+and the latitude and month dimensions are stacked into a single dimension
+so that the singular value decomposition has a 2D dataset to work with).
+As for the latitudinal gradient, we convert the singular value decomposition results
+into EOFs and PCs.
+However, in the case of seasonality, while the PCs are still only a function of year,
+the EOFs have dimensions (latitude, month).
+For the seasonality change, again following \cite{meinshausen_historical_2017},
+we retain only the first EOF (although this results in larger differences, up to 2~ppm,
+between the seasonality anomalies and the EOF-based reproduction
+than was the case for the EOF-based latitudinal gradient).
+[TODO: figure here or in results, or make this section data and results, maybe]
+
+At this point we have, or can construct, all the required input components
+over the time period covered by the observational network.
+The last step is to extend these intermediate data products
+so that we can produce the required input components
+over the entire time period included in the output dataset.
+
+% \subsubsubsection{Extending over time}
+
+% \subsubsubsubsection{Latitudinal gradient}
+
+% \subsubsubsubsection{Global- annual-mean}
+
+% \subsubsubsubsection{Seasonality}
+
+% \subsubsubsection{Recombining}
+
+% \subsubsubsubsection{Interpolating global- annual-mean to monthly timesteps}
+
+% \subsubsubsubsection{Constructing seasonality over time}
+
+% \subsubsubsubsection{Constructing latitudinal gradient over time (including interpolating PCs to monthly timesteps)}
 
 \begin{enumerate}
   \item NOAA
