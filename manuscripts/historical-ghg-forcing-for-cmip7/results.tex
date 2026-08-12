@@ -1,3 +1,36 @@
 \section{Results}
 
 Some results here.
+
+Link to user guide (publish user guide on zenodo, link to actual dataset on zenodo) as reference for people who want details of how to use, not key results
+
+Note key trends over various groups of gases
+
+Comparison with CMIP6 and CMIP5 datasets
+
+Compare to station data we started with (conclusion should be mostly that we are close in ERF terms, but there are clear areas for improvement or reconsideration)
+
+Compare to any independent networks we can think of/find
+
+Add discussion section
+
+Note various issues identified in methods
+
+Note issues for minor gases and lack of new datasets compared to last time, suggest picking a smaller, more clearly supported, set of gases for future to simplify things
+
+Note that we still don't use satellite data: clear area for improvement
+
+Note that we also don't include uncertainties. Note that leading uncertainty is likely not measurement-level,
+rather methodological i.e. the various leaps/assumptions we have to make to go from a sparse observational network to a temporally extended, spatially complete dataset
+
+Notes re extensions for later internal use:
+
+- ingest updated network data
+- calculate new global- annual-means
+- optimise existing latitudinal gradient (and seasonality change for CO_2) to get best fit with interpolated observational network values
+    - avoids the jump of using a different lat. gradient or seasonality over time
+    - also avoids extending PCs using crude regressions
+    - have to use relative seasonality calculation for gases other than CO_2, oh well just one less degree of freedom in the optimisation
+- calculate full grids
+- check no unexpected/spurious jumps
+- process, format etc. then publish

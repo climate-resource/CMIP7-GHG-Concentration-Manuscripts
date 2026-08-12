@@ -51,12 +51,20 @@ $gm$ is the global-, annual-mean derived value (and is broadcast across all lati
 $lg$ is the latitudinal gradient contribution
 and $s$ is the seasonality contribution.
 
+The key to this decomposition is that the latitudinal gradient term, $lg$,
+has a spatial (area-weighted) mean of zero
+and that the seasonality term, $s$,
+has an annual-mean of zero
+so that they can be added to the global- annual-mean term, $gm$,
+without affecting the corresponding global- annual-mean values.
+
 The key choices are about how we arrive at $gm$, $lg$ and $s$ for each greenhouse gas species in our dataset.
 We describe the different methods in the following sections.
 
 \subsection{Calculating the general components}
 
 \subsubsection{CO_2}
+\label{sssec:methods-co2}
 
 CO_2 has the longest observational record of all the greenhouse gases included in our dataset.
 It is also the largest driver of climate change to date [TODO citation], hence has the most available observations.
@@ -64,7 +72,8 @@ Finally, atmospheric CO_2 concentrations are driven by the carbon cycle,
 which led to the introduction of extra complexity in the calculation of the input components,
 with the aim of better representing the variations seen in the observational record.
 
-We begin by collecting observations of surface CO_2 concentrations from the NOAA observational networks.
+We begin by collecting observations of surface CO_2 concentrations from the NOAA observational networks
+[TODO check whether in-situ and flask or just one, and what this means in terms of assuming scales are the same etc.].
 We bin these observations into 15\textdegree latitudinal, 60\textdegree longitudinal and monthly temporal bins.
 Within each bin, we firstly take the mean of all measurements that come from the same network
 (where, for NOAA, we treat the in-situ and surface flask measurements as separate networks),
@@ -139,7 +148,7 @@ reproduces the residuals we started with exactly.
 However, following \citet{meinshausen_historical_2017}
 we only retain the first two EOFs as these are sufficient
 to reproduce the residuals to within 1~ppm CO_2 (and are usually much closer than this).
-[TODO figure]
+[TODO figure and calculation of variance explained to make this easier to justify or not]
 
 % \subsubsubsubsection{seasonality}
 
@@ -173,8 +182,8 @@ between the seasonality anomalies and the EOF-based reproduction
 than was the case for the EOF-based latitudinal gradient).
 [TODO: figure here or in results, or make this section data and results, maybe]
 
-At this point we have, or can construct, all the required input components
-over the time period covered by the observational network.
+At this point we have (or, more precisely, can construct),
+all the required input components over the time period covered by the observational network.
 The last step is to extend these intermediate data products
 so that we can produce the required input components
 over the entire time period included in the output dataset.
@@ -182,24 +191,285 @@ over the entire time period included in the output dataset.
 % \subsubsubsection{Extending over time}
 
 % \subsubsubsubsection{Latitudinal gradient}
+To extend the latitudinal gradient in time, we need to extend the PCs in time (the EOFs have no time dimension).
+
+Following \cite{meinshausen_historical_2017},
+the first PC is extended by performing a linear regression against CO_2 emissions of a geological origin
+(as opposed to CO_2 emissions that originate in the active biosphere)
+from the [TODO cite PRIMAP version] dataset.
+Using this regression, we then extend emissions back to the 1750,
+the first year reported in the [TODO cite PRIMAP] dataset.
+Before 1750, we keep the first PC value constant.
+
+The second PC is much simpler.
+It is simply linearly interpolated between its value at the start of the observational period,
+in our case 1981, and zero in 1850.
+It is kept constant at zero before 1850.
+
+[TODO figure: 3 panels - fossil emissions, PC1 regression, PC1 and PC2 extension (start axis at 1700 as values are constant before then)]
 
 % \subsubsubsubsection{Global- annual-mean}
+To extend the global- annual-mean back in time, we rely on the [TODO cite Mauna Loa merged record] and ice core values from [TODO cite Menking et al 2025].
+
+We start with the [TODO cite Mauna Loa merged record].
+We use all data from [TODO cite Mauna Loa merged record] which is not already covered in the observational record.
+In practice this means that we use [TODO cite Mauna Loa merged record] from 1959 to 1980.
+There is an offset of around 1~ppm between the [TODO cite Mauna Loa merged record]
+and the global- annual-mean we derive from the observational network
+in the time period in which they overlap.
+To avoid introducing an artificial step in the output,
+we harmonise the [TODO cite Mauna Loa merged record] data to the observational network
+i.e. add a declining offset (with the decline set to reach zero over 100 years)
+to ensure that the [TODO cite Mauna Loa merged record] data and the observational network
+derived global- annual-mean agree in 1981 - their first overlap year.
+This is crude a clear area for further investigation in future work ([TODO forward ref discussion]).
+
+We then use data from [TODO cite Menking et al 2025] to extend back to year 1.
+We use the spline-interpolated data from [TODO cite Menking et al 2025],
+removing the need for us to make our own spline interpolation choices (unlike \citet{meinshausen_historical_2017}).
+As for the [TODO cite Mauna Loa merged record] data,
+there is a small offset, albeit of only around 0.5~ppm in this case,
+between the [TODO cite Menking et al 2025]
+and the value implied by our global- annual-mean and latitudinal gradient
+in the time period in which they overlap.
+Like for the [TODO cite Mauna Loa merged record] data,
+to avoid introducing an artificial step in the output,
+we harmonise the [TODO cite Menking et al 2025] data.
+We then calculate the temporally extended global- annual-mean such that,
+when it is combined with the (now temporally extended) latitudinal gradient,
+our output dataset matches the [TODO cite Menking et al 2025]
+in the latitudinal bin in which the ice cores were taken exactly
+(this is the -67.5\textdegree bin on our native grid).
+
+[TODO figure: 3 panels - overview with period in which we use obs network, Mauna Loa merged and ice core spline marked;
+Mauna Loa harmonisation;
+Meking harmonisation including the latitudinal bin we're in]
 
 % \subsubsubsubsection{Seasonality}
+To extend the seasonality back in time, we need to extend the seasonality change PC in time.
+
+Following \cite{meinshausen_historical_2017},
+the (only) PC is extended by performing a linear regression against a composite of global-mean surface air temperatures from [TODO cite HadCRUT]
+and our (now extended) global- annual-mean CO_2 concentrations.
+[TODO copy out formula and parameters used in our composite]
+Using this regression, we then extend the PC back to the 1850,
+the start of [TODO cite HadCRUT]'s dataset.
+Before 1850, we keep the PC value constant.
+
+[TODO figure: regression plus temporal extension (start in 1800, constant before then)]
 
 % \subsubsubsection{Recombining}
 
+The last step is to construct the inputs needed for Equation \ref{eq:native-resolution-sum}
+from the temporally extended components.
+
 % \subsubsubsubsection{Interpolating global- annual-mean to monthly timesteps}
+
+We start with the global-, annual-mean term, $gm(y, m)$.
+This must be interpolated onto monthly timesteps.
+We do this using [TODO find name], which allows us to perform a mean-preserving interpolation
+that ensures that the interpolated timeseries stays consistent with the global- annual-mean values.
+[TODO note somewhere that this is one of the most computationally expensive steps in the whole process]
 
 % \subsubsubsubsection{Constructing seasonality over time}
 
+Next we calculate the seasonality term, $s(y, m, l)$.
+This requires first calculating the seasonality change over time
+by taking the product of the temporally extended PC and the EOF.
+This seasonality change is then added onto our `base seasonality' to give the full seasonality term.
+
 % \subsubsubsubsection{Constructing latitudinal gradient over time (including interpolating PCs to monthly timesteps)}
 
-\begin{enumerate}
-  \item NOAA
-  \item Seasonality (year, month, latitude)
-  \item Latitudinal gradient (year, month, latitude)
-\end{enumerate}
+Finally we calculate the latitudinal gradient term, $lg(y, m, l)$.
+Like for the global-, annual-mean,
+to avoid jumps at year boundaries, we must first interpolate the PCs to monthly timesteps
+(again using mean-preserving interpolation).
+Then the full latitudinal gradient is calculated
+by taking the product of the temporally extended, monthly interpolated PCs and the EOFs.
+
+\subsubsection{CH_4}
+
+CH_4 has the second-longest observational record,
+reflecting its importance as the second-largest greenhouse gas driver of climate change to date [TODO ref].
+Calculating the components of Equation \ref{eq:native-resolution-sum}
+for CH_4 largely follows the same approach as is used for CO_2
+(see Section \ref{sssec:methods-co2}).
+Here we only document the key differences,
+and refer to components of Section \ref{sssec:methods-co2} wherever the same approach is used.
+
+For CH_4, we use both the NOAA [TODO ref] and AGAGE [TODO ref] networks.
+We use both NOAA's surface flask and in-situ observations
+[TODO figure out difference, nuance here e.g. assumption that difference in scales doesn't matter].
+We use data from the AGAGE network, as well as from the predecessor GAGE [TODO ref] and ALE [TODO ref] networks.
+The approach used to bin and average these networks then follows the approach used for CO_2 (Section \ref{sssec:methods-co2}).
+
+As for CO_2, the surface observational network does not cover the entire glob [TODO: figure],
+so we must interpolate.
+We apply the same pre-interpolation data requirements as for CO_2 (Section \ref{sssec:methods-co2}).
+When we  take the longest dataset that is continuous,
+we end up with an observational network dataset that runs from 1984 to 2023 (both inclusive).
+[TODO unify language re meaning of observational network, ice core extension etc.]
+
+% \subsubsubsection{Spatial interpolation}
+
+As for CO_2, we use 2D `wrap around' interpolation to go from the observational network's coverage to complete spatial coverage (Section \ref{sssec:methods-co2}).
+
+% \subsubsubsection{PCA}
+
+As for CO_2, we then take our spatially complete dataset and perform principal component analysis.
+
+% \subsubsubsubsection{zonal mean}
+
+% \subsubsubsubsection{global-, annual-mean}
+
+The calculation of the zonal- and global-, annual-mean is exactly the same as for CO_2 (Section \ref{sssec:methods-co2}).
+
+% \subsubsubsubsection{latitudinal gradient}
+
+The calculation of the latitudinal gradient is also exactly the same as for CO_2 (Section \ref{sssec:methods-co2}).
+[TODO figure and calculation of variance explained to make this easier to justify or not]
+
+% \subsubsubsubsection{seasonality}
+
+The calculation of the seasonality is also exactly the same as for CO_2 for the first step (Section \ref{sssec:methods-co2}).
+However, for CH_4, we do not calculate a seasonality change component.
+Instead, we calculate a relative seasonality
+by dividing the absolute seasonality by the average of the global- annual-mean
+(over the same time period as is used to calculate the seasonality).
+[TODO: figure]
+
+Like for CO_2, the next step is to then extend these `observational network' based components back in time.
+
+% \subsubsubsubsection{Latitudinal gradient}
+
+Following \cite{meinshausen_historical_2017},
+the first PC is initially extended by performing a linear regression against CH_4 emissions of a geological origin
+(as opposed to CH_4 emissions that originate in the active biosphere)
+from the [TODO cite PRIMAP version] dataset.
+Using this regression, we extend the first PC back to the last year
+in which we have observations from ice cores in both the northern and southern hemispheres,
+in our case 1948.
+For the period including and before 1948, we use ice core information to optimise the first PC.
+We use ice core values from [TODO cite Menking et al 2025] for the southern hemisphere
+and [TODO cite Neem] for the northern hemisphere.
+The value of the first PC is optimised such that,
+in all years where we have observations from both [TODO cite Menking et al 2025] and [TODO cite Neem],
+our output dataset matches the ice core values in the latitudinal bin that corresponds to where the ice core measurements are taken
+(-67.5\textdegree for [TODO cite Menking et al 2025] and 82.5\textdegree for [TODO cite Neem]).
+As part of this optimisation, the global-mean concentration is included as a free parameter
+and we consider the value of the second PC and EOF too (see next paragraph).
+[TODO: figure out whether we use this optimised global-mean or not and write text here]
+The first PC is then linearly interpolated between the years in which we have observations for both ice cores.
+By combining the first PC values from the observational network,
+based on the regression with CH_4 emissions of a geological origin,
+the ice core extension
+and assuming that the first PC is constant before the first year in which we have ice core observations in both hemispheres (year 287),
+we end up with first PC values for the entire timespan from year 1 to 2023.
+
+The second PC is simply kept constant before the start of the observational period.
+
+[TODO figure: 4  panels - fossil emissions, PC1 regression, optimised PC values and interpolation and extrapolation, PC1 and PC2 extension (start axis at 1700 as values are constant before then)]
+
+% \subsubsubsubsection{Global- annual-mean}
+To extend the global- annual-mean back in time, we rely on the ice core values from [TODO cite EPICA] and [TODO cite Law Dome].
+We do not use the values from [TODO cite Menking et al 2025] because of a processing error
+([TODO forward ref discussion of this, basically say that it was an error,
+but doesn't affect CMIP datasets in a material way
+because of how similar the Law Dome and Menking data is,
+but users of CH_4 data before 1850 should be aware and may wish to make other choices]).
+
+We start with the ice core data from [TODO cite Law Dome].
+We smooth this following the method used in \cite{meinshausen_historical_2017}.
+To each data point in the [TODO cite Law Dome] dataset,
+we add random noise.
+The noise is normally distributed.
+In the value axis, it has a standard deviation of 3~ppb.
+In the time axis, the standard deviation increases as the age of the observation increases
+according to the equation $\sigma = 0.025 \times (2024 - y)$, where $y$ is the year to which the observation applies.
+For each year between the start and end of the [TODO cite Law Dome] dataset, we pick at least four points either side of that year
+and a maximum of ten points either side of that year.
+If there are four or more points within 100 years of the year of interest
+(on a given side, i.e. before or after the year of interest),
+the points that are closest to the year for which we are trying to generate a value are used (on that side).
+If there are fewer than four points within 100 years of the window of interest
+(on a given side, i.e. before or after the year of interest),
+then the nearest four points on that side are used, irrespective of how far away they are from the year of interest.
+Based on the selected points, a quantile regression with a third order polynomial is performed.
+The inferred value for the year of interest is then taken from this regression.
+This process is repeated over all years, and the entire process is then repeated 250 times.
+The smoothed dataset is then the median over these 250 repeats.
+[TODO figure that shows noise, window selector at start window, end window and something in between, and then how regression looks and is used at start window, end window and somewhere in the middle.]
+
+We use this smoothed [TODO cite Law dome] data to extend back to the start of the [TODO cite Law Dome] data, year 154.
+This process is very similar to how the ice core data is used for CO_2.
+There is a very small, less than 1~ppb, offset
+between the smoothed [TODO cite Law Dome] data
+and the value implied by our global- annual-mean and latitudinal gradient
+in the time period in which they overlap.
+Like for CO_2,
+to avoid introducing an artificial step in the output,
+we harmonise the smoothed [TODO cite Law Dome] data
+to the value implied by our global- annual-mean and latitudinal gradient
+(even though this harmonisation has a much smaller effect in this case, because of the smaller offset).
+We then calculate the temporally extended global- annual-mean such that,
+when it is combined with the (now temporally extended) latitudinal gradient,
+our output dataset matches the smoothed [TODO cite Law Dome] data
+in the latitudinal bin in which the ice cores were taken exactly
+(this is the -67.5\textdegree bin on our native grid).
+
+We then use data from [TODO cite EPICA] to extend back to year 1.
+We simply interpolate the underlying EPICA data,
+rather than smoothing because the period from year 1 to year 154 is not the focus of this dataset.
+As for the smoothed [TODO cite Law Dome] data,
+we calculate the global- annual-mean such that,
+when it is combined with the latitudinal gradient,
+our output dataset matches the [TODO cite EPIC] data
+in the latitudinal bin in which the ice cores were taken exactly
+(this is -82.5\textdegree on our native grid).
+
+As a final check, we verify that the values implied by our global- annual-mean and latitudinal gradient
+match the values from the [TODO NEEM] data to within 0.5\%.
+This ensures that our processing has maintained the latitudinal gradient information
+provided by the ice cores throughout the various processing steps.
+
+[TODO figure: 3 panels - overview with period in which we use obs network, Law Dome ice core and EPICA ice core;
+Law Dome harmonisation including the latitudinal bin we're in]
+
+% \subsubsubsubsection{Seasonality}
+Unlike for CO_2, no further processing of the seasonality is required to extend it in time.
+Following \cite{meinshausen_historical_2017},
+its extension is always driven by global-, annual-mean values
+and these values have been temporally extended in the previous step.
+
+% \subsubsubsection{Recombining}
+
+The last step is to construct the inputs needed for Equation \ref{eq:native-resolution-sum}
+from the temporally extended components.
+
+% \subsubsubsubsection{Interpolating global- annual-mean to monthly timesteps}
+
+As for CO_2, we do a mean-preserving interpolation of the global-, annual-mean
+onto monthly timesteps to get the term, $gm(y, m)$.
+
+% \subsubsubsubsection{Constructing seasonality over time}
+
+Next we calculate the seasonality term, $s(y, m, l)$.
+This is simply the product of the relative seasonality and the global-, annual-mean concentrations
+(not the monthly interpolation though, as the seasonality already includes a monthly dimension
+and using the monthly interpolation would lead to an absolute seasonality
+which does not have an annual-mean of zero,
+breaking the key requirement of the seasonality term).
+
+% \subsubsubsubsection{Constructing latitudinal gradient over time (including interpolating PCs to monthly timesteps)}
+
+Finally we calculate the latitudinal gradient term, $lg(y, m, l)$.
+This is done using mean-preserving interpolation on the PCs before the PCs and EOFs are multiplied,
+in the same way as is described for CO_2 (Section \ref{sssec:methods-co2}).
+
+%%% Up to here
+%%% Continue with N2O
+
+\subsubsection{N_2O}
 
 For all GHGs, we need three things:
 
