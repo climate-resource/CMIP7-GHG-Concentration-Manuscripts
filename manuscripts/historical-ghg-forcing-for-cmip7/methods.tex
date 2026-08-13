@@ -472,6 +472,7 @@ This is done using mean-preserving interpolation on the PCs before the PCs and E
 in the same way as is described for CO_2 (Section \ref{sssec:methods-co2}).
 
 \subsubsection{N_2O}
+\label{sssec:methods-n2o}
 
 Calculating the components of Equation \ref{eq:native-resolution-sum}
 for N_2O largely follows the same approach as is used for CO_2 and CH_4
@@ -572,6 +573,27 @@ the same as for CH_4 (Section \ref{sssec:methods-ch4}).
 Finally we calculate the latitudinal gradient term, $lg(y, m, l)$.
 This is done using mean-preserving interpolation on the PCs before the PCs and EOFs are multiplied,
 in the same way as is described for CO_2 (Section \ref{sssec:methods-co2}).
+
+\subsubsection{SF_6 and similarly processed species}
+
+Calculating the components of Equation \ref{eq:native-resolution-sum}
+for SF_6 largely follows the same approach as is used for CO_2, CH_4 and N_2O
+(see Sections \ref{sssec:methods-co2}, \ref{sssec:methods-ch4} and \ref{sssec:methods-n2o}).
+Here we only document the key differences,
+and refer to components of Sections \ref{sssec:methods-co2}, \ref{sssec:methods-ch4} and \ref{sssec:methods-n2o} as needed.
+
+The same approach is used for C_2F_6, C_3F_8, CCl_4, CF_4, CFC-11, CFC-113, CFC-114, CFC-115, CFC-12, CH_2Cl_2, CH_3Br, CH_3CCl_3, CH_3Cl, CHCl_3, Halon-1211, Halon-1301, Halon-2402, HCFC-141b, HCFC-142b, HCFC-22, HFC-125, HFC-134a, HFC-143a, HFC-152a, HFC-227ea, HFC-23, HFC-236fa, HFC-245fa, HFC-32, HFC-365mfc, HFC-4310mee, NF_3 and SO_2F_2.
+
+[TODO: table of input sources used for each gas]
+[TODO: table of pre-industrial values used for each gas]
+[TODO: table of temporal extent of obs network for each gas]
+[TODO: where required, we extend to the poles using a constant extrapolation due to a lack of data]
+[TODO: only ever one lat grad. EOF]
+[TODO: note that we depart from M17 by just using data, rather than doing overrides for some seasonality and lat. gradient]
+[TODO: extend lat. grad. PC back in time using regression with PRIMAP emissions]
+[TODO: override obs. network global-mean with other source table]
+[TODO: assume pre-industrial value then do sigmoid interpolation between pre-industrial value and global-mean]
+[TODO: put it all back together like CH_4, with checks for negative values because scaling of seasonality or lat. gradient is imperfect - negatives simply replaced with zero. This only happens as a result of rounding errors, basically]
 
 %%% Up to here
 %%% Continue with
