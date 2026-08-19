@@ -547,7 +547,7 @@ Meking harmonisation including the latitudinal bin we're in]
 
 % \subsubsubsubsection{Seasonality}
 
-Like for CH_4, no further processing of the seasonality is required to extend it in time.
+Like for CH_4 (Section \ref{sssec:methods-ch4}), no further processing of the seasonality is required to extend it in time.
 Following \cite{meinshausen_historical_2017},
 its extension is always driven by global-, annual-mean values
 and these values have been temporally extended in the previous step.
@@ -575,6 +575,7 @@ This is done using mean-preserving interpolation on the PCs before the PCs and E
 in the same way as is described for CO_2 (Section \ref{sssec:methods-co2}).
 
 \subsubsection{SF_6 and similarly processed species}
+\label{sssec:methods-sf6-like}
 
 Calculating the components of Equation \ref{eq:native-resolution-sum}
 for SF_6 largely follows the same approach as is used for CO_2, CH_4 and N_2O
@@ -582,21 +583,123 @@ for SF_6 largely follows the same approach as is used for CO_2, CH_4 and N_2O
 Here we only document the key differences,
 and refer to components of Sections \ref{sssec:methods-co2}, \ref{sssec:methods-ch4} and \ref{sssec:methods-n2o} as needed.
 
-The same approach is used for C_2F_6, C_3F_8, CCl_4, CF_4, CFC-11, CFC-113, CFC-114, CFC-115, CFC-12, CH_2Cl_2, CH_3Br, CH_3CCl_3, CH_3Cl, CHCl_3, Halon-1211, Halon-1301, Halon-2402, HCFC-141b, HCFC-142b, HCFC-22, HFC-125, HFC-134a, HFC-143a, HFC-152a, HFC-227ea, HFC-23, HFC-236fa, HFC-245fa, HFC-32, HFC-365mfc, HFC-4310mee, NF_3 and SO_2F_2.
+The same approach is used for
+C_2F_6, C_3F_8, CCl_4, CF_4,
+CFC-11, CFC-113, CFC-114, CFC-115, CFC-12,
+CH_2Cl_2, CH_3Br, CH_3CCl_3, CH_3Cl, CHCl_3,
+Halon-1211, Halon-1301, Halon-2402,
+HCFC-141b, HCFC-142b, HCFC-22,
+HFC-125, HFC-134a, HFC-143a, HFC-152a, HFC-227ea, HFC-23, HFC-236fa, HFC-245fa, HFC-32, HFC-365mfc, HFC-4310mee,
+NF_3 and SO_2F_2.
 
-[TODO: table of input sources used for each gas]
-[TODO: table of pre-industrial values used for each gas]
+Due to differences in data availability, we use different input sources each gas.
+[TODO: table of input sources used for each gas, group by common input sources rather than row per gas]
+
+As for CO_2, the surface observational network does not cover the entire globe [TODO: figure],
+so we must interpolate.
+As for CO_2, we specify that at least five data points are required for us to do spatial interpolation.
+However, due to a lack of data, we allow for extrapolation to the most northern and most southern latitudinal boxes.
+In order to avoid spurious effects due to extrapolation,
+we use constant extrapolation rather than linear or smoother extrapolations such as cubic
+[TODO note this as a clear weakness in discussion].
+When we  take the longest dataset that is continuous,
+we end up with observational network datasets of varying lengths for each gas.
 [TODO: table of temporal extent of obs network for each gas]
-[TODO: where required, we extend to the poles using a constant extrapolation due to a lack of data]
-[TODO: only ever one lat grad. EOF]
-[TODO: note that we depart from M17 by just using data, rather than doing overrides for some seasonality and lat. gradient]
-[TODO: extend lat. grad. PC back in time using regression with PRIMAP emissions]
-[TODO: override obs. network global-mean with other source table]
-[TODO: assume pre-industrial value then do sigmoid interpolation between pre-industrial value and global-mean]
-[TODO: put it all back together like CH_4, with checks for negative values because scaling of seasonality or lat. gradient is imperfect - negatives simply replaced with zero. This only happens as a result of rounding errors, basically]
+
+% \subsubsubsection{Spatial interpolation}
+
+As for CO_2, we use 2D `wrap around' interpolation to go from the observational network's coverage to complete spatial coverage (Section \ref{sssec:methods-co2}).
+
+% \subsubsubsection{PCA}
+
+As for CO_2, we then take our spatially complete dataset and perform principal component analysis.
+
+% \subsubsubsubsection{zonal mean}
+
+% \subsubsubsubsection{global-, annual-mean}
+
+The calculation of the zonal- and global-, annual-mean is exactly the same as for CO_2 (Section \ref{sssec:methods-co2}).
+
+% \subsubsubsubsection{latitudinal gradient}
+
+The calculation of the latitudinal gradient is also exactly the same as for CO_2 (Section \ref{sssec:methods-co2}).
+However, we only ever use a single latitudinal gradient EOF.
+[TODO figure and calculation of variance explained to make this easier to justify or not]
+
+% \subsubsubsubsection{seasonality}
+
+The calculation of the seasonality is exactly the same as for CH_4 (Section \ref{sssec:methods-ch4}).
+[TODO: figure]
+
+By using seasonality and latitudinal gradient based on the observational network,
+rather than assuming zero seasonality and/or latitudinal gradient for some gases,
+we depart from the method of \textcite{meinshausen_historical_2017}.
+
+Like for CO_2, the next step is to then extend these `observational network' based components back in time.
+
+% \subsubsubsubsection{Latitudinal gradient}
+
+We extend the PC value (as we retain only one) back in time by using a regression against total emissions
+from the [TODO cite RCMIP1] emissions dataset.
+Using this regression, we then extend emissions back to the 1750,
+the first year reported in the [TODO cite RCMIP1] dataset.
+Before 1750, we keep the first PC value constant.
+
+[TODO supplementary figure for each gas: 3 panels - total emissions, PC1 regression, PC1 extension (start axis at 1700 as values are constant before then)]
+
+% \subsubsubsubsection{Global- annual-mean}
+
+The global-, annual-mean is calculated in two steps.
+For a number of gases, we use the global-mean from [TODO cite WMO 2022], [TODO cite Western 2024], [TODO cite Addam et al 2024] or [Velders 2022] to set the global-mean.
+For CF_4, C_2F_6 and C_3F_8, we harmonise the global-mean from [TODO cite Trudinger et al 2016] to the global-mean from the observational network to create a longer, composite timeseries.
+For all other gases, we use the global-mean derived from the observational network [TODO table].
+
+For all gases, we extend the global-, annual-mean back in time based on information about the gas' pre-industrial value and when this pre-industrial value should be reached.
+These are source from [TODO cite Velders et al. 2022] and [TODO cite the various sources used in M17] [TODO table].
+We then fit a sigmoid function between the pre-industrial value (with assumed gradient of zero beforehand)
+and the global-, annual-mean from the previous step.
+[TODO supplementary figure for each gas: global- annual-mean raw inputs, composite, pre-industrial value and interpolated spline]
+
+% \subsubsubsubsection{Seasonality}
+
+Like for CH_4 (Section \ref{sssec:methods-ch4}), no further processing of the seasonality is required to extend it in time.
+Following \cite{meinshausen_historical_2017},
+the seasonality extension is always driven by global-, annual-mean values
+and these values have been temporally extended in the previous step.
+
+% \subsubsubsection{Recombining}
+
+The last step is to construct the inputs needed for Equation \ref{eq:native-resolution-sum}
+from the temporally extended components.
+
+% \subsubsubsubsection{Interpolating global- annual-mean to monthly timesteps}
+
+As for CO_2, we do a mean-preserving interpolation of the global-, annual-mean
+onto monthly timesteps to get the term, $gm(y, m)$.
+
+% \subsubsubsubsection{Constructing seasonality over time}
+
+Next we calculate the seasonality term, $s(y, m, l)$.
+This is simply the product of the relative seasonality and the global-, annual-mean concentrations,
+the same as for CH_4 (Section \ref{sssec:methods-ch4}).
+
+% \subsubsubsubsection{Constructing latitudinal gradient over time (including interpolating PCs to monthly timesteps)}
+
+Finally we calculate the latitudinal gradient term, $lg(y, m, l)$.
+This is done using mean-preserving interpolation on the PCs before the PCs and EOFs are multiplied,
+in the same way as is described for CO_2 (Section \ref{sssec:methods-co2}).
+
+We do an extra check for gases that are processed like SF_6.
+This is to ensure that no negative values will apply when we apply Equation \ref{eq:native-resolution-sum}.
+Where negative values are identified, we reduce the seasonality and/or latitudinal gradient as required
+so that the negative values become zero.
+This is a crude method, but these negative values are only introduced because of rounding errors
+so we view this as an acceptable fix given the intended application of the dataset.
+
+[TODO unify language re meaning of observational network, ice core extension etc.]
 
 %%% Up to here
-%%% Continue with
+%%% Continue with C_4F_10
 
 For all GHGs, we need three things:
 
