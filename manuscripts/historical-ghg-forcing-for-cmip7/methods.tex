@@ -865,13 +865,54 @@ to extract the seasonality and latitudinal gradient
 and apply the same checks to avoid negative values as in Seciton \ref{ssec:methods-c4f10-likeg}
 hence values may not be exactly identical to those reported in \citet{meinshausen_historical_2017} [TODO cite M2020].
 
-% derived grids:
-% - area and time-means
-% - higher-resolution grids
-%   just weighted mean-preserving interpolation on the 15-degree latitudes.
-%   Get this back from https://github.com/climate-resource/CMIP-GHG-Concentration-Generation/blob/v0.2.0/src/local/mean_preserving_interpolation.py
-%   if anyone ever needs these outputs.
+\subsection{Derived output grids}
 
-% equivalent species:
-% - done on already processed output rather than on native grid to avoid any oddity from non-linear operations (such as mean-preserving interpolation)
-% - radiative equivalent i.e. based on full concs, not delta (which is what you use for ERF)
+For each gas, we apply Equation \ref{eq:native-resolution-sum}
+to create a gridded dataset on our 15\textdegree latitudinal (spatial), monthly (temporal) `native' grid.
+From this native grid output, we then derive four other output products:
+
+\begin{enumerate}
+    \item hemispheric (spatial) monthly (temporal) grid
+    \item global-mean (spatial) monthly (temporal) grid
+    \item hemispheric (spatial) yearly (temporal) grid
+    \item global-mean (spatial) yearly (temporal) grid
+\end{enumerate}
+
+These outputs are trivially derived by taking means in the relevant axes
+(where the spatial means are area-weighted).
+The outputs are then formatted before being published on the ESGF for distribution to modelling teams.
+
+We also have the ability to produce higher-resolution spatial grids
+by applying mean-preserving interpolation to the latitudinal axis of the native grid output.
+Arbitrary latitudinal resolution can be produced by applying this technique.
+%   See https://github.com/climate-resource/CMIP-GHG-Concentration-Generation/blob/v0.2.0/src/local/mean_preserving_interpolation.py
+%   if anyone ever needs these outputs.
+As a result of the processing time, data storage requirements and lack of use in CMIP6,
+we have not produced the 0.5\textdegree latitudinal grid product as part of our `standard' offering this time.
+
+\subsection{Equivalent species}
+
+Given that the majority, it not all, ESMs will not want the computational expense of including 43 greenhouse gas tracers,
+we also produce the equivalent species provided in \citet{meinshausen_historical_2017}.
+These equivalent species allow modelling teams to pick one of three options when running:
+
+\begin{enumerate}
+    \item Use all GHGs individually: modelling teams can pick which of the 43 provided GHGs to run with. Note that running with any of the 43 GHGs missing means that some GHG radiative effects will be missing from the simulation
+    \item Use CO_2, CH_4, N_2O, CFC-12 and CFC-11 equivalent: CFC-11 captures the equivalent effect of all GHGs other than CO_2, CH_4, N_2O and CFC-12.
+    \item Use CO_2, CH_4, N_2O, CFC-12 equivalent and HFC-134a equivalent: CFC-12 captures the equivalent effect of all ozone-depleting substances (namely CFC-11, CFC-12, CFC-113, CFC-114, CFC-115, CCl_4, CH_2Cl_2, CH_3Br, CH_3CCl_3, CH_3Cl, CHCl_3, Halon-1211, Halon-1301, Halon-2402, HCFC-141b, HCFC-142b, HCFC-22) while all other fluorinated gases are included in HFC-134a (namely CF_4, C_2F_6, C_3F_8, cC_4F_8, C_4F_10, C_5F_12, C_6F_14, C_7F_16, C_8F_18, HFC-23, HFC-32, HFC-125, HFC-134a, HFC-143a, HFC-152a, HFC-227ea, HFC-236fa, HFC-245fa, HFC-365mfc, HFC-4310mee, NF_3, SF_6, SO_2F_2)
+\end{enumerate}
+
+The equivalence is calculated following the `full equivalence' definition given in \citet{meinshausen_historical_2017}.
+[TODO in the citation, add see their Equation 7].
+We use the radiative efficiencies from the last IPCC Assessment Report,
+specifically the radiative efficiencies given in Table 7.SM.6 of the Working Group 1 Chapter 7 Supplementary Material [TODO citation].
+
+These equivalent species are derived based on output that is already on the desired output grid,
+rather than on the native grid (with further processing applied thereafter).
+This avoids any consistency issues due to non-linearity in the processing operations,
+such as from mean-preserving interpolation.
+
+\subsection{Vertical dimension}
+
+For any modelling team which requires suggestions for handling the vertical dimension,
+we refer to \citet{meinshausen_historical_2017}.

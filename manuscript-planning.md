@@ -72,6 +72,9 @@ Notes from reading Meinshausen at al 2017 (M17): https://gmd.copernicus.org/arti
         - CMIP organisers and all involved
         - Forcings TT panel
         - direct funding acknowledgements (ESA)
+    - data access
+        - ESGF
+        - Zenodo
 
 Scenarios manuscript:
 
