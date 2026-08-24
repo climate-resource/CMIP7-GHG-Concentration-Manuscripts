@@ -787,6 +787,19 @@ so that the negative values become zero.
 This is a crude method, but these negative values are only introduced because of rounding errors
 so we view this as an acceptable fix given the intended application of the dataset.
 
+\subsubsection{C_8F_18}
+\label{sssec:methods-c8f18}
+
+For C_8F_18, there have been no updated measurements since [TODO cite Ivy].
+Hence we simply use CMIP6 historical values, with SSP2-4.5 [TODO cite M2020] for the values from 2015 to 2022.
+Given that C_8F_18 accounts for [TODO \% of total ERF],
+the sensitivity of climate simulations to this choice is negligible.
+
+We process the \citet{meinshausen_historical_2017} data
+to extract the seasonality and latitudinal gradient
+and apply the same checks to avoid negative values as in Seciton \ref{sssec:methods-c4f10-like}
+hence values may not be exactly identical to those reported in \citet{meinshausen_historical_2017} [TODO cite M2020].
+
 %%% Up to here
 %%% Continue with C_4F_10
 
