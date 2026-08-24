@@ -198,20 +198,6 @@ def main(  # noqa: PLR0913
             file_okay=True,
         ),
     ],
-    extra: Annotated[
-        list[Path],
-        typer.Option(
-            help=(
-                "Paths to copy into the build directory, "
-                "but not include in the `main.tex` file. "
-                "These are useful "
-                r"if you use \input or \include commands in your latex "
-                "(so the files need to be in the build directory, "
-                "but it is left to latex to add the content). "
-                "Replacements are applied to this files as part of the copying process."
-            )
-        ),
-    ],
     conclusion: Annotated[
         Path,
         typer.Option(
@@ -330,6 +316,20 @@ def main(  # noqa: PLR0913
             file_okay=True,
         ),
     ],
+    extra: Annotated[
+        list[Path] | None,
+        typer.Option(
+            help=(
+                "Paths to copy into the build directory, "
+                "but not include in the `main.tex` file. "
+                "These are useful "
+                r"if you use \input or \include commands in your latex "
+                "(so the files need to be in the build directory, "
+                "but it is left to latex to add the content). "
+                "Replacements are applied to this files as part of the copying process."
+            )
+        ),
+    ] = None,
 ) -> None:
     """
     Compile the PDF
@@ -367,7 +367,7 @@ def main(  # noqa: PLR0913
         source_text = source_file.read_text()
         replacement_text = f"{get_source_file_str(source_file)}\n{source_text}"
         replacement = to_replace.replace(
-            "TEXT", f"\n{textwrap.indent(replacement_text, prefix = 4 * ' ')}\n"
+            "TEXT", f"\n{textwrap.indent(replacement_text, prefix=4 * ' ')}\n"
         )
         res = res.replace(to_replace, replacement)
 
@@ -390,7 +390,7 @@ def main(  # noqa: PLR0913
     copy_template_files(template_dir=copernicus_template_dir, build_dir=latex_dir)
     shutil.copy2(references_bib_file, latex_main.parent / references_bib_file.name)
 
-    for extra_file in extra:
+    for extra_file in extra if extra is not None else []:
         raw = extra_file.read_text()
         mapped = apply_replacements(raw, replacements_map)
         (latex_dir / extra_file.name).write_text(mapped)

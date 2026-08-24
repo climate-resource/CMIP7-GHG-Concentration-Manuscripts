@@ -19,7 +19,7 @@ abstract_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/abstrac
 introduction_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/introduction.tex"
 output_requirements_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/output-requirements.tex"
 methods_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods.tex"
-methods_subfile="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods-detail.tex"
+# methods_subfile="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods-detail.tex"
 results_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/results.tex"
 code_and_data_availability_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/code-and-data-availability.tex"
 author_contribution_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/author-contribution.tex"
@@ -51,7 +51,6 @@ uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --introduction "${introduction_file}" \
     --section "${output_requirements_file}" \
     --section "${methods_file}" \
-    --extra "${methods_subfile}" \
     --section "${results_file}" \
     --conclusion "${conclusion_file}" \
     --code-and-data-availability "${code_and_data_availability_file}" \
@@ -65,5 +64,6 @@ uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --clean-copernicus-template-filename "${clean_copernicus_template_filename}" \
     --build-dir "${build_dir}" \
     --output "${output_pdf}"
+# --extra "${methods_subfile}" \
 
 echo "Output file is in ${output_pdf}"

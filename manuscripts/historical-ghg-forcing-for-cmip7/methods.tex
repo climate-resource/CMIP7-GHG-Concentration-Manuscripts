@@ -800,118 +800,13 @@ to extract the seasonality and latitudinal gradient
 and apply the same checks to avoid negative values as in Seciton \ref{sssec:methods-c4f10-like}
 hence values may not be exactly identical to those reported in \citet{meinshausen_historical_2017} [TODO cite M2020].
 
-%%% Up to here
-%%% Continue with C_4F_10
+% derived grids:
+% - area and time-means
+% - higher-resolution grids
+%   just weighted mean-preserving interpolation on the 15-degree latitudes.
+%   Get this back from https://github.com/climate-resource/CMIP-GHG-Concentration-Generation/blob/v0.2.0/src/local/mean_preserving_interpolation.py
+%   if anyone ever needs these outputs.
 
-For all GHGs, we need three things:
-
-\begin{enumerate}
-  \item Global-mean concentration with monthly temporal resolution (explain somewhere why this doesn't work with annual-mean resolution because of the jumps you get from December to January)
-  \item Seasonality (year, month, latitude)
-  \item Latitudinal gradient (year, month, latitude)
-\end{enumerate}
-
-The trick is how we get these for different gases.
-Breaks down into six cases:
-
-\begin{enumerate}
-    \item CO_2
-    \item CH_4
-    \item N_2O
-    \item SF_6-like
-    \item C_4F_10-like
-    \item C_8F_18-like
-\end{enumerate}
-
-CO_2:
-
-\begin{enumerate}
-    \item Bin obs
-    \item Interpolate/extrapolate to complete spatial coverage
-    \item Do PCA to get global-, annual-mean, seasonality and latitudinal gradient over the observational era with sufficient data
-    \item Extend latitudinal gradient PCs back in time using fossil emissions
-    \item Extend global-mean back in time (depends on the previous step)
-    \item Extend seasonality back in time using our funny temperature-concentration composite
-    \item Put it all back together to get the pieces for gridding
-    \begin{itemize}
-        \item Get annual-mean monthly
-        \item Calculate seasonality over time (i.e. base seasonality plus seasonality change)
-        \item Interpolate latitudinal gradient PCs to monthly
-    \end{itemize}
-\end{enumerate}
-
-CH_4:
-
-\begin{enumerate}
-    \item Bin obs
-    \item Interpolate/extrapolate to complete spatial coverage
-    \item Do PCA to get global-, annual-mean, seasonality and latitudinal gradient over the observational era with sufficient data
-    \item Extend latitudinal gradient PCs back in time using fossil emissions
-    \item Extend global-mean back in time (depends on the previous step)
-    \item Put it all back together to get the pieces for gridding
-    \begin{itemize}
-        \item Get annual-mean monthly
-        \item Calculate seasonality over time (i.e. multiply base seasonality by global-mean values)
-        \item Interpolate latitudinal gradient PCs to monthly
-    \end{itemize}
-\end{enumerate}
-
-N_2O:
-
-\begin{enumerate}
-    \item Bin obs
-    \item Interpolate/extrapolate to complete spatial coverage
-    \item Do PCA to get global-, annual-mean, seasonality and latitudinal gradient over the observational era with sufficient data
-    \item Extend latitudinal gradient PCs back in time using total emissions
-    \item Extend global-mean back in time (depends on the previous step)
-    \item Put it all back together to get the pieces for gridding
-    \begin{itemize}
-        \item Get annual-mean monthly
-        \item Calculate seasonality over time (i.e. multiply base seasonality by global-mean values)
-        \item Interpolate latitudinal gradient PCs to monthly
-    \end{itemize}
-\end{enumerate}
-
-SF_6:
-
-\begin{enumerate}
-    \item Bin obs
-    \item Interpolate/extrapolate to complete spatial coverage
-    \item Do PCA to get global-, annual-mean, seasonality and latitudinal gradient over the observational era with sufficient data
-    \item Extend latitudinal gradient PCs back in time using total emissions
-    \item Extend global-mean back in time using pre-industrial value plus interpolation
-    \item Put it all back together to get the pieces for gridding
-    \begin{itemize}
-        \item Get annual-mean monthly
-        \item Calculate seasonality over time (i.e. multiply base seasonality by global-mean values)
-        \item Interpolate latitudinal gradient PCs to monthly
-    \end{itemize}
-\end{enumerate}
-
-C_4F_10:
-
-\begin{enumerate}
-    \item Get latitudinal gradient
-    \item Put it all back together to get the pieces for gridding
-    \begin{itemize}
-        \item Get annual-mean monthly
-        \item Assume zero seasonality
-        \item Interpolate latitudinal gradient PCs to monthly
-    \end{itemize}
-\end{enumerate}
-
-C_8F_18:
-
-\begin{enumerate}
-    \item No new data, so just use CMIP6 pieces (historical plus ssp245, minor gas so different choices make negligible difference [TODO quantify])
-    \item Put it all back together to get the pieces for gridding
-    \begin{itemize}
-        \item Get annual-mean monthly
-        \item Assume zero seasonality
-        \item Interpolate latitudinal gradient PCs to monthly
-    \end{itemize}
-\end{enumerate}
-
-\subsection{Details}
-
-\input{methods-detail.tex}
+% equivalent species:
+% - done on already processed output rather than on native grid to avoid any oddity from non-linear operations (such as mean-preserving interpolation)
+% - radiative equivalent i.e. based on full concs, not delta (which is what you use for ERF)
