@@ -49,6 +49,7 @@ Notes from reading Meinshausen at al 2017 (M17): https://gmd.copernicus.org/arti
             - global-mean
             - lat. grad.
             - seasonality
+            - compare with https://www.nature.com/articles/s41586-026-10938-1
         - N2O
             - global-mean
             - lat. grad.

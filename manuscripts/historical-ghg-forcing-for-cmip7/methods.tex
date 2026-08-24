@@ -633,7 +633,7 @@ The calculation of the seasonality is exactly the same as for CH_4 (Section \ref
 
 By using seasonality and latitudinal gradient based on the observational network,
 rather than assuming zero seasonality and/or latitudinal gradient for some gases,
-we depart from the method of \textcite{meinshausen_historical_2017}.
+we depart from the method of \citet{meinshausen_historical_2017}.
 
 Like for CO_2, the next step is to then extend these `observational network' based components back in time.
 
@@ -697,6 +697,95 @@ This is a crude method, but these negative values are only introduced because of
 so we view this as an acceptable fix given the intended application of the dataset.
 
 [TODO unify language re meaning of observational network, ice core extension etc.]
+
+\subsubsection{C_4F_10 and similarly processed species}
+\label{sssec:methods-c4f10-like}
+
+Calculating the components of Equation \ref{eq:native-resolution-sum}
+for C_4F_10 is highly simplified.
+The same approach is used for
+cC_4F_8, C_5F_12, C_6F_14 and C_7F_16.
+
+% \subsubsubsection{Spatial interpolation}
+% \subsubsubsection{PCA}
+% \subsubsubsubsection{zonal mean}
+For these species, there is no significant observational network to use.
+Hence we do not perform spatial interpolation or PCA analysis.
+
+% \subsubsubsubsection{latitudinal gradient}
+
+Instead, we simply start from the data provided in [TODO cite Droste et al. 2020].
+This provides observations of these gases at two observational sites,
+[TODO figure out what CG and TAL are and specify their latitudes].
+We then assume a single linear EOF
+(note that this linearity is before considering the area-weight given to each latitudinal box,
+the EOF (and therefore the latitudinal gradient) does not appear linear if the area-weights are not considered).
+We then set the PCs such that change in value between the
+[TODO CG and TAL] observations in each year
+is matched by our latitudinal gradient (i.e. the product of the EOF and the PC).
+As the [TODO cite Droste] data only extends to 2018,
+we use a basic linear extrapolation to extend the PCs to 2022.
+This is very simple, but given that these gases account for [TODO \% of total ERF],
+the sensitivity of climate simulations to this choice is negligible.
+
+% \subsubsubsubsection{global-, annual-mean}
+
+We calculate the global-, annual-mean such that the values in the
+CG ([TODO CG lat]) and TAL ([TODO TAL lat]) latitudinal boxes are matched
+when the global-, annual-mean is combined with the latitudinal gradient we just derived.
+As the [TODO cite Droste] data only extends to 2018,
+we use a basic linear extrapolation to extend the data to 2022.
+This is very simple, but given that these gases account for [TODO \% of total ERF],
+the sensitivity of climate simulations to this choice is negligible.
+
+% \subsubsubsubsection{seasonality}
+% NA: assumed zero
+
+Like for CO_2, the next step is to then extend these components back in time.
+
+% \subsubsubsubsection{Latitudinal gradient}
+
+We extend the PC value (as we retain only one) back in time by
+assuming that the PC value is constant at zero
+before the first year of [TODO cite Droste] data [TODO Droste first year].
+We make this assumption based on the fact that the [TODO Droste data]
+is zero before this year, hence the latitudinal gradient must also be zero
+because negative concentrations are not possible.
+
+% \subsubsubsubsection{Global- annual-mean}
+
+In line with the [TODO cite Droste] data,
+we assume that concentrations remain at zero before the first year of data provided in [TODO cite Droste], [TODO first Droste year].
+
+% \subsubsubsubsection{Seasonality}
+% NA: assumed zero
+
+% \subsubsubsection{Recombining}
+
+The last step is to construct the inputs needed for Equation \ref{eq:native-resolution-sum}
+from the temporally extended components.
+
+% \subsubsubsubsection{Interpolating global- annual-mean to monthly timesteps}
+
+As for CO_2, we do a mean-preserving interpolation of the global-, annual-mean
+onto monthly timesteps to get the term, $gm(y, m)$.
+
+% \subsubsubsubsection{Constructing seasonality over time}
+
+As above, seasonality is assumed to be zero.
+
+% \subsubsubsubsection{Constructing latitudinal gradient over time (including interpolating PCs to monthly timesteps)}
+
+As for N_2O (Section \ref{sssec:methods-n2o}),
+we use mean-preserving interpolation on the PCs before the PCs and EOFs are multiplied
+to derive the latitudinal gradient.
+
+As for gases that are processed like SF_6 (Section \ref{sssec:methods-sf6-like}),
+we do an extra check that no negative values will apply when we apply Equation \ref{eq:native-resolution-sum}.
+Where negative values are identified, we reduce the latitudinal gradient as required
+so that the negative values become zero.
+This is a crude method, but these negative values are only introduced because of rounding errors
+so we view this as an acceptable fix given the intended application of the dataset.
 
 %%% Up to here
 %%% Continue with C_4F_10
