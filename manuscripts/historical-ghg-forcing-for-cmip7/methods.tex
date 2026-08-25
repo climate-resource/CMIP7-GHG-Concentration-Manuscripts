@@ -5,17 +5,25 @@ However, we have made changes in a number of places
 so we describe the method in full,
 while also highlighting places of clear divergence.
 
+ALTODO: divergence not yet clear
+
 \subsection{General approach}
 \label{ssec:methods-general-approach}
 
-In line with \citet{meinshausen_historical_2017}, a dataset is created containing complete values for concentrations for all gasses,
-with a temporal and latitudinal dependency. No dependency on longitute is provided.
+In line with \citet{meinshausen_historical_2017}, we provide a series of data products
+ containing complete values of concentrations for all forcing gasses,
+with a temporal and latitudinal dependency. No dependency on longitute is provided. For a brief
+discussion on extension in the vertical dimension, see section \ref{ssec:methods-vertical}
 
-This first dataset has monthly temporal resolution and latitud15\textdegree~latitudinal spatial resolution.
-We refer to this grid as our `native resolution', and therefore to the dataset as our 'native resolution dataset'.
-We can then create higher and lower resolution data products (see [TODO: forward refernence]).
+The first dataset that is generate has monthly temporal resolution and
+latitud15\textdegree~latitudinal spatial resolution.
+We refer to this grid as our `native resolution', and therefore to the dataset
+as our 'native resolution dataset'.
+We then create higher and lower resolution data products (see section
+\ref{ssec:methods-derived-grids}).
 
-Although there are differences in the approach for each gas, the general process can be broken down as follows:
+Although there are differences in the methods and limitations for each gas, the general approach can
+be broken down as follows:
 
 \begin{itemize}
     \item { \textbf{Step 1: Collect observations}. Select surface observations from available observing networks.
@@ -61,8 +69,8 @@ Although there are differences in the approach for each gas, the general process
             \item Latitudinal gradient components
         \end{enumerate}
 
-        The latter is a set of empirical orthogonal functions (EOFs, a function of latitude only)
-        nd principal components (PCs, a function of year only) derived using principal component analysis (PCA).
+        The latitudinal gradient components are a set of empirical orthogonal functions (EOFs, a function of latitude only)
+        and principal components (PCs, a function of year only) derived using principal component analysis (PCA).
         The number of EOFs and PCs retained is either one or two,
         depending on the gas. More information on this step
         is provided in the different gas-specific sections.
@@ -87,13 +95,13 @@ Although there are differences in the approach for each gas, the general process
             To achieve consistency, first we need to give all components the same time dimension.
              This introduces the first subtlety: while our approach is based on a timeseries of global-, annual-mean concentrations,
             this timeseries has to be interpolated to monthly timesteps
-            in order to avoid the change from year to year resulting in step changes between December of one year and January of the next,
+            in order to avoid the change from year to year resulting in step changes between December of one year and January of the next.
             The same interpolation requirement applies to the latitudinal gradient
             (which is initially calculated on a yearly timestep, see [TODO forward ref]).
             Moreover, seasonality can vary by latitude.
-            As a result, the latitudinal variation of seasonality must be calculated
-            (i.e. seasonality must have a "latitude" dimension)
-            The following calculations are therefore performed:
+            As a result, the latitudinal variation of seasonality must be included
+            (i.e. seasonality must have a `latitude' dimension)
+             The following calculations are therefore performed:
 
         \begin{enumerate}
             \item The global-, annual-mean is converted into a global-, monthly-mean using mean-preserving interpolation
@@ -126,18 +134,20 @@ Although there are differences in the approach for each gas, the general process
             has an annual-mean of zero
             so that they can be added to the global- annual-mean term, $gm$,
             without affecting the corresponding global- annual-mean values.
-            The dataset is then created following CMOR standards [TODO: cite]
+            The dataset is then formatted in a consistent way (we do not use the term
+             `standard' way here, because no standards are robustly defined for forcings data)
 
     }
 \end{itemize}
 
 
 The key choices are about how we arrive at $gm$, $lg$ and $s$ for each greenhouse gas species in our dataset.
+These decisions are often guided by data availability and quality, and by the chemical
+qualities of the gas species.
 We describe the specifics for each gas included in the dataset in the following sections, underlining
 gas-specific features and how the methods might stray from the general approach described here.
 
 
-ALTODO: this might be a useful table for an overview on variations
 \begin{table}
 \centering
 \begin{tabular}{c|c|c|c|c|c |c}
@@ -153,7 +163,9 @@ ALTODO: this might be a useful table for an overview on variations
 
 
 \end{tabular}
-\caption{Different approaches from the base case (N_2O) per gas, broken down by step}
+\caption{
+ALTODO: this might be a useful table for an overview on variations
+Differencesfrom the base case (N_2O) per gas, broken down by step}
 \label{table:methods-differences}
 \end{table}
 
@@ -163,7 +175,7 @@ ALTODO: this might be a useful table for an overview on variations
 \label{ssec:methods-n2o}
 
 We begin with N_2O as the production of its concentration follows the general approach described
-in section \ref{ssec:methods-general-approach}, and can therefore be considered as the 'base case'.
+in section \ref{ssec:methods-general-approach}, and can therefore be considered as the `base case'.
 
 We detail here the exact data sources used and any gas-specific details, following the process breakdown
 made in Section \ref{ssec:methods-general-approach}.
@@ -173,6 +185,7 @@ Ideally also with a time trend, both from 1850 and from year 1 showing the ice c
 True for all gases with ground observations
 
 \subsubsection{Step 1: Collect observations}
+[ALTODO: eventually remove all the 'step x's from the titles]
 
 For N_2O, we use both the NOAA HATS [TODO ref] and AGAGE [TODO ref] networks.
 We use data from the AGAGE network, as well as from the predecessor GAGE [TODO ref] and ALE [TODO ref] networks.
@@ -231,7 +244,10 @@ reproduces the residuals we started with exactly.
 However, following \citet{meinshausen_historical_2017}
 we only retain the first two EOFs as these are sufficient
 to reproduce the residuals to within 1~ppm CO_2 (and are usually much closer than this).
-[TODO figure and calculation of variance explained to make this easier to justify or not]
+
+[TODO figure and calculation of variance explained to
+make this easier to justify or not.]
+
 
 % \subsubsubsubsection{seasonality}
 ALTODO: not sure if this is right for NO2
@@ -252,29 +268,6 @@ so that the residuals do not include step changes at each year boundary
 The seasonality is the average of these residuals over all available years
 and thus has dimensions (month, lat).
 
-On top of this seasonality, we also calculate EOFs and PCs for the change
- in seasonality over time.
-These are calculated by taking the seasonality and
- residuals from the previous step.
-We then calculate the difference between these two, which we call
- `seasonality anomalies'.
-We then perform singular value decomposition on these seasonality
-anomalies
-(this is done by stacking the data so it has one dimension which is year
-and the latitude and month dimensions are stacked into a single dimension
-so that the singular value decomposition has a 2D dataset to work with).
-As for the latitudinal gradient, we convert the singular value
- decomposition results
-into EOFs and PCs.
-
-However, in the case of seasonality, while the PCs are still only a function of year,
-the EOFs have dimensions (latitude, month).
-
-For the seasonality change component, we calculate a relative seasonality
-by dividing the absolute seasonality by the average of the global- annual-mean
-(over the same time period as is used to calculate the seasonality).
-[TODO: figure]
-
 At this point we have (or, more precisely, can construct),
 all the required input components over the time period covered by the observational network.
 The last step is to extend these intermediate data products
@@ -288,8 +281,8 @@ over the entire time period included in the output dataset.
 
 
 % \subsubsubsubsection{Latitudinal gradient}
-To extend the latitudinal gradient in time, we need to extend the PCs in time
-(the EOFs have no time dimension).
+To extend the latitudinal gradient in time, we need to extend the PCs in time.
+The EOFs have no time dimension and can therefore be applied without need for modification.
 
 Following \cite{meinshausen_historical_2017}, we simply keep the PC
 values constant in the period before the observational network (pre-1989).
@@ -425,18 +418,11 @@ to get a single value in each bin.
 Binning and interpolation for N_2O follow the general approach described in Section
 \ref{ssec:methods-general-approach}.
 
-In this dataset, that meant that we used data from 1981 to 2023 (both inclusive).
-
+In this dataset, that means we use data from 1981 to 2023 (both inclusive).
 
 \subsubsection{Step 3: Principal component analysis}
 \label{sssec:methods-co2-pca}
 
-Calculating the components of Equation \ref{eq:native-resolution-sum}
-for CO_2 largely follows the same approach as is used for N_2O
-(see Sections \ref{ssec:methods-n2o}).
-
-Here we only document the key differences,
-and refer to components of Sections \ref{ssec:methods-n2o} as needed.
 
 As for N_2O (Section \ref{sssec:methods-n2o-pca}),
 we then take our spatially complete dataset and perform
@@ -616,7 +602,7 @@ Summary of differences from the baseline case
     \item {In Step 4, over the period in which we have ice core observations in both
          the southern and northern hemispheres, the first latitudinal gradient
          PC is optimised so that we reproduce the latitudinal gradient given
-         by these ice cores. Linear interpolation is used for years where we
+         by these ice cores. Linear interpolation of the first PC value is used for years where we
          don't have ice core observations in both hemispheres.
     }
 \end{enumerate}
@@ -778,7 +764,7 @@ Law Dome harmonisation including the latitudinal bin we're in]
 
 % \subsubsubsubsection{Seasonality}
 
-Unlike for CO_2, and like for N_2O (Section \ref{sssec:methods-n2o-backward-extension}),
+Unlike for CO_2, but like for N_2O (Section \ref{sssec:methods-n2o-backward-extension}),
 no further processing of the seasonality
 is required to extend it in time.
 Following \cite{meinshausen_historical_2017},
@@ -973,14 +959,13 @@ so we view this as an acceptable fix given the intended application of the datas
 \subsection{Generating concentrations for C_4F_10 and similarly processed species}
 \label{ssec:methods-c4f10-like}
 
-Summary of differences from the baseline case
-(Section \ref{ssec:methods-general-components}):
+Summary of differences from the baseline case (Section \ref{ssec:methods-general-approach}):
 
 \begin{enumerate}
-    \item { In Step 1, given that there is no comprehensive observational network, we instead calculate the latitudinal
+    \item { Given that there is no comprehensive observational network, we instead calculate the latitudinal
         gradient and global- annual-mean based on a single source and simple assumptions.
     }
-    \item From Step 3, seasonality is assumed to be zero.
+    \item Seasonality is assumed to be zero.
     \item{ In Step 5, as in Section \ref{ssec:methods-sf6-like}, when calculating the input components of
            Equation \ref{eq:native-resolution-sum}, we reduce the seasonality and/or latitudinal gradient
             where rounding errors would otherwise lead to negative values in the output dataset.
@@ -994,8 +979,6 @@ cC_4F_8, C_5F_12, C_6F_14 and C_7F_16.
 
 \subsubsection{Step 1: Use source data instead of oservations}
 
-\subsubsection{Source data}
-
 % \subsubsubsection{Spatial interpolation}
 % \subsubsubsection{PCA}
 % \subsubsubsubsection{zonal mean}
@@ -1004,10 +987,14 @@ Hence we do not perform spatial interpolation or PCA analysis.
 
 % \subsubsubsubsection{latitudinal gradient}
 
-Instead, we simply start from the data provided in [TODO cite Droste et al. 2020].
-This provides observations of these gases at two observational sites,
-[TODO figure out what CG and TAL are and specify their latitudes].
+Instead, we simply start from the data provided in \cite{acp-20-4787-2020}.
+This provides observations of these gases at two observational sites:
+ Cape Grim: Tasmania, Australia, 41\degree S, 145\degree E, and
+ Tacolneston: Norfolk, UK, 52\degree N, 1\degree E, 85 m tower, or possibly
+ Taiwan: Cape Fuguei, 25\degree N, 122\degree E , and Hengchun, 22\degree N, 121\degree E
 
+ [TODO figure out what CG and TAL are and specify their latitudes].
+[ALTODO: in the article they mention three different locations but I assume Taiwan is excluded]
 \subsubsection{Step 2: Bin and interpolate observations}
 
 This step is not needed due to the nature of the data source.
@@ -1120,9 +1107,11 @@ and apply the same checks to avoid negative values as in Seciton \ref{ssec:metho
 hence values may not be exactly identical to those reported in \citet{meinshausen_historical_2017} [TODO cite M2020].
 
 \subsection{Derived output grids}
+\label{ssec:methods-derived-grids}
+
 
 For each gas, we apply Equation \ref{eq:native-resolution-sum}
-to create a gridded dataset on our 15\textdegree~latitudinal (spatial), monthly (temporal) 'native resolution' grid.
+to create a gridded dataset on our 15\textdegree~latitudinal (spatial), monthly (temporal) `native resolution' grid.
 From this native grid output, we then derive four other output products:
 
 \begin{enumerate}
@@ -1142,7 +1131,7 @@ Arbitrary latitudinal resolution can be produced by applying this technique.
 %   See https://github.com/climate-resource/CMIP-GHG-Concentration-Generation/blob/v0.2.0/src/local/mean_preserving_interpolation.py
 %   if anyone ever needs these outputs.
 As a result of the processing time, data storage requirements and lack of use in CMIP6,
-we have not produced the 0.5\textdegree~latitudinal grid product as part of our 'standard' offering this time.
+we have not produced the 0.5\textdegree~latitudinal grid product as part of our `standard' offering this time.
 
 \subsection{Equivalent species}
 
@@ -1167,6 +1156,7 @@ This avoids any consistency issues due to non-linearity in the processing operat
 such as from mean-preserving interpolation.
 
 \subsection{Vertical dimension}
+\label{ssec:methods-vertical}
 
 For any modelling team which requires suggestions for handling the vertical dimension,
 we refer to \citet{meinshausen_historical_2017}.
