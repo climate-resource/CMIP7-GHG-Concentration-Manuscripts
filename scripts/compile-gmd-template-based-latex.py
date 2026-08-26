@@ -326,7 +326,17 @@ def main(  # noqa: PLR0913
                 r"if you use \input or \include commands in your latex "
                 "(so the files need to be in the build directory, "
                 "but it is left to latex to add the content). "
-                "Replacements are applied to this files as part of the copying process."
+                "Replacements are applied to these files "
+                "as part of the copying process."
+            )
+        ),
+    ] = None,
+    auxiliary: Annotated[
+        list[Path] | None,
+        typer.Option(
+            help=(
+                "Paths to copy into the build directory "
+                "without any processing e.g. figure files."
             )
         ),
     ] = None,
@@ -394,6 +404,9 @@ def main(  # noqa: PLR0913
         raw = extra_file.read_text()
         mapped = apply_replacements(raw, replacements_map)
         (latex_dir / extra_file.name).write_text(mapped)
+
+    for auxiliary_file in auxiliary if auxiliary is not None else []:
+        shutil.copy2(auxiliary_file, latex_main.parent / auxiliary_file.name)
 
     subprocess.run(
         ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", latex_main.name],
