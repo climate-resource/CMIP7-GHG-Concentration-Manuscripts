@@ -19,6 +19,7 @@ abstract_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/abstrac
 introduction_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/introduction.tex"
 output_requirements_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/output-requirements.tex"
 methods_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods.tex"
+n2o_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/n2o_methods.pdf"
 # methods_subfile="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods-detail.tex"
 results_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/results.tex"
 code_and_data_availability_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/code-and-data-availability.tex"
@@ -43,6 +44,8 @@ mkdir -p "${output_pdf_dir}/"
 
 # run python stuff to generate inputs
 #   - caching in the python (just have user config to set the caching for each step with basic decorators)
+uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-inputs.py" \
+    --n2o-methods-figure-file "${n2o_methods_figure_file}"
 
 # create pdf or dump out to a single text file (that can then be dumped onto google docs, maybe easiest to do this with AI)
 #   - caching here would be cool based on changes to the input hashes or content excluding comments, but likely overkill for many steps
@@ -51,6 +54,7 @@ uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --introduction "${introduction_file}" \
     --section "${output_requirements_file}" \
     --section "${methods_file}" \
+    --auxiliary "${n2o_methods_figure_file}" \
     --section "${results_file}" \
     --conclusion "${conclusion_file}" \
     --code-and-data-availability "${code_and_data_availability_file}" \
