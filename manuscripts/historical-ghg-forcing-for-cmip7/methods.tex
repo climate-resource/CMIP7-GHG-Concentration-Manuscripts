@@ -566,11 +566,38 @@ For N_2O, we use both the NOAA HATS [TODO ref] and AGAGE [TODO ref] networks.
 We use data from the AGAGE network, as well as from the predecessor GAGE [TODO ref] and ALE [TODO ref] networks.
 The approach used to bin and average these networks then follows the approach used for
 CO_2 (Section \ref{sssec:methods-co2-observational-network}).
+The resulting observational network is shown in Figure \ref{fig:n2o-observational-network}.
+
+\begin{figure*}[t]
+\includegraphics[width=\textwidth]{n2o_methods.pdf}
+\caption{
+The N_2O surface observational network.
+(a) The monthly mean mole fraction reported by each station,
+coloured by the station's latitude, with a different marker for each network.
+(b) The location of each station.
+The ALE, GAGE and AGAGE stations are largely the same physical sites,
+observed by successive instruments, so we show them as a single network.
+Sites which host both networks are drawn as concentric outlines.
+The grid lines show the 15\textdegree{} latitudinal
+and 60\textdegree{} longitudinal bins into which the observations are binned.
+(c) The number of input data points in each month
+and 15\textdegree{} latitudinal bin, summed over all longitudes.
+The networks report monthly averages,
+so each input data point is itself the average of many measurements;
+those underlying measurements are not reported to us,
+and so are neither shown nor counted here.
+Bins with no data are left blank,
+which makes clear that the network covers only part of the globe
+and that its coverage changes over time.
+}
+\label{fig:n2o-observational-network}
+\end{figure*}
 
 \subsubsection{Spatial interpolation}
 
 As for CO_2 (Section \ref{sssec:methods-co2-spatial-interpolation}),
-the surface observational network does not cover the entire globe [TODO: figure],
+the surface observational network does not cover the entire globe
+(Figure \ref{fig:n2o-observational-network}),
 so we must interpolate.
 We apply the same pre-interpolation data requirements as for CO_2 (Section \ref{sssec:methods-co2-spatial-interpolation}).
 When we  take the longest dataset that is continuous,
