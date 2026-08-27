@@ -31,16 +31,9 @@ from local.cmip_ghg_generation import (
     ensure_bundle_available,
     ensure_bundle_environment,
     ensure_executed_notebook_available,
-    run_notebook,
+    run_notebook_from_bundle_dir,
     write_modified_notebook,
 )
-
-BIN_OBSERVATIONAL_NETWORK_NOTEBOOK = (
-    Path("calculate_n2o_monthly_fifteen_degree_pieces")
-    / "only"
-    / "1000_n2o_bin-observational-network.ipynb"
-)
-"""Notebook from the original run which builds the data we want"""
 
 ALL_DATA_WITH_BINS_FILE = Path("manuscript-outputs") / "n2o_all-data-with-bins.csv"
 """Where the re-run notebook saves the data we want
@@ -156,11 +149,28 @@ def get_n2o_all_data_with_bins(
         logger.info(f"Using existing {out_file}")
         return pd.read_csv(out_file)
 
+    base_notebook = (
+        Path("calculate_n2o_monthly_fifteen_degree_pieces")
+        / "only"
+        / "1000_n2o_bin-observational-network.ipynb"
+    )
+
     start_from = ensure_executed_notebook_available(
-        BIN_OBSERVATIONAL_NETWORK_NOTEBOOK,
+        base_notebook,
         original_run_notebooks_dir=original_run_notebooks_dir,
     )
-    ensure_bundle_available(bundle_dir)
+    ensure_bundle_available(
+        files_to_get=(
+            "pyproject.toml",
+            "pixi.lock",
+            "v1.0.0-config-raw.yaml",
+        ),
+        files_to_get_tarred=(
+            "src.tar.gz",
+            "data--interim.tar.gz",
+        ),
+        bundle_dir=bundle_dir,
+    )
     ensure_bundle_environment(bundle_dir)
 
     save_cell = f"""
@@ -175,17 +185,18 @@ all_data_with_bins.to_csv(manuscript_out_file, index=False)
 manuscript_out_file
 """
 
-    notebook_name = BIN_OBSERVATIONAL_NETWORK_NOTEBOOK.stem
+    notebook_name = base_notebook.stem
+    ipynb_to_run = bundle_dir / "notebooks-rerun" / f"{notebook_name}.ipynb"
     to_run = write_modified_notebook(
         start_from=start_from,
         out_py=MODIFIED_NOTEBOOKS_DIR / f"{notebook_name}.py",
-        out_ipynb=bundle_dir / "notebooks-rerun" / f"{notebook_name}.ipynb",
+        out_ipynb=ipynb_to_run,
         extra_cells=[save_cell],
         step_config_id="only",
     )
-    run_notebook(
+    run_notebook_from_bundle_dir(
         to_run,
-        bundle_dir / "notebooks-rerun" / f"{notebook_name}_executed.ipynb",
+        ipynb_to_run,
         bundle_dir=bundle_dir,
     )
 
@@ -486,7 +497,7 @@ def plot_observation_counts(
 
 def generate_n2o_methods_figure(
     outfile: Path,
-    bundle_dir: Path = DEFAULT_BUNDLE_DIR,
+    bundle_dir: Path,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
     force_rerun: bool = False,
 ) -> Path:

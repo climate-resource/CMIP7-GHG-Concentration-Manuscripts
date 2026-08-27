@@ -34,27 +34,6 @@ from local.zenodo import download_files, extract_tar_gz
 ZENODO_RECORD_ID = "14892947"
 """ID of the Zenodo record which holds the original run"""
 
-BUNDLE_FILES_PLAIN = (
-    "pyproject.toml",
-    "pixi.lock",
-    "v1.0.0-config-raw.yaml",
-)
-"""Files we need from the Zenodo record which are used as-is"""
-
-BUNDLE_FILES_TARRED = (
-    "src.tar.gz",
-    "data--interim.tar.gz",
-)
-"""Tarballs we need from the Zenodo record
-
-`src.tar.gz` holds the original run's `local` package,
-`data--interim.tar.gz` holds the intermediate data files the notebooks read.
-
-We deliberately do not grab `data--processed.tar.gz` (75MB).
-The only thing in it that the notebooks we re-run touch
-is the dependency database, which they create if it isn't there.
-"""
-
 TARBALL_STRIP_COMPONENTS = 2
 """Leading path components to strip when extracting the tarballs
 
@@ -174,7 +153,13 @@ def ensure_executed_notebook_available(
     return our_copy
 
 
-def ensure_bundle_available(bundle_dir: Path = DEFAULT_BUNDLE_DIR) -> Path:
+def ensure_bundle_available(
+    files_to_get: tuple[str, ...],
+    files_to_get_tarred: tuple[str, ...],
+    bundle_dir: Path = DEFAULT_BUNDLE_DIR,
+    record_id: str = ZENODO_RECORD_ID,
+    tar_strip_components: int = TARBALL_STRIP_COMPONENTS,
+) -> Path:
     """
     Ensure that the original run's bundle is available locally
 
@@ -183,23 +168,35 @@ def ensure_bundle_available(bundle_dir: Path = DEFAULT_BUNDLE_DIR) -> Path:
 
     Parameters
     ----------
+    files_to_get
+        Files to get from the bundle
+
+    files_to_get_tarred
+        Tar files to get and extract from the bundle
+
     bundle_dir
         Directory in which to put the bundle
+
+    record_id
+        ID of the record from which to get the bundle
+
+    tar_strip_components
+        Path components to strip when extracting tarballs
 
     Returns
     -------
         `bundle_dir`, for convenience
     """
     download_files(
-        record_id=ZENODO_RECORD_ID,
-        filenames=BUNDLE_FILES_PLAIN,
+        record_id=record_id,
+        filenames=files_to_get,
         dest_dir=bundle_dir,
     )
 
     tarball_dir = bundle_dir / "zenodo-tarballs"
     tarballs = download_files(
-        record_id=ZENODO_RECORD_ID,
-        filenames=BUNDLE_FILES_TARRED,
+        record_id=record_id,
+        filenames=files_to_get_tarred,
         dest_dir=tarball_dir,
     )
     for tarball in tarballs:
@@ -208,7 +205,11 @@ def ensure_bundle_available(bundle_dir: Path = DEFAULT_BUNDLE_DIR) -> Path:
             logger.debug(f"{tarball} has already been extracted")
             continue
 
-        extract_tar_gz(tarball, bundle_dir, strip_components=TARBALL_STRIP_COMPONENTS)
+        extract_tar_gz(
+            tarball,
+            bundle_dir,
+            strip_components=tar_strip_components,
+        )
         marker.touch()
 
     return bundle_dir
@@ -240,7 +241,11 @@ def ensure_bundle_environment(bundle_dir: Path = DEFAULT_BUNDLE_DIR) -> None:
     )
 
 
-def run_in_bundle(command: list[str], bundle_dir: Path) -> None:
+def run_in_bundle(
+    command: list[str],
+    bundle_dir: Path,
+    env_vars_to_drop: tuple[str, ...] = ENV_VARS_TO_DROP_WHEN_RUNNING_NOTEBOOKS,
+) -> None:
     """
     Run a command with the bundle as its working directory
 
@@ -254,15 +259,19 @@ def run_in_bundle(command: list[str], bundle_dir: Path) -> None:
 
     bundle_dir
         Directory which holds the bundle
+
+    env_vars_to_drop
+        Environment variables to drop when running the command
     """  # noqa: E501
     env = {
         k: v
         for k, v in os.environ.items()
+        # Make this a function argument rather than a global
         if k not in ENV_VARS_TO_DROP_WHEN_RUNNING_NOTEBOOKS
     }
 
     logger.debug(f"Running {command} in {bundle_dir}")
-    # The command is built by this module, it is not user input
+    # The command is built by this module, it is not user input, hence noqa S603
     subprocess.run(command, cwd=bundle_dir, env=env, check=True)  # noqa: S603
 
 
@@ -286,7 +295,7 @@ def write_modified_notebook(  # noqa: PLR0913
 
     Two copies are written: a `py:percent` copy, which is what we track in git
     because it is the copy a human can read a diff of,
-    and an `ipynb` copy, which is what we actually execute.
+    and an `ipynb` copy, which is what we actually intend to be executed.
 
     Parameters
     ----------
@@ -390,7 +399,7 @@ def _clear_run_artefacts(notebook: NotebookNode) -> None:
         cell["execution_count"] = None
 
 
-def run_notebook(
+def run_notebook_from_bundle_dir(
     notebook: Path,
     out_notebook: Path,
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
@@ -422,7 +431,9 @@ def run_notebook(
             "run",
             "--frozen",
             "papermill",
-            "--no-progress-bar",
+            # Show the progress by default.
+            # Can add a flag later if we need to be able to toggle this.
+            # "--no-progress-bar",
             # The config file's paths are relative to the bundle's root directory
             "--cwd",
             str(bundle_dir.resolve()),

@@ -35,9 +35,6 @@ repos:
         args: [ --fix, --exit-non-zero-on-fix ]
       - id: ruff-format
   - repo: https://github.com/astral-sh/uv-pre-commit
-    # Must be new enough to understand the lock format uv.lock is written in
-    # (uv 0.4.26 predates `revision`, so it silently downgraded the whole file
-    # any time a pyproject.toml change forced a re-resolve).
     rev: "0.12.1"
     hooks:
       - id: uv-lock
