@@ -133,6 +133,66 @@ In the timeseries panel colour shows latitude, so the legend
 can only speak about the marker shape.
 """
 
+PANELS = (
+    "timeseries",
+    "locations",
+    "counts",
+    "interpolated-most",
+    "interpolated-least",
+    "gm",
+    "seasonality",
+    "lat-grad-eof",
+    "lat-grad-pc",
+    "gm-ext",
+    "lat-grad-pc-emms",
+    "lat-grad-pc-ext",
+    "flying-carpet",
+    "yearly",
+    "monthly",
+)
+"""The figure's panels, in the order in which they are labelled
+
+The labels follow the order of the steps in the method,
+which is not the order in which the panels are laid out.
+"""
+
+MOSAIC = [
+    ["timeseries", "timeseries", "interpolated-most", "gm"],
+    ["timeseries", "timeseries", "interpolated-least", "seasonality"],
+    ["locations", "counts", "lat-grad-eof", "lat-grad-pc"],
+    ["gm-ext", "gm-ext", "lat-grad-pc-emms", "lat-grad-pc-ext"],
+    ["flying-carpet", "yearly", "yearly", "monthly"],
+]
+"""Layout of the figure's panels
+
+Four columns, because the columns have to be wide enough
+to carry a panel's labels and its colour bar.
+With more (hence narrower) columns, the layout engine runs out of room
+and gives up, which is what leaves the panels sitting
+in matplotlib's default positions rather than in the positions we asked for.
+If a panel needs a width that four columns cannot express,
+it is cheaper to move panels between rows than to split the columns further.
+
+There is no point setting height ratios here:
+the rows which hold a map are shrunk onto the height their map needs
+while the figure is being laid out,
+see [fit_rows_to_fixed_aspect_panels][].
+"""
+
+MAP_PANELS = ("locations", "interpolated-most", "interpolated-least")
+"""The panels which show a map
+
+These are the panels with a fixed aspect ratio,
+which is what makes the figure's spacing fiddly.
+There will not be any more of them.
+"""
+
+FIGURE_SIZE = (15.0, 11.2)
+"""Size of the figure in inches
+
+The width is set by the page, the height by what the panels need.
+"""
+
 
 def get_n2o_all_data_with_bins(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
@@ -663,51 +723,232 @@ def plot_coverage_and_interpolated(
     # return stuff for colour bar
 
 
-def align_latitude_axes(
+def has_fixed_aspect(ax: matplotlib.axes.Axes) -> bool:
+    """
+    Determine whether an axes' aspect ratio is fixed
+
+    A fixed aspect ratio means the axes' height follows from its width,
+    so the axes cannot stretch to fill the row it is in.
+    Our maps are the axes for which this is true.
+
+    Parameters
+    ----------
+    ax
+        Axes to check
+
+    Returns
+    -------
+        `True` if `ax`'s aspect ratio is fixed, `False` otherwise
+    """
+    return ax.get_aspect() != "auto"
+
+
+def fit_rows_to_fixed_aspect_panels(
     fig: matplotlib.figure.Figure,
-    map_ax: matplotlib.axes.Axes,
-    counts_ax: matplotlib.axes.Axes,
-    counts_colour_bar_ax: matplotlib.axes.Axes,
+    axes: dict[str, matplotlib.axes.Axes],
+    n_iterations: int = 4,
 ) -> None:
     """
-    Line the counts panel's latitude axis up with the map's
+    Shrink each row of the figure onto the fixed-aspect panels it holds
 
-    Once they line up, a latitude sits at the same height in both panels,
-    so the eye can run straight from a station on the map
-    to the data it contributes.
+    The maps have a fixed aspect ratio, so their height follows from their
+    width and they cannot stretch to fill their row.
+    Everything else in the row does stretch,
+    which leaves a band of white space under each map
+    and stops each map's latitude axis
+    from lining up with its neighbours' latitude axes.
 
-    The map's aspect is fixed, so it doesn't fill the height of its cell
-    and we only know the height it does fill once the figure has been laid out.
-    Hence we lay the figure out, then move the counts panel to match the map.
+    So, we do the opposite: we shrink every row which holds a map
+    down onto the height that map wants,
+    and let the layout engine hand the height this frees up
+    to the rows which can actually use it.
+    Once a row is the height of its map,
+    every panel in that row has the map's height too,
+    which is what lines the latitude axes up.
+
+    Row heights and panel widths depend on each other
+    (through the space the layout engine sets aside for labels
+    and colour bars), so we iterate rather than solving in one shot.
+    A handful of iterations is plenty:
+    a map's height is set by its width, which barely moves
+    as the rows change height.
 
     Parameters
     ----------
     fig
-        Figure being drawn
+        Figure to lay out
 
-    map_ax
-        Axes holding the map
+        This must be using a layout engine which respects height ratios,
+        i.e. the constrained layout engine.
 
-    counts_ax
-        Axes holding the observation counts
+    axes
+        The figure's panels
 
-    counts_colour_bar_ax
-        Axes holding the observation counts' colour bar
+        Panels which span more than one row are ignored,
+        because they say nothing about the height any single row needs.
 
-        This moves with the counts panel, otherwise it is left standing
-        taller than the panel it belongs to.
+    n_iterations
+        Number of times to iterate
+    """
+    grid_spec = next(iter(axes.values())).get_subplotspec().get_gridspec()
+    height_ratios = list(grid_spec.get_height_ratios())
+
+    for _ in range(n_iterations):
+        fig.draw_without_rendering()
+
+        heights: dict[int, list[tuple[bool, float]]] = {}
+        for ax in axes.values():
+            row_span = ax.get_subplotspec().rowspan
+            if row_span.stop - row_span.start != 1:
+                continue
+
+            heights.setdefault(row_span.start, []).append(
+                (has_fixed_aspect(ax), ax.get_position().height)
+            )
+
+        for row, row_heights in heights.items():
+            fixed_heights = [height for fixed, height in row_heights if fixed]
+            if not fixed_heights:
+                # Nothing in this row is holding the row's height back
+                continue
+
+            # The tallest map is the height the row needs,
+            # the tallest panel is the height the row currently has.
+            wanted = max(fixed_heights)
+            have = max(height for _, height in row_heights)
+            if have <= 0.0:
+                # The layout engine has given up on this row,
+                # so there is nothing to measure. Leave the row as it is:
+                # squeezing it further would only make matters worse.
+                continue
+
+            height_ratios[row] *= wanted / have
+
+        grid_spec.set_height_ratios(height_ratios)
+
+
+def add_colour_bar(
+    fig: matplotlib.figure.Figure,
+    mappable: matplotlib.cm.ScalarMappable,
+    ax: matplotlib.axes.Axes | list[matplotlib.axes.Axes],
+    label: str,
+    ticks: np.typing.ArrayLike | None = None,
+    **kwargs: object,
+) -> matplotlib.colorbar.Colorbar:
+    """
+    Add a colour bar to the figure
+
+    Note
+    ----
+    Every colour bar we add costs the figure space, so each one needs a look
+    before it is trusted, and there are two things to look at.
+
+    First, a colour bar takes its width from the panel it belongs to,
+    which makes that panel narrower.
+    If that panel is a map, the map gets shorter too
+    (its aspect ratio is fixed), and its whole row shrinks with it,
+    because [fit_rows_to_fixed_aspect_panels][] fits the row to the map.
+    A colour bar on a map is therefore much more expensive
+    than a colour bar on any other panel.
+    If the figure ends up carrying more colour bars than it can,
+    the first thing to try is one colour bar shared between the panels
+    which share a scale (pass a list of panels as `ax`),
+    e.g. one for the two interpolated-coverage maps.
+
+    Second, the colour bar has to be listed in `colour_bars`
+    in [generate_n2o_methods_figure][], with the panel it belongs to,
+    so that [tuck_colour_bars_against_their_panels][] moves it
+    up against its panel.
+
+    Parameters
+    ----------
+    fig
+        Figure to add the colour bar to
+
+    mappable
+        Mappable to draw the colour bar for
+
+    ax
+        Panel (or panels) the colour bar belongs to
+
+        The space for the colour bar is taken from these panels.
+
+    label
+        Label for the colour bar
+
+    ticks
+        Ticks to show on the colour bar
+
+        If not supplied, the ticks are left to matplotlib.
+
+    **kwargs
+        Passed on to `fig.colorbar`
+
+    Returns
+    -------
+        The colour bar which was added
+    """
+    colour_bar = fig.colorbar(mappable, ax=ax, pad=0.02, aspect=18, **kwargs)
+    if ticks is not None:
+        colour_bar.set_ticks(ticks)
+
+    colour_bar.set_label(label, fontsize="small")
+    colour_bar.ax.tick_params(labelsize="small")
+
+    return colour_bar
+
+
+def tuck_colour_bars_against_their_panels(
+    fig: matplotlib.figure.Figure,
+    colour_bars: list[tuple[matplotlib.colorbar.Colorbar, matplotlib.axes.Axes]],
+    gap: float = 0.1,
+) -> None:
+    """
+    Move each colour bar up against the panel it belongs to
+
+    The layout engine parks a colour bar at the far side of the gap
+    between its panel and the next one,
+    where it reads as though it belongs to the panel on its right.
+    Here we slide it back across the gap, up against its own panel.
+    Nothing else moves: the space the colour bar leaves behind
+    simply widens the gap before the next panel.
+
+    Parameters
+    ----------
+    fig
+        Figure being laid out
+
+    colour_bars
+        The figure's colour bars, each with the panel it belongs to
+
+        Only colour bars which sit to the right of their panel are moved.
+
+    gap
+        Gap to leave between each panel and its colour bar, in inches
+
+    Notes
+    -----
+    This freezes the layout,
+    because the layout engine would otherwise undo the move,
+    so it has to be the last thing which touches the figure's layout.
     """
     fig.draw_without_rendering()
-    map_position = map_ax.get_position()
+    fig.set_layout_engine("none")
 
-    # TODO: turn back on
-    # # Constrained layout would just undo the positions we set below
-    # fig.set_layout_engine("none")
+    gap_in_figure_coords = gap / fig.get_size_inches()[0]
+    for colour_bar, panel in colour_bars:
+        if colour_bar.orientation != "vertical":
+            # Sits under its panel rather than beside it, so it is already home
+            continue
 
-    for ax in (counts_ax, counts_colour_bar_ax):
-        position = ax.get_position()
-        ax.set_position(
-            (position.x0, map_position.y0, position.width, map_position.height)
+        position = colour_bar.ax.get_position()
+        colour_bar.ax.set_position(
+            (
+                panel.get_position().x1 + gap_in_figure_coords,
+                position.y0,
+                position.width,
+                position.height,
+            )
         )
 
 
@@ -738,85 +979,13 @@ def generate_n2o_methods_figure(
     -------
         `outfile`
     """
-    panels = (
-        "timeseries",
-        "locations",
-        "counts",
-        "interpolated-most",
-        "interpolated-least",
-        "gm",
-        "lat-grad-eof",
-        "lat-grad-pc",
-        "seasonality",
-        "gm-ext",
-        "lat-grad-pc-emms",
-        "lat-grad-pc-ext",
-        "flying-carpet",
-        "yearly",
-        "monthly",
-    )
-    labels = [string.ascii_lowercase[i] for i in range(len(panels))]
     fig, axes = plt.subplot_mosaic(
-        [
-            [
-                "timeseries",
-                "timeseries",
-                "timeseries",
-                "timeseries",
-                "interpolated-most",
-                "interpolated-most",
-                "lat-grad-pc",
-                "lat-grad-pc",
-            ],
-            [
-                "timeseries",
-                "timeseries",
-                "timeseries",
-                "timeseries",
-                "interpolated-least",
-                "interpolated-least",
-                "lat-grad-eof",
-                "lat-grad-eof",
-            ],
-            [
-                "locations",
-                "locations",
-                "counts",
-                "counts",
-                "gm",
-                "gm",
-                "seasonality",
-                "seasonality",
-            ],
-            [
-                "gm-ext",
-                "gm-ext",
-                "gm-ext",
-                "gm-ext",
-                "lat-grad-pc-emms",
-                "lat-grad-pc-emms",
-                "lat-grad-pc-ext",
-                "lat-grad-pc-ext",
-            ],
-            [
-                "flying-carpet",
-                "flying-carpet",
-                "yearly",
-                "yearly",
-                "yearly",
-                "monthly",
-                "monthly",
-                "monthly",
-            ],
-        ],
-        figsize=(15.0, 11.2),
+        MOSAIC,
+        figsize=FIGURE_SIZE,
         per_subplot_kw={
-            "locations": {"projection": ccrs.PlateCarree()},
-            "interpolated-most": {"projection": ccrs.PlateCarree()},
-            "interpolated-least": {"projection": ccrs.PlateCarree()},
+            panel: {"projection": ccrs.PlateCarree()} for panel in MAP_PANELS
         },
-        # TODO: turn back on?
-        # layout="constrained",
+        layout="constrained",
     )
 
     all_data_with_bins = add_network_group(
@@ -831,26 +1000,24 @@ def generate_n2o_methods_figure(
     plot_station_locations(all_data_with_bins, axes["locations"])
     counts_mesh = plot_observation_counts(all_data_with_bins, axes["counts"])
 
-    latitude_colour_bar = fig.colorbar(
+    latitude_colour_bar = add_colour_bar(
+        fig,
         timeseries_scatter,
         ax=axes["timeseries"],
-        pad=0.02,
-        aspect=18,
+        label=r"latitude [$^{\circ}$N]",
+        ticks=LAT_BIN_BOUNDS[::2],
     )
-    latitude_colour_bar.set_ticks(LAT_BIN_BOUNDS[::2])
-    latitude_colour_bar.set_label(r"latitude [$^{\circ}$N]", fontsize="small")
-    latitude_colour_bar.ax.tick_params(labelsize="small")
+    # The points are drawn see-through so they don't hide each other,
+    # but the colour bar should show the colours at full strength
     latitude_colour_bar.solids.set_alpha(1.0)
 
-    counts_colour_bar = fig.colorbar(
+    counts_colour_bar = add_colour_bar(
+        fig,
         counts_mesh,
         ax=axes["counts"],
-        pad=0.02,
-        aspect=18,
+        label="Number of input data points",
+        ticks=np.arange(1, int(counts_mesh.norm.vmax) + 1),
     )
-    counts_colour_bar.set_ticks(np.arange(1, int(counts_mesh.norm.vmax) + 1))
-    counts_colour_bar.set_label("Number of input data points", fontsize="small")
-    counts_colour_bar.ax.tick_params(labelsize="small")
 
     # Both time axes cover the same period, even though the panels differ in width
     x_limits = (
@@ -862,11 +1029,6 @@ def generate_n2o_methods_figure(
 
     axes["counts"].set_xlabel("year", fontsize="small")
 
-    for label, panel in zip(labels, panels):
-        axes[panel].set_title(
-            f"({label})", loc="left", fontsize="medium", fontweight="bold"
-        )
-
     interpolated_obs_file = (
         bundle_dir / "data/interim/n2o/n2o_observational-network_interpolated.nc"
     )
@@ -875,7 +1037,8 @@ def generate_n2o_methods_figure(
         all_data_with_bins, interpolated_obs
     )
     for key in ["most", "least"]:
-        # Need to return something here, then create the colour bar
+        # TODO: return the mesh here, then give these panels a colour bar
+        # (see the note in [add_colour_bar][] before doing so)
         plot_coverage_and_interpolated(
             input_data=all_data_with_bins,
             interpolated=interpolated_obs,
@@ -883,10 +1046,24 @@ def generate_n2o_methods_figure(
             ax=axes[f"interpolated-{key}"],
         )
 
-    # # Last, because it freezes the layout
-    # align_latitude_axes(fig, axes["locations"], axes["counts"], counts_colour_bar.ax)
-    # TODO: turn this off
-    fig.tight_layout()
+    for label, panel in zip(string.ascii_lowercase, PANELS):
+        axes[panel].set_title(
+            f"({label})", loc="left", fontsize="medium", fontweight="bold"
+        )
+
+    # The figure's colour bars, each with the panel it belongs to.
+    # Any colour bar we add has to be listed here too,
+    # otherwise it is left stranded next to its neighbour's panel.
+    colour_bars = [
+        (latitude_colour_bar, axes["timeseries"]),
+        (counts_colour_bar, axes["counts"]),
+    ]
+
+    # These two are last, and in this order,
+    # because they need to know how much space everything else has taken up
+    # and the second of them freezes the layout.
+    fit_rows_to_fixed_aspect_panels(fig, axes)
+    tuck_colour_bars_against_their_panels(fig, colour_bars)
 
     outfile.parent.mkdir(exist_ok=True, parents=True)
     logger.info(f"Writing {outfile}")
