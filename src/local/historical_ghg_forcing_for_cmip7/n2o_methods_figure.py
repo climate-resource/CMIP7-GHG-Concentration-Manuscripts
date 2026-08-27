@@ -19,6 +19,7 @@ from pathlib import Path
 import cartopy.crs as ccrs
 import matplotlib.axes
 import matplotlib.colors
+import matplotlib.figure
 import matplotlib.lines
 import matplotlib.pyplot as plt
 import numpy as np
@@ -53,6 +54,14 @@ LON_BIN_BOUNDS = np.arange(-180, 181, 60)
 """Bounds of the longitudinal bins used by the original run
 
 This mirrors `local.binning.LON_BIN_BOUNDS` in the original run.
+"""
+
+LAT_AXIS_LIMITS = (-95, 95)
+"""Limits of the latitude axis
+
+Used by both the map and the counts panel, so the two can be read against
+each other. A little room past the poles, so the polar stations have
+somewhere to sit.
 """
 
 NETWORK_GROUPS = {
@@ -447,15 +456,16 @@ def plot_station_locations(
     # Anchoring it to the top keeps it up against its panel label.
     ax.set_anchor("N")
     ax.tick_params(labelsize="small")
-    # A little room past the poles, so the polar stations have somewhere to sit
-    ax.set_ylim(-95, 95)
-    # Below the axes rather than over the map,
-    # which also uses the space the map's fixed aspect leaves free
+    ax.set_ylim(LAT_AXIS_LIMITS)
+    # On the panel label's line, rather than over the map (which would cover
+    # stations) or below it (which would waste the height the map's fixed
+    # aspect already costs us)
     add_network_legend(
         ax,
-        loc="upper center",
-        bbox_to_anchor=(0.5, -0.25),
+        loc="lower right",
+        bbox_to_anchor=(1.0, 1.0),
         ncols=2,
+        # frameon=False,
     )
 
 
@@ -523,10 +533,58 @@ def plot_observation_counts(
         shading="flat",
     )
     ax.set_yticks(LAT_BIN_BOUNDS[::2])
+    ax.set_ylim(LAT_AXIS_LIMITS)
     ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
     ax.tick_params(labelsize="small")
 
     return mesh
+
+
+def align_latitude_axes(
+    fig: matplotlib.figure.Figure,
+    map_ax: matplotlib.axes.Axes,
+    counts_ax: matplotlib.axes.Axes,
+    counts_colour_bar_ax: matplotlib.axes.Axes,
+) -> None:
+    """
+    Line the counts panel's latitude axis up with the map's
+
+    Once they line up, a latitude sits at the same height in both panels,
+    so the eye can run straight from a station on the map
+    to the data it contributes.
+
+    The map's aspect is fixed, so it doesn't fill the height of its cell
+    and we only know the height it does fill once the figure has been laid out.
+    Hence we lay the figure out, then move the counts panel to match the map.
+
+    Parameters
+    ----------
+    fig
+        Figure being drawn
+
+    map_ax
+        Axes holding the map
+
+    counts_ax
+        Axes holding the observation counts
+
+    counts_colour_bar_ax
+        Axes holding the observation counts' colour bar
+
+        This moves with the counts panel, otherwise it is left standing
+        taller than the panel it belongs to.
+    """
+    fig.draw_without_rendering()
+    map_position = map_ax.get_position()
+
+    # Constrained layout would just undo the positions we set below
+    fig.set_layout_engine("none")
+
+    for ax in (counts_ax, counts_colour_bar_ax):
+        position = ax.get_position()
+        ax.set_position(
+            (position.x0, map_position.y0, position.width, map_position.height)
+        )
 
 
 def generate_n2o_methods_figure(
@@ -571,10 +629,12 @@ def generate_n2o_methods_figure(
             ["timeseries", "timeseries"],
             ["locations", "counts"],
         ],
-        figsize=(7.5, 5.9),
+        figsize=(7.5, 5.6),
         # The map keeps a true 2:1 aspect, so the bottom row is sized to suit it,
-        # and given the wider column, rather than leaving it adrift in white space
-        height_ratios=[1.0, 0.78],
+        # and given the wider column, rather than leaving it adrift in white space.
+        # With the legend above the map rather than below, the row only has to
+        # hold the map itself, so the height it used to spare goes to the timeseries.
+        height_ratios=[1.0, 0.6],
         width_ratios=[1.28, 1.0],
         per_subplot_kw={"locations": {"projection": ccrs.PlateCarree()}},
         layout="constrained",
@@ -582,9 +642,6 @@ def generate_n2o_methods_figure(
 
     timeseries_scatter = plot_station_timeseries(all_data_with_bins, axes["timeseries"])
     plot_station_locations(all_data_with_bins, axes["locations"])
-    # Claude: please make the y axis of b and c be aligned
-    # so that the users eye can just follow the natural horizontal line between the two plots
-    # to 'see' where the data points come from when comparing to the map.
     counts_mesh = plot_observation_counts(all_data_with_bins, axes["counts"])
 
     latitude_colour_bar = fig.colorbar(
@@ -622,6 +679,9 @@ def generate_n2o_methods_figure(
         axes[panel].set_title(
             f"({label})", loc="left", fontsize="medium", fontweight="bold"
         )
+
+    # Last, because it freezes the layout
+    align_latitude_axes(fig, axes["locations"], axes["counts"], counts_colour_bar.ax)
 
     outfile.parent.mkdir(exist_ok=True, parents=True)
     logger.info(f"Writing {outfile}")
