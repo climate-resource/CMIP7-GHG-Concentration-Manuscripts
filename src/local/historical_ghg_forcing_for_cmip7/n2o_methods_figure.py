@@ -56,7 +56,7 @@ LON_BIN_BOUNDS = np.arange(-180, 181, 60)
 This mirrors `local.binning.LON_BIN_BOUNDS` in the original run.
 """
 
-LAT_AXIS_LIMITS = (-95, 95)
+LAT_AXIS_LIMITS = (-91, 91)
 """Limits of the latitude axis
 
 Used by both the map and the counts panel, so the two can be read against
@@ -626,16 +626,48 @@ def generate_n2o_methods_figure(
     labels = [string.ascii_lowercase[i] for i in range(len(panels))]
     fig, axes = plt.subplot_mosaic(
         [
-            ["timeseries", "timeseries"],
-            ["locations", "counts"],
+            [
+                "timeseries",
+                "timeseries",
+                "timeseries",
+                "timeseries",
+                "interpolated",
+                "interpolated",
+                "gm",
+                "gm",
+            ],
+            [
+                "locations",
+                "locations",
+                "counts",
+                "counts",
+                "lat-grad-eof",
+                "lat-grad-pc",
+                "seasonality",
+                "seasonality",
+            ],
+            [
+                "gm-ext",
+                "gm-ext",
+                "gm-ext",
+                "gm-ext",
+                "lat-grad-pc-emms",
+                "lat-grad-pc-emms",
+                "lat-grad-pc-ext",
+                "lat-grad-pc-ext",
+            ],
+            [
+                "flying-carpet",
+                "flying-carpet",
+                "yearly",
+                "yearly",
+                "yearly",
+                "monthly",
+                "monthly",
+                "monthly",
+            ],
         ],
-        figsize=(7.5, 5.6),
-        # The map keeps a true 2:1 aspect, so the bottom row is sized to suit it,
-        # and given the wider column, rather than leaving it adrift in white space.
-        # With the legend above the map rather than below, the row only has to
-        # hold the map itself, so the height it used to spare goes to the timeseries.
-        height_ratios=[1.0, 0.6],
-        width_ratios=[1.28, 1.0],
+        figsize=(15.0, 11.2),
         per_subplot_kw={"locations": {"projection": ccrs.PlateCarree()}},
         layout="constrained",
     )
