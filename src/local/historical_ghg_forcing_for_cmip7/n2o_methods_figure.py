@@ -24,6 +24,7 @@ import matplotlib.lines
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import xarray as xr
 from loguru import logger
 
 from local.cmip_ghg_generation import (
@@ -36,6 +37,7 @@ from local.cmip_ghg_generation import (
     run_notebook_from_bundle_dir,
     write_modified_notebook,
 )
+from local.xarray_time import convert_time_to_year_month, convert_year_month_to_time
 
 ALL_DATA_WITH_BINS_FILE = Path("manuscript-outputs") / "n2o_all-data-with-bins.csv"
 """Where the re-run notebook saves the data we want
@@ -50,10 +52,18 @@ LAT_BIN_BOUNDS = np.arange(-90, 91, 15)
 This mirrors `local.binning.LAT_BIN_BOUNDS` in the original run.
 """
 
+LAT_BIN_CENTRES = (LAT_BIN_BOUNDS[:-1] + LAT_BIN_BOUNDS[1:]) / 2.0
+"""Centres of the latitudinal bins used by the original run
+"""
+
 LON_BIN_BOUNDS = np.arange(-180, 181, 60)
 """Bounds of the longitudinal bins used by the original run
 
 This mirrors `local.binning.LON_BIN_BOUNDS` in the original run.
+"""
+
+LON_BIN_CENTRES = (LON_BIN_BOUNDS[:-1] + LON_BIN_BOUNDS[1:]) / 2.0
+"""Centres of the longitudinal bins used by the original run
 """
 
 LAT_AXIS_LIMITS = (-91, 91)
@@ -211,6 +221,47 @@ manuscript_out_file
     )
 
     return pd.read_csv(out_file)
+
+
+def get_interpolated_input_coverage_info(
+    all_data_with_bins: pd.DataFrame,
+    interpolated_obs: xr.Dataset,
+) -> dict[str, tuple[int, int]]:
+    """
+    Get interpolated input coverage information
+
+    Returns the year and month for the time point
+    with the most input points and the least input points.
+    """
+    # Reproduce what was done in the workflow.
+    # Break this out if we need it elsewhere.
+    interpolated_obs_nan_free = convert_year_month_to_time(
+        convert_time_to_year_month(interpolated_obs).dropna("year")
+    )
+    nan_free_min_year = int(interpolated_obs_nan_free["time"].dt.year.min())
+    nan_free_max_year = int(interpolated_obs_nan_free["time"].dt.year.max())
+    all_data_with_bins_relevant = all_data_with_bins[
+        (all_data_with_bins["year"] >= nan_free_min_year)
+        & (all_data_with_bins["year"] <= nan_free_max_year)
+    ].copy()
+    all_data_with_bins_relevant["lat-lon-bin"] = (
+        all_data_with_bins["lat_bin"].astype(str)
+        + "__"
+        + all_data_with_bins["lon_bin"].astype(str)
+    )
+    input_point_counts = all_data_with_bins_relevant.groupby(
+        [
+            "year",
+            "month",
+        ]
+    )["lat-lon-bin"].count()
+
+    res = {
+        "most": input_point_counts.idxmax(),
+        "least": input_point_counts.idxmin(),
+    }
+
+    return res
 
 
 def get_decimal_year(indf: pd.DataFrame) -> pd.Series[float]:
@@ -540,6 +591,78 @@ def plot_observation_counts(
     return mesh
 
 
+def plot_coverage_and_interpolated(
+    input_data: pd.DataFrame,
+    interpolated: xr.Dataset,
+    year_month: tuple[int, int],
+    ax: matplotlib.axes.Axes,
+) -> None:
+    """
+    Plot the interpolated values and the coverage of input data
+    """
+    ax.coastlines(linewidth=0.6, color="0.3", zorder=2.0)
+    ax.set_global()
+
+    for lat_bound in LAT_BIN_BOUNDS:
+        ax.axhline(lat_bound, linewidth=0.4, color="0.85", zorder=0)
+
+    for lon_bound in LON_BIN_BOUNDS:
+        ax.axvline(lon_bound, linewidth=0.4, color="0.85", zorder=0)
+
+    lon_grid, lat_grid = np.meshgrid(
+        LON_BIN_CENTRES,
+        LAT_BIN_CENTRES,
+    )
+
+    interpolated_ym = convert_time_to_year_month(interpolated).sel(
+        year=year_month[0], month=year_month[1]
+    )
+    interpolated_ym_vs = interpolated_ym.data_vars
+    if len(interpolated_ym_vs) != 1:
+        raise AssertionError
+
+    interpolated_ym_da = interpolated_ym_vs[next(iter(interpolated_ym.data_vars))]
+    ax.pcolormesh(
+        lon_grid,
+        lat_grid,
+        interpolated_ym_da.T,
+        shading="auto",
+        # TODO: better colouring etc.
+        # cmap=plt.get_cmap("YlOrRd", max_count),
+        # norm=matplotlib.colors.BoundaryNorm(np.arange(0.5, max_count + 1.0), max_count),
+        # shading="flat",
+    )
+
+    input_data_ym = input_data[
+        (input_data["year"] == year_month[0]) & (input_data["month"] == year_month[1])
+    ]
+    ax.scatter(
+        input_data_ym["lon_bin"],
+        input_data_ym["lat_bin"],
+        transform=ccrs.PlateCarree(),
+        # TODO: copy stuff from line 489
+        c="k",
+        marker="o",
+        s=10.0,
+        label="Input point",
+        zorder=3,
+    )
+
+    # TODO: make this nicer
+    ax.set_title(f"{year_month[0]}-{year_month[1]:02d}", fontsize="small")
+
+    ax.set_yticks(LAT_BIN_BOUNDS[::2], crs=ccrs.PlateCarree())
+    ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
+    ax.set_xticks(LON_BIN_BOUNDS[::2], crs=ccrs.PlateCarree())
+    ax.set_xlabel(r"longitude [$^{\circ}$E]", fontsize="small")
+    # The map's aspect is fixed, so it can't fill its cell.
+    # Anchoring it to the top keeps it up against its panel label.
+    ax.set_anchor("N")
+    ax.tick_params(labelsize="small")
+
+    # return stuff for colour bar
+
+
 def align_latitude_axes(
     fig: matplotlib.figure.Figure,
     map_ax: matplotlib.axes.Axes,
@@ -577,8 +700,9 @@ def align_latitude_axes(
     fig.draw_without_rendering()
     map_position = map_ax.get_position()
 
-    # Constrained layout would just undo the positions we set below
-    fig.set_layout_engine("none")
+    # TODO: turn back on
+    # # Constrained layout would just undo the positions we set below
+    # fig.set_layout_engine("none")
 
     for ax in (counts_ax, counts_colour_bar_ax):
         position = ax.get_position()
@@ -614,19 +738,12 @@ def generate_n2o_methods_figure(
     -------
         `outfile`
     """
-    all_data_with_bins = add_network_group(
-        get_n2o_all_data_with_bins(
-            bundle_dir=bundle_dir,
-            original_run_notebooks_dir=original_run_notebooks_dir,
-            force_rerun=force_rerun,
-        )
-    )
-
     panels = (
         "timeseries",
         "locations",
         "counts",
-        "interpolated",
+        "interpolated-most",
+        "interpolated-least",
         "gm",
         "lat-grad-eof",
         "lat-grad-pc",
@@ -646,18 +763,28 @@ def generate_n2o_methods_figure(
                 "timeseries",
                 "timeseries",
                 "timeseries",
-                "interpolated",
-                "interpolated",
-                "gm",
-                "gm",
+                "interpolated-most",
+                "interpolated-most",
+                "lat-grad-pc",
+                "lat-grad-pc",
+            ],
+            [
+                "timeseries",
+                "timeseries",
+                "timeseries",
+                "timeseries",
+                "interpolated-least",
+                "interpolated-least",
+                "lat-grad-eof",
+                "lat-grad-eof",
             ],
             [
                 "locations",
                 "locations",
                 "counts",
                 "counts",
-                "lat-grad-eof",
-                "lat-grad-pc",
+                "gm",
+                "gm",
                 "seasonality",
                 "seasonality",
             ],
@@ -683,8 +810,21 @@ def generate_n2o_methods_figure(
             ],
         ],
         figsize=(15.0, 11.2),
-        per_subplot_kw={"locations": {"projection": ccrs.PlateCarree()}},
-        layout="constrained",
+        per_subplot_kw={
+            "locations": {"projection": ccrs.PlateCarree()},
+            "interpolated-most": {"projection": ccrs.PlateCarree()},
+            "interpolated-least": {"projection": ccrs.PlateCarree()},
+        },
+        # TODO: turn back on?
+        # layout="constrained",
+    )
+
+    all_data_with_bins = add_network_group(
+        get_n2o_all_data_with_bins(
+            bundle_dir=bundle_dir,
+            original_run_notebooks_dir=original_run_notebooks_dir,
+            force_rerun=force_rerun,
+        )
     )
 
     timeseries_scatter = plot_station_timeseries(all_data_with_bins, axes["timeseries"])
@@ -727,8 +867,26 @@ def generate_n2o_methods_figure(
             f"({label})", loc="left", fontsize="medium", fontweight="bold"
         )
 
-    # Last, because it freezes the layout
-    align_latitude_axes(fig, axes["locations"], axes["counts"], counts_colour_bar.ax)
+    interpolated_obs_file = (
+        bundle_dir / "data/interim/n2o/n2o_observational-network_interpolated.nc"
+    )
+    interpolated_obs = xr.load_dataset(interpolated_obs_file)
+    most_least_coverage = get_interpolated_input_coverage_info(
+        all_data_with_bins, interpolated_obs
+    )
+    for key in ["most", "least"]:
+        # Need to return something here, then create the colour bar
+        plot_coverage_and_interpolated(
+            input_data=all_data_with_bins,
+            interpolated=interpolated_obs,
+            year_month=most_least_coverage[key],
+            ax=axes[f"interpolated-{key}"],
+        )
+
+    # # Last, because it freezes the layout
+    # align_latitude_axes(fig, axes["locations"], axes["counts"], counts_colour_bar.ax)
+    # TODO: turn this off
+    fig.tight_layout()
 
     outfile.parent.mkdir(exist_ok=True, parents=True)
     logger.info(f"Writing {outfile}")
