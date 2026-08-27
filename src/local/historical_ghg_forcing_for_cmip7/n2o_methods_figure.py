@@ -622,7 +622,22 @@ def generate_n2o_methods_figure(
         )
     )
 
-    panels = ("timeseries", "locations", "counts")
+    panels = (
+        "timeseries",
+        "locations",
+        "counts",
+        "interpolated",
+        "gm",
+        "lat-grad-eof",
+        "lat-grad-pc",
+        "seasonality",
+        "gm-ext",
+        "lat-grad-pc-emms",
+        "lat-grad-pc-ext",
+        "flying-carpet",
+        "yearly",
+        "monthly",
+    )
     labels = [string.ascii_lowercase[i] for i in range(len(panels))]
     fig, axes = plt.subplot_mosaic(
         [
