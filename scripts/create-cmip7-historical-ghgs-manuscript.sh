@@ -58,6 +58,9 @@ uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-input
     --n2o-methods-figure-file "${n2o_methods_figure_file}" \
     --bundle-dir "${zenodo_bundle_dir}" \
     --original-run-notebooks-dir "${original_run_notebooks_dir}"
+
+open figures/historical-ghg-forcing-for-cmip7/n2o_methods.pdf
+exit 0
 # --force-rerun \
 
 # create pdf or dump out to a single text file (that can then be dumped onto google docs, maybe easiest to do this with AI)

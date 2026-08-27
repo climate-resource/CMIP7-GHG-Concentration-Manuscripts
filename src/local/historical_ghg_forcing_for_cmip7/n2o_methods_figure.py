@@ -13,6 +13,7 @@ See [local.cmip_ghg_generation][] for how that works.
 
 from __future__ import annotations
 
+import string
 from pathlib import Path
 
 import cartopy.crs as ccrs
@@ -77,7 +78,7 @@ These are from the Okabe-Ito palette, i.e. they are colour-blind safe.
 
 NETWORK_GROUP_MARKERS = {
     "NOAA": "o",
-    "AGAGE/GAGE/ALE": "s",
+    "AGAGE/GAGE/ALE": "^",
 }
 """Marker to use for each group of observational networks
 
@@ -86,8 +87,8 @@ so the figure still works in greyscale.
 """
 
 NETWORK_GROUP_MARKER_SIZES = {
-    "NOAA": 150.0,
-    "AGAGE/GAGE/ALE": 55.0,
+    "NOAA": 50.0,
+    "AGAGE/GAGE/ALE": 25.0,
 }
 """Marker size to use for each group of observational networks on the map
 
@@ -278,7 +279,7 @@ def add_network_legend(ax: matplotlib.axes.Axes, **kwargs: object) -> None:
         Passed on to `ax.legend`
     """
     ax.legend(
-        fontsize="small",
+        fontsize="x-small",
         framealpha=0.9,
         handletextpad=0.2,
         columnspacing=1.0,
@@ -286,9 +287,15 @@ def add_network_legend(ax: matplotlib.axes.Axes, **kwargs: object) -> None:
     )
 
 
-def plot_station_timeseries(
+def plot_station_timeseries(  # noqa: PLR0913
     indf: pd.DataFrame,
     ax: matplotlib.axes.Axes,
+    # In axis co-ords
+    inset_x0: float = 0.65,
+    inset_y0: float = 0.15,
+    inset_width: float = 0.3,
+    inset_height: float = 0.3,
+    # consider making inset x and y injectable too
 ) -> matplotlib.collections.PathCollection:
     """
     Plot the monthly mean measured at each station
@@ -312,19 +319,40 @@ def plot_station_timeseries(
     """
     normalisation = matplotlib.colors.Normalize(vmin=-90.0, vmax=90.0)
 
+    inset_xlim = (indf["year"].max() - 3, indf["year"].max())
+    inset_values = indf[
+        (indf["year"] >= inset_xlim[0]) & (indf["year"] <= inset_xlim[1])
+    ]
+    inset_values_range = inset_values["value"].max() - inset_values["value"].min()
+    inset_ylim = (
+        np.floor(max(inset_values["value"].min() - 0.05 * inset_values_range, 0.0)),
+        np.ceil(inset_values["value"].max() + 0.05 * inset_values_range),
+    )
+    ax_inset = ax.inset_axes(
+        [inset_x0, inset_y0, inset_width, inset_height],
+        xlim=inset_xlim,
+        ylim=inset_ylim,
+        # xticklabels=[],
+        # yticklabels=[],
+    )
+    ax_inset.tick_params(labelsize="small")
+
+    ax.indicate_inset_zoom(ax_inset, edgecolor="black")
+
     scatter = None
     for group, group_df in indf.groupby(NETWORK_GROUP_COLUMN):
-        scatter = ax.scatter(
-            get_decimal_year(group_df),
-            group_df["value"],
-            c=group_df["latitude"],
-            cmap=LATITUDE_COLOUR_MAP,
-            norm=normalisation,
-            marker=NETWORK_GROUP_MARKERS[group],
-            s=5.0,
-            alpha=0.7,
-            linewidths=0.0,
-        )
+        for axh in [ax, ax_inset]:
+            scatter = axh.scatter(
+                get_decimal_year(group_df),
+                group_df["value"],
+                c=group_df["latitude"],
+                cmap=LATITUDE_COLOUR_MAP,
+                norm=normalisation,
+                marker=NETWORK_GROUP_MARKERS[group],
+                s=10.0,
+                alpha=0.4,
+                linewidths=0.0,
+            )
 
     if scatter is None:
         msg = "No data to plot"
@@ -412,7 +440,9 @@ def plot_station_locations(
         )
 
     ax.set_yticks(LAT_BIN_BOUNDS[::2], crs=ccrs.PlateCarree())
+    ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
     ax.set_xticks(LON_BIN_BOUNDS[::2], crs=ccrs.PlateCarree())
+    ax.set_xlabel(r"longitude [$^{\circ}$E]", fontsize="small")
     # The map's aspect is fixed, so it can't fill its cell.
     # Anchoring it to the top keeps it up against its panel label.
     ax.set_anchor("N")
@@ -424,7 +454,7 @@ def plot_station_locations(
     add_network_legend(
         ax,
         loc="upper center",
-        bbox_to_anchor=(0.5, -0.16),
+        bbox_to_anchor=(0.5, -0.25),
         ncols=2,
     )
 
@@ -454,6 +484,10 @@ def plot_observation_counts(
     -------
         The mesh which was drawn, so a colour bar can be added for it
     """
+    # The bins the observations are binned into
+    for lat_bound in LAT_BIN_BOUNDS:
+        ax.axhline(lat_bound, linewidth=0.4, color="0.85", zorder=3)
+
     counts = (
         indf.groupby(["year", "month", "lat_bin"]).size().rename("count").reset_index()
     )
@@ -469,7 +503,7 @@ def plot_observation_counts(
     # Every month in the record, so gaps show up as gaps rather than being closed up
     month_starts = np.arange(
         np.floor(counts["decimal_year"].min()),
-        np.ceil(counts["decimal_year"].max()) + 1 / 12,
+        np.ceil(counts["decimal_year"].max()) - 1 / 24,
         1 / 12,
     )
     grid = grid.reindex(
@@ -484,7 +518,7 @@ def plot_observation_counts(
         x_bounds,
         LAT_BIN_BOUNDS,
         np.ma.masked_equal(grid.to_numpy(), 0),
-        cmap=plt.get_cmap("YlGnBu", max_count),
+        cmap=plt.get_cmap("YlOrRd", max_count),
         norm=matplotlib.colors.BoundaryNorm(np.arange(0.5, max_count + 1.0), max_count),
         shading="flat",
     )
@@ -530,6 +564,8 @@ def generate_n2o_methods_figure(
         )
     )
 
+    panels = ("timeseries", "locations", "counts")
+    labels = [string.ascii_lowercase[i] for i in range(len(panels))]
     fig, axes = plt.subplot_mosaic(
         [
             ["timeseries", "timeseries"],
@@ -546,6 +582,9 @@ def generate_n2o_methods_figure(
 
     timeseries_scatter = plot_station_timeseries(all_data_with_bins, axes["timeseries"])
     plot_station_locations(all_data_with_bins, axes["locations"])
+    # Claude: please make the y axis of b and c be aligned
+    # so that the users eye can just follow the natural horizontal line between the two plots
+    # to 'see' where the data points come from when comparing to the map.
     counts_mesh = plot_observation_counts(all_data_with_bins, axes["counts"])
 
     latitude_colour_bar = fig.colorbar(
@@ -576,9 +615,10 @@ def generate_n2o_methods_figure(
     )
     for panel in ("timeseries", "counts"):
         axes[panel].set_xlim(x_limits)
+
     axes["counts"].set_xlabel("year", fontsize="small")
 
-    for label, panel in zip("abc", ("timeseries", "locations", "counts")):
+    for label, panel in zip(labels, panels):
         axes[panel].set_title(
             f"({label})", loc="left", fontsize="medium", fontweight="bold"
         )
