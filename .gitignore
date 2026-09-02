@@ -8,7 +8,7 @@ book-diff
 *.png
 
 # Data
-data/raw
+data/raw/*
 
 # Databases
 *.db
@@ -164,3 +164,10 @@ dmypy.json
 
 # Mac stuff
 *.DS_Store
+
+# Executed notebooks from the original CMIP7 GHG concentration generation run
+# (https://zenodo.org/records/14892947). These are not archived on Zenodo,
+# so we track them here so other users don't need a local copy of the run.
+# These negations must come last, so they beat the *.ipynb rule above.
+!data/raw/historical-ghg-forcing-for-cmip7/
+!data/raw/historical-ghg-forcing-for-cmip7/**

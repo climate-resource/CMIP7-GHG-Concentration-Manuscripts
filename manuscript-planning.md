@@ -12,7 +12,7 @@ Notes from reading Meinshausen at al 2017 (M17): https://gmd.copernicus.org/arti
 
 - content
     - mole fraction in dry air vs. mole fraction in real atmopshere hooha/BS
-    - different scales
+    - different scales (ignored this time, noise in the scheme of things)
     - historical experiment to end in 2021 even though this dataset goes to 2022 (and we hope to extend further in future)
     - changes compared to CMIP6 (and reasons therefore)
     - comparisons with other datasets
@@ -22,7 +22,7 @@ Notes from reading Meinshausen at al 2017 (M17): https://gmd.copernicus.org/arti
         - note ERF difference as tiny, therefore not ideal, but not a reason to re-write/re-run
     - don't compare the seasonal cycle and latitudinal gradient from CMIP6 ESMs (unless I have way more time than I expected/I'm really wanting to test some CMIP data handling setup)
     - "Given the negligible radiative forcing from ..., this uncertainty does not affect the overall results."
-    - get placeholder link for providing results from Jared so we can put link in the paper then build when it suits us
+    - if we have time, build a portal for visualising/exploring/accessing results
 
     - introduction
         - CMIP context
