@@ -218,6 +218,32 @@ def unit(pdf: pd.DataFrame, unit_col: str = "unit") -> str:
     return res_l[0]
 
 
+def label_name(ghg: str) -> str:
+    """Get the label name for a given string"""
+    replacements = {
+        "n2o": "N2O",
+    }
+
+    res = ghg
+    for old, new in replacements.items():
+        res = res.replace(old, new)
+
+    return res
+
+
+def get_only_data_variable(ds: xr.Dataset) -> xr.DataArray:
+    """
+    Get only data variable in a dataset
+    """
+    ds_vs = ds.data_vars
+    if len(ds_vs) != 1:
+        raise AssertionError(ds_vs)
+
+    res = ds_vs[next(iter(ds.data_vars))]
+
+    return res
+
+
 def get_n2o_all_data_with_bins(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
@@ -681,6 +707,7 @@ def plot_coverage_and_interpolated(
     year_month: tuple[int, int],
     ax: matplotlib.axes.Axes,
     title: str,
+    # return type hint is wrong
 ) -> None:
     """
     Plot the interpolated values and the coverage of input data
@@ -702,11 +729,13 @@ def plot_coverage_and_interpolated(
     interpolated_ym = convert_time_to_year_month(interpolated).sel(
         year=year_month[0], month=year_month[1]
     )
-    interpolated_ym_vs = interpolated_ym.data_vars
-    if len(interpolated_ym_vs) != 1:
-        raise AssertionError
+    interpolated_ym_da = get_only_data_variable(interpolated_ym)
+    # interpolated_ym_vs = interpolated_ym.data_vars
+    # if len(interpolated_ym_vs) != 1:
+    #     raise AssertionError
+    #
+    # interpolated_ym_da = interpolated_ym_vs[next(iter(interpolated_ym.data_vars))]
 
-    interpolated_ym_da = interpolated_ym_vs[next(iter(interpolated_ym.data_vars))]
     mesh = ax.pcolormesh(
         lon_grid,
         lat_grid,
@@ -741,6 +770,18 @@ def plot_coverage_and_interpolated(
     ax.tick_params(labelsize="small")
 
     return mesh
+
+
+def plot_global_mean_from_obs_network(gm: xr.Dataset, ax: matplotlib.axes.Axes) -> None:
+    """
+    Plot global-mean derived from the observational network
+    """
+    gm_da = get_only_data_variable(gm)
+    ax.scatter(
+        gm_da["year"].values.squeeze(),
+        gm_da.values.squeeze(),
+    )
+    ax.set_ylabel(f"[{gm_da.attrs['units']}]", fontsize="small")
 
 
 def has_fixed_aspect(ax: matplotlib.axes.Axes) -> bool:
@@ -1060,7 +1101,10 @@ def generate_n2o_methods_figure(
     for key in ["most", "least"]:
         # TODO: return the mesh here, then give these panels a colour bar
         # (see the note in [add_colour_bar][] before doing so)
-        title = {"most": "Best case", "least": "Worst case"}[key]
+        title = {
+            "most": "Best case interpolation",
+            "least": "Worst case interpolation",
+        }[key]
         ax = axes[f"interpolated-{key}"]
         coverage_mesh = plot_coverage_and_interpolated(
             input_data=all_data_with_bins,
@@ -1073,11 +1117,16 @@ def generate_n2o_methods_figure(
             fig,
             coverage_mesh,
             ax=ax,
-            label=f"{ghg(all_data_with_bins)} [{unit(all_data_with_bins)}]",
+            label=f"[{unit(all_data_with_bins)}]",
             # ticks=LAT_BIN_BOUNDS[::2],
         )
 
         coverage_colour_bars_axes.append([colour_bar, ax])
+
+    global_mean_from_obs_network = xr.load_dataset(
+        bundle_dir / "data/interim/n2o/n2o_observational-network_global-annual-mean.nc"
+    )
+    plot_global_mean_from_obs_network(global_mean_from_obs_network, axes["gm"])
 
     for label, panel in zip(string.ascii_lowercase, PANELS):
         axes[panel].set_title(
