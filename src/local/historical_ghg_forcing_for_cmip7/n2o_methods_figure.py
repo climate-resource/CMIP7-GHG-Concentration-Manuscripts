@@ -126,6 +126,8 @@ of colour vision deficiency. Deliberately different from the colour map
 used for the observation counts, so the two scales don't get confused.
 """
 
+INTERPOLATION_COLOUR_MAP = "autumn"
+
 LEGEND_MARKER_COLOUR = "0.35"
 """Colour to draw legend markers in where colour means something else
 
@@ -192,6 +194,28 @@ FIGURE_SIZE = (15.0, 11.2)
 
 The width is set by the page, the height by what the panels need.
 """
+
+
+def ghg(pdf: pd.DataFrame, ghg_col: str = "gas") -> str:
+    """
+    Get GHG of a pandas.DataFrame
+    """
+    res_l = pdf[ghg_col].unique()
+    if len(res_l) != 1:
+        raise AssertionError(res_l)
+
+    return res_l[0]
+
+
+def unit(pdf: pd.DataFrame, unit_col: str = "unit") -> str:
+    """
+    Get unit of a pandas.DataFrame
+    """
+    res_l = pdf[unit_col].unique()
+    if len(res_l) != 1:
+        raise AssertionError(res_l)
+
+    return res_l[0]
 
 
 def get_n2o_all_data_with_bins(
@@ -656,6 +680,7 @@ def plot_coverage_and_interpolated(
     interpolated: xr.Dataset,
     year_month: tuple[int, int],
     ax: matplotlib.axes.Axes,
+    title: str,
 ) -> None:
     """
     Plot the interpolated values and the coverage of input data
@@ -682,15 +707,12 @@ def plot_coverage_and_interpolated(
         raise AssertionError
 
     interpolated_ym_da = interpolated_ym_vs[next(iter(interpolated_ym.data_vars))]
-    ax.pcolormesh(
+    mesh = ax.pcolormesh(
         lon_grid,
         lat_grid,
         interpolated_ym_da.T,
         shading="auto",
-        # TODO: better colouring etc.
-        # cmap=plt.get_cmap("YlOrRd", max_count),
-        # norm=matplotlib.colors.BoundaryNorm(np.arange(0.5, max_count + 1.0), max_count),
-        # shading="flat",
+        cmap=INTERPOLATION_COLOUR_MAP,
     )
 
     input_data_ym = input_data[
@@ -700,7 +722,6 @@ def plot_coverage_and_interpolated(
         input_data_ym["lon_bin"],
         input_data_ym["lat_bin"],
         transform=ccrs.PlateCarree(),
-        # TODO: copy stuff from line 489
         c="k",
         marker="o",
         s=10.0,
@@ -708,8 +729,7 @@ def plot_coverage_and_interpolated(
         zorder=3,
     )
 
-    # TODO: make this nicer
-    ax.set_title(f"{year_month[0]}-{year_month[1]:02d}", fontsize="small")
+    ax.set_title(title, fontsize="small")
 
     ax.set_yticks(LAT_BIN_BOUNDS[::2], crs=ccrs.PlateCarree())
     ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
@@ -720,7 +740,7 @@ def plot_coverage_and_interpolated(
     ax.set_anchor("N")
     ax.tick_params(labelsize="small")
 
-    # return stuff for colour bar
+    return mesh
 
 
 def has_fixed_aspect(ax: matplotlib.axes.Axes) -> bool:
@@ -1036,15 +1056,28 @@ def generate_n2o_methods_figure(
     most_least_coverage = get_interpolated_input_coverage_info(
         all_data_with_bins, interpolated_obs
     )
+    coverage_colour_bars_axes = []
     for key in ["most", "least"]:
         # TODO: return the mesh here, then give these panels a colour bar
         # (see the note in [add_colour_bar][] before doing so)
-        plot_coverage_and_interpolated(
+        title = {"most": "Best case", "least": "Worst case"}[key]
+        ax = axes[f"interpolated-{key}"]
+        coverage_mesh = plot_coverage_and_interpolated(
             input_data=all_data_with_bins,
             interpolated=interpolated_obs,
             year_month=most_least_coverage[key],
-            ax=axes[f"interpolated-{key}"],
+            ax=ax,
+            title=title,
         )
+        colour_bar = add_colour_bar(
+            fig,
+            coverage_mesh,
+            ax=ax,
+            label=f"{ghg(all_data_with_bins)} [{unit(all_data_with_bins)}]",
+            # ticks=LAT_BIN_BOUNDS[::2],
+        )
+
+        coverage_colour_bars_axes.append([colour_bar, ax])
 
     for label, panel in zip(string.ascii_lowercase, PANELS):
         axes[panel].set_title(
@@ -1057,6 +1090,7 @@ def generate_n2o_methods_figure(
     colour_bars = [
         (latitude_colour_bar, axes["timeseries"]),
         (counts_colour_bar, axes["counts"]),
+        *((cb, ax) for cb, ax in coverage_colour_bars_axes),
     ]
 
     # These two are last, and in this order,
