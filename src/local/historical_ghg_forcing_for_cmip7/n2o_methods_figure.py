@@ -24,6 +24,7 @@ import matplotlib.lines
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import xarray as xr
 from loguru import logger
 
@@ -142,7 +143,7 @@ PANELS = (
     ("interpolated-most", "Interpolation: most inputs"),
     ("interpolated-least", "Interpolation: fewest inputs"),
     ("gm", "Obs. global-mean"),
-    # "seasonality",
+    ("seasonality", "Obs. seasonality"),
     # "lat-grad-eof",
     # "lat-grad-pc",
     # "gm-ext",
@@ -781,6 +782,30 @@ def plot_global_mean_from_obs_network(gm: xr.Dataset, ax: matplotlib.axes.Axes) 
     ax.set_ylabel(f"[{gm_da.attrs['units']}]", fontsize="small")
 
 
+def plot_seasonality_from_obs_network(
+    seasonality: xr.Dataset,
+    ax: matplotlib.axes.Axes,
+    assumed_units: str,
+    # assumed_ghg: str,
+) -> matplotlib.axes.Axes:
+    """
+    Plot seasonality derived from the observational network
+    """
+    seasonality_da = get_only_data_variable(seasonality)
+    pdf = seasonality_da.to_pandas().stack().rename("value").to_frame().reset_index()
+    sns.scatterplot(
+        pdf,
+        x="month",
+        y="value",
+        hue="lat",
+        ax=ax,
+    )
+    ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
+    ax.set_xticks(np.arange(1, 12 + 1))
+
+    return ax
+
+
 def has_fixed_aspect(ax: matplotlib.axes.Axes) -> bool:
     """
     Determine whether an axes' aspect ratio is fixed
@@ -1052,6 +1077,16 @@ def generate_n2o_methods_figure(
             original_run_notebooks_dir=original_run_notebooks_dir,
             force_rerun=force_rerun,
         )
+    )
+
+    seasonality_from_obs_network = xr.load_dataset(
+        bundle_dir / "data/interim/n2o/n2o_observational-network_seasonality.nc",
+    )
+    plot_seasonality_from_obs_network(
+        seasonality_from_obs_network,
+        axes["seasonality"],
+        assumed_units="dimensionless",
+        # assumed_ghg=ghg(all_data_with_bins),
     )
 
     timeseries_scatter = plot_station_timeseries(all_data_with_bins, axes["timeseries"])
