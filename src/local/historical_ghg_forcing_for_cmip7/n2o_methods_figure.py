@@ -136,21 +136,21 @@ can only speak about the marker shape.
 """
 
 PANELS = (
-    "timeseries",
-    "locations",
-    "counts",
-    "interpolated-most",
-    "interpolated-least",
-    "gm",
-    "seasonality",
-    "lat-grad-eof",
-    "lat-grad-pc",
-    "gm-ext",
-    "lat-grad-pc-emms",
-    "lat-grad-pc-ext",
-    "flying-carpet",
-    "yearly",
-    "monthly",
+    ("timeseries", "Observational network values"),
+    ("locations", "Obs. locations"),
+    ("counts", "Obs. counts"),
+    ("interpolated-most", "Interpolation: most inputs"),
+    ("interpolated-least", "Interpolation: fewest inputs"),
+    ("gm", "Obs. global-mean"),
+    # "seasonality",
+    # "lat-grad-eof",
+    # "lat-grad-pc",
+    # "gm-ext",
+    # "lat-grad-pc-emms",
+    # "lat-grad-pc-ext",
+    # "flying-carpet",
+    # "yearly",
+    # "monthly",
 )
 """The figure's panels, in the order in which they are labelled
 
@@ -623,9 +623,9 @@ def plot_station_locations(
     # aspect already costs us)
     add_network_legend(
         ax,
-        loc="lower right",
-        bbox_to_anchor=(1.0, 1.0),
-        ncols=2,
+        loc="center left",
+        bbox_to_anchor=(1.05, 0.5),
+        ncols=1,
         # frameon=False,
     )
 
@@ -706,7 +706,6 @@ def plot_coverage_and_interpolated(
     interpolated: xr.Dataset,
     year_month: tuple[int, int],
     ax: matplotlib.axes.Axes,
-    title: str,
     # return type hint is wrong
 ) -> None:
     """
@@ -757,8 +756,6 @@ def plot_coverage_and_interpolated(
         label="Input point",
         zorder=3,
     )
-
-    ax.set_title(title, fontsize="small")
 
     ax.set_yticks(LAT_BIN_BOUNDS[::2], crs=ccrs.PlateCarree())
     ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
@@ -1099,19 +1096,12 @@ def generate_n2o_methods_figure(
     )
     coverage_colour_bars_axes = []
     for key in ["most", "least"]:
-        # TODO: return the mesh here, then give these panels a colour bar
-        # (see the note in [add_colour_bar][] before doing so)
-        title = {
-            "most": "Best case interpolation",
-            "least": "Worst case interpolation",
-        }[key]
         ax = axes[f"interpolated-{key}"]
         coverage_mesh = plot_coverage_and_interpolated(
             input_data=all_data_with_bins,
             interpolated=interpolated_obs,
             year_month=most_least_coverage[key],
             ax=ax,
-            title=title,
         )
         colour_bar = add_colour_bar(
             fig,
@@ -1128,9 +1118,12 @@ def generate_n2o_methods_figure(
     )
     plot_global_mean_from_obs_network(global_mean_from_obs_network, axes["gm"])
 
-    for label, panel in zip(string.ascii_lowercase, PANELS):
+    for label, (panel, title) in zip(string.ascii_lowercase, PANELS):
         axes[panel].set_title(
-            f"({label})", loc="left", fontsize="medium", fontweight="bold"
+            f"$\\bf{{({label})}}$ {title}",
+            loc="left",
+            fontsize="medium",
+            # fontweight="bold",
         )
 
     # The figure's colour bars, each with the panel it belongs to.
