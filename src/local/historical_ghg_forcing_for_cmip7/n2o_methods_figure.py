@@ -14,6 +14,7 @@ See [local.cmip_ghg_generation][] for how that works.
 from __future__ import annotations
 
 import string
+from collections.abc import Mapping
 from pathlib import Path
 
 import cartopy.crs as ccrs
@@ -144,8 +145,8 @@ PANELS = (
     ("interpolated-least", "Interpolation: fewest inputs"),
     ("gm", "Obs. global-mean"),
     ("seasonality", "Obs. seasonality"),
-    # "lat-grad-eof",
-    # "lat-grad-pc",
+    ("lat-grad-eof", "Obs. lat. gradient EOFs"),
+    ("lat-grad-pc", "Obs. lat. gradient PCs"),
     # "gm-ext",
     # "lat-grad-pc-emms",
     # "lat-grad-pc-ext",
@@ -801,9 +802,45 @@ def plot_seasonality_from_obs_network(
         ax=ax,
     )
     ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
-    ax.set_xticks(np.arange(1, 12 + 1))
+    ax.set_xticks(np.arange(1, 12 + 1, 3))
 
     return ax
+
+
+def plot_lat_gradient_pieces_from_obs_network(
+    lat_gradient_info: xr.Dataset,
+    axes: Mapping[str, matplotlib.axes.Axes],
+    pcs_name: str = "principal-components",
+    eofs_name: str = "eofs",
+) -> dict[str, matplotlib.axes.Axes]:
+    """
+    Plot seasonality derived from the observational network
+    """
+    da_pcs = lat_gradient_info[pcs_name]
+    pdf_pcs = da_pcs.to_pandas().stack().rename("value").to_frame().reset_index()
+    sns.scatterplot(
+        pdf_pcs,
+        x="year",
+        y="value",
+        hue="eof",
+        ax=axes["pcs"],
+    )
+    axes["pcs"].set_ylabel(f"[{da_pcs.attrs['units']}]", fontsize="small")
+
+    da_eofs = lat_gradient_info[eofs_name]
+    pdf_eofs = da_eofs.to_pandas().stack().rename("value").to_frame().reset_index()
+    sns.scatterplot(
+        pdf_eofs,
+        x="value",
+        y="lat",
+        hue="eof",
+        ax=axes["eofs"],
+    )
+    axes["eofs"].set_yticks(LAT_BIN_BOUNDS[::2])
+    axes["eofs"].set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
+    axes["eofs"].set_xlabel(f"[{da_eofs.attrs['units']}]", fontsize="small")
+
+    return axes
 
 
 def has_fixed_aspect(ax: matplotlib.axes.Axes) -> bool:
@@ -1078,15 +1115,16 @@ def generate_n2o_methods_figure(
             force_rerun=force_rerun,
         )
     )
-
-    seasonality_from_obs_network = xr.load_dataset(
-        bundle_dir / "data/interim/n2o/n2o_observational-network_seasonality.nc",
+    lat_gradient_from_obs_network = xr.load_dataset(
+        bundle_dir
+        / "data/interim/n2o/n2o_observational-network_latitudinal-gradient-eofs.nc",
     )
-    plot_seasonality_from_obs_network(
-        seasonality_from_obs_network,
-        axes["seasonality"],
-        assumed_units="dimensionless",
-        # assumed_ghg=ghg(all_data_with_bins),
+    plot_lat_gradient_pieces_from_obs_network(
+        lat_gradient_from_obs_network,
+        {
+            "pcs": axes["lat-grad-pc"],
+            "eofs": axes["lat-grad-eof"],
+        },
     )
 
     timeseries_scatter = plot_station_timeseries(all_data_with_bins, axes["timeseries"])
@@ -1152,6 +1190,15 @@ def generate_n2o_methods_figure(
         bundle_dir / "data/interim/n2o/n2o_observational-network_global-annual-mean.nc"
     )
     plot_global_mean_from_obs_network(global_mean_from_obs_network, axes["gm"])
+
+    seasonality_from_obs_network = xr.load_dataset(
+        bundle_dir / "data/interim/n2o/n2o_observational-network_seasonality.nc",
+    )
+    plot_seasonality_from_obs_network(
+        seasonality_from_obs_network,
+        axes["seasonality"],
+        assumed_units="dimensionless",
+    )
 
     for label, (panel, title) in zip(string.ascii_lowercase, PANELS):
         axes[panel].set_title(
