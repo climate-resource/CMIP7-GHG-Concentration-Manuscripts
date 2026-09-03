@@ -147,7 +147,7 @@ PANELS = (
     ("seasonality", "Obs. seasonality"),
     ("lat-grad-eof", "Obs. lat. gradient EOFs"),
     ("lat-grad-pc", "Obs. lat. gradient PCs"),
-    # "gm-ext",
+    ("gm-ext-l", "Extended global-mean"),
     # "lat-grad-pc-emms",
     # "lat-grad-pc-ext",
     # "flying-carpet",
@@ -164,7 +164,7 @@ MOSAIC = [
     ["timeseries", "timeseries", "interpolated-most", "gm"],
     ["timeseries", "timeseries", "interpolated-least", "seasonality"],
     ["locations", "counts", "lat-grad-eof", "lat-grad-pc"],
-    ["gm-ext", "gm-ext", "lat-grad-pc-emms", "lat-grad-pc-ext"],
+    ["gm-ext-l", "gm-ext-r", "lat-grad-pc-emms", "lat-grad-pc-ext"],
     ["flying-carpet", "yearly", "yearly", "monthly"],
 ]
 """Layout of the figure's panels
@@ -779,6 +779,7 @@ def plot_global_mean_from_obs_network(gm: xr.Dataset, ax: matplotlib.axes.Axes) 
     ax.scatter(
         gm_da["year"].values.squeeze(),
         gm_da.values.squeeze(),
+        s=15,
     )
     ax.set_ylabel(f"[{gm_da.attrs['units']}]", fontsize="small")
 
@@ -841,6 +842,68 @@ def plot_lat_gradient_pieces_from_obs_network(
     axes["eofs"].set_xlabel(f"[{da_eofs.attrs['units']}]", fontsize="small")
 
     return axes
+
+
+def plot_global_mean_extension(
+    gm: xr.Dataset,
+    ax_left: matplotlib.axes.Axes,
+    ax_right: matplotlib.axes.Axes,
+    input_sources=Mapping[str, pd.DataFrame],
+    split_year: int = 1950,
+) -> None:
+    """
+    Plot global-mean derived from the observational network
+    """
+    gm_da = get_only_data_variable(gm)
+
+    for i, ax in enumerate((ax_left, ax_right)):
+        ax.plot(
+            gm_da["year"].values.squeeze(),
+            gm_da.values.squeeze(),
+            label="Extended global-mean" if i < 1 else None,
+            linewidth=2,
+            # s=30,
+        )
+
+        for label, pdf in input_sources.items():
+            ax.plot(
+                pdf["year"],
+                pdf["value"],
+                label=label if i < 1 else None,
+                linewidth=2,
+                # s=30,
+            )
+
+    ax_left.legend()
+
+    ax_left.set_ylabel(f"[{gm_da.attrs['units']}]", fontsize="small")
+    # ax.set_xlabel("year")
+    ax_left.set_xlim(xmin=0, xmax=split_year)
+    ax_right.set_xlim(xmin=split_year, xmax=gm_da["year"].max())
+
+    # Needs some work from here, but getting there
+    # hide the spines
+    ax_left.spines["right"].set_visible(False)
+    ax_right.spines["left"].set_visible(False)
+    ax_right.yaxis.tick_right()
+    #
+    # # This looks pretty good, and was fairly painless, but you can get that
+    # # cut-out diagonal lines look with just a bit more work. The important
+    # # thing to know here is that in axes coordinates, which are always
+    # # between 0-1, spine endpoints are at these locations (0, 0), (0, 1),
+    # # (1, 0), and (1, 1).  Thus, we just need to put the diagonals in the
+    # # appropriate corners of each of our axes, and so long as we use the
+    # # right transform and disable clipping.
+    #
+    # d = 0.015  # how big to make the diagonal lines in axes coordinates
+    # # arguments to pass plot, just so we don't keep repeating them
+    # kwargs = dict(transform=ax_left.transAxes, color="k", clip_on=False)
+    # ax_left.plot((1 - d, 1 + d), (-d, +d), **kwargs)
+    # ax_left.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)
+    #
+    # kwargs.update(transform=ax_right.transAxes)  # switch to the bottom axes
+    # ax_right.plot((-d, +d), (1 - d, 1 + d), **kwargs)
+    # ax_right.plot((-d, +d), (-d, +d), **kwargs)
 
 
 def has_fixed_aspect(ax: matplotlib.axes.Axes) -> bool:
@@ -1115,17 +1178,6 @@ def generate_n2o_methods_figure(
             force_rerun=force_rerun,
         )
     )
-    lat_gradient_from_obs_network = xr.load_dataset(
-        bundle_dir
-        / "data/interim/n2o/n2o_observational-network_latitudinal-gradient-eofs.nc",
-    )
-    plot_lat_gradient_pieces_from_obs_network(
-        lat_gradient_from_obs_network,
-        {
-            "pcs": axes["lat-grad-pc"],
-            "eofs": axes["lat-grad-eof"],
-        },
-    )
 
     timeseries_scatter = plot_station_timeseries(all_data_with_bins, axes["timeseries"])
     plot_station_locations(all_data_with_bins, axes["locations"])
@@ -1198,6 +1250,34 @@ def generate_n2o_methods_figure(
         seasonality_from_obs_network,
         axes["seasonality"],
         assumed_units="dimensionless",
+    )
+
+    lat_gradient_from_obs_network = xr.load_dataset(
+        bundle_dir
+        / "data/interim/n2o/n2o_observational-network_latitudinal-gradient-eofs.nc",
+    )
+    plot_lat_gradient_pieces_from_obs_network(
+        lat_gradient_from_obs_network,
+        {
+            "pcs": axes["lat-grad-pc"],
+            "eofs": axes["lat-grad-eof"],
+        },
+    )
+
+    global_mean_extended = xr.load_dataset(
+        bundle_dir / "data/interim/n2o/n2o_global-annual-mean_allyears.nc"
+    )
+    menking_et_al = pd.read_csv(
+        bundle_dir / "data/interim/menking-et-al-2025/menking_et_al_2025.csv"
+    )
+    menking_et_al = menking_et_al[menking_et_al["gas"] == ghg(all_data_with_bins)]
+    plot_global_mean_extension(
+        global_mean_extended,
+        axes["gm-ext-l"],
+        axes["gm-ext-r"],
+        input_sources={
+            "Menking et al.": menking_et_al,
+        },
     )
 
     for label, (panel, title) in zip(string.ascii_lowercase, PANELS):
