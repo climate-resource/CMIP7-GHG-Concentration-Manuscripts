@@ -1,0 +1,58 @@
+\section{Results}
+
+Some results here. (refer back to figures included in methods)
+
+Link to user guide (publish user guide on zenodo, link to actual dataset on zenodo) as reference for people who want details of how to use, not key results
+
+Note key trends over various groups of gases (single figure with trend over gases, split panels by key gases so comparison with CMIP6 and CMIP5 isn't crazy)
+- included above: Comparison with CMIP6 and CMIP5 datasets
+
+Compare to station data we started with (conclusion should be mostly that we are close in ERF terms, but there are clear areas for improvement or reconsideration)
+- this basically measures a) effect of averaging over networks and b) effect of dropping down to lat. grad. and seasonality then reconstructing
+    - this is a better assessment of our seasonality and lat. gradient than comparing these components to CMIP6
+    - let the CMIP6 comparison just be summarised with maximum deviations at various reporting resolutions, because all such deviations should be small in ERF terms
+- plots for key gases in main, rest in supplementary
+
+Compare to any independent networks we can think of/find
+- table like Malte's Table 7
+- plots for key gases in main, rest in supplementary
+- CO2
+    - Mauna Loa (as we don't use that for most of our record)
+    - get co-authors to suggest others...
+- CH4
+    - https://www.nature.com/articles/s41586-026-10938-1 and networks therein
+        - data file link: https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41586-026-10938-1/MediaObjects/41586_2026_10938_MOESM2_ESM.xlsx
+        - has other timeseries in there too: decide ourselves whether we use them or retrieve from source
+    - ask Cape Grim people whether all the sources I've included already include all Cape Grim records, or whether the are independent measurements
+    - UCI: Simpson, I. J., Sulbaek Andersen, M. P., Meinardi, S., Bruhwiler, L., Blake, N. J., Helmig, D., Rowland, F. S., and Blake, D. R.: Long-term decline of global atmospheric ethane concentrations and implications for methane, Nature, 488, 490-494, 10.1038/nature11342, 2012
+- N2O
+    - ask Cape Grim people whether all the sources I've included already include all Cape Grim records, or whether the are independent measurements
+- ODSs
+    - get co-authors to suggest...
+- others
+    - get co-authors to suggest...
+
+Add discussion section
+
+Note various issues identified in methods
+
+Note issues for minor gases and lack of new datasets compared to last time, suggest picking a smaller, more clearly supported, set of gases for future to simplify things
+
+Note that we still don't use satellite data: clear area for improvement
+
+Note that we also don't include uncertainties. Note that leading uncertainty is likely not measurement-level,
+rather methodological i.e. the various leaps/assumptions we have to make to go from a sparse observational network to a temporally extended, spatially complete dataset
+
+Note that we could just use AGAGE model-based reanalysis rather than our more crude statistical approach (not sure what the right tradeoff is here: modelling is more physical, but also more prone to going wild)
+
+Notes re extensions for later internal use:
+
+- ingest updated network data
+- calculate new global- annual-means
+- optimise existing latitudinal gradient (and seasonality change for CO_2) to get best fit with interpolated observational network values
+    - avoids the jump of using a different lat. gradient or seasonality over time
+    - also avoids extending PCs using crude regressions
+    - have to use relative seasonality calculation for gases other than CO_2, oh well just one less degree of freedom in the optimisation
+- calculate full grids
+- check no unexpected/spurious jumps
+- process, format etc. then publish

@@ -2,7 +2,7 @@
 authors = [
     { name = "Zebedee Nicholls", email = "zebedee.nicholls@climate-resource.com"},
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
     "pre-commit>=3.3.1",
     "jupyterlab>=4.0.0",
@@ -27,6 +27,9 @@ dependencies = [
     "typer>=0.20.0",
     "gitpython>=3.1.45",
     "httpx-retries>=0.4.6",
+    "cartopy>=0.24",
+    "nbformat>=5.10",
+    "openscm-zenodo @ git+https://github.com/openscm/openscm-zenodo.git@3617c4fbe26282c810a6379721864b57a3892555",
 ]
 name = "local"
 version = "0.1.0"
@@ -51,6 +54,10 @@ src = [
 ]
 exclude = [
     "_ext",
+    # Notebooks from the original CMIP7 GHG concentration generation run.
+    # These are a record of that run rather than code we maintain,
+    # so they are kept exactly as they were rather than linted to our style.
+    "data/raw",
 ]
 
 [tool.ruff.lint]
