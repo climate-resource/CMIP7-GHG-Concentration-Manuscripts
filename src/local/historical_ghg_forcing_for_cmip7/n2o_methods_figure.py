@@ -152,7 +152,7 @@ PANELS = (
     ("lat-grad-pc-ext-l", "Extended lat. gradient. PCs"),
     ("flying-carpet", "Native resolution"),
     ("monthly", "Monthly spatial-means"),
-    ("yearly", "Yearly spatial-means"),
+    ("yearly-l", "Yearly spatial-means"),
 )
 """The figure's panels, in the order in which they are labelled
 
@@ -165,7 +165,7 @@ MOSAIC = [
     ["timeseries", "timeseries", "interpolated-least", "seasonality"],
     ["locations", "counts", "lat-grad-eof", "lat-grad-pc"],
     ["gm-ext-l", "gm-ext-r", "lat-grad-pc-ext-l", "lat-grad-pc-ext-r"],
-    ["flying-carpet", "monthly", "yearly", "yearly"],
+    ["flying-carpet", "monthly", "yearly-l", "yearly-r"],
 ]
 """Layout of the figure's panels
 
@@ -966,7 +966,7 @@ def plot_flying_carpet(
     """
     Plot flying carpet
     """
-    tmp = convert_year_month_to_time(get_only_data_variable(native_resolution).copy())
+    tmp = convert_year_month_to_time(get_only_data_variable(native_resolution))
     tmp = tmp.assign_coords(
         time=tmp["time"].dt.year + tmp["time"].dt.month / 12 + 1 / 24
     )
@@ -992,6 +992,86 @@ def plot_flying_carpet(
     ax.set_xticks([other_tick, max_year])
 
     return mesh
+
+
+def plot_monthly_means(
+    pda: xr.Dataset,
+    ax: matplotlib.axes.Axes,
+) -> None:
+    """
+    Plot monthly means
+    """
+    tmp = convert_year_month_to_time(get_only_data_variable(pda))
+    tmp = tmp.assign_coords(
+        time=tmp["time"].dt.year + tmp["time"].dt.month / 12 + 1 / 24
+    )
+    pdf_l = []
+    for region, rda in tmp.groupby("Region"):
+        tmp_df = (
+            rda.sel(Region=region).to_pandas().rename("value").to_frame().reset_index()
+        )
+        tmp_df["Region"] = region
+        pdf_l.append(tmp_df)
+
+    pdf = pd.concat(pdf_l)
+
+    sns.scatterplot(
+        pdf,
+        x="time",
+        y="value",
+        hue="Region",
+        ax=ax,
+        s=15,
+        alpha=0.7,
+        edgecolor=None,
+    )
+
+    ax.set_ylabel(f"[{tmp.attrs['units']}]", fontsize="small")
+    ax.set_xlim(pda["year"].min(), pda["year"].max())
+
+
+def plot_yearly_means(
+    pda: xr.Dataset,
+    ax_left: matplotlib.axes.Axes,
+    ax_right: matplotlib.axes.Axes,
+    split_year: int = 1850,
+) -> None:
+    """
+    Plot global-mean derived from the observational network
+    """
+    tmp = get_only_data_variable(pda)
+    pdf_l = []
+    for region, rda in tmp.groupby("Region"):
+        tmp_df = (
+            rda.sel(Region=region).to_pandas().rename("value").to_frame().reset_index()
+        )
+        tmp_df["Region"] = region
+        pdf_l.append(tmp_df)
+
+    pdf = pd.concat(pdf_l)
+
+    for i, ax in enumerate((ax_left, ax_right)):
+        sns.scatterplot(
+            pdf,
+            x="year",
+            y="value",
+            hue="Region",
+            ax=ax,
+            s=15,
+            alpha=0.7,
+            edgecolor=None,
+            # legend=False,
+        )
+
+    ax_right.get_legend().remove()
+    add_break_lines_and_setup(
+        ax_left,
+        ax_right,
+        pda["year"].min(),
+        split_year,
+        pda["year"].max(),
+        tmp.attrs["units"],
+    )
 
 
 def has_fixed_aspect(ax: matplotlib.axes.Axes) -> bool:
@@ -1223,7 +1303,7 @@ def tuck_colour_bars_against_their_panels(
         )
 
 
-def generate_n2o_methods_figure(
+def generate_n2o_methods_figure(  # noqa: PLR0915
     outfile: Path,
     bundle_dir: Path,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
@@ -1399,6 +1479,44 @@ def generate_n2o_methods_figure(
     # )
     #
     # coverage_colour_bars_axes.append([colour_bar, ax])
+
+    gm_monthly = xr.load_dataset(
+        bundle_dir / "data/interim/n2o/n2o_global-mean_monthly.nc"
+    )
+    gm_monthly = gm_monthly.assign_coords(lat=["Global"])
+    hm_monthly = xr.load_dataset(
+        bundle_dir / "data/interim/n2o/n2o_hemispheric-mean_monthly.nc"
+    )
+    sh_lat = -45.0
+    hm_monthly = hm_monthly.assign_coords(
+        lat=[
+            "Southern hemisphere" if v == sh_lat else "Northern hemisphere"
+            for v in hm_monthly["lat"]
+        ]
+    )
+    pda = xr.concat([gm_monthly, hm_monthly], "lat")
+    pda = pda.rename({"lat": "Region"})
+    max_year = int(pda["year"].max())
+    plot_monthly_means(
+        pda.sel(year=range(max_year - 4, max_year + 1)), ax=axes["monthly"]
+    )
+
+    gm_yearly = xr.load_dataset(
+        bundle_dir / "data/interim/n2o/n2o_global-mean_annual-mean.nc"
+    )
+    gm_yearly = gm_yearly.assign_coords(lat=["Global"])
+    hm_yearly = xr.load_dataset(
+        bundle_dir / "data/interim/n2o/n2o_hemispheric-mean_annual-mean.nc"
+    )
+    hm_yearly = hm_yearly.assign_coords(
+        lat=[
+            "Southern hemisphere" if v == sh_lat else "Northern hemisphere"
+            for v in hm_yearly["lat"]
+        ]
+    )
+    pda = xr.concat([gm_yearly, hm_yearly], "lat")
+    pda = pda.rename({"lat": "Region"})
+    plot_yearly_means(pda, ax_left=axes["yearly-l"], ax_right=axes["yearly-r"])
 
     for label, (panel, title) in zip(string.ascii_lowercase, PANELS):
         axes[panel].set_title(
