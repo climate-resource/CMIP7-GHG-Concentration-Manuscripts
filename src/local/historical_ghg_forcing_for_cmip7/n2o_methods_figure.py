@@ -148,11 +148,11 @@ PANELS = (
     ("lat-grad-eof", "Obs. lat. gradient EOFs"),
     ("lat-grad-pc", "Obs. lat. gradient PCs"),
     ("gm-ext-l", "Extended global-mean"),
-    # "lat-grad-pc-emms",
-    # "lat-grad-pc-ext",
-    # "flying-carpet",
-    # "yearly",
-    # "monthly",
+    # ("lat-grad-pc-emms", "Lat. gradient PCs against emissions"),
+    ("lat-grad-pc-ext-l", "Extended lat. gradient. PCs"),
+    ("flying-carpet", "Native resolution"),
+    ("monthly", "Monthly spatial-means"),
+    ("yearly", "Yearly spatial-means"),
 )
 """The figure's panels, in the order in which they are labelled
 
@@ -164,8 +164,8 @@ MOSAIC = [
     ["timeseries", "timeseries", "interpolated-most", "gm"],
     ["timeseries", "timeseries", "interpolated-least", "seasonality"],
     ["locations", "counts", "lat-grad-eof", "lat-grad-pc"],
-    ["gm-ext-l", "gm-ext-r", "lat-grad-pc-emms", "lat-grad-pc-ext"],
-    ["flying-carpet", "yearly", "yearly", "monthly"],
+    ["gm-ext-l", "gm-ext-r", "lat-grad-pc-ext-l", "lat-grad-pc-ext-r"],
+    ["flying-carpet", "monthly", "yearly", "yearly"],
 ]
 """Layout of the figure's panels
 
@@ -844,6 +844,50 @@ def plot_lat_gradient_pieces_from_obs_network(
     return axes
 
 
+def add_break_lines_and_setup(  # noqa: PLR0913
+    ax_left: matplotlib.axes.Axes,
+    ax_right: matplotlib.axes.Axes,
+    min_year: int,
+    split_year: int,
+    max_year: int,
+    units: str,
+) -> None:
+    """
+    Add break lines to axes and do other general setup for broken axes
+    """
+    # Needs some work, but getting there.
+    ax_left.legend()
+
+    ax_left.set_ylabel(f"[{units}]", fontsize="small")
+    ax_right.set_ylabel("")
+    # ax.set_xlabel("year")
+    ax_left.set_xlim(xmin=min_year, xmax=split_year)
+    ax_right.set_xlim(xmin=split_year, xmax=max_year)
+
+    # Hide the spines
+    ax_left.spines["right"].set_visible(False)
+    ax_right.spines["left"].set_visible(False)
+    ax_right.yaxis.tick_right()
+
+    # Potential option for cutout lines.
+    # The important
+    # thing to know here is that in axes coordinates, which are always
+    # between 0-1, spine endpoints are at these locations (0, 0), (0, 1),
+    # (1, 0), and (1, 1).  Thus, we just need to put the diagonals in the
+    # appropriate corners of each of our axes, and so long as we use the
+    # right transform and disable clipping.
+
+    d = 0.015  # how big to make the diagonal lines in axes coordinates
+    # arguments to pass plot, just so we don't keep repeating them
+    kwargs = dict(transform=ax_left.transAxes, color="k", clip_on=False)
+    ax_left.plot((1 - d, 1 + d), (-d, +d), **kwargs)
+    ax_left.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)
+
+    kwargs.update(transform=ax_right.transAxes)  # switch to the bottom axes
+    ax_right.plot((-d, +d), (1 - d, 1 + d), **kwargs)
+    ax_right.plot((-d, +d), (-d, +d), **kwargs)
+
+
 def plot_global_mean_extension(
     gm: xr.Dataset,
     ax_left: matplotlib.axes.Axes,
@@ -874,36 +918,48 @@ def plot_global_mean_extension(
                 # s=30,
             )
 
-    ax_left.legend()
+    add_break_lines_and_setup(
+        ax_left,
+        ax_right,
+        gm_da["year"].min(),
+        split_year,
+        gm_da["year"].max(),
+        gm_da.attrs["units"],
+    )
 
-    ax_left.set_ylabel(f"[{gm_da.attrs['units']}]", fontsize="small")
-    # ax.set_xlabel("year")
-    ax_left.set_xlim(xmin=0, xmax=split_year)
-    ax_right.set_xlim(xmin=split_year, xmax=gm_da["year"].max())
 
-    # Needs some work from here, but getting there
-    # hide the spines
-    ax_left.spines["right"].set_visible(False)
-    ax_right.spines["left"].set_visible(False)
-    ax_right.yaxis.tick_right()
-    #
-    # # This looks pretty good, and was fairly painless, but you can get that
-    # # cut-out diagonal lines look with just a bit more work. The important
-    # # thing to know here is that in axes coordinates, which are always
-    # # between 0-1, spine endpoints are at these locations (0, 0), (0, 1),
-    # # (1, 0), and (1, 1).  Thus, we just need to put the diagonals in the
-    # # appropriate corners of each of our axes, and so long as we use the
-    # # right transform and disable clipping.
-    #
-    # d = 0.015  # how big to make the diagonal lines in axes coordinates
-    # # arguments to pass plot, just so we don't keep repeating them
-    # kwargs = dict(transform=ax_left.transAxes, color="k", clip_on=False)
-    # ax_left.plot((1 - d, 1 + d), (-d, +d), **kwargs)
-    # ax_left.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)
-    #
-    # kwargs.update(transform=ax_right.transAxes)  # switch to the bottom axes
-    # ax_right.plot((-d, +d), (1 - d, 1 + d), **kwargs)
-    # ax_right.plot((-d, +d), (-d, +d), **kwargs)
+def plot_lat_gradient_pcs_extended(
+    lat_grad_info: xr.Dataset,
+    ax_left: matplotlib.axes.Axes,
+    ax_right: matplotlib.axes.Axes,
+    pcs_key: str = "principal-components",
+    split_year: int = 1950,
+) -> None:
+    """
+    Plot extended latitudinal gradient PCs
+    """
+    pcs_da = lat_grad_info[pcs_key]
+    pcs_df = pcs_da.to_pandas().stack().rename("value").to_frame().reset_index()
+
+    for i, ax in enumerate((ax_left, ax_right)):
+        sns.scatterplot(
+            pcs_df,
+            x="year",
+            y="value",
+            hue="eof",
+            ax=ax,
+            s=15,
+            edgecolor=None,
+        )
+
+    add_break_lines_and_setup(
+        ax_left,
+        ax_right,
+        pcs_da["year"].min(),
+        split_year,
+        pcs_da["year"].max(),
+        pcs_da.attrs["units"],
+    )
 
 
 def has_fixed_aspect(ax: matplotlib.axes.Axes) -> bool:
@@ -1162,6 +1218,14 @@ def generate_n2o_methods_figure(
     -------
         `outfile`
     """
+    all_data_with_bins = add_network_group(
+        get_n2o_all_data_with_bins(
+            bundle_dir=bundle_dir,
+            original_run_notebooks_dir=original_run_notebooks_dir,
+            force_rerun=force_rerun,
+        )
+    )
+
     fig, axes = plt.subplot_mosaic(
         MOSAIC,
         figsize=FIGURE_SIZE,
@@ -1169,14 +1233,6 @@ def generate_n2o_methods_figure(
             panel: {"projection": ccrs.PlateCarree()} for panel in MAP_PANELS
         },
         layout="constrained",
-    )
-
-    all_data_with_bins = add_network_group(
-        get_n2o_all_data_with_bins(
-            bundle_dir=bundle_dir,
-            original_run_notebooks_dir=original_run_notebooks_dir,
-            force_rerun=force_rerun,
-        )
     )
 
     timeseries_scatter = plot_station_timeseries(all_data_with_bins, axes["timeseries"])
@@ -1278,6 +1334,16 @@ def generate_n2o_methods_figure(
         input_sources={
             "Menking et al.": menking_et_al,
         },
+    )
+
+    pcs_extended = xr.load_dataset(
+        bundle_dir / "data/interim/n2o/n2o_allyears-lat-gradient-eofs-pcs.nc"
+    )
+    plot_lat_gradient_pcs_extended(
+        pcs_extended,
+        axes["lat-grad-pc-ext-l"],
+        axes["lat-grad-pc-ext-r"],
+        split_year=1950,
     )
 
     for label, (panel, title) in zip(string.ascii_lowercase, PANELS):
