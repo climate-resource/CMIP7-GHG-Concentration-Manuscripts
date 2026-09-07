@@ -128,7 +128,7 @@ of colour vision deficiency. Deliberately different from the colour map
 used for the observation counts, so the two scales don't get confused.
 """
 
-INTERPOLATION_COLOUR_MAP = "autumn"
+INTERPOLATION_COLOUR_MAP = "autumn_r"
 
 LEGEND_MARKER_COLOUR = "0.35"
 """Colour to draw legend markers in where colour means something else
@@ -223,7 +223,7 @@ def unit(pdf: pd.DataFrame, unit_col: str = "unit") -> str:
 def label_name(ghg: str) -> str:
     """Get the label name for a given string"""
     replacements = {
-        "n2o": "N2O",
+        "n2o": "N$_2$O",
     }
 
     res = ghg
@@ -530,12 +530,10 @@ def plot_station_timeseries(  # noqa: PLR0913
         msg = "No data to plot"
         raise AssertionError(msg)
 
-    units = indf["unit"].unique()
-    if units.size != 1:
-        msg = f"Expected exactly one unit, got {units}"
-        raise AssertionError(msg)
+    units = unit(indf)
+    gas = ghg(indf)
 
-    ax.set_ylabel(f"N$_2$O [{units[0]}]", fontsize="small")
+    ax.set_ylabel(label_name(f"{gas} [{units[0]}]"), fontsize="small")
     ax.set_xlabel("year", fontsize="small")
     ax.tick_params(labelsize="small")
 
@@ -962,6 +960,40 @@ def plot_lat_gradient_pcs_extended(
     )
 
 
+def plot_flying_carpet(
+    native_resolution: xr.Dataset, ax: matplotlib.axes.Axes, tick_nearest: int = 5
+) -> None:
+    """
+    Plot flying carpet
+    """
+    tmp = convert_year_month_to_time(get_only_data_variable(native_resolution).copy())
+    tmp = tmp.assign_coords(
+        time=tmp["time"].dt.year + tmp["time"].dt.month / 12 + 1 / 24
+    )
+    mesh = tmp.plot.surface(
+        x="time",
+        y="lat",
+        ax=ax,
+        cmap=INTERPOLATION_COLOUR_MAP,
+        levels=30,
+        add_colorbar=False,
+        # alpha=0.7,
+    )
+    ax.view_init(15, -135, 0)  # type: ignore
+    # Rotation not working here, label is still upside down
+    ax.set_zlabel(
+        label_name(f"{tmp.name} [{tmp.attrs['units']}]"), rotation=90, fontsize="small"
+    )
+    ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
+    ax.set_yticks([-45, 45])
+    ax.set_xlabel("time", fontsize="small")
+    max_year = int(native_resolution["year"].max())
+    other_tick = tick_nearest * np.floor(max_year / tick_nearest) - 5
+    ax.set_xticks([other_tick, max_year])
+
+    return mesh
+
+
 def has_fixed_aspect(ax: matplotlib.axes.Axes) -> bool:
     """
     Determine whether an axes' aspect ratio is fixed
@@ -1230,7 +1262,8 @@ def generate_n2o_methods_figure(
         MOSAIC,
         figsize=FIGURE_SIZE,
         per_subplot_kw={
-            panel: {"projection": ccrs.PlateCarree()} for panel in MAP_PANELS
+            **{panel: {"projection": ccrs.PlateCarree()} for panel in MAP_PANELS},
+            "flying-carpet": {"projection": "3d"},
         },
         layout="constrained",
     )
@@ -1345,6 +1378,27 @@ def generate_n2o_methods_figure(
         axes["lat-grad-pc-ext-r"],
         split_year=1950,
     )
+
+    native_resolution = xr.load_dataset(
+        bundle_dir / "data/interim/n2o/n2o_fifteen-degree_monthly.nc"
+    )
+    max_year = int(native_resolution["year"].max())
+    ax = axes["flying-carpet"]
+    mesh_flying_carpet = plot_flying_carpet(  # noqa: F841
+        native_resolution.sel(year=range(max_year - 9, max_year + 1)),
+        ax,
+    )
+    # Turned off while it destroys formatting. Maybe just leave off.
+    # @Claude: please fix
+    # colour_bar = add_colour_bar(
+    #     fig,
+    #     mesh_flying_carpet,
+    #     ax=ax,
+    #     label=f"[{get_only_data_variable(native_resolution).attrs['units']}]",
+    #     # ticks=LAT_BIN_BOUNDS[::2],
+    # )
+    #
+    # coverage_colour_bars_axes.append([colour_bar, ax])
 
     for label, (panel, title) in zip(string.ascii_lowercase, PANELS):
         axes[panel].set_title(
