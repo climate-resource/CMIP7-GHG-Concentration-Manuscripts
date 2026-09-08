@@ -800,7 +800,7 @@ def plot_seasonality_from_obs_network(
         hue="lat",
         ax=ax,
     )
-    ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
+    ax.set_ylabel(f"[{seasonality_da.attrs['units']}]", fontsize="small")
     ax.set_xticks(np.arange(1, 12 + 1, 3))
 
     return ax
