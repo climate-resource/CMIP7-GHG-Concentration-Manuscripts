@@ -36,7 +36,7 @@ from local.cmip_ghg_generation import (
 )
 from local.xarray_time import convert_time_to_year_month, convert_year_month_to_time
 
-ALL_DATA_WITH_BINS_FILE = Path("manuscript-outputs") / "n2o_all-data-with-bins.csv"
+ALL_DATA_WITH_BINS_FILE = Path("manuscript-outputs") / "ch4_all-data-with-bins.csv"
 """Where the re-run notebook saves the data we want
 
 Relative to the bundle's root directory,
@@ -85,7 +85,8 @@ the same physical sites, so we show them as one network.
 
 NETWORK_GROUP_COLOURS = {
     "NOAA": "#0072b2",
-    "AGAGE/GAGE/ALE": "#d55e00",
+    "NOAA (moving)": "#3a3b3a",
+    "AGAGE/GAGE/ALE": "#ffa500",
 }
 """Colour to use for each group of observational networks
 
@@ -94,6 +95,7 @@ These are from the Okabe-Ito palette, i.e. they are colour-blind safe.
 
 NETWORK_GROUP_MARKERS = {
     "NOAA": "o",
+    "NOAA (moving)": ".",
     "AGAGE/GAGE/ALE": "^",
 }
 """Marker to use for each group of observational networks
@@ -104,6 +106,7 @@ so the figure still works in greyscale.
 
 NETWORK_GROUP_MARKER_SIZES = {
     "NOAA": 50.0,
+    "NOAA (moving)": 10.0,
     "AGAGE/GAGE/ALE": 25.0,
 }
 """Marker size to use for each group of observational networks on the map
@@ -253,35 +256,13 @@ def get_only_data_variable(ds: xr.Dataset) -> xr.DataArray:
     return res
 
 
-def get_n2o_all_data_with_bins(
+def get_ch4_all_data_with_bins(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
     force_rerun: bool = False,
 ) -> pd.DataFrame:
     """
-    Get the N2O observational network data, as it went into the binning
-
-    This re-runs the original run's binning notebook if it needs to.
-    That is slow the first time (the original run's environment has to be
-    downloaded and installed), so the result is re-used if it is already there.
-
-    Parameters
-    ----------
-    bundle_dir
-        Directory in which to keep the original run's bundle
-
-    original_run_notebooks_dir
-        The original run's `notebooks-executed` directory
-
-        Only used if we don't already have a copy of the notebook we need.
-
-    force_rerun
-        Re-run the notebook even if its output is already there
-
-    Returns
-    -------
-        The observational network data, with the latitudinal and longitudinal
-        bin of each observation added
+    Get the CH4 observational network data, as it went into the binning
     """
     out_file = bundle_dir / ALL_DATA_WITH_BINS_FILE
     if out_file.exists() and not force_rerun:
@@ -289,9 +270,9 @@ def get_n2o_all_data_with_bins(
         return pd.read_csv(out_file)
 
     base_notebook = (
-        Path("calculate_n2o_monthly_fifteen_degree_pieces")
+        Path("calculate_ch4_monthly_fifteen_degree_pieces")
         / "only"
-        / "1000_n2o_bin-observational-network.ipynb"
+        / "1100_ch4_bin-observational-network.ipynb"
     )
 
     start_from = ensure_executed_notebook_available(
@@ -422,7 +403,51 @@ def add_network_group(indf: pd.DataFrame) -> pd.DataFrame:
         msg = f"No network group for {sorted(set(out.loc[unmapped, 'network']))}"
         raise AssertionError(msg)
 
-    return out
+    def get_surf_ship_suffix(inv: str) -> str:
+        if pd.isnull(inv):
+            return ""
+
+        if inv == "surface":
+            return ""
+
+        if inv == "shipboard":
+            return " (moving)"
+
+        raise NotImplementedError(inv)
+
+    out[NETWORK_GROUP_COLUMN] = out[NETWORK_GROUP_COLUMN] + out["surf_or_ship"].apply(
+        get_surf_ship_suffix
+    )
+    res_l = []
+    for (network, station), nsdf in out.groupby(["network", "station"]):
+        # if r.shape[0] == 1:
+        #     continue
+        corrected = nsdf.copy()
+        ng_vcs = corrected["network_group"].value_counts()
+        if not ng_vcs.empty and ng_vcs.shape[0] > 1:
+            # Majority rules
+            ng = ng_vcs.index.values[0]
+            corrected["network_group"] = ng
+
+        loc_tolerance = 0.65
+        if (corrected[["latitude", "longitude"]].std() < loc_tolerance).all(axis=None):
+            # Make all locations the same
+            for col in ["latitude", "longitude"]:
+                corrected.loc[:, col] = corrected[col].median()
+            # corrected[["latitude", "longitude"]] = corrected[
+            #     ["latitude", "longitude"]
+            # ].median()
+
+        elif (
+            corrected[["latitude", "longitude"]].drop_duplicates().shape[0] > 1
+            and (corrected["network_group"] != "NOAA (moving)").any()
+        ):
+            raise NotImplementedError
+
+        res_l.append(corrected)
+
+    res = pd.concat(res_l)
+    return res
 
 
 def get_network_groups_largest_first(indf: pd.DataFrame) -> list[str]:
@@ -1335,13 +1360,13 @@ def generate_ch4_methods_figure(
     -------
         `outfile`
     """
-    # all_data_with_bins = add_network_group(
-    #     get_ch4_all_data_with_bins(
-    #         bundle_dir=bundle_dir,
-    #         original_run_notebooks_dir=original_run_notebooks_dir,
-    #         force_rerun=force_rerun,
-    #     )
-    # )
+    all_data_with_bins = add_network_group(
+        get_ch4_all_data_with_bins(
+            bundle_dir=bundle_dir,
+            original_run_notebooks_dir=original_run_notebooks_dir,
+            force_rerun=force_rerun,
+        )
+    )
 
     fig, axes = plt.subplot_mosaic(
         MOSAIC,
@@ -1353,39 +1378,42 @@ def generate_ch4_methods_figure(
         layout="constrained",
     )
 
-    # timeseries_scatter = plot_station_timeseries(all_data_with_bins, axes["timeseries"])
-    # plot_station_locations(all_data_with_bins, axes["locations"])
-    # counts_mesh = plot_observation_counts(all_data_with_bins, axes["counts"])
-    #
-    # latitude_colour_bar = add_colour_bar(
-    #     fig,
-    #     timeseries_scatter,
-    #     ax=axes["timeseries"],
-    #     label=r"latitude [$^{\circ}$N]",
-    #     ticks=LAT_BIN_BOUNDS[::2],
-    # )
-    # # The points are drawn see-through so they don't hide each other,
-    # # but the colour bar should show the colours at full strength
-    # latitude_colour_bar.solids.set_alpha(1.0)
-    #
-    # counts_colour_bar = add_colour_bar(
-    #     fig,
-    #     counts_mesh,
-    #     ax=axes["counts"],
-    #     label="Number of input data points",
-    #     ticks=np.arange(1, int(counts_mesh.norm.vmax) + 1),
-    # )
-    #
-    # # Both time axes cover the same period, even though the panels differ in width
-    # x_limits = (
-    #     get_decimal_year(all_data_with_bins).min() - 1.0,
-    #     get_decimal_year(all_data_with_bins).max() + 1.0,
-    # )
-    # for panel in ("timeseries", "counts"):
-    #     axes[panel].set_xlim(x_limits)
-    #
-    # axes["counts"].set_xlabel("year", fontsize="small")
-    #
+    axes["timeseries"].set_ylim([1400, 2200])
+    timeseries_scatter = plot_station_timeseries(
+        all_data_with_bins, axes["timeseries"], inset_y0=0.1
+    )
+    plot_station_locations(all_data_with_bins, axes["locations"])
+    counts_mesh = plot_observation_counts(all_data_with_bins, axes["counts"])
+
+    latitude_colour_bar = add_colour_bar(
+        fig,
+        timeseries_scatter,
+        ax=axes["timeseries"],
+        label=r"latitude [$^{\circ}$N]",
+        ticks=LAT_BIN_BOUNDS[::2],
+    )
+    # The points are drawn see-through so they don't hide each other,
+    # but the colour bar should show the colours at full strength
+    latitude_colour_bar.solids.set_alpha(1.0)
+
+    counts_colour_bar = add_colour_bar(
+        fig,
+        counts_mesh,
+        ax=axes["counts"],
+        label="Number of input data points",
+        ticks=np.arange(1, int(counts_mesh.norm.vmax) + 1),
+    )
+
+    # Both time axes cover the same period, even though the panels differ in width
+    x_limits = (
+        get_decimal_year(all_data_with_bins).min() - 1.0,
+        get_decimal_year(all_data_with_bins).max() + 1.0,
+    )
+    for panel in ("timeseries", "counts"):
+        axes[panel].set_xlim(x_limits)
+
+    axes["counts"].set_xlabel("year", fontsize="small")
+
     # interpolated_obs_file = (
     #     bundle_dir / "data/interim/n2o/n2o_observational-network_interpolated.nc"
     # )
@@ -1530,21 +1558,21 @@ def generate_ch4_methods_figure(
     #         fontsize="medium",
     #         # fontweight="bold",
     #     )
-    #
-    # # The figure's colour bars, each with the panel it belongs to.
-    # # Any colour bar we add has to be listed here too,
-    # # otherwise it is left stranded next to its neighbour's panel.
-    # colour_bars = [
-    #     (latitude_colour_bar, axes["timeseries"]),
-    #     (counts_colour_bar, axes["counts"]),
-    #     *((cb, ax) for cb, ax in coverage_colour_bars_axes),
-    # ]
+
+    # The figure's colour bars, each with the panel it belongs to.
+    # Any colour bar we add has to be listed here too,
+    # otherwise it is left stranded next to its neighbour's panel.
+    colour_bars = [
+        (latitude_colour_bar, axes["timeseries"]),
+        (counts_colour_bar, axes["counts"]),
+        # *((cb, ax) for cb, ax in coverage_colour_bars_axes),
+    ]
 
     # These two are last, and in this order,
     # because they need to know how much space everything else has taken up
     # and the second of them freezes the layout.
     fit_rows_to_fixed_aspect_panels(fig, axes)
-    # tuck_colour_bars_against_their_panels(fig, colour_bars)
+    tuck_colour_bars_against_their_panels(fig, colour_bars)
 
     outfile.parent.mkdir(exist_ok=True, parents=True)
     logger.info(f"Writing {outfile}")

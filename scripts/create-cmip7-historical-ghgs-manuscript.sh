@@ -18,7 +18,7 @@ cd "${repo_root}"
 zenodo_bundle_dir="${repo_root}/data/raw/cmip-ghg-concentration-generation/v1.0.0"
 # Where we store the original zenodo bundle once downloaded.
 # Careful: if you change this, make sure to gitignore the new destination too.
-original_run_notebooks_dir="${repo_root}/CMIP-GHG-Concentration-Generation/output-bundles/v1.0.0/notebooks-executed"
+original_run_notebooks_dir="${repo_root}/../CMIP-GHG-Concentration-Generation/output-bundles/v1.0.0/notebooks-executed"
 # Where the original run notebooks are.
 # We didn't include these in the zenodo archive, stupidly.
 # If you need these but don't have them, you have to ask Zeb or someone who does have them.
