@@ -1492,7 +1492,6 @@ def generate_ch4_methods_figure(
         raise AssertionError
     epica_lat = epica_lat_l[0]
 
-    # epica_data =
     plot_global_mean_extension(
         global_mean_extended,
         axes["gm-ext-l"],
@@ -1505,18 +1504,22 @@ def generate_ch4_methods_figure(
         },
     )
 
-    # pcs_extended = xr.load_dataset(
-    #     bundle_dir / "data/interim/ch4/ch4_allyears-lat-gradient-eofs-pcs.nc"
-    # )
-    # plot_lat_gradient_pcs_extended(
-    #     pcs_extended,
-    #     axes["lat-grad-pc-ext-l"],
-    #     axes["lat-grad-pc-ext-r"],
-    #     split_year=1930,
-    #     # TODO: add labelling of different time periods and input sources
-    # )
-    # # TODO: add plot of regression against PRIMAP
-    #
+    pcs_extended = xr.load_dataset(
+        bundle_dir / "data/interim/ch4/ch4_allyears-lat-gradient-eofs-pcs.nc"
+    )
+    # TODO - Up to here:
+    # - need to add plot of regression against PRIMAP
+    # - need to colour the different bits of the PC extension
+    #   - direct from obs. network
+    #   - based on regression against PRIMAP
+    #   - optimised to match Law Dome and NEEM
+    plot_lat_gradient_pcs_extended(
+        pcs_extended,
+        axes["lat-grad-pc-ext-l"],
+        axes["lat-grad-pc-ext-r"],
+        split_year=1930,
+    )
+
     # native_resolution = xr.load_dataset(
     #     bundle_dir / "data/interim/ch4/ch4_fifteen-degree_monthly.nc"
     # )
