@@ -9,6 +9,7 @@ Generation of the CH4 methods figure
 
 from __future__ import annotations
 
+import string
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -1414,150 +1415,153 @@ def generate_ch4_methods_figure(
 
     axes["counts"].set_xlabel("year", fontsize="small")
 
-    # interpolated_obs_file = (
-    #     bundle_dir / "data/interim/n2o/n2o_observational-network_interpolated.nc"
-    # )
-    # interpolated_obs = xr.load_dataset(interpolated_obs_file)
-    # most_least_coverage = get_interpolated_input_coverage_info(
-    #     all_data_with_bins, interpolated_obs
-    # )
-    # coverage_colour_bars_axes = []
-    # for key in ["most", "least"]:
-    #     ax = axes[f"interpolated-{key}"]
-    #     coverage_mesh = plot_coverage_and_interpolated(
-    #         input_data=all_data_with_bins,
-    #         interpolated=interpolated_obs,
-    #         year_month=most_least_coverage[key],
-    #         ax=ax,
-    #     )
-    #     colour_bar = add_colour_bar(
-    #         fig,
-    #         coverage_mesh,
-    #         ax=ax,
-    #         label=f"[{unit(all_data_with_bins)}]",
-    #         # ticks=LAT_BIN_BOUNDS[::2],
-    #     )
-    #
-    #     coverage_colour_bars_axes.append([colour_bar, ax])
-    #
-    # global_mean_from_obs_network = xr.load_dataset(
-    #     bundle_dir / "data/interim/n2o/n2o_observational-network_global-annual-mean.nc"
-    # )
-    # plot_global_mean_from_obs_network(global_mean_from_obs_network, axes["gm"])
-    #
-    # seasonality_from_obs_network = xr.load_dataset(
-    #     bundle_dir / "data/interim/n2o/n2o_observational-network_seasonality.nc",
-    # )
-    # plot_seasonality_from_obs_network(
-    #     seasonality_from_obs_network,
-    #     axes["seasonality"],
-    #     assumed_units="dimensionless",
-    # )
-    #
-    # lat_gradient_from_obs_network = xr.load_dataset(
-    #     bundle_dir
-    #     / "data/interim/n2o/n2o_observational-network_latitudinal-gradient-eofs.nc",
-    # )
-    # plot_lat_gradient_pieces_from_obs_network(
-    #     lat_gradient_from_obs_network,
-    #     {
-    #         "pcs": axes["lat-grad-pc"],
-    #         "eofs": axes["lat-grad-eof"],
-    #     },
-    # )
-    #
-    # global_mean_extended = xr.load_dataset(
-    #     bundle_dir / "data/interim/n2o/n2o_global-annual-mean_allyears.nc"
-    # )
+    interpolated_obs_file = (
+        bundle_dir / "data/interim/ch4/ch4_observational-network_interpolated.nc"
+    )
+    interpolated_obs = xr.load_dataset(interpolated_obs_file)
+    most_least_coverage = get_interpolated_input_coverage_info(
+        all_data_with_bins, interpolated_obs
+    )
+    coverage_colour_bars_axes = []
+    for key in ["most", "least"]:
+        ax = axes[f"interpolated-{key}"]
+        coverage_mesh = plot_coverage_and_interpolated(
+            input_data=all_data_with_bins,
+            interpolated=interpolated_obs,
+            year_month=most_least_coverage[key],
+            ax=ax,
+        )
+        colour_bar = add_colour_bar(
+            fig,
+            coverage_mesh,
+            ax=ax,
+            label=f"[{unit(all_data_with_bins)}]",
+            # ticks=LAT_BIN_BOUNDS[::2],
+        )
+
+        coverage_colour_bars_axes.append([colour_bar, ax])
+
+    global_mean_from_obs_network = xr.load_dataset(
+        bundle_dir / "data/interim/ch4/ch4_observational-network_global-annual-mean.nc"
+    )
+    plot_global_mean_from_obs_network(global_mean_from_obs_network, axes["gm"])
+
+    seasonality_from_obs_network = xr.load_dataset(
+        bundle_dir / "data/interim/ch4/ch4_observational-network_seasonality.nc",
+    )
+    plot_seasonality_from_obs_network(
+        seasonality_from_obs_network,
+        axes["seasonality"],
+        assumed_units="dimensionless",
+    )
+
+    lat_gradient_from_obs_network = xr.load_dataset(
+        bundle_dir
+        / "data/interim/ch4/ch4_observational-network_latitudinal-gradient-eofs.nc",
+    )
+    plot_lat_gradient_pieces_from_obs_network(
+        lat_gradient_from_obs_network,
+        {
+            "pcs": axes["lat-grad-pc"],
+            "eofs": axes["lat-grad-eof"],
+        },
+    )
+
+    global_mean_extended = xr.load_dataset(
+        bundle_dir / "data/interim/ch4/ch4_global-annual-mean_allyears.nc"
+    )
     # menking_et_al = pd.read_csv(
     #     bundle_dir / "data/interim/menking-et-al-2025/menking_et_al_2025.csv"
     # )
     # menking_et_al = menking_et_al[menking_et_al["gas"] == ghg(all_data_with_bins)]
-    # plot_global_mean_extension(
-    #     global_mean_extended,
-    #     axes["gm-ext-l"],
-    #     axes["gm-ext-r"],
-    #     input_sources={
-    #         "Menking et al.": menking_et_al,
-    #     },
+    plot_global_mean_extension(
+        global_mean_extended,
+        axes["gm-ext-l"],
+        axes["gm-ext-r"],
+        input_sources={
+            # TODO: add Law Dome input here (with label that makes clear different latitude)
+            # "Menking et al.": menking_et_al,
+        },
+    )
+
+    pcs_extended = xr.load_dataset(
+        bundle_dir / "data/interim/ch4/ch4_allyears-lat-gradient-eofs-pcs.nc"
+    )
+    plot_lat_gradient_pcs_extended(
+        pcs_extended,
+        axes["lat-grad-pc-ext-l"],
+        axes["lat-grad-pc-ext-r"],
+        split_year=1930,
+        # TODO: add labelling of different time periods and input sources
+    )
+    # TODO: add plot of regression against PRIMAP
+
+    native_resolution = xr.load_dataset(
+        bundle_dir / "data/interim/ch4/ch4_fifteen-degree_monthly.nc"
+    )
+    max_year = int(native_resolution["year"].max())
+    ax = axes["flying-carpet"]
+    mesh_flying_carpet = plot_flying_carpet(
+        native_resolution.sel(year=range(max_year - 9, max_year + 1)),
+        ax,
+    )
+    # Turned off while it destroys formatting. Maybe just leave off.
+    # @Claude: please fix
+    # colour_bar = add_colour_bar(
+    #     fig,
+    #     mesh_flying_carpet,
+    #     ax=ax,
+    #     label=f"[{get_only_data_variable(native_resolution).attrs['units']}]",
+    #     # ticks=LAT_BIN_BOUNDS[::2],
     # )
     #
-    # pcs_extended = xr.load_dataset(
-    #     bundle_dir / "data/interim/n2o/n2o_allyears-lat-gradient-eofs-pcs.nc"
-    # )
-    # plot_lat_gradient_pcs_extended(
-    #     pcs_extended,
-    #     axes["lat-grad-pc-ext-l"],
-    #     axes["lat-grad-pc-ext-r"],
-    #     split_year=1950,
-    # )
-    #
-    # native_resolution = xr.load_dataset(
-    #     bundle_dir / "data/interim/n2o/n2o_fifteen-degree_monthly.nc"
-    # )
-    # max_year = int(native_resolution["year"].max())
-    # ax = axes["flying-carpet"]
-    # mesh_flying_carpet = plot_flying_carpet(
-    #     native_resolution.sel(year=range(max_year - 9, max_year + 1)),
-    #     ax,
-    # )
-    # # Turned off while it destroys formatting. Maybe just leave off.
-    # # @Claude: please fix
-    # # colour_bar = add_colour_bar(
-    # #     fig,
-    # #     mesh_flying_carpet,
-    # #     ax=ax,
-    # #     label=f"[{get_only_data_variable(native_resolution).attrs['units']}]",
-    # #     # ticks=LAT_BIN_BOUNDS[::2],
-    # # )
-    # #
-    # # coverage_colour_bars_axes.append([colour_bar, ax])
-    #
-    # gm_monthly = xr.load_dataset(
-    #     bundle_dir / "data/interim/n2o/n2o_global-mean_monthly.nc"
-    # )
-    # gm_monthly = gm_monthly.assign_coords(lat=["Global"])
-    # hm_monthly = xr.load_dataset(
-    #     bundle_dir / "data/interim/n2o/n2o_hemispheric-mean_monthly.nc"
-    # )
-    # sh_lat = -45.0
-    # hm_monthly = hm_monthly.assign_coords(
-    #     lat=[
-    #         "Southern hemisphere" if v == sh_lat else "Northern hemisphere"
-    #         for v in hm_monthly["lat"]
-    #     ]
-    # )
-    # pda = xr.concat([gm_monthly, hm_monthly], "lat")
-    # pda = pda.rename({"lat": "Region"})
-    # max_year = int(pda["year"].max())
-    # plot_monthly_means(
-    #     pda.sel(year=range(max_year - 4, max_year + 1)), ax=axes["monthly"]
-    # )
-    #
-    # gm_yearly = xr.load_dataset(
-    #     bundle_dir / "data/interim/n2o/n2o_global-mean_annual-mean.nc"
-    # )
-    # gm_yearly = gm_yearly.assign_coords(lat=["Global"])
-    # hm_yearly = xr.load_dataset(
-    #     bundle_dir / "data/interim/n2o/n2o_hemispheric-mean_annual-mean.nc"
-    # )
-    # hm_yearly = hm_yearly.assign_coords(
-    #     lat=[
-    #         "Southern hemisphere" if v == sh_lat else "Northern hemisphere"
-    #         for v in hm_yearly["lat"]
-    #     ]
-    # )
-    # pda = xr.concat([gm_yearly, hm_yearly], "lat")
-    # pda = pda.rename({"lat": "Region"})
-    # plot_yearly_means(pda, ax_left=axes["yearly-l"], ax_right=axes["yearly-r"])
-    #
-    # for label, (panel, title) in zip(string.ascii_lowercase, PANELS):
-    #     axes[panel].set_title(
-    #         f"$\\bf{{({label})}}$ {title}",
-    #         loc="left",
-    #         fontsize="medium",
-    #         # fontweight="bold",
-    #     )
+    # coverage_colour_bars_axes.append([colour_bar, ax])
+
+    gm_monthly = xr.load_dataset(
+        bundle_dir / "data/interim/ch4/ch4_global-mean_monthly.nc"
+    )
+    gm_monthly = gm_monthly.assign_coords(lat=["Global"])
+    hm_monthly = xr.load_dataset(
+        bundle_dir / "data/interim/ch4/ch4_hemispheric-mean_monthly.nc"
+    )
+    sh_lat = -45.0
+    hm_monthly = hm_monthly.assign_coords(
+        lat=[
+            "Southern hemisphere" if v == sh_lat else "Northern hemisphere"
+            for v in hm_monthly["lat"]
+        ]
+    )
+    pda = xr.concat([gm_monthly, hm_monthly], "lat")
+    pda = pda.rename({"lat": "Region"})
+    max_year = int(pda["year"].max())
+    plot_monthly_means(
+        pda.sel(year=range(max_year - 4, max_year + 1)), ax=axes["monthly"]
+    )
+
+    gm_yearly = xr.load_dataset(
+        bundle_dir / "data/interim/ch4/ch4_global-mean_annual-mean.nc"
+    )
+    gm_yearly = gm_yearly.assign_coords(lat=["Global"])
+    hm_yearly = xr.load_dataset(
+        bundle_dir / "data/interim/ch4/ch4_hemispheric-mean_annual-mean.nc"
+    )
+    hm_yearly = hm_yearly.assign_coords(
+        lat=[
+            "Southern hemisphere" if v == sh_lat else "Northern hemisphere"
+            for v in hm_yearly["lat"]
+        ]
+    )
+    pda = xr.concat([gm_yearly, hm_yearly], "lat")
+    pda = pda.rename({"lat": "Region"})
+    plot_yearly_means(pda, ax_left=axes["yearly-l"], ax_right=axes["yearly-r"])
+
+    for label, (panel, title) in zip(string.ascii_lowercase, PANELS):
+        axes[panel].set_title(
+            f"$\\bf{{({label})}}$ {title}",
+            loc="left",
+            fontsize="medium",
+            # fontweight="bold",
+        )
 
     # The figure's colour bars, each with the panel it belongs to.
     # Any colour bar we add has to be listed here too,
@@ -1565,7 +1569,7 @@ def generate_ch4_methods_figure(
     colour_bars = [
         (latitude_colour_bar, axes["timeseries"]),
         (counts_colour_bar, axes["counts"]),
-        # *((cb, ax) for cb, ax in coverage_colour_bars_axes),
+        *((cb, ax) for cb, ax in coverage_colour_bars_axes),
     ]
 
     # These two are last, and in this order,
