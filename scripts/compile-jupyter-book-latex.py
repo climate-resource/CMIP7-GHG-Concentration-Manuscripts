@@ -34,6 +34,9 @@ def main(
         Path, typer.Option(help="Bibtex references file to use")
     ],
 ) -> None:
+    """
+    Compile the jupyter-book latex files to PDF
+    """
     with open(source, encoding="utf-8") as fh:
         tex_jupyter_book_l = [v.strip() for v in fh.readlines()]
 
