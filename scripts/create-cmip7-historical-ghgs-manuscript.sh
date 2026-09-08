@@ -29,6 +29,7 @@ output_requirements_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cm
 
 methods_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods.tex"
 n2o_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/n2o_methods.pdf"
+ch4_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/ch4_methods.pdf"
 
 # methods_subfile="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods-detail.tex"
 results_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/results.tex"
@@ -56,10 +57,12 @@ mkdir -p "${output_pdf_dir}/"
 #   - caching in the python (just have user config to set the caching for each step with basic decorators)
 uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-inputs.py" \
     --n2o-methods-figure-file "${n2o_methods_figure_file}" \
+    --ch4-methods-figure-file "${ch4_methods_figure_file}" \
     --bundle-dir "${zenodo_bundle_dir}" \
     --original-run-notebooks-dir "${original_run_notebooks_dir}"
 
-open figures/historical-ghg-forcing-for-cmip7/n2o_methods.pdf
+open "${n2o_methods_figure_file}"
+open "${ch4_methods_figure_file}"
 exit 0
 # --force-rerun \
 

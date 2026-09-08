@@ -697,8 +697,6 @@ we end up with first PC values for the entire timespan from year 1 to 2023.
 
 The second PC is simply kept constant before the start of the observational period.
 
-[TODO figure: 4  panels - fossil emissions, PC1 regression, optimised PC values and interpolation and extrapolation, PC1 and PC2 extension (start axis at 1700 as values are constant before then)]
-
 % \subsubsubsubsection{Global- annual-mean}
 
 To extend the global- annual-mean back in time, we rely on the ice core values from [TODO cite EPICA] and [TODO cite Law Dome].
@@ -708,6 +706,7 @@ but doesn't affect CMIP datasets in a material way
 because of how similar the Law Dome and Menking data is,
 but users of CH_4 data before 1850 should be aware and may wish to make other choices]).
 
+[TODO check whether we use this smoothed Law Dome data as input for the lat. grad. PC optimisation (or whether we just use raw)]
 We start with the ice core data from [TODO cite Law Dome].
 We smooth this following the method used in \cite{meinshausen_historical_2017}.
 To each data point in the [TODO cite Law Dome] dataset,
