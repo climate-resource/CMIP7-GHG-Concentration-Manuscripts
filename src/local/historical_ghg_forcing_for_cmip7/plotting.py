@@ -61,14 +61,17 @@ somewhere to sit.
 
 NETWORK_GROUPS = {
     "NOAA": "NOAA",
-    "AGAGE": "AGAGE/GAGE/ALE",
-    "GAGE": "AGAGE/GAGE/ALE",
-    "ALE": "AGAGE/GAGE/ALE",
+    "AGAGE": "AGAGE",
+    "GAGE": "AGAGE",
+    "ALE": "AGAGE",
 }
 """How the networks are grouped for plotting
 
 ALE, GAGE and AGAGE are successive instruments at what are largely
 the same physical sites, so we show them as one network.
+The group goes by the name of the current instrument,
+because the full name of all three is wider
+than the panel whose legend has to carry it.
 """
 
 MOVING_SUFFIX = " (moving)"
@@ -83,7 +86,7 @@ so it is shown as its own group rather than folded in with the fixed sites.
 NETWORK_GROUP_COLOURS = {
     "NOAA": "#0072b2",
     "NOAA (moving)": "#3a3b3a",
-    "AGAGE/GAGE/ALE": "#d55e00",
+    "AGAGE": "#d55e00",
 }
 """Colour to use for each group of observational networks
 
@@ -100,7 +103,7 @@ simply never asks for the moving group.
 NETWORK_GROUP_MARKERS = {
     "NOAA": "o",
     "NOAA (moving)": ".",
-    "AGAGE/GAGE/ALE": "^",
+    "AGAGE": "^",
 }
 """Marker to use for each group of observational networks
 
@@ -111,7 +114,7 @@ so the figure still works in greyscale.
 NETWORK_GROUP_MARKER_SIZES = {
     "NOAA": 50.0,
     "NOAA (moving)": 10.0,
-    "AGAGE/GAGE/ALE": 25.0,
+    "AGAGE": 25.0,
 }
 """Marker size to use for each group of observational networks on the map
 
@@ -166,12 +169,61 @@ The height is not shared, because each gas has as many rows
 as its panels need, see each gas' `FIGURE_SIZE`.
 """
 
+LAYOUT_PADDING = {
+    "h_pad": 0.01,
+    "w_pad": 0.02,
+    "hspace": 0.005,
+    "wspace": 0.01,
+}
+"""Padding the layout engine leaves around and between the panels, in inches
+
+Tighter than the layout engine's default.
+The default is set for a figure with a handful of panels in it;
+here there are fifteen, so the default padding is paid fifteen times over
+and the panels are the poorer for it.
+The panels still get the room their labels need:
+this is the space left over and above that.
+"""
+
 ROW_HEIGHT = 2.24
 """Height each row of a methods figure gets, in inches
 
 Also the same for both gases, so that a panel is the same size
 in either figure.
 """
+
+
+def create_panels(
+    mosaic: list[list[str]], figure_size: tuple[float, float]
+) -> tuple[matplotlib.figure.Figure, dict[str, matplotlib.axes.Axes]]:
+    """
+    Create the figure and its panels
+
+    Parameters
+    ----------
+    mosaic
+        Layout of the figure's panels
+
+    figure_size
+        Size of the figure, in inches
+
+    Returns
+    -------
+    :
+        The figure and its panels
+    """
+    fig, axes = plt.subplot_mosaic(
+        mosaic,
+        figsize=figure_size,
+        per_subplot_kw={
+            **{panel: {"projection": ccrs.PlateCarree()} for panel in MAP_PANELS},
+            "flying-carpet": {"projection": "3d"},
+        },
+        layout="constrained",
+    )
+    fig.get_layout_engine().set(**LAYOUT_PADDING)
+
+    return fig, axes
 
 
 def ghg(pdf: pd.DataFrame, ghg_col: str = "gas") -> str:
@@ -454,7 +506,9 @@ def get_network_groups_largest_first(indf: pd.DataFrame) -> list[str]:
     )
 
 
-def add_compact_legend(ax: matplotlib.axes.Axes, **kwargs: object) -> None:
+def add_compact_legend(
+    ax: matplotlib.axes.Axes, fontsize: str = "x-small", **kwargs: object
+) -> None:
     """
     Add a legend which takes as little of its panel as it can
 
@@ -468,18 +522,24 @@ def add_compact_legend(ax: matplotlib.axes.Axes, **kwargs: object) -> None:
     ax
         Axes to add the legend to
 
+    fontsize
+        Size to draw the legend's text at
+
     **kwargs
         Passed on to `ax.legend`
     """
     ax.legend(
-        fontsize="x-small",
-        framealpha=0.9,
-        handletextpad=0.2,
-        columnspacing=1.0,
-        labelspacing=0.3,
-        borderpad=0.3,
-        borderaxespad=0.3,
-        **kwargs,
+        **{
+            "fontsize": fontsize,
+            "framealpha": 0.9,
+            "handletextpad": 0.2,
+            "columnspacing": 1.0,
+            "labelspacing": 0.3,
+            "borderpad": 0.3,
+            "borderaxespad": 0.3,
+            # Anything the caller asks for wins over what we ask for here
+            **kwargs,
+        }
     )
 
 
@@ -511,6 +571,80 @@ def compact_existing_legend(ax: matplotlib.axes.Axes, **kwargs: object) -> None:
 
     add_compact_legend(ax, handles=handles, labels=labels, title=title, **kwargs)
     ax.get_legend().get_title().set_fontsize("x-small")
+
+
+def latitude_colour(latitude: float) -> tuple[float, float, float, float]:
+    """
+    Get the colour which stands for a latitude
+
+    Parameters
+    ----------
+    latitude
+        Latitude to get the colour of
+
+    Returns
+    -------
+        Colour to draw `latitude` in
+    """
+    return plt.get_cmap(LATITUDE_COLOUR_MAP)(LATITUDE_NORMALISATION(latitude))
+
+
+def add_latitude_legend(
+    ax: matplotlib.axes.Axes,
+    latitudes: np.typing.ArrayLike,
+    ncols: int = 2,
+    every: int = 2,
+    **kwargs: object,
+) -> None:
+    """
+    Add a legend which says which latitude each colour stands for
+
+    Parameters
+    ----------
+    ax
+        Axes to add the legend to
+
+    latitudes
+        Latitudes which appear on `ax`
+
+        Listed north first, so the legend runs the same way up as a map does.
+
+    ncols
+        Number of columns to lay the legend out in
+
+    every
+        Show every nth latitude rather than all of them
+
+        Colour stands for latitude here rather than for a category,
+        so the legend is a scale, and a scale only has to be sampled
+        finely enough to be read off:
+        an entry for every latitudinal bin is more entries
+        than a panel this size has room for,
+        and says no more than every second one does.
+
+    **kwargs
+        Passed on to [add_compact_legend][]
+    """
+    add_compact_legend(
+        ax,
+        fontsize="xx-small",
+        ncols=ncols,
+        handles=[
+            matplotlib.lines.Line2D(
+                [],
+                [],
+                linestyle="none",
+                marker="o",
+                markersize=3,
+                color=latitude_colour(latitude),
+                label=f"{latitude:.0f}",
+            )
+            for latitude in sorted(np.asarray(latitudes), reverse=True)[::every]
+        ],
+        title=r"lat [$^{\circ}$N]",
+        **kwargs,
+    )
+    ax.get_legend().get_title().set_fontsize("xx-small")
 
 
 def plot_station_timeseries(  # noqa: PLR0913
@@ -670,16 +804,27 @@ def plot_station_locations(
     ax.set_anchor("N")
     ax.tick_params(labelsize="small")
     ax.set_ylim(LAT_AXIS_LIMITS)
-    # On the panel label's line, rather than over the map (which would cover
-    # stations) or below it (which would waste the height the map's fixed
-    # aspect already costs us)
+    # On the panel's title line, which has room to spare and is the only
+    # place around this panel that does: the map cannot be drawn over
+    # (that would cover stations), its row is only as tall as the map itself
+    # so there is no band under it, and the gap beside it is a gap between
+    # two columns rather than space belonging to this panel.
     add_compact_legend(
         ax,
-        loc="center left",
-        bbox_to_anchor=(1.05, 0.5),
-        ncols=1,
-        # frameon=False,
+        fontsize="xx-small",
+        loc="lower right",
+        bbox_to_anchor=(1.0, 1.0),
+        # Two at most, so the legend stays clear of the panel's own title,
+        # which shares this line with it.
+        ncols=min(len(get_network_groups_largest_first(stations)), 2),
+        handlelength=1.0,
+        handletextpad=0.3,
     )
+    # The gap beside the map is there whether or not we put the legend in it,
+    # so the legend is placed by hand and kept out of the layout engine's sums.
+    # Left in them, it would ask for its width from the next panel's column,
+    # which every panel in that column would then pay for.
+    ax.get_legend().set_in_layout(False)
 
 
 def plot_observation_counts(
@@ -843,11 +988,10 @@ def plot_seasonality_from_obs_network(
     """
     Plot seasonality derived from the observational network
 
-    There is one line here for each of the twelve latitudinal bins.
-    A legend for twelve bins is taller than this panel,
-    so latitude is shown with the same colour map,
-    over the same range, as the timeseries panel uses,
-    and read off that panel's colour bar.
+    There is one series here for each of the twelve latitudinal bins.
+    Latitude is shown with the same colour map, over the same range,
+    as the timeseries panel uses, so a colour means the same latitude
+    everywhere in the figure.
     """
     seasonality_da = get_only_data_variable(seasonality)
     pdf = seasonality_da.to_pandas().stack().rename("value").to_frame().reset_index()
@@ -864,6 +1008,7 @@ def plot_seasonality_from_obs_network(
     ax.set_xlabel("month", fontsize="small")
     ax.set_xticks(np.arange(1, 12 + 1, 3))
     ax.tick_params(labelsize="small")
+    add_latitude_legend(ax, pdf["lat"].unique(), loc="best")
 
     return ax
 
@@ -916,9 +1061,39 @@ def add_break_lines_and_setup(  # noqa: PLR0913
     split_year: int,
     max_year: int,
     units: str,
+    legend_loc: str = "best",
 ) -> None:
     """
     Add break lines to axes and do other general setup for broken axes
+
+    Parameters
+    ----------
+    ax_left
+        Left half of the broken axis
+
+    ax_right
+        Right half of the broken axis
+
+    min_year
+        First year the left half covers
+
+    split_year
+        Year the axis is broken at
+
+    max_year
+        Last year the right half covers
+
+    units
+        Units of the values plotted
+
+    legend_loc
+        Where to put the pair's legend
+
+        Passed on to `ax.legend`, so `"best"` leaves it to matplotlib.
+        Worth naming where matplotlib's answer is not a good one:
+        it places the legend where the data is thinnest,
+        which on a panel whose data hugs one edge
+        is on top of the axis' own tick labels.
     """
     # One legend for the pair, on the left half:
     # the two halves are one panel as far as a reader is concerned.
@@ -926,9 +1101,9 @@ def add_break_lines_and_setup(  # noqa: PLR0913
         ax_right.get_legend().remove()
 
     if ax_left.get_legend() is None:
-        add_compact_legend(ax_left, loc="best")
+        add_compact_legend(ax_left, loc=legend_loc)
     else:
-        compact_existing_legend(ax_left, loc="best")
+        compact_existing_legend(ax_left, loc=legend_loc)
 
     ax_left.set_ylabel(f"[{units}]", fontsize="small")
     ax_right.set_ylabel("")
@@ -942,7 +1117,15 @@ def add_break_lines_and_setup(  # noqa: PLR0913
     # Hide the spines
     ax_left.spines["right"].set_visible(False)
     ax_right.spines["left"].set_visible(False)
-    ax_right.yaxis.tick_right()
+
+    # The two halves are one panel, so they share one vertical scale,
+    # and the right half's copy of it would say nothing the left half
+    # has not already said. Hiding it is not only tidier:
+    # a panel's tick labels are the most expensive thing about it
+    # as far as the layout engine is concerned,
+    # and the halves are the only panels which can give that cost up.
+    ax_right.set_ylim(ax_left.get_ylim())
+    ax_right.yaxis.set_visible(False)
 
     # Potential option for cutout lines.
     # The important
@@ -1092,7 +1275,7 @@ def plot_flying_carpet(
     """
     tmp = convert_year_month_to_time(get_only_data_variable(native_resolution))
     tmp = tmp.assign_coords(
-        time=tmp["time"].dt.year + tmp["time"].dt.month / 12 + 1 / 24
+        time=tmp["time"].dt.year + tmp["time"].dt.month / 12 - 1 / 24
     )
     mesh = tmp.plot.surface(
         x="time",
@@ -1129,7 +1312,7 @@ def plot_monthly_means(
     """
     tmp = convert_year_month_to_time(get_only_data_variable(pda))
     tmp = tmp.assign_coords(
-        time=tmp["time"].dt.year + tmp["time"].dt.month / 12 + 1 / 24
+        time=tmp["time"].dt.year + tmp["time"].dt.month / 12 - 1 / 24
     )
     pdf_l = []
     for region, rda in tmp.groupby("Region"):
@@ -1199,6 +1382,10 @@ def plot_yearly_means(
         split_year,
         pda["year"].max(),
         tmp.attrs["units"],
+        # The record is flat and low until its last century, so the top of
+        # the left half is the only part of this panel with room in it,
+        # and centring keeps the legend off the axis' tick labels.
+        legend_loc="upper center",
     )
 
 
@@ -1387,7 +1574,7 @@ def thin_ticks(ticks: np.typing.ArrayLike, max_ticks: int) -> np.typing.NDArray:
     return ticks[:: int(np.ceil(ticks.size / max_ticks))]
 
 
-def add_colour_bar(
+def add_colour_bar(  # noqa: PLR0913
     fig: matplotlib.figure.Figure,
     mappable: matplotlib.cm.ScalarMappable,
     ax: matplotlib.axes.Axes | list[matplotlib.axes.Axes],
@@ -1623,7 +1810,10 @@ def add_colour_bar_beside(  # noqa: PLR0913
     )
 
     colour_bar = fig.colorbar(mappable, cax=colour_bar_axes, **kwargs)
-    colour_bar.set_label(label, fontsize="small")
+    # Above the colour bar rather than turned on its side beside it:
+    # this colour bar is here because its panel had no width to spare,
+    # and a label beside it would want as much width again.
+    colour_bar.ax.set_title(label, fontsize="small", loc="left")
     colour_bar.ax.tick_params(labelsize="small")
 
     return colour_bar

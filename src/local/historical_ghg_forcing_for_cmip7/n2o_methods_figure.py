@@ -12,7 +12,6 @@ from __future__ import annotations
 import string
 from pathlib import Path
 
-import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -32,12 +31,12 @@ from local.cmip_ghg_generation import (
 from local.historical_ghg_forcing_for_cmip7.plotting import (
     FIGURE_WIDTH,
     LAT_BIN_BOUNDS,
-    MAP_PANELS,
     ROW_HEIGHT,
     add_colour_bar,
     add_colour_bar_beside,
     add_network_group,
     close_broken_axis_pairs,
+    create_panels,
     fit_rows_to_fixed_aspect_panels,
     get_decimal_year,
     get_interpolated_input_coverage_info,
@@ -57,7 +56,6 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     plot_station_timeseries,
     plot_yearly_means,
     tuck_colour_bars_against_their_panels,
-    unit,
 )
 
 ALL_DATA_WITH_BINS_FILE = Path("manuscript-outputs") / "n2o_all-data-with-bins.csv"
@@ -90,29 +88,57 @@ which is not the order in which the panels are laid out.
 """
 
 MOSAIC = [
-    ["timeseries", "timeseries", "interpolated-most", "gm"],
-    ["timeseries", "timeseries", "interpolated-least", "seasonality"],
-    ["locations", "counts", "lat-grad-eof", "lat-grad-pc"],
-    ["gm-ext-l", "gm-ext-r", "lat-grad-pc-ext-l", "lat-grad-pc-ext-r"],
-    ["flying-carpet", "monthly", "yearly-l", "yearly-r"],
+    ["timeseries"] * 6 + ["gm"] * 3 + ["seasonality"] * 3,
+    ["timeseries"] * 6 + ["lat-grad-eof"] * 3 + ["lat-grad-pc"] * 3,
+    ["locations"] * 3
+    + ["counts"] * 3
+    + ["interpolated-most"] * 3
+    + ["interpolated-least"] * 3,
+    ["gm-ext-l"] * 3
+    + ["gm-ext-r"] * 3
+    + ["lat-grad-pc-ext-l"] * 3
+    + ["lat-grad-pc-ext-r"] * 3,
+    ["flying-carpet"] * 2 + ["monthly"] * 4 + ["yearly-l"] * 3 + ["yearly-r"] * 3,
 ]
 """Layout of the figure's panels
 
-Four columns, because the columns have to be wide enough
-to carry a panel's labels and its colour bar.
-With more (hence narrower) columns, the layout engine runs out of room
-and gives up, which is what leaves the panels sitting
-in matplotlib's default positions rather than in the positions we asked for.
-If a panel needs a width that four columns cannot express,
-it is cheaper to move panels between rows than to split the columns further.
+Twelve columns, which is four panels wide:
+a panel takes three columns, and the ones which do not need three
+(the flying carpet, whose 3D axes matplotlib always draws square,
+however wide a cell we give it) take fewer,
+so the panel beside them can have what is left over.
+
+Four panels to a row is the most the page's width will take.
+It is a limit on the number of panels, not on their width:
+each one needs room for its labels, its ticks and its colour bar
+whatever size it is drawn at, and a fifth panel in a row
+leaves the layout engine no way to satisfy them all,
+at which point it gives up and every panel lands
+wherever matplotlib would have put it without us.
+So a panel can only be made wider by taking width from its neighbours,
+never by squeezing another panel into the row.
+
+Every map is in the same row.
+A map's aspect ratio is fixed, so a map is only half as tall as it is wide,
+and its row is shrunk onto it (see [fit_rows_to_fixed_aspect_panels][]),
+which takes every panel sharing that row down with it.
+With all three maps in one row, that happens to one row rather than three,
+and the row it happens to is the one where it helps:
+all four panels there carry a latitude axis, and shrinking the row
+is what lines those axes up with each other.
+
+No panel may span the middle of the figure.
+Column spans have to nest: a panel may span the left half or the right half,
+but a panel which straddles the middle ties every column
+to every other one, which the maps' fixed aspect ratio then over-constrains.
 
 The two halves of each broken axis (the panels whose names end in `-l` and
-`-r`) each take a column of their own here,
+`-r`) each take columns of their own here,
 then have the gap between them closed up once the figure has been laid out,
 see [close_broken_axis_pairs][].
 
 There is no point setting height ratios here:
-the rows which hold a map are shrunk onto the height their map needs
+the row which holds the maps is shrunk onto the height they need
 while the figure is being laid out,
 see [fit_rows_to_fixed_aspect_panels][].
 """
@@ -260,15 +286,7 @@ def generate_n2o_methods_figure(  # noqa: PLR0915
         )
     )
 
-    fig, axes = plt.subplot_mosaic(
-        MOSAIC,
-        figsize=FIGURE_SIZE,
-        per_subplot_kw={
-            **{panel: {"projection": ccrs.PlateCarree()} for panel in MAP_PANELS},
-            "flying-carpet": {"projection": "3d"},
-        },
-        layout="constrained",
-    )
+    fig, axes = create_panels(MOSAIC, FIGURE_SIZE)
 
     timeseries_scatter = plot_station_timeseries(all_data_with_bins, axes["timeseries"])
     plot_station_locations(all_data_with_bins, axes["locations"])
@@ -310,23 +328,19 @@ def generate_n2o_methods_figure(  # noqa: PLR0915
     most_least_coverage = get_interpolated_input_coverage_info(
         all_data_with_bins, interpolated_obs
     )
-    coverage_colour_bars_axes = []
     for key in ["most", "least"]:
-        ax = axes[f"interpolated-{key}"]
-        coverage_mesh = plot_coverage_and_interpolated(
+        # No colour bar on these two: they are here to show where the input
+        # points are and how far the interpolation has to reach between them,
+        # which is a question about the shape of the field rather than about
+        # its values. A colour bar on a map is also the most expensive thing
+        # we can add, because a map's aspect ratio is fixed, so width taken
+        # from it costs it height too, and its whole row with it.
+        plot_coverage_and_interpolated(
             input_data=all_data_with_bins,
             interpolated=interpolated_obs,
             year_month=most_least_coverage[key],
-            ax=ax,
+            ax=axes[f"interpolated-{key}"],
         )
-        colour_bar = add_colour_bar(
-            fig,
-            coverage_mesh,
-            ax=ax,
-            label=f"[{unit(all_data_with_bins)}]",
-        )
-
-        coverage_colour_bars_axes.append([colour_bar, ax])
 
     global_mean_from_obs_network = xr.load_dataset(
         bundle_dir / "data/interim/n2o/n2o_observational-network_global-annual-mean.nc"
@@ -440,7 +454,6 @@ def generate_n2o_methods_figure(  # noqa: PLR0915
     colour_bars = [
         (latitude_colour_bar, axes["timeseries"]),
         (counts_colour_bar, axes["counts"]),
-        *((cb, ax) for cb, ax in coverage_colour_bars_axes),
     ]
 
     # These are last, and in this order,
