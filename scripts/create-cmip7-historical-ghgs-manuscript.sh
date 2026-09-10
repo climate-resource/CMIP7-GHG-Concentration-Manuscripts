@@ -63,7 +63,7 @@ uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-input
 
 open "${n2o_methods_figure_file}"
 open "${ch4_methods_figure_file}"
-exit 0
+#exit 0
 # --force-rerun \
 
 # create pdf or dump out to a single text file (that can then be dumped onto google docs, maybe easiest to do this with AI)
