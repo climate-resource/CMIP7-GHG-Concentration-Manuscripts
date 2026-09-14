@@ -20,6 +20,7 @@ import matplotlib.colors
 import matplotlib.figure
 import matplotlib.lines
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 import numpy as np
 import openscm_units
 import pandas as pd
@@ -58,6 +59,14 @@ LAT_AXIS_LIMITS = (-91, 91)
 Used by both the map and the counts panel, so the two can be read against
 each other. A little room past the poles, so the polar stations have
 somewhere to sit.
+"""
+
+MAP_ASPECT = (LAT_AXIS_LIMITS[1] - LAT_AXIS_LIMITS[0]) / 360.0
+"""Height of a map's data box divided by its width
+
+The maps are plate carrée, so one degree is the same length in either direction
+and the map is as tall, relative to its width,
+as its latitude range is relative to the 360 degrees of longitude.
 """
 
 NETWORK_GROUPS = {
@@ -150,81 +159,6 @@ LEGEND_MARKER_COLOUR = "0.35"
 In the timeseries panel colour shows latitude, so the legend
 can only speak about the marker shape.
 """
-
-MAP_PANELS = ("locations", "interpolated-most", "interpolated-least")
-"""The panels which show a map
-
-These are the panels with a fixed aspect ratio,
-which is what makes the figure's spacing fiddly.
-There will not be any more of them.
-"""
-
-FIGURE_WIDTH = 15.0
-"""Width of a methods figure, in inches
-
-Set by the page, so it is the same for both gases:
-the two figures sit next to each other in the manuscript
-and should be read at the same size.
-
-The height is not shared, because each gas has as many rows
-as its panels need, see each gas' `FIGURE_SIZE`.
-"""
-
-LAYOUT_PADDING = {
-    "h_pad": 0.01,
-    "w_pad": 0.02,
-    "hspace": 0.005,
-    "wspace": 0.01,
-}
-"""Padding the layout engine leaves around and between the panels, in inches
-
-Tighter than the layout engine's default.
-The default is set for a figure with a handful of panels in it;
-here there are fifteen, so the default padding is paid fifteen times over
-and the panels are the poorer for it.
-The panels still get the room their labels need:
-this is the space left over and above that.
-"""
-
-ROW_HEIGHT = 2.24
-"""Height each row of a methods figure gets, in inches
-
-Also the same for both gases, so that a panel is the same size
-in either figure.
-"""
-
-
-def create_panels(
-    mosaic: list[list[str]], figure_size: tuple[float, float]
-) -> tuple[matplotlib.figure.Figure, dict[str, matplotlib.axes.Axes]]:
-    """
-    Create the figure and its panels
-
-    Parameters
-    ----------
-    mosaic
-        Layout of the figure's panels
-
-    figure_size
-        Size of the figure, in inches
-
-    Returns
-    -------
-    :
-        The figure and its panels
-    """
-    fig, axes = plt.subplot_mosaic(
-        mosaic,
-        figsize=figure_size,
-        per_subplot_kw={
-            **{panel: {"projection": ccrs.PlateCarree()} for panel in MAP_PANELS},
-            "flying-carpet": {"projection": "3d"},
-        },
-        layout="constrained",
-    )
-    fig.get_layout_engine().set(**LAYOUT_PADDING)
-
-    return fig, axes
 
 
 def ghg(pdf: pd.DataFrame, ghg_col: str = "gas") -> str:
@@ -695,6 +629,7 @@ def plot_station_timeseries(  # noqa: PLR0913
         # yticklabels=[],
     )
     ax_inset.tick_params(labelsize="small")
+    ax_inset.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
 
     ax.indicate_inset_zoom(ax_inset, edgecolor="black")
 
@@ -815,9 +750,9 @@ def plot_station_locations(
         fontsize="xx-small",
         loc="lower right",
         bbox_to_anchor=(1.0, 1.0),
-        # Two at most, so the legend stays clear of the panel's own title,
-        # which shares this line with it.
-        ncols=min(len(get_network_groups_largest_first(stations)), 2),
+        # All on one row, so the legend is no taller than the title line it shares.
+        # The maps are wide enough that it still stays clear of the title.
+        ncols=len(get_network_groups_largest_first(stations)),
         handlelength=1.0,
         handletextpad=0.3,
     )
@@ -963,6 +898,8 @@ def plot_coverage_and_interpolated(
     # Anchoring it to the top keeps it up against its panel label.
     ax.set_anchor("N")
     ax.tick_params(labelsize="small")
+    # Same as the locations map, so all the maps are the same shape
+    ax.set_ylim(LAT_AXIS_LIMITS)
 
     return mesh
 
@@ -978,6 +915,7 @@ def plot_global_mean_from_obs_network(gm: xr.Dataset, ax: matplotlib.axes.Axes) 
         s=15,
     )
     ax.set_ylabel(f"[{gm_da.attrs['units']}]", fontsize="small")
+    ax.tick_params(labelsize="small")
 
 
 def plot_seasonality_from_obs_network(
@@ -1002,7 +940,7 @@ def plot_seasonality_from_obs_network(
         c=pdf["lat"],
         cmap=LATITUDE_COLOUR_MAP,
         norm=LATITUDE_NORMALISATION,
-        s=10.0,
+        s=30.0,
         linewidths=0.0,
     )
     ax.set_ylabel(f"[{seasonality_da.attrs['units']}]", fontsize="small")
@@ -1292,10 +1230,11 @@ def plot_lat_gradient_pcs_emissions_regression(  # noqa: PLR0913
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
 
-    ax.set_xlabel(f"{emissions_name} [{x_unit}]")
-    ax.set_ylabel(f"PC{eof} [{pc_units}]")
+    ax.set_xlabel(f"{emissions_name} [{x_unit}]", fontsize="small")
+    ax.set_ylabel(f"PC{eof} [{pc_units}]", fontsize="small")
+    ax.tick_params(labelsize="small")
 
-    ax.legend()
+    add_compact_legend(ax, loc="best")
 
 
 def plot_lat_gradient_pcs_extended(  # noqa: PLR0913
@@ -1435,6 +1374,7 @@ def plot_monthly_means(
     ax.set_xlabel("time", fontsize="small")
     ax.tick_params(labelsize="small")
     ax.set_xlim(pda["year"].min(), pda["year"].max())
+    ax.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
     compact_existing_legend(ax, loc="best")
 
 
@@ -1485,162 +1425,6 @@ def plot_yearly_means(
     )
 
 
-def has_fixed_aspect(ax: matplotlib.axes.Axes) -> bool:
-    """
-    Determine whether an axes' aspect ratio is fixed
-
-    A fixed aspect ratio means the axes' height follows from its width,
-    so the axes cannot stretch to fill the row it is in.
-    Our maps are the axes for which this is true.
-
-    Parameters
-    ----------
-    ax
-        Axes to check
-
-    Returns
-    -------
-        `True` if `ax`'s aspect ratio is fixed, `False` otherwise
-    """
-    return ax.get_aspect() != "auto"
-
-
-def fit_rows_to_fixed_aspect_panels(
-    fig: matplotlib.figure.Figure,
-    axes: dict[str, matplotlib.axes.Axes],
-    n_iterations: int = 6,
-    min_row_shrink: float = 0.5,
-    fit_figure_height: bool = True,
-) -> None:
-    """
-    Shrink each row of the figure onto the fixed-aspect panels it holds
-
-    The maps have a fixed aspect ratio, so their height follows from their
-    width and they cannot stretch to fill their row.
-    Everything else in the row does stretch,
-    which leaves a band of white space under each map
-    and stops each map's latitude axis
-    from lining up with its neighbours' latitude axes.
-
-    So, we do the opposite: we shrink every row which holds a map
-    down onto the height that map wants,
-    and let the layout engine hand the height this frees up
-    to the rows which can actually use it.
-    Once a row is the height of its map,
-    every panel in that row has the map's height too,
-    which is what lines the latitude axes up.
-
-    Row heights and panel widths depend on each other
-    (through the space the layout engine sets aside for labels
-    and colour bars), so we iterate rather than solving in one shot.
-    A handful of iterations is plenty:
-    a map's height is set by its width, which barely moves
-    as the rows change height.
-
-    Parameters
-    ----------
-    fig
-        Figure to lay out
-
-        This must be using a layout engine which respects height ratios,
-        i.e. the constrained layout engine.
-
-    axes
-        The figure's panels
-
-        Panels which span more than one row are ignored,
-        because they say nothing about the height any single row needs.
-
-    n_iterations
-        Number of times to iterate
-
-    min_row_shrink
-        The most any one row may be shrunk by in a single iteration
-
-        A row which has been squeezed flat cannot be measured,
-        so there is no way back from one, whatever went wrong.
-
-    fit_figure_height
-        Take the height the map rows give up off the figure
-
-        Without this, the height the map rows give up is handed to the rows
-        which do not hold a map, so those rows come out
-        two or three times the height of the rows which do,
-        and the figure reads as though its panels were sized at random.
-        With it, every row which does not hold a map
-        keeps the height the figure was asked for,
-        and the figure ends up as tall as its panels need and no taller.
-
-    Notes
-    -----
-    Each row is shrunk by the white space we measured in it,
-    rather than by the ratio of the height it has to the height it wants.
-    The two are not the same, because a row is taller than the panels in it:
-    the difference is the row's labels, ticks and title,
-    which are a fixed number of points high
-    and so do not shrink with the row.
-    Scaling by the ratio takes that fixed height off the row again
-    on every iteration, which walks the row down to nothing
-    however many times we go around
-    (the panels then have no room left at all,
-    the layout engine gives up, and every panel lands
-    wherever matplotlib would have put it without us).
-    """
-    grid_spec = next(iter(axes.values())).get_subplotspec().get_gridspec()
-    height_ratios = list(grid_spec.get_height_ratios())
-    initial_ratio_total = sum(height_ratios)
-    figure_width, initial_figure_height = fig.get_size_inches()
-
-    for _ in range(n_iterations):
-        fig.draw_without_rendering()
-
-        heights: dict[int, list[tuple[bool, float]]] = {}
-        for ax in axes.values():
-            row_span = ax.get_subplotspec().rowspan
-            if row_span.stop - row_span.start != 1:
-                continue
-
-            heights.setdefault(row_span.start, []).append(
-                (has_fixed_aspect(ax), ax.get_position().height)
-            )
-
-        ratio_total = sum(height_ratios)
-        for row, row_heights in heights.items():
-            fixed_heights = [height for fixed, height in row_heights if fixed]
-            if not fixed_heights:
-                # Nothing in this row is holding the row's height back
-                continue
-
-            # The tallest map is the height the row needs,
-            # the tallest panel is the height the row currently has.
-            wanted = max(fixed_heights)
-            have = max(height for _, height in row_heights)
-            if have <= 0.0:
-                # The layout engine has given up on this row,
-                # so there is nothing to measure. Leave the row as it is:
-                # squeezing it further would only make matters worse.
-                continue
-
-            # An upper bound on the row's height,
-            # in the same units as the heights we measured.
-            # An over-estimate here only means we take off
-            # slightly less than the white space we found,
-            # which we get back on the next iteration.
-            row_height = height_ratios[row] / ratio_total
-            shrink_to = 1.0 - max(have - wanted, 0.0) / row_height
-            # Never shrink a row to nothing, however far out our measurements
-            # turn out to be: a row we have squeezed flat cannot be measured,
-            # so there would be no way back from it.
-            height_ratios[row] *= max(shrink_to, min_row_shrink)
-
-        grid_spec.set_height_ratios(height_ratios)
-        if fit_figure_height:
-            fig.set_size_inches(
-                figure_width,
-                initial_figure_height * sum(height_ratios) / initial_ratio_total,
-            )
-
-
 def thin_ticks(ticks: np.typing.ArrayLike, max_ticks: int) -> np.typing.NDArray:
     """
     Take every nth tick, so that no more than `max_ticks` are left
@@ -1673,36 +1457,15 @@ def thin_ticks(ticks: np.typing.ArrayLike, max_ticks: int) -> np.typing.NDArray:
 def add_colour_bar(  # noqa: PLR0913
     fig: matplotlib.figure.Figure,
     mappable: matplotlib.cm.ScalarMappable,
-    ax: matplotlib.axes.Axes | list[matplotlib.axes.Axes],
+    cax: matplotlib.axes.Axes,
     label: str,
     ticks: np.typing.ArrayLike | None = None,
     max_ticks: int = 6,
+    label_on_top: bool = False,
     **kwargs: object,
 ) -> matplotlib.colorbar.Colorbar:
     """
     Add a colour bar to the figure
-
-    Note
-    ----
-    Every colour bar we add costs the figure space, so each one needs a look
-    before it is trusted, and there are two things to look at.
-
-    First, a colour bar takes its width from the panel it belongs to,
-    which makes that panel narrower.
-    If that panel is a map, the map gets shorter too
-    (its aspect ratio is fixed), and its whole row shrinks with it,
-    because [fit_rows_to_fixed_aspect_panels][] fits the row to the map.
-    A colour bar on a map is therefore much more expensive
-    than a colour bar on any other panel.
-    If the figure ends up carrying more colour bars than it can,
-    the first thing to try is one colour bar shared between the panels
-    which share a scale (pass a list of panels as `ax`),
-    e.g. one for the two interpolated-coverage maps.
-
-    Second, the colour bar has to be listed in `colour_bars`
-    in [generate_n2o_methods_figure][], with the panel it belongs to,
-    so that [tuck_colour_bars_against_their_panels][] moves it
-    up against its panel.
 
     Parameters
     ----------
@@ -1712,10 +1475,11 @@ def add_colour_bar(  # noqa: PLR0913
     mappable
         Mappable to draw the colour bar for
 
-    ax
-        Panel (or panels) the colour bar belongs to
+    cax
+        Axes in which to draw the colour bar
 
-        The space for the colour bar is taken from these panels.
+        Where this sits is up to the figure's layout,
+        see [local.historical_ghg_forcing_for_cmip7.layout][].
 
     label
         Label for the colour bar
@@ -1730,6 +1494,11 @@ def add_colour_bar(  # noqa: PLR0913
 
         See [thin_ticks][].
 
+    label_on_top
+        Put the label above the colour bar rather than beside it
+
+        Useful where there is no width to spare beside the colour bar.
+
     **kwargs
         Passed on to `fig.colorbar`
 
@@ -1737,232 +1506,15 @@ def add_colour_bar(  # noqa: PLR0913
     -------
         The colour bar which was added
     """
-    colour_bar = fig.colorbar(mappable, ax=ax, pad=0.02, aspect=18, **kwargs)
+    colour_bar = fig.colorbar(mappable, cax=cax, **kwargs)
     if ticks is not None:
         colour_bar.set_ticks(thin_ticks(ticks, max_ticks=max_ticks))
 
-    colour_bar.set_label(label, fontsize="small")
+    if label_on_top:
+        colour_bar.ax.set_title(label, fontsize="small", loc="left")
+    else:
+        colour_bar.set_label(label, fontsize="small")
+
     colour_bar.ax.tick_params(labelsize="small")
 
     return colour_bar
-
-
-def freeze_layout(fig: matplotlib.figure.Figure) -> None:
-    """
-    Draw the figure, then stop the layout engine from moving anything again
-
-    Everything which places a panel by hand has to happen after this,
-    otherwise the layout engine simply undoes it on the next draw.
-
-    Calling this more than once is harmless,
-    so each of the by-hand steps can call it
-    without having to know whether one of the others already has.
-
-    Parameters
-    ----------
-    fig
-        Figure whose layout to freeze
-    """
-    if fig.get_layout_engine() is None:
-        return
-
-    fig.draw_without_rendering()
-    fig.set_layout_engine("none")
-
-
-def close_broken_axis_pairs(
-    fig: matplotlib.figure.Figure,
-    pairs: list[tuple[matplotlib.axes.Axes, matplotlib.axes.Axes]],
-    gap: float = 0.06,
-) -> None:
-    """
-    Close up the gap between the two halves of each broken axis
-
-    The two halves of a broken axis are two panels as far as the layout
-    engine is concerned, so it puts a full panel's gap between them,
-    which reads as two panels rather than as one panel with a break in it.
-
-    Here we give each pair back the gap between its halves:
-    the two halves are stretched out over the whole span the pair had,
-    with only enough room left between them for the break lines to sit in.
-    Nothing outside the pair moves.
-
-    Parameters
-    ----------
-    fig
-        Figure being laid out
-
-    pairs
-        The figure's broken axes, each as its left half and its right half
-
-        The two halves must be in the same row.
-
-    gap
-        Gap to leave between the two halves, in inches
-
-        Wide enough for the break lines to read as a break,
-        narrow enough that the two halves still read as one panel.
-
-    Notes
-    -----
-    This freezes the layout, see [freeze_layout][].
-    """
-    freeze_layout(fig)
-
-    gap_in_figure_coords = gap / fig.get_size_inches()[0]
-    for ax_left, ax_right in pairs:
-        left_position = ax_left.get_position()
-        right_position = ax_right.get_position()
-
-        span = right_position.x1 - left_position.x0
-        width = (span - gap_in_figure_coords) / 2.0
-
-        ax_left.set_position(
-            (left_position.x0, left_position.y0, width, left_position.height)
-        )
-        ax_right.set_position(
-            (
-                left_position.x0 + width + gap_in_figure_coords,
-                right_position.y0,
-                width,
-                right_position.height,
-            )
-        )
-
-
-def add_colour_bar_beside(  # noqa: PLR0913
-    fig: matplotlib.figure.Figure,
-    mappable: matplotlib.cm.ScalarMappable,
-    panel: matplotlib.axes.Axes,
-    label: str,
-    gap: float = 0.1,
-    width: float = 0.14,
-    height_fraction: float = 0.6,
-    **kwargs: object,
-) -> matplotlib.colorbar.Colorbar:
-    """
-    Add a colour bar beside a panel without taking the space out of the layout
-
-    [add_colour_bar][] asks the layout engine for the room its colour bar
-    needs, which is what we want almost everywhere.
-    It is not what we want for the panel which holds the flying carpet:
-    that panel is a 3D axes, whose box is much bigger than the carpet drawn
-    inside it, so the layout engine reserves a colour bar's width of room
-    that the carpet was never using, and every panel in the row gets narrower
-    for nothing.
-
-    Here we put the colour bar in the slack beside the carpet instead,
-    which costs the rest of the figure nothing.
-
-    Parameters
-    ----------
-    fig
-        Figure to add the colour bar to
-
-    mappable
-        Mappable to draw the colour bar for
-
-    panel
-        Panel the colour bar belongs to
-
-        The colour bar is placed against this panel's right-hand edge.
-
-    label
-        Label for the colour bar
-
-    gap
-        Gap between the panel and its colour bar, in inches
-
-    width
-        Width of the colour bar, in inches
-
-    height_fraction
-        Height of the colour bar, as a fraction of the panel's height
-
-    **kwargs
-        Passed on to `fig.colorbar`
-
-    Returns
-    -------
-        The colour bar which was added
-
-    Notes
-    -----
-    This freezes the layout, see [freeze_layout][].
-    """
-    freeze_layout(fig)
-
-    figure_width = fig.get_size_inches()[0]
-    position = panel.get_position()
-
-    bar_height = height_fraction * position.height
-    colour_bar_axes = fig.add_axes(
-        (
-            position.x1 + gap / figure_width,
-            position.y0 + (position.height - bar_height) / 2.0,
-            width / figure_width,
-            bar_height,
-        )
-    )
-
-    colour_bar = fig.colorbar(mappable, cax=colour_bar_axes, **kwargs)
-    # Above the colour bar rather than turned on its side beside it:
-    # this colour bar is here because its panel had no width to spare,
-    # and a label beside it would want as much width again.
-    colour_bar.ax.set_title(label, fontsize="small", loc="left")
-    colour_bar.ax.tick_params(labelsize="small")
-
-    return colour_bar
-
-
-def tuck_colour_bars_against_their_panels(
-    fig: matplotlib.figure.Figure,
-    colour_bars: list[tuple[matplotlib.colorbar.Colorbar, matplotlib.axes.Axes]],
-    gap: float = 0.1,
-) -> None:
-    """
-    Move each colour bar up against the panel it belongs to
-
-    The layout engine parks a colour bar at the far side of the gap
-    between its panel and the next one,
-    where it reads as though it belongs to the panel on its right.
-    Here we slide it back across the gap, up against its own panel.
-    Nothing else moves: the space the colour bar leaves behind
-    simply widens the gap before the next panel.
-
-    Parameters
-    ----------
-    fig
-        Figure being laid out
-
-    colour_bars
-        The figure's colour bars, each with the panel it belongs to
-
-        Only colour bars which sit to the right of their panel are moved.
-
-    gap
-        Gap to leave between each panel and its colour bar, in inches
-
-    Notes
-    -----
-    This freezes the layout, see [freeze_layout][],
-    so it has to come after anything which needs the layout engine
-    and after anything which moves the panels the colour bars follow.
-    """
-    freeze_layout(fig)
-
-    gap_in_figure_coords = gap / fig.get_size_inches()[0]
-    for colour_bar, panel in colour_bars:
-        if colour_bar.orientation != "vertical":
-            # Sits under its panel rather than beside it, so it is already home
-            continue
-
-        position = colour_bar.ax.get_position()
-        colour_bar.ax.set_position(
-            (
-                panel.get_position().x1 + gap_in_figure_coords,
-                position.y0,
-                position.width,
-                position.height,
-            )
-        )

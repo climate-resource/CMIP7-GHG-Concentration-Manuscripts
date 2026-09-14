@@ -18,9 +18,9 @@ from __future__ import annotations
 
 import json
 import shutil
-import string
 from pathlib import Path
 
+import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -38,16 +38,18 @@ from local.cmip_ghg_generation import (
     run_notebook_from_bundle_dir,
     write_modified_notebook,
 )
+from local.historical_ghg_forcing_for_cmip7.layout import (
+    Panel,
+    Row,
+    create_figure,
+    label_panels,
+    lay_out_figure,
+)
 from local.historical_ghg_forcing_for_cmip7.plotting import (
-    FIGURE_WIDTH,
     LAT_BIN_BOUNDS,
-    ROW_HEIGHT,
+    MAP_ASPECT,
     add_colour_bar,
-    add_colour_bar_beside,
     add_network_group,
-    close_broken_axis_pairs,
-    create_panels,
-    fit_rows_to_fixed_aspect_panels,
     get_decimal_year,
     get_interpolated_input_coverage_info,
     get_only_data_variable,
@@ -66,7 +68,6 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     plot_station_locations,
     plot_station_timeseries,
     plot_yearly_means,
-    tuck_colour_bars_against_their_panels,
 )
 from local.paths import DATA_RAW_DIR
 
@@ -105,109 +106,89 @@ because that is the notebook's working directory.
 LAW_DOME_SMOOTHED_DATA_FILE = Path("manuscript-outputs") / "ch4_law-dome-smoothed.csv"
 """Where the re-run notebook saves the Law Dome data we want"""
 
-PANELS = (
-    ("timeseries", "Observational network values"),
-    ("locations", "Obs. locations"),
-    ("counts", "Obs. counts"),
-    ("interpolated-most", "Interpolation: most inputs"),
-    ("interpolated-least", "Interpolation: fewest inputs"),
-    ("gm", "Obs. global-mean"),
-    ("seasonality", "Obs. seasonality"),
-    ("lat-grad-eof", "Obs. lat. gradient EOFs"),
-    ("lat-grad-pc", "Obs. lat. gradient PCs"),
-    ("gm-ext-l", "Extended global-mean"),
-    ("lat-grad-pc-ext-l", "Extended lat. gradient. PCs"),
-    ("lat-grad-pc-emms", "Lat. gradient PCs against geological emissions"),
-    ("flying-carpet", "Native resolution"),
-    ("monthly", "Monthly spatial-means"),
-    ("yearly-l", "Yearly spatial-means"),
+TITLES = {
+    "timeseries": "Observational network values",
+    "counts": "Obs. counts",
+    "locations": "Obs. locations",
+    "interpolated-most": "Interpolation: most inputs",
+    "interpolated-least": "Interpolation: fewest inputs",
+    "gm": "Obs. global-mean",
+    "seasonality": "Obs. seasonality",
+    "lat-grad-eof": "Obs. lat. gradient EOFs",
+    "lat-grad-pc": "Obs. lat. gradient PCs",
+    "gm-ext": "Extended global-mean",
+    "lat-grad-pc-emms": "Lat. gradient PC0 against geological emissions",
+    "lat-grad-pc-ext": "Extended lat. gradient PCs",
+    "monthly": "Monthly spatial-means",
+    "yearly": "Yearly spatial-means",
+    "flying-carpet": "Native resolution",
+}
+"""Title of each panel"""
+
+ROWS = (
+    Row(
+        panels=(
+            Panel("timeseries", width=2.0, colour_bar=True),
+            Panel("counts", colour_bar=True),
+        ),
+        height=3.6,
+    ),
+    Row(
+        panels=tuple(
+            Panel(name, aspect=MAP_ASPECT, projection=ccrs.PlateCarree())
+            for name in ("locations", "interpolated-most", "interpolated-least")
+        ),
+    ),
+    Row(
+        panels=(
+            Panel("gm"),
+            Panel("seasonality"),
+            Panel("lat-grad-eof"),
+            Panel("lat-grad-pc"),
+        ),
+        height=2.3,
+    ),
+    Row(
+        panels=(
+            Panel("gm-ext", width=1.5, broken=True),
+            Panel("lat-grad-pc-emms"),
+            Panel("lat-grad-pc-ext", width=1.5, broken=True),
+        ),
+        height=2.3,
+    ),
+    Row(
+        panels=(
+            Panel("monthly"),
+            Panel("yearly", width=1.5, broken=True),
+            Panel(
+                "flying-carpet",
+                aspect=1.0,
+                projection="3d",
+                colour_bar=True,
+                colour_bar_height=0.6,
+            ),
+        ),
+        height=2.8,
+    ),
 )
-"""The figure's panels, in the order in which they are labelled
+"""Layout of the figure's panels, top to bottom
 
-The labels follow the order of the steps in the method,
-which is not the order in which the panels are laid out.
-"""
+The rows follow the steps of the method,
+so the panels are labelled in reading order.
 
-MOSAIC = [
-    ["timeseries"] * 6 + ["gm"] * 3 + ["seasonality"] * 3,
-    ["timeseries"] * 6 + ["lat-grad-eof"] * 3 + ["lat-grad-pc"] * 3,
-    ["locations"] * 3
-    + ["counts"] * 3
-    + ["interpolated-most"] * 3
-    + ["interpolated-least"] * 3,
-    ["gm-ext-l"] * 3
-    + ["gm-ext-r"] * 3
-    + ["lat-grad-pc-ext-l"] * 3
-    + ["lat-grad-pc-ext-r"] * 3,
-    ["lat-grad-pc-emms"] * 4
-    + ["flying-carpet"] * 2
-    + ["monthly"] * 3
-    + ["yearly-l"] * 2
-    + ["yearly-r"] * 1,
-]
-"""Layout of the figure's panels
+- The observational network: what was measured and when.
+- The maps: where it was measured and how we interpolate between measurements.
+  Every map is in the same row: a map's shape is fixed,
+  so its row's height follows from how many maps share the row's width,
+  and with all of them together we only pay for that once.
+- Decomposition into a global-mean, seasonality and latitudinal gradient.
+- Extending each of those back in time.
+- The outputs, including the flying carpet,
+  which is square and so sets its row's height.
 
-This figure has a panel the N2O figure does not.
-It fits in the same five rows because the broken axes on the last row
-are given only the width they need rather than a quarter of the figure each.
-
-Twelve columns, which is four panels wide:
-a panel takes three columns, and the ones which do not need three
-(the flying carpet, whose 3D axes matplotlib always draws square,
-however wide a cell we give it) take fewer,
-so the panel beside them can have what is left over.
-
-Four panels to a row is the most the page's width will take.
-It is a limit on the number of panels, not on their width:
-each one needs room for its labels, its ticks and its colour bar
-whatever size it is drawn at, and a fifth panel in a row
-leaves the layout engine no way to satisfy them all,
-at which point it gives up and every panel lands
-wherever matplotlib would have put it without us.
-So a panel can only be made wider by taking width from its neighbours,
-never by squeezing another panel into the row.
-
-Every map is in the same row.
-A map's aspect ratio is fixed, so a map is only half as tall as it is wide,
-and its row is shrunk onto it (see [fit_rows_to_fixed_aspect_panels][]),
-which takes every panel sharing that row down with it.
-With all three maps in one row, that happens to one row rather than three,
-and the row it happens to is the one where it helps:
-all four panels there carry a latitude axis, and shrinking the row
-is what lines those axes up with each other.
-
-No panel may span the middle of the figure.
-Column spans have to nest: a panel may span the left half or the right half,
-but a panel which straddles the middle ties every column
-to every other one, which the maps' fixed aspect ratio then over-constrains.
-
-The two halves of each broken axis (the panels whose names end in `-l` and
-`-r`) each take columns of their own here,
-then have the gap between them closed up once the figure has been laid out,
-see [close_broken_axis_pairs][].
-
-There is no point setting height ratios here:
-the row which holds the maps is shrunk onto the height they need
-while the figure is being laid out,
-see [fit_rows_to_fixed_aspect_panels][].
-"""
-
-FIGURE_SIZE = (FIGURE_WIDTH, len(MOSAIC) * ROW_HEIGHT)
-"""Size of the figure in inches
-
-The width is set by the page,
-the height by how many rows of panels this gas needs.
-"""
-
-BROKEN_AXIS_PAIRS = (
-    ("gm-ext-l", "gm-ext-r"),
-    ("lat-grad-pc-ext-l", "lat-grad-pc-ext-r"),
-    ("yearly-l", "yearly-r"),
-)
-"""The figure's broken axes, each as its left half and its right half
-
-These are the panels which show a long record and a short one at once,
-so the two halves are one panel as far as a reader is concerned.
+Each row is laid out independently of the others,
+see [local.historical_ghg_forcing_for_cmip7.layout][],
+so rows need not have the same number of panels.
 """
 
 
@@ -577,7 +558,7 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
         )
     )
 
-    fig, axes = create_panels(MOSAIC, FIGURE_SIZE)
+    fig, axes = create_figure(ROWS)
 
     axes["timeseries"].set_ylim([1400, 2200])
     timeseries_scatter = plot_station_timeseries(
@@ -589,7 +570,7 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
     latitude_colour_bar = add_colour_bar(
         fig,
         timeseries_scatter,
-        ax=axes["timeseries"],
+        cax=axes["timeseries-colour-bar"],
         label=r"latitude [$^{\circ}$N]",
         ticks=LAT_BIN_BOUNDS[::2],
     )
@@ -597,10 +578,10 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
     # but the colour bar should show the colours at full strength
     latitude_colour_bar.solids.set_alpha(1.0)
 
-    counts_colour_bar = add_colour_bar(
+    add_colour_bar(
         fig,
         counts_mesh,
-        ax=axes["counts"],
+        cax=axes["counts-colour-bar"],
         label="Number of input data points",
         ticks=np.arange(1, int(counts_mesh.norm.vmax) + 1),
     )
@@ -817,40 +798,22 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
     pda = pda.rename({"lat": "Region"})
     plot_yearly_means(pda, ax_left=axes["yearly-l"], ax_right=axes["yearly-r"])
 
-    for label, (panel, title) in zip(string.ascii_lowercase, PANELS):
-        axes[panel].set_title(
-            f"$\\bf{{({label})}}$ {title}",
-            loc="left",
-            fontsize="medium",
-        )
-
-    # The figure's colour bars, each with the panel it belongs to.
-    # Any colour bar we add has to be listed here too,
-    # otherwise it is left stranded next to its neighbour's panel.
-    colour_bars = [
-        (latitude_colour_bar, axes["timeseries"]),
-        (counts_colour_bar, axes["counts"]),
-    ]
-
-    # These are last, and in this order,
-    # because they each need to know how much space everything before them
-    # has taken up, and they freeze the layout.
-    fit_rows_to_fixed_aspect_panels(fig, axes)
-    close_broken_axis_pairs(
-        fig, [(axes[left], axes[right]) for left, right in BROKEN_AXIS_PAIRS]
-    )
-    add_colour_bar_beside(
+    add_colour_bar(
         fig,
         flying_carpet_mesh,
-        axes["flying-carpet"],
+        cax=axes["flying-carpet-colour-bar"],
         # The panel's own vertical axis carries no label, so this says
         # both what is plotted and what its units are.
         label=label_name(
             f"{ghg(all_data_with_bins)} "
             f"[{get_only_data_variable(native_resolution).attrs['units']}]"
         ),
+        label_on_top=True,
     )
-    tuck_colour_bars_against_their_panels(fig, colour_bars)
+
+    label_panels(ROWS, axes, TITLES)
+    # Last, because it needs to know how much room everything takes up
+    lay_out_figure(fig, axes, ROWS)
 
     outfile.parent.mkdir(exist_ok=True, parents=True)
     logger.info(f"Writing {outfile}")
