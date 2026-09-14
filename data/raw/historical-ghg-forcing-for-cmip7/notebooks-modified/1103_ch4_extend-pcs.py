@@ -624,17 +624,23 @@ json.dumps([int(v) for v in years_to_fill_with_regression])
 # but we need them for our plotting
 from pathlib import Path
 
-years_to_fill_with_regression
 primap_regression_data_file = Path("manuscript-outputs/ch4_primap-regression-data.nc")
 primap_regression_data_file.parent.mkdir(exist_ok=True, parents=True)
 primap_regression_data.pint.dequantify().to_netcdf(primap_regression_data_file)
 primap_regression_data_file
 
 # %%
-years_to_fill_with_regression
 years_to_fill_with_regression_file = Path("manuscript-outputs/ch4_primap-regression-years.json")
 years_to_fill_with_regression_file.parent.mkdir(exist_ok=True, parents=True)
 with open(years_to_fill_with_regression_file, "w") as fh:
     json.dump([int(v) for v in years_to_fill_with_regression], fh)
 
 years_to_fill_with_regression_file
+
+# %%
+pc0_optimised_years_file = Path("manuscript-outputs/ch4_pc0-optimised-years.json")
+pc0_optimised_years_file.parent.mkdir(exist_ok=True, parents=True)
+with open(pc0_optimised_years_file, "w") as fh:
+    json.dump([int(v) for v in pc0_optimised_years_to_optimise["year"].values], fh)
+
+pc0_optimised_years_file

@@ -16,6 +16,7 @@ the panels it has and how they are laid out.
 
 from __future__ import annotations
 
+import json
 import shutil
 import string
 from pathlib import Path
@@ -89,6 +90,13 @@ PRIMAP_REGRESSION_YEARS_FILE = (
     Path("manuscript-outputs") / "ch4_primap-regression-years.json"
 )
 """Where the re-run notebook saves the PRIMAP regression years information we want
+
+Relative to the bundle's root directory,
+because that is the notebook's working directory.
+"""
+
+PC0_OPTIMISED_YEARS_FILE = Path("manuscript-outputs") / "ch4_pc0-optimised-years.json"
+"""Where the re-run notebook saves the PC0 optimised years information we want
 
 Relative to the bundle's root directory,
 because that is the notebook's working directory.
@@ -315,8 +323,8 @@ def get_ch4_primap_regression_data(
 
     Returns
     -------
-        The observational network data, with the latitudinal and longitudinal
-        bin of each observation added
+    :
+        PRIMAP data used for the regression
     """
     out_file = bundle_dir / PRIMAP_REGRESSION_DATA_FILE
     if out_file.exists() and not force_rerun:
@@ -325,6 +333,88 @@ def get_ch4_primap_regression_data(
 
     re_run_pc_extension_notebook(bundle_dir, original_run_notebooks_dir)
     return xr.load_dataset(out_file)
+
+
+def get_ch4_primap_regression_years(
+    bundle_dir: Path = DEFAULT_BUNDLE_DIR,
+    original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
+    force_rerun: bool = False,
+) -> pd.DataFrame:
+    """
+    Get the years in which PC0 is extended using a regression against emissions
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    original_run_notebooks_dir
+        The original run's `notebooks-executed` directory
+
+        Only used if we don't already have a copy of the notebook we need.
+
+    force_rerun
+        Re-run the notebook even if its output is already there
+
+    Returns
+    -------
+    :
+        Years in which the PRIMAP regression was used
+    """
+    out_file = bundle_dir / PRIMAP_REGRESSION_YEARS_FILE
+    if out_file.exists() and not force_rerun:
+        logger.info(f"Using existing {out_file}")
+        with open(out_file) as fh:
+            res = json.load(fh)
+
+        return res
+
+    re_run_pc_extension_notebook(bundle_dir, original_run_notebooks_dir)
+    with open(out_file) as fh:
+        res = json.load(fh)
+
+    return res
+
+
+def get_ch4_pc0_optimised_regression_years(
+    bundle_dir: Path = DEFAULT_BUNDLE_DIR,
+    original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
+    force_rerun: bool = False,
+) -> pd.DataFrame:
+    """
+    Get the years in which PC0 is extended using an optimisation against ice cores
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    original_run_notebooks_dir
+        The original run's `notebooks-executed` directory
+
+        Only used if we don't already have a copy of the notebook we need.
+
+    force_rerun
+        Re-run the notebook even if its output is already there
+
+    Returns
+    -------
+    :
+        Years in which the PC0 optimisation was used
+    """
+    out_file = bundle_dir / PC0_OPTIMISED_YEARS_FILE
+    if out_file.exists() and not force_rerun:
+        logger.info(f"Using existing {out_file}")
+        with open(out_file) as fh:
+            res = json.load(fh)
+
+        return res
+
+    re_run_pc_extension_notebook(bundle_dir, original_run_notebooks_dir)
+    with open(out_file) as fh:
+        res = json.load(fh)
+
+    return res
 
 
 def re_run_pc_extension_notebook(
@@ -408,7 +498,6 @@ def re_run_pc_extension_notebook(
 # but we need them for our plotting
 from pathlib import Path
 
-years_to_fill_with_regression
 primap_regression_data_file = Path("{PRIMAP_REGRESSION_DATA_FILE.as_posix()}")
 primap_regression_data_file.parent.mkdir(exist_ok=True, parents=True)
 primap_regression_data.pint.dequantify().to_netcdf(primap_regression_data_file)
@@ -416,7 +505,6 @@ primap_regression_data_file
 """
 
     save_cell_primap_years = f"""
-years_to_fill_with_regression
 years_to_fill_with_regression_file = Path("{PRIMAP_REGRESSION_YEARS_FILE.as_posix()}")
 years_to_fill_with_regression_file.parent.mkdir(exist_ok=True, parents=True)
 with open(years_to_fill_with_regression_file, "w") as fh:
@@ -425,13 +513,26 @@ with open(years_to_fill_with_regression_file, "w") as fh:
 years_to_fill_with_regression_file
 """
 
+    save_cell_pc0_optimised_years = f"""
+pc0_optimised_years_file = Path("{PC0_OPTIMISED_YEARS_FILE.as_posix()}")
+pc0_optimised_years_file.parent.mkdir(exist_ok=True, parents=True)
+with open(pc0_optimised_years_file, "w") as fh:
+    json.dump([int(v) for v in pc0_optimised_years_to_optimise["year"].values], fh)
+
+pc0_optimised_years_file
+"""
+
     notebook_name = base_notebook.stem
     ipynb_to_run = bundle_dir / "notebooks-rerun" / f"{notebook_name}.ipynb"
     to_run = write_modified_notebook(
         start_from=start_from,
         out_py=MODIFIED_NOTEBOOKS_DIR / f"{notebook_name}.py",
         out_ipynb=ipynb_to_run,
-        extra_cells=[save_cell_primap_data, save_cell_primap_years],
+        extra_cells=[
+            save_cell_primap_data,
+            save_cell_primap_years,
+            save_cell_pc0_optimised_years,
+        ],
         step_config_id="only",
     )
     run_notebook_from_bundle_dir(
@@ -622,11 +723,51 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
         regression_info=regression_info,
         ax=axes["lat-grad-pc-emms"],
     )
+
+    primap_regression_years_l = get_ch4_primap_regression_years(
+        bundle_dir=bundle_dir,
+        original_run_notebooks_dir=original_run_notebooks_dir,
+        force_rerun=force_rerun,
+    )
+    primap_regression_years = np.array(primap_regression_years_l)
+
+    pc0_optimised_years_l = get_ch4_pc0_optimised_regression_years(
+        bundle_dir=bundle_dir,
+        original_run_notebooks_dir=original_run_notebooks_dir,
+        force_rerun=force_rerun,
+    )
+    pc0_optimised_years = np.arange(
+        min(pc0_optimised_years_l), max(pc0_optimised_years_l) + 1
+    )
+
+    obs_based_years = lat_gradient_from_obs_network["year"].values
+
+    pc0_constant_years = pcs_extended["year"].values[
+        ~np.isin(pcs_extended["year"], obs_based_years)
+        & ~np.isin(pcs_extended["year"], primap_regression_years)
+        & ~np.isin(pcs_extended["year"], pc0_optimised_years)
+    ]
+    pc1_constant_years = pcs_extended["year"].values[
+        ~np.isin(pcs_extended["year"], obs_based_years)
+    ]
+
     plot_lat_gradient_pcs_extended(
         pcs_extended,
         axes["lat-grad-pc-ext-l"],
         axes["lat-grad-pc-ext-r"],
         split_year=1930,
+        pieces={
+            0: {
+                "Obs.": obs_based_years,
+                "Emissions regression": primap_regression_years,
+                "Ice core optimised": pc0_optimised_years,
+                "Constant": pc0_constant_years,
+            },
+            1: {
+                "Obs.": obs_based_years,
+                "Constant": pc1_constant_years,
+            },
+        },
     )
 
     native_resolution = xr.load_dataset(

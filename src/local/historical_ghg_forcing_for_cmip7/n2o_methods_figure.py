@@ -387,11 +387,25 @@ def generate_n2o_methods_figure(  # noqa: PLR0915
     pcs_extended = xr.load_dataset(
         bundle_dir / "data/interim/n2o/n2o_allyears-lat-gradient-eofs-pcs.nc"
     )
+    obs_based_years = lat_gradient_from_obs_network["year"].values
+    pc_constant_years = pcs_extended["year"].values[
+        ~np.isin(pcs_extended["year"], obs_based_years)
+    ]
     plot_lat_gradient_pcs_extended(
         pcs_extended,
         axes["lat-grad-pc-ext-l"],
         axes["lat-grad-pc-ext-r"],
         split_year=1950,
+        pieces={
+            0: {
+                "Obs.": obs_based_years,
+                "Constant": pc_constant_years,
+            },
+            1: {
+                "Obs.": obs_based_years,
+                "Constant": pc_constant_years,
+            },
+        },
     )
 
     native_resolution = xr.load_dataset(

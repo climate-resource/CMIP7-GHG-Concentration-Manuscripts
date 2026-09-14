@@ -1234,7 +1234,7 @@ def plot_global_mean_extension(
     )
 
 
-def plot_lat_gradient_pcs_emissions_regression(
+def plot_lat_gradient_pcs_emissions_regression(  # noqa: PLR0913
     lat_grad_info: xr.Dataset,
     emissions_data: xr.Dataset,
     emissions_name: str,
@@ -1298,12 +1298,14 @@ def plot_lat_gradient_pcs_emissions_regression(
     ax.legend()
 
 
-def plot_lat_gradient_pcs_extended(
+def plot_lat_gradient_pcs_extended(  # noqa: PLR0913
     lat_grad_info: xr.Dataset,
     ax_left: matplotlib.axes.Axes,
     ax_right: matplotlib.axes.Axes,
     pcs_key: str = "principal-components",
     split_year: int = 1950,
+    # Should be numpy array of int, anyway
+    pieces: dict[int, dict[str, list[int]]] | None = None,
 ) -> None:
     """
     Plot extended latitudinal gradient PCs
@@ -1311,15 +1313,28 @@ def plot_lat_gradient_pcs_extended(
     pcs_da = lat_grad_info[pcs_key]
     pcs_df = pcs_da.to_pandas().stack().rename("value").to_frame().reset_index()
 
+    for eof, info in pieces.items():
+        for source, years in info.items():
+            pcs_df.loc[
+                (pcs_df["eof"] == eof) & (pcs_df["year"].isin(years)), "source"
+            ] = source
+
+    if pcs_df["source"].isnull().any(axis=None):
+        raise AssertionError
+
     for i, ax in enumerate((ax_left, ax_right)):
         sns.scatterplot(
             pcs_df,
             x="year",
             y="value",
-            hue="eof",
+            # hue="eof",
+            # style="source",
+            style="eof",
+            hue="source",
             ax=ax,
-            s=15,
+            s=25,
             edgecolor=None,
+            alpha=0.7,
         )
 
     add_break_lines_and_setup(
@@ -1330,6 +1345,22 @@ def plot_lat_gradient_pcs_extended(
         pcs_da["year"].max(),
         pcs_da.attrs["units"],
     )
+
+    legend = ax_left.get_legend()
+    if legend is None:
+        raise AssertionError
+
+    handles = legend.legend_handles
+    labels = [text.get_text() for text in legend.get_texts()]
+    # Add fake handles and legends for other EOFs so 2 col splits as we want.
+    for _ in range(len(pcs_df["source"].unique()) - len(pcs_df["eof"].unique())):
+        handles.append(matplotlib.lines.Line2D([], [], color="none", label=""))
+        labels.append("")
+
+    title = legend.get_title().get_text()
+
+    add_compact_legend(ax_left, handles=handles, labels=labels, title=title, ncols=2)
+    ax_left.get_legend().get_title().set_fontsize("x-small")
 
 
 def plot_flying_carpet(
