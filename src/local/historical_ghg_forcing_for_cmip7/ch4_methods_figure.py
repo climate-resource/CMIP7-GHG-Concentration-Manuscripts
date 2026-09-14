@@ -7,13 +7,16 @@ What is here is the data this figure loads,
 the panels it has and how they are laid out.
 """
 # Differences from N2O
-# - regression against PRIMAP to get back to ice core overlap 1948. i.e. put the regression panel back in, combine the extended PCs panel ? (Or keep the split, add another column)
+# - regression against PRIMAP to get back to ice core overlap 1948.
+#   i.e. put the regression panel back in, combine the extended PCs panel ?
+#   (Or keep the split, add another column)
 # - first PC optimisation with ice cores
 # - first PC constant before ice core overlap
 # - note that Law Dome is different lat on the extended global-mean panel
 
 from __future__ import annotations
 
+import shutil
 import string
 from pathlib import Path
 
@@ -21,6 +24,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
+import yaml
 from loguru import logger
 
 from local.cmip_ghg_generation import (
@@ -52,6 +56,7 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     plot_flying_carpet,
     plot_global_mean_extension,
     plot_global_mean_from_obs_network,
+    plot_lat_gradient_pcs_emissions_regression,
     plot_lat_gradient_pcs_extended,
     plot_lat_gradient_pieces_from_obs_network,
     plot_monthly_means,
@@ -66,6 +71,24 @@ from local.paths import DATA_RAW_DIR
 
 ALL_DATA_WITH_BINS_FILE = Path("manuscript-outputs") / "ch4_all-data-with-bins.csv"
 """Where the re-run notebook saves the data we want
+
+Relative to the bundle's root directory,
+because that is the notebook's working directory.
+"""
+
+PRIMAP_REGRESSION_DATA_FILE = (
+    Path("manuscript-outputs") / "ch4_primap-regression-data.nc"
+)
+"""Where the re-run notebook saves the PRIMAP regression data we want
+
+Relative to the bundle's root directory,
+because that is the notebook's working directory.
+"""
+
+PRIMAP_REGRESSION_YEARS_FILE = (
+    Path("manuscript-outputs") / "ch4_primap-regression-years.json"
+)
+"""Where the re-run notebook saves the PRIMAP regression years information we want
 
 Relative to the bundle's root directory,
 because that is the notebook's working directory.
@@ -269,6 +292,155 @@ manuscript_out_file
     return pd.read_csv(out_file)
 
 
+def get_ch4_primap_regression_data(
+    bundle_dir: Path = DEFAULT_BUNDLE_DIR,
+    original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
+    force_rerun: bool = False,
+) -> pd.DataFrame:
+    """
+    Get the PRIMAP data used for the CH4 PC regression
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    original_run_notebooks_dir
+        The original run's `notebooks-executed` directory
+
+        Only used if we don't already have a copy of the notebook we need.
+
+    force_rerun
+        Re-run the notebook even if its output is already there
+
+    Returns
+    -------
+        The observational network data, with the latitudinal and longitudinal
+        bin of each observation added
+    """
+    out_file = bundle_dir / PRIMAP_REGRESSION_DATA_FILE
+    if out_file.exists() and not force_rerun:
+        logger.info(f"Using existing {out_file}")
+        return xr.load_dataset(out_file)
+
+    re_run_pc_extension_notebook(bundle_dir, original_run_notebooks_dir)
+    return xr.load_dataset(out_file)
+
+
+def re_run_pc_extension_notebook(
+    bundle_dir: Path = DEFAULT_BUNDLE_DIR,
+    original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
+) -> None:
+    """
+    Re-run the pc extension notebook
+    """
+    base_notebook = (
+        Path("calculate_ch4_monthly_fifteen_degree_pieces")
+        / "only"
+        / "1103_ch4_extend-pcs.ipynb"
+    )
+
+    start_from = ensure_executed_notebook_available(
+        base_notebook,
+        original_run_notebooks_dir=original_run_notebooks_dir,
+    )
+    ensure_bundle_available(
+        files_to_get=(
+            "pyproject.toml",
+            "pixi.lock",
+            "v1.0.0-config-raw.yaml",
+        ),
+        files_to_get_tarred=(
+            "src.tar.gz",
+            "data--interim.tar.gz",
+        ),
+        bundle_dir=bundle_dir,
+    )
+    ensure_bundle_environment(bundle_dir)
+
+    # Make sure primap is there too
+    primap_notebook = Path("retrieve_misc_data") / "only" / "0002_primap.ipynb"
+
+    start_from_primap = ensure_executed_notebook_available(
+        primap_notebook,
+        original_run_notebooks_dir=original_run_notebooks_dir,
+    )
+    ipynb_to_run_primap = (
+        bundle_dir / "notebooks-rerun" / f"{primap_notebook.name}.ipynb"
+    )
+    to_run_primap = write_modified_notebook(
+        start_from=start_from_primap,
+        out_py=MODIFIED_NOTEBOOKS_DIR / f"{primap_notebook.name}.py",
+        out_ipynb=ipynb_to_run_primap,
+        extra_cells=[],
+        step_config_id="only",
+    )
+    run_notebook_from_bundle_dir(
+        to_run_primap,
+        ipynb_to_run_primap,
+        bundle_dir=bundle_dir,
+    )
+
+    # Put needed file in right directory
+    # TODO: try and reduce hard-coding here
+    for source_file, target_file in (
+        (
+            (
+                DATA_RAW_DIR
+                / "historical-ghg-forcing-for-cmip7/zenodo-missing/law-dome_ch4_smoothed_median.csv"  # noqa: E501
+            ),
+            bundle_dir / "data/interim/law_dome/law-dome_ch4_smoothed_median.csv",
+        ),
+        (
+            (
+                DATA_RAW_DIR
+                / "historical-ghg-forcing-for-cmip7/zenodo-missing/neem_with_location.csv"  # noqa: E501
+            ),
+            bundle_dir / "data/interim/neem/neem_with_location.csv",
+        ),
+    ):
+        target_file.parent.mkdir(exist_ok=True, parents=True)
+        shutil.copy2(source_file, target_file)
+
+    save_cell_primap_data = f"""
+# Added for the CMIP7 GHG manuscript.
+# The original run never saved these pieces out,
+# but we need them for our plotting
+from pathlib import Path
+
+years_to_fill_with_regression
+primap_regression_data_file = Path("{PRIMAP_REGRESSION_DATA_FILE.as_posix()}")
+primap_regression_data_file.parent.mkdir(exist_ok=True, parents=True)
+primap_regression_data.pint.dequantify().to_netcdf(primap_regression_data_file)
+primap_regression_data_file
+"""
+
+    save_cell_primap_years = f"""
+years_to_fill_with_regression
+years_to_fill_with_regression_file = Path("{PRIMAP_REGRESSION_YEARS_FILE.as_posix()}")
+years_to_fill_with_regression_file.parent.mkdir(exist_ok=True, parents=True)
+with open(years_to_fill_with_regression_file, "w") as fh:
+    json.dump([int(v) for v in years_to_fill_with_regression], fh)
+
+years_to_fill_with_regression_file
+"""
+
+    notebook_name = base_notebook.stem
+    ipynb_to_run = bundle_dir / "notebooks-rerun" / f"{notebook_name}.ipynb"
+    to_run = write_modified_notebook(
+        start_from=start_from,
+        out_py=MODIFIED_NOTEBOOKS_DIR / f"{notebook_name}.py",
+        out_ipynb=ipynb_to_run,
+        extra_cells=[save_cell_primap_data, save_cell_primap_years],
+        step_config_id="only",
+    )
+    run_notebook_from_bundle_dir(
+        to_run,
+        ipynb_to_run,
+        bundle_dir=bundle_dir,
+    )
+
+
 def generate_ch4_methods_figure(  # noqa: PLR0915
     outfile: Path,
     bundle_dir: Path,
@@ -394,7 +566,7 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
     )
     law_dome_smoothed = pd.read_csv(
         DATA_RAW_DIR
-        / "historical-ghg-forcing-for-cmip7/zenodo-missing/law-dome_ch4_smoothed_median.csv"
+        / "historical-ghg-forcing-for-cmip7/zenodo-missing/law-dome_ch4_smoothed_median.csv"  # noqa: E501
     )
     law_dome_lat_l = law_dome_smoothed["latitude"].unique()
     if len(law_dome_lat_l) > 1:
@@ -433,6 +605,23 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
     #   - direct from obs. network
     #   - based on regression against PRIMAP
     #   - optimised to match Law Dome and NEEM
+    primap_regression_data = get_ch4_primap_regression_data(
+        bundle_dir=bundle_dir,
+        original_run_notebooks_dir=original_run_notebooks_dir,
+        force_rerun=force_rerun,
+    )
+    with open(
+        bundle_dir / "data/interim/ch4/ch4_pc0-ch4-fossil-emissions-regression.yaml"
+    ) as fh:
+        regression_info = yaml.safe_load(fh)
+
+    plot_lat_gradient_pcs_emissions_regression(
+        lat_gradient_from_obs_network,
+        primap_regression_data,
+        emissions_name=label_name("ch4 emissions of geological origin"),
+        regression_info=regression_info,
+        ax=axes["lat-grad-pc-emms"],
+    )
     plot_lat_gradient_pcs_extended(
         pcs_extended,
         axes["lat-grad-pc-ext-l"],

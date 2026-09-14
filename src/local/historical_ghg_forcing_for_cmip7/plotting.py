@@ -21,6 +21,7 @@ import matplotlib.figure
 import matplotlib.lines
 import matplotlib.pyplot as plt
 import numpy as np
+import openscm_units
 import pandas as pd
 import seaborn as sns
 import xarray as xr
@@ -1231,6 +1232,70 @@ def plot_global_mean_extension(
         gm_da["year"].max(),
         gm_da.attrs["units"],
     )
+
+
+def plot_lat_gradient_pcs_emissions_regression(
+    lat_grad_info: xr.Dataset,
+    emissions_data: xr.Dataset,
+    emissions_name: str,
+    regression_info: dict[str, tuple[float, str]],
+    ax: matplotlib.axes.Axes,
+    pcs_key: str = "principal-components",
+    eof: int = 0,
+    ur=openscm_units.unit_registry,
+    x_unit: str = "MtCH4 / yr",
+) -> None:
+    """
+    Plot the regression between a PC and an emissions regression
+    """
+    pc_da = lat_grad_info[pcs_key].sel(eof=eof)
+
+    common_years = np.intersect1d(pc_da["year"], emissions_data["year"])
+
+    emissions_da = get_only_data_variable(emissions_data.sel(year=common_years))
+    emissions_da.to_pandas()
+    emissions_da_units = emissions_da.attrs["units"]
+    conversion_factor = ur(emissions_da_units).to(x_unit).m
+    emissions_values = emissions_da.values * conversion_factor
+
+    pc_units = pc_da.attrs["units"]
+    pc_values = pc_da.sel(year=common_years).values
+
+    ax.scatter(
+        x=emissions_values,
+        y=pc_values,
+        label="raw data",
+        marker="x",
+        s=30,
+        color="tab:blue",
+        alpha=0.7,
+    )
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+
+    regression_gradient = (
+        ur.Quantity(regression_info["m"][0], regression_info["m"][1])
+        .to(f"{pc_units} / ({x_unit})")
+        .m
+    )
+    regression_y_int = (
+        ur.Quantity(regression_info["c"][0], regression_info["c"][1]).to(pc_units).m
+    )
+    ax.axline(
+        xy1=(0, regression_y_int),
+        slope=regression_gradient,
+        label="regression",
+        linestyle="-",
+        color="tab:orange",
+        alpha=0.9,
+    )
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+
+    ax.set_xlabel(f"{emissions_name} [{x_unit}]")
+    ax.set_ylabel(f"PC{eof} [{pc_units}]")
+
+    ax.legend()
 
 
 def plot_lat_gradient_pcs_extended(
