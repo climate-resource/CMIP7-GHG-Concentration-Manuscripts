@@ -1173,10 +1173,10 @@ def plot_global_mean_extension(
     )
 
 
-def plot_lat_gradient_pcs_emissions_regression(  # noqa: PLR0913
+def plot_pc_timeseries_regression(  # noqa: PLR0913
     lat_grad_info: xr.Dataset,
-    emissions_data: xr.Dataset,
-    emissions_name: str,
+    timeseries_data: xr.Dataset,
+    timeseries_name: str,
     regression_info: dict[str, tuple[float, str]],
     ax: matplotlib.axes.Axes,
     x_unit: str,
@@ -1185,23 +1185,23 @@ def plot_lat_gradient_pcs_emissions_regression(  # noqa: PLR0913
     ur=openscm_units.unit_registry,
 ) -> None:
     """
-    Plot the regression between a PC and an emissions regression
+    Plot the regression between a PC and a timeseries
     """
     pc_da = lat_grad_info[pcs_key].sel(eof=eof)
 
-    common_years = np.intersect1d(pc_da["year"], emissions_data["year"])
+    common_years = np.intersect1d(pc_da["year"], timeseries_data["year"])
 
-    emissions_da = get_only_data_variable(emissions_data.sel(year=common_years))
-    emissions_da.to_pandas()
-    emissions_da_units = emissions_da.attrs["units"]
-    conversion_factor = ur(emissions_da_units).to(x_unit).m
-    emissions_values = emissions_da.values * conversion_factor
+    timeseries_da = get_only_data_variable(timeseries_data.sel(year=common_years))
+    timeseries_da.to_pandas()
+    timeseries_da_units = timeseries_da.attrs["units"]
+    conversion_factor = ur(timeseries_da_units).to(x_unit).m
+    timeseries_values = timeseries_da.values * conversion_factor
 
     pc_units = pc_da.attrs["units"]
     pc_values = pc_da.sel(year=common_years).values
 
     ax.scatter(
-        x=emissions_values,
+        x=timeseries_values,
         y=pc_values,
         label="raw data",
         marker="x",
@@ -1231,15 +1231,15 @@ def plot_lat_gradient_pcs_emissions_regression(  # noqa: PLR0913
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
 
-    ax.set_xlabel(f"{emissions_name} [{x_unit}]", fontsize="small")
+    ax.set_xlabel(f"{timeseries_name} [{x_unit}]", fontsize="small")
     ax.set_ylabel(f"PC{eof} [{pc_units}]", fontsize="small")
     ax.tick_params(labelsize="small")
 
     add_compact_legend(ax, loc="best")
 
 
-def plot_lat_gradient_pcs_extended(  # noqa: PLR0913
-    lat_grad_info: xr.Dataset,
+def plot_pcs_extended(  # noqa: PLR0913
+    eof_pieces: xr.Dataset,
     ax_left: matplotlib.axes.Axes,
     ax_right: matplotlib.axes.Axes,
     pcs_key: str = "principal-components",
@@ -1250,7 +1250,7 @@ def plot_lat_gradient_pcs_extended(  # noqa: PLR0913
     """
     Plot extended latitudinal gradient PCs
     """
-    pcs_da = lat_grad_info[pcs_key]
+    pcs_da = eof_pieces[pcs_key]
     pcs_df = pcs_da.to_pandas().stack().rename("value").to_frame().reset_index()
 
     for eof, info in pieces.items():

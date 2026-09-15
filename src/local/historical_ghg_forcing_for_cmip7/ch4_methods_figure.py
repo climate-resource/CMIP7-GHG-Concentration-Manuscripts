@@ -59,11 +59,11 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     plot_flying_carpet,
     plot_global_mean_extension,
     plot_global_mean_from_obs_network,
-    plot_lat_gradient_pcs_emissions_regression,
-    plot_lat_gradient_pcs_extended,
     plot_lat_gradient_pieces_from_obs_network,
     plot_monthly_means,
     plot_observation_counts,
+    plot_pc_timeseries_regression,
+    plot_pcs_extended,
     plot_seasonality_from_obs_network,
     plot_station_locations,
     plot_station_timeseries,
@@ -697,10 +697,10 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
         },
     )
 
-    plot_lat_gradient_pcs_emissions_regression(
+    plot_pc_timeseries_regression(
         lat_gradient_from_obs_network,
         primap_regression_data,
-        emissions_name=label_name("ch4 emissions of geological origin"),
+        timeseries_name=label_name("ch4 emissions of geological origin"),
         regression_info=regression_info,
         ax=axes["lat-grad-pc-emms"],
         x_unit="MtCH4 / yr",
@@ -733,7 +733,7 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
         ~np.isin(pcs_extended["year"], obs_based_years)
     ]
 
-    plot_lat_gradient_pcs_extended(
+    plot_pcs_extended(
         pcs_extended,
         axes["lat-grad-pc-ext-l"],
         axes["lat-grad-pc-ext-r"],

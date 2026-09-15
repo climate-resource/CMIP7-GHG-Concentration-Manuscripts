@@ -6,10 +6,7 @@ live in [local.historical_ghg_forcing_for_cmip7.plotting][].
 What is here is the data this figure loads,
 the panels it has and how they are laid out.
 """
-# Differences from co2
-# - global-mean extension
-#   - harmonised Mauna Loa merged back to 1959
-#   - harmonised Menkin et al before then (note latitude)
+# Differences from ch4
 # - seasonality has PCs
 #   - regression against composite back to 1850, constant before
 #   - seasonality delta has to be plotted too: it is per latitude
@@ -64,11 +61,11 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     plot_flying_carpet,
     plot_global_mean_extension,
     plot_global_mean_from_obs_network,
-    plot_lat_gradient_pcs_emissions_regression,
-    plot_lat_gradient_pcs_extended,
     plot_lat_gradient_pieces_from_obs_network,
     plot_monthly_means,
     plot_observation_counts,
+    plot_pc_timeseries_regression,
+    plot_pcs_extended,
     plot_seasonality_from_obs_network,
     plot_station_locations,
     plot_station_timeseries,
@@ -100,6 +97,14 @@ Relative to the bundle's root directory,
 because that is the notebook's working directory.
 """
 
+CO2_SEASONALITY_CHANGE_COMPOSITE_FILE = (
+    Path("manuscript-outputs") / "co2_seasonality-change-composite.nc"
+)
+"""Where the re-run notebook saves the seasonality composite regression timeseries
+
+Relative to the bundle's root directory,
+because that is the notebook's working directory.
+"""
 # PC0_OPTIMISED_YEARS_FILE = Path("manuscript-outputs") / "co2_pc0-optimised-years.json"
 # """Where the re-run notebook saves the PC0 optimised years information we want
 #
@@ -120,7 +125,7 @@ TITLES = {
     "lat-grad-eof": "Obs. lat. gradient EOFs",
     "lat-grad-pc": "Obs. lat. gradient PCs",
     "gm-ext": "Extended global-mean",
-    "seasonality-eof-composite": "Seasonality PC0 against composite",  # might need to put a new line in this title
+    "seasonality-pc-composite": "Seasonality PC0 against composite",  # might need to put a new line in this title # noqa: E501
     "seasonality-pc-ext": "Extended seasonality PC",
     "lat-grad-pc-emms": "Lat. gradient PC0 against geological emissions",
     "lat-grad-pc-ext": "Extended lat. gradient PCs",
@@ -159,7 +164,7 @@ ROWS = (
             Panel("lat-grad-eof"),
             Panel("lat-grad-pc"),
             Panel("gm-ext", width=1.5, broken=True),
-            Panel("seasonality-eof-composite"),
+            Panel("seasonality-pc-composite"),
             Panel("seasonality-pc-ext", width=1.5, broken=True),
         ),
         height=2.3,
@@ -327,7 +332,7 @@ def get_co2_primap_regression_data(
         logger.info(f"Using existing {out_file}")
         return xr.load_dataset(out_file)
 
-    re_run_pc_extension_notebook(bundle_dir, original_run_notebooks_dir)
+    re_run_lat_grad_pc_extension_notebook(bundle_dir, original_run_notebooks_dir)
     return xr.load_dataset(out_file)
 
 
@@ -365,14 +370,14 @@ def get_co2_primap_regression_years(
 
         return res
 
-    re_run_pc_extension_notebook(bundle_dir, original_run_notebooks_dir)
+    re_run_lat_grad_pc_extension_notebook(bundle_dir, original_run_notebooks_dir)
     with open(out_file) as fh:
         res = json.load(fh)
 
     return res
 
 
-def re_run_pc_extension_notebook(
+def re_run_lat_grad_pc_extension_notebook(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
 ) -> None:
@@ -468,6 +473,97 @@ years_to_fill_with_regression_file
     )
 
 
+def get_co2_seasonality_change_composite_timeseries(
+    bundle_dir: Path = DEFAULT_BUNDLE_DIR,
+    original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
+    force_rerun: bool = False,
+) -> xr.Dataset:
+    """
+    Get the years in which PC0 is extended using a regression against emissions
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    original_run_notebooks_dir
+        The original run's `notebooks-executed` directory
+
+        Only used if we don't already have a copy of the notebook we need.
+
+    force_rerun
+        Re-run the notebook even if its output is already there
+
+    Returns
+    -------
+    :
+        Years in which the PRIMAP regression was used
+    """
+    out_file = bundle_dir / CO2_SEASONALITY_CHANGE_COMPOSITE_FILE
+    if out_file.exists() and not force_rerun:
+        logger.info(f"Using existing {out_file}")
+        res = xr.load_dataset(out_file)
+
+        return res
+
+    base_notebook = (
+        Path("calculate_co2_monthly_fifteen_degree_pieces")
+        / "only"
+        / "1205_co2_extend-seasonality-change-pcs.ipynb"
+    )
+
+    start_from = ensure_executed_notebook_available(
+        base_notebook,
+        original_run_notebooks_dir=original_run_notebooks_dir,
+    )
+    ensure_bundle_available(
+        files_to_get=(
+            "pyproject.toml",
+            "pixi.lock",
+            "v1.0.0-config-raw.yaml",
+        ),
+        files_to_get_tarred=(
+            "src.tar.gz",
+            "data--interim.tar.gz",
+            "data--raw--hadcrut5.tar.gz",
+        ),
+        bundle_dir=bundle_dir,
+    )
+    ensure_bundle_environment(bundle_dir)
+
+    save_cell_timeseries_data = f"""
+# Added for the CMIP7 GHG manuscript.
+# The original run never saved these pieces out,
+# but we need them for our plotting
+from pathlib import Path
+
+co2_seasonality_change_composite_file = Path("{CO2_SEASONALITY_CHANGE_COMPOSITE_FILE.as_posix()}")
+co2_seasonality_change_composite_file.parent.mkdir(exist_ok=True, parents=True)
+regression_timeseries_same_years.pint.dequantify().to_netcdf(co2_seasonality_change_composite_file)
+co2_seasonality_change_composite_file
+"""  # noqa: E501
+
+    notebook_name = base_notebook.stem
+    ipynb_to_run = bundle_dir / "notebooks-rerun" / f"{notebook_name}.ipynb"
+    to_run = write_modified_notebook(
+        start_from=start_from,
+        out_py=MODIFIED_NOTEBOOKS_DIR / f"{notebook_name}.py",
+        out_ipynb=ipynb_to_run,
+        extra_cells=[
+            save_cell_timeseries_data,
+        ],
+        step_config_id="only",
+    )
+    run_notebook_from_bundle_dir(
+        to_run,
+        ipynb_to_run,
+        bundle_dir=bundle_dir,
+    )
+    res = xr.load_dataset(out_file)
+
+    return res
+
+
 def plot_seasonality_change_from_obs_network(
     seasonality_change: xr.Dataset,
     axes: dict[str, matplotlib.axes.Axes],
@@ -521,7 +617,7 @@ def plot_seasonality_change_from_obs_network(
     add_latitude_legend(axes["eof"], pdf["lat"].unique(), loc="best")
 
 
-def generate_co2_methods_figure(
+def generate_co2_methods_figure(  # noqa: PLR0915
     outfile: Path,
     bundle_dir: Path,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
@@ -629,7 +725,6 @@ def generate_co2_methods_figure(
         assumed_units="dimensionless",
     )
 
-    # TODO: seasonality change bits
     seasonality_change_from_obs_network = xr.load_dataset(
         bundle_dir
         / "data/interim/co2/co2_observational-network_seasonality-change-eofs.nc"
@@ -679,51 +774,96 @@ def generate_co2_methods_figure(
     global_mean_extended = xr.load_dataset(
         bundle_dir / "data/interim/co2/co2_global-annual-mean_allyears.nc"
     )
-    # law_dome_smoothed = pd.read_csv(
-    #     DATA_RAW_DIR
-    #     / "historical-ghg-forcing-for-cmip7/zenodo-missing/law-dome_co2_smoothed_median.csv"  # noqa: E501
-    # )
-    # law_dome_lat_l = law_dome_smoothed["latitude"].unique()
-    # if len(law_dome_lat_l) > 1:
-    #     raise AssertionError
-    # law_dome_lat = law_dome_lat_l[0]
-    #
-    # epica = pd.read_csv(
-    #     DATA_RAW_DIR
-    #     / "historical-ghg-forcing-for-cmip7/zenodo-missing/epica_with_location.csv"
-    # )
-    # epica = epica[epica["year"] < law_dome_smoothed["year"].min()]
-    # epica_lat_l = epica["latitude"].unique()
-    # if len(epica_lat_l) > 1:
-    #     raise AssertionError
-    # epica_lat = epica_lat_l[0]
-    # TODO: global-mean extension components
+    menking_et_al = pd.read_csv(
+        bundle_dir / "data/interim/menking-et-al-2025/menking_et_al_2025.csv"
+    )
+    menking_et_al = menking_et_al[menking_et_al["gas"] == ghg(all_data_with_bins)]
+    menking_et_al_lat_l = menking_et_al["latitude"].unique()
+    if len(menking_et_al_lat_l) != 1:
+        raise AssertionError(menking_et_al_lat_l)
+    menking_et_al_lat = menking_et_al_lat_l[0]
 
+    mauna_loa_merged = pd.read_csv(
+        bundle_dir / "data/interim/mauna_loa/merged_ice_core.csv"
+    ).rename({"time": "year"}, axis="columns")
+    mauna_loa_start = 1959
+    mauna_loa_merged = mauna_loa_merged[mauna_loa_merged["year"] >= mauna_loa_start]
     plot_global_mean_extension(
         global_mean_extended,
         axes["gm-ext-l"],
         axes["gm-ext-r"],
         input_sources={
-            # (
-            #     f"Law Dome (smoothed, {law_dome_lat:.2f}" + r"$^{\circ}$N)"
-            # ): law_dome_smoothed,
-            # (f"EPICA ({epica_lat:.2f}" + r"$^{\circ}$N)"): epica,
+            "Mauna Loa Law Dome merged smoothed record": mauna_loa_merged,
+            f"Menking et al. ({menking_et_al_lat:.2f}" + r"$^{\circ}$N)": menking_et_al,
         },
     )
 
-    plot_lat_gradient_pcs_emissions_regression(
+    # Re-run notebook to save composite timeseries
+    co2_seasonality_change_composite = get_co2_seasonality_change_composite_timeseries(
+        bundle_dir=bundle_dir,
+        original_run_notebooks_dir=original_run_notebooks_dir,
+        force_rerun=force_rerun,
+    )
+    with open(
+        bundle_dir / "data/interim/co2/co2_seasonality-change_temp-conc-regression.yaml"
+    ) as fh:
+        regression_info_seasonality_change_raw = yaml.safe_load(fh)
+
+    regression_info_seasonality_change = regression_info_seasonality_change_raw[
+        "regression_result"
+    ]
+
+    plot_pc_timeseries_regression(
+        seasonality_change_from_obs_network,
+        co2_seasonality_change_composite,
+        timeseries_name=label_name("Temperature - co2 concentration composite"),
+        regression_info=regression_info_seasonality_change,
+        ax=axes["seasonality-pc-composite"],
+        x_unit="dimensionless",
+    )
+
+    seasonality_change_extended = xr.load_dataset(
+        bundle_dir / "data/interim/co2/co2_allyears-seasonality-change-eofs-pcs.nc"
+    )
+
+    # TODO: remove hard-coding?
+    obs_based_years = seasonality_change_from_obs_network["year"].values
+    composite_regression_years = np.arange(1850, 2023)
+    composite_regression_years = composite_regression_years[
+        ~np.isin(composite_regression_years, obs_based_years)
+    ]
+    seasonality_change_pc_constant_years = seasonality_change_extended["year"][
+        ~np.isin(seasonality_change_extended["year"], obs_based_years)
+        & ~np.isin(seasonality_change_extended["year"], composite_regression_years)
+    ].values
+
+    plot_pcs_extended(
+        seasonality_change_extended,
+        axes["seasonality-pc-ext-l"],
+        axes["seasonality-pc-ext-r"],
+        split_year=1800,
+        pieces={
+            0: {
+                "Obs.": obs_based_years,
+                "Composite regression": composite_regression_years,
+                "Simple extrapolation": seasonality_change_pc_constant_years,
+            },
+        },
+    )
+
+    plot_pc_timeseries_regression(
         lat_gradient_from_obs_network,
         primap_regression_data,
-        emissions_name=label_name("co2 emissions of geological origin"),
+        timeseries_name=label_name("co2 emissions of geological origin"),
         regression_info=regression_info,
         ax=axes["lat-grad-pc-emms"],
         x_unit="GtC / yr",
     )
 
+    # TODO: remove hard-coding?
     primap_years_all = np.arange(1750, 2024)
 
     obs_based_years = lat_gradient_from_obs_network["year"].values
-    # TODO: remove hard-coding
     primap_regression_years = primap_years_all[
         ~np.isin(primap_years_all, obs_based_years)
     ]
@@ -736,7 +876,7 @@ def generate_co2_methods_figure(
         ~np.isin(pcs_extended["year"], obs_based_years)
     ]
 
-    plot_lat_gradient_pcs_extended(
+    plot_pcs_extended(
         pcs_extended,
         axes["lat-grad-pc-ext-l"],
         axes["lat-grad-pc-ext-r"],

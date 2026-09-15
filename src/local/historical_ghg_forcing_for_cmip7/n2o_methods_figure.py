@@ -49,10 +49,10 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     plot_flying_carpet,
     plot_global_mean_extension,
     plot_global_mean_from_obs_network,
-    plot_lat_gradient_pcs_extended,
     plot_lat_gradient_pieces_from_obs_network,
     plot_monthly_means,
     plot_observation_counts,
+    plot_pcs_extended,
     plot_seasonality_from_obs_network,
     plot_station_locations,
     plot_station_timeseries,
@@ -383,7 +383,7 @@ def generate_n2o_methods_figure(  # noqa: PLR0915
     pc_constant_years = pcs_extended["year"].values[
         ~np.isin(pcs_extended["year"], obs_based_years)
     ]
-    plot_lat_gradient_pcs_extended(
+    plot_pcs_extended(
         pcs_extended,
         axes["lat-grad-pc-ext-l"],
         axes["lat-grad-pc-ext-r"],
