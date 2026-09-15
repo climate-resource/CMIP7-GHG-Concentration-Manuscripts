@@ -184,6 +184,7 @@ def unit(pdf: pd.DataFrame, unit_col: str = "unit") -> str:
 
 
 GHG_LABELS = {
+    "co2": "CO$_2$",
     "ch4": "CH$_4$",
     "n2o": "N$_2$O",
 }
@@ -1178,10 +1179,10 @@ def plot_lat_gradient_pcs_emissions_regression(  # noqa: PLR0913
     emissions_name: str,
     regression_info: dict[str, tuple[float, str]],
     ax: matplotlib.axes.Axes,
+    x_unit: str,
     pcs_key: str = "principal-components",
     eof: int = 0,
     ur=openscm_units.unit_registry,
-    x_unit: str = "MtCH4 / yr",
 ) -> None:
     """
     Plot the regression between a PC and an emissions regression

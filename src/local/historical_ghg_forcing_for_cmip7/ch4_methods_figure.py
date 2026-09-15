@@ -635,9 +635,25 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
         bundle_dir
         / "data/interim/ch4/ch4_observational-network_latitudinal-gradient-eofs.nc",
     )
+    primap_regression_data = get_ch4_primap_regression_data(
+        bundle_dir=bundle_dir,
+        original_run_notebooks_dir=original_run_notebooks_dir,
+        force_rerun=force_rerun,
+    )
+    pcs_extended = xr.load_dataset(
+        bundle_dir / "data/interim/ch4/ch4_allyears-lat-gradient-eofs-pcs.nc"
+    )
+    with open(
+        bundle_dir / "data/interim/ch4/ch4_pc0-ch4-fossil-emissions-regression.yaml"
+    ) as fh:
+        regression_info = yaml.safe_load(fh)
     # Flip both PC signs
     with xr.set_options(keep_attrs=True):
         lat_gradient_from_obs_network = -lat_gradient_from_obs_network
+        pcs_extended = -pcs_extended
+
+    regression_info["m"][0] *= -1
+    regression_info["c"][0] *= -1
 
     plot_lat_gradient_pieces_from_obs_network(
         lat_gradient_from_obs_network,
@@ -681,25 +697,13 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
         },
     )
 
-    pcs_extended = xr.load_dataset(
-        bundle_dir / "data/interim/ch4/ch4_allyears-lat-gradient-eofs-pcs.nc"
-    )
-    primap_regression_data = get_ch4_primap_regression_data(
-        bundle_dir=bundle_dir,
-        original_run_notebooks_dir=original_run_notebooks_dir,
-        force_rerun=force_rerun,
-    )
-    with open(
-        bundle_dir / "data/interim/ch4/ch4_pc0-ch4-fossil-emissions-regression.yaml"
-    ) as fh:
-        regression_info = yaml.safe_load(fh)
-
     plot_lat_gradient_pcs_emissions_regression(
         lat_gradient_from_obs_network,
         primap_regression_data,
         emissions_name=label_name("ch4 emissions of geological origin"),
         regression_info=regression_info,
         ax=axes["lat-grad-pc-emms"],
+        x_unit="MtCH4 / yr",
     )
 
     primap_regression_years_l = get_ch4_primap_regression_years(

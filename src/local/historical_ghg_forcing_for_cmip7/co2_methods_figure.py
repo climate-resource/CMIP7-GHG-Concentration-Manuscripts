@@ -7,9 +7,6 @@ What is here is the data this figure loads,
 the panels it has and how they are laid out.
 """
 # Differences from co2
-# - lat grad.
-#   - PC1: linear back to 1850 then constant
-#   - PC0: emissions regresssion, constant pre 1750
 # - global-mean extension
 #   - harmonised Mauna Loa merged back to 1959
 #   - harmonised Menkin et al before then (note latitude)
@@ -29,6 +26,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import xarray as xr
+import yaml
 from loguru import logger
 
 from local.cmip_ghg_generation import (
@@ -66,6 +64,8 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     plot_flying_carpet,
     plot_global_mean_extension,
     plot_global_mean_from_obs_network,
+    plot_lat_gradient_pcs_emissions_regression,
+    plot_lat_gradient_pcs_extended,
     plot_lat_gradient_pieces_from_obs_network,
     plot_monthly_means,
     plot_observation_counts,
@@ -372,47 +372,6 @@ def get_co2_primap_regression_years(
     return res
 
 
-def get_co2_pc0_optimised_regression_years(
-    bundle_dir: Path = DEFAULT_BUNDLE_DIR,
-    original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
-    force_rerun: bool = False,
-) -> pd.DataFrame:
-    """
-    Get the years in which PC0 is extended using an optimisation against ice cores
-
-    Parameters
-    ----------
-    bundle_dir
-        Directory in which to keep the original run's bundle
-
-    original_run_notebooks_dir
-        The original run's `notebooks-executed` directory
-
-        Only used if we don't already have a copy of the notebook we need.
-
-    force_rerun
-        Re-run the notebook even if its output is already there
-
-    Returns
-    -------
-    :
-        Years in which the PC0 optimisation was used
-    """
-    out_file = bundle_dir / PC0_OPTIMISED_YEARS_FILE
-    if out_file.exists() and not force_rerun:
-        logger.info(f"Using existing {out_file}")
-        with open(out_file) as fh:
-            res = json.load(fh)
-
-        return res
-
-    re_run_pc_extension_notebook(bundle_dir, original_run_notebooks_dir)
-    with open(out_file) as fh:
-        res = json.load(fh)
-
-    return res
-
-
 def re_run_pc_extension_notebook(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
@@ -467,27 +426,6 @@ def re_run_pc_extension_notebook(
         bundle_dir=bundle_dir,
     )
 
-    # # Put needed file in right directory
-    # # TODO: try and reduce hard-coding here
-    # for source_file, target_file in (
-    #     (
-    #         (
-    #             DATA_RAW_DIR
-    #             / "historical-ghg-forcing-for-cmip7/zenodo-missing/law-dome_co2_smoothed_median.csv"  # noqa: E501
-    #         ),
-    #         bundle_dir / "data/interim/law_dome/law-dome_co2_smoothed_median.csv",
-    #     ),
-    #     (
-    #         (
-    #             DATA_RAW_DIR
-    #             / "historical-ghg-forcing-for-cmip7/zenodo-missing/neem_with_location.csv"  # noqa: E501
-    #         ),
-    #         bundle_dir / "data/interim/neem/neem_with_location.csv",
-    #     ),
-    # ):
-    #     target_file.parent.mkdir(exist_ok=True, parents=True)
-    #     shutil.copy2(source_file, target_file)
-
     save_cell_primap_data = f"""
 # Added for the CMIP7 GHG manuscript.
 # The original run never saved these pieces out,
@@ -501,6 +439,8 @@ primap_regression_data_file
 """
 
     save_cell_primap_years = f"""
+import json
+
 years_to_fill_with_regression_file = Path("{PRIMAP_REGRESSION_YEARS_FILE.as_posix()}")
 years_to_fill_with_regression_file.parent.mkdir(exist_ok=True, parents=True)
 with open(years_to_fill_with_regression_file, "w") as fh:
@@ -508,15 +448,6 @@ with open(years_to_fill_with_regression_file, "w") as fh:
 
 years_to_fill_with_regression_file
 """
-
-    #     save_cell_pc0_optimised_years = f"""
-    # pc0_optimised_years_file = Path("{PC0_OPTIMISED_YEARS_FILE.as_posix()}")
-    # pc0_optimised_years_file.parent.mkdir(exist_ok=True, parents=True)
-    # with open(pc0_optimised_years_file, "w") as fh:
-    #     json.dump([int(v) for v in pc0_optimised_years_to_optimise["year"].values], fh)
-    #
-    # pc0_optimised_years_file
-    # """
 
     notebook_name = base_notebook.stem
     ipynb_to_run = bundle_dir / "notebooks-rerun" / f"{notebook_name}.ipynb"
@@ -527,7 +458,6 @@ years_to_fill_with_regression_file
         extra_cells=[
             save_cell_primap_data,
             save_cell_primap_years,
-            # save_cell_pc0_optimised_years,
         ],
         step_config_id="only",
     )
@@ -716,11 +646,27 @@ def generate_co2_methods_figure(
         bundle_dir
         / "data/interim/co2/co2_observational-network_latitudinal-gradient-eofs.nc",
     )
+    pcs_extended = xr.load_dataset(
+        bundle_dir / "data/interim/co2/co2_allyears-lat-gradient-eofs-pcs.nc"
+    )
+    primap_regression_data = get_co2_primap_regression_data(
+        bundle_dir=bundle_dir,
+        original_run_notebooks_dir=original_run_notebooks_dir,
+        force_rerun=force_rerun,
+    )
+    with open(
+        bundle_dir / "data/interim/co2/co2_pc0-co2-fossil-emissions-regression.yaml"
+    ) as fh:
+        regression_info = yaml.safe_load(fh)
     # Flip sign of PC0 so it is more intuitive
     with xr.set_options(keep_attrs=True):
         lat_gradient_from_obs_network = lat_gradient_from_obs_network * xr.where(
             lat_gradient_from_obs_network["eof"] == 0, -1, 1
         )
+        pcs_extended = pcs_extended * xr.where(pcs_extended["eof"] == 0, -1, 1)
+
+    regression_info["m"][0] *= -1
+    regression_info["c"][0] *= -1
 
     plot_lat_gradient_pieces_from_obs_network(
         lat_gradient_from_obs_network,
@@ -751,6 +697,7 @@ def generate_co2_methods_figure(
     # if len(epica_lat_l) > 1:
     #     raise AssertionError
     # epica_lat = epica_lat_l[0]
+    # TODO: global-mean extension components
 
     plot_global_mean_extension(
         global_mean_extended,
@@ -764,73 +711,48 @@ def generate_co2_methods_figure(
         },
     )
 
-    # TODO: check regressions file name
-    # pcs_extended = xr.load_dataset(
-    #     bundle_dir / "data/interim/co2/co2_allyears-lat-gradient-eofs-pcs.nc"
-    # )
-    # primap_regression_data = get_co2_primap_regression_data(
-    #     bundle_dir=bundle_dir,
-    #     original_run_notebooks_dir=original_run_notebooks_dir,
-    #     force_rerun=force_rerun,
-    # )
-    # with open(
-    #     bundle_dir / "data/interim/co2/co2_pc0-co2-fossil-emissions-regression.yaml"
-    # ) as fh:
-    #     regression_info = yaml.safe_load(fh)
-    #
-    # plot_lat_gradient_pcs_emissions_regression(
-    #     lat_gradient_from_obs_network,
-    #     primap_regression_data,
-    #     emissions_name=label_name("co2 emissions of geological origin"),
-    #     regression_info=regression_info,
-    #     ax=axes["lat-grad-pc-emms"],
-    # )
-    #
-    # primap_regression_years_l = get_co2_primap_regression_years(
-    #     bundle_dir=bundle_dir,
-    #     original_run_notebooks_dir=original_run_notebooks_dir,
-    #     force_rerun=force_rerun,
-    # )
-    # primap_regression_years = np.array(primap_regression_years_l)
-    #
-    # pc0_optimised_years_l = get_co2_pc0_optimised_regression_years(
-    #     bundle_dir=bundle_dir,
-    #     original_run_notebooks_dir=original_run_notebooks_dir,
-    #     force_rerun=force_rerun,
-    # )
-    # pc0_optimised_years = np.arange(
-    #     min(pc0_optimised_years_l), max(pc0_optimised_years_l) + 1
-    # )
-    #
-    # obs_based_years = lat_gradient_from_obs_network["year"].values
-    #
-    # pc0_constant_years = pcs_extended["year"].values[
-    #     ~np.isin(pcs_extended["year"], obs_based_years)
-    #     & ~np.isin(pcs_extended["year"], primap_regression_years)
-    #     & ~np.isin(pcs_extended["year"], pc0_optimised_years)
-    # ]
-    # pc1_constant_years = pcs_extended["year"].values[
-    #     ~np.isin(pcs_extended["year"], obs_based_years)
-    # ]
-    #
-    # plot_lat_gradient_pcs_extended(
-    #     pcs_extended,
-    #     axes["lat-grad-pc-ext-l"],
-    #     axes["lat-grad-pc-ext-r"],
-    #     split_year=1930,
-    #     pieces={
-    #         0: {
-    #             "Obs.": obs_based_years,
-    #             "Emissions regression": primap_regression_years,
-    #             "Ice core optimised": pc0_optimised_years,
-    #             "Constant": pc0_constant_years,
-    #         },
-    #         1: {
-    #             "Obs.": obs_based_years,
-    #             "Constant": pc1_constant_years,
-    #         },
-    #     },
-    # )
+    plot_lat_gradient_pcs_emissions_regression(
+        lat_gradient_from_obs_network,
+        primap_regression_data,
+        emissions_name=label_name("co2 emissions of geological origin"),
+        regression_info=regression_info,
+        ax=axes["lat-grad-pc-emms"],
+        x_unit="GtC / yr",
+    )
+
+    primap_years_all = np.arange(1750, 2024)
+
+    obs_based_years = lat_gradient_from_obs_network["year"].values
+    # TODO: remove hard-coding
+    primap_regression_years = primap_years_all[
+        ~np.isin(primap_years_all, obs_based_years)
+    ]
+
+    pc0_constant_years = pcs_extended["year"].values[
+        ~np.isin(pcs_extended["year"], obs_based_years)
+        & ~np.isin(pcs_extended["year"], primap_regression_years)
+    ]
+    pc1_constant_years = pcs_extended["year"].values[
+        ~np.isin(pcs_extended["year"], obs_based_years)
+    ]
+
+    plot_lat_gradient_pcs_extended(
+        pcs_extended,
+        axes["lat-grad-pc-ext-l"],
+        axes["lat-grad-pc-ext-r"],
+        split_year=1930,
+        pieces={
+            0: {
+                "Obs.": obs_based_years,
+                "Emissions regression": primap_regression_years,
+                "Simple extrapolation": pc0_constant_years,
+            },
+            1: {
+                "Obs.": obs_based_years,
+                "Simple extrapolation": pc1_constant_years,
+            },
+        },
+    )
 
     native_resolution = xr.load_dataset(
         bundle_dir / "data/interim/co2/co2_fifteen-degree_monthly.nc"
