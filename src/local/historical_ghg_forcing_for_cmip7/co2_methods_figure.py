@@ -23,9 +23,11 @@ import json
 from pathlib import Path
 
 import cartopy.crs as ccrs
+import matplotlib.axes
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import xarray as xr
 from loguru import logger
 
@@ -48,9 +50,13 @@ from local.historical_ghg_forcing_for_cmip7.layout import (
 )
 from local.historical_ghg_forcing_for_cmip7.plotting import (
     LAT_BIN_BOUNDS,
+    LATITUDE_COLOUR_MAP,
+    LATITUDE_NORMALISATION,
     MAP_ASPECT,
     add_colour_bar,
+    add_latitude_legend,
     add_network_group,
+    compact_existing_legend,
     get_decimal_year,
     get_interpolated_input_coverage_info,
     get_only_data_variable,
@@ -109,8 +115,8 @@ TITLES = {
     "interpolated-least": "Interpolation: fewest inputs",
     "gm": "Obs. global-mean",
     "seasonality": "Obs. seasonality",
-    "seasonality-eof": "Obs. seasonality EOF",
-    "seasonality-pc": "Obs. seasonality PC",
+    "seasonality-eof": "Obs. seasonality change EOF",
+    "seasonality-pc": "Obs. seasonality change PC",
     "lat-grad-eof": "Obs. lat. gradient EOFs",
     "lat-grad-pc": "Obs. lat. gradient PCs",
     "gm-ext": "Extended global-mean",
@@ -532,6 +538,59 @@ years_to_fill_with_regression_file
     )
 
 
+def plot_seasonality_change_from_obs_network(
+    seasonality_change: xr.Dataset,
+    axes: dict[str, matplotlib.axes.Axes],
+    principal_components_key: str = "principal-components",
+    eofs_key: str = "eofs",
+) -> matplotlib.axes.Axes:
+    """
+    Plot seasonality change derived from the observational network
+
+    There is one series here for each of the twelve latitudinal bins.
+    Latitude is shown with the same colour map, over the same range,
+    as the timeseries panel uses, so a colour means the same latitude
+    everywhere.
+    """
+    da_pcs = seasonality_change[principal_components_key]
+    pdf_pcs = da_pcs.to_pandas().stack().rename("value").to_frame().reset_index()
+    sns.scatterplot(
+        pdf_pcs,
+        x="year",
+        y="value",
+        hue="eof",
+        ax=axes["pc"],
+    )
+    axes["pc"].set_ylabel(f"[{da_pcs.attrs['units']}]", fontsize="small")
+    axes["pc"].set_xlabel("year", fontsize="small")
+    axes["pc"].tick_params(labelsize="small")
+    compact_existing_legend(axes["pc"], loc="best")
+
+    sc_eof = seasonality_change[eofs_key]
+    pdf_l = []
+    for (eof, lat), sc_eof_lat in sc_eof.groupby(["eof", "lat"]):
+        tmp = sc_eof_lat.squeeze().to_pandas().rename("value").to_frame().reset_index()
+        tmp["lat"] = lat
+        tmp["eof"] = eof
+        pdf_l.append(tmp)
+
+    pdf = pd.concat(pdf_l)
+    axes["eof"].scatter(
+        pdf["month"],
+        pdf["value"],
+        c=pdf["lat"],
+        cmap=LATITUDE_COLOUR_MAP,
+        norm=LATITUDE_NORMALISATION,
+        s=30.0,
+        linewidths=0.0,
+    )
+    axes["eof"].set_ylabel(f"[{sc_eof.attrs['units']}]", fontsize="small")
+    axes["eof"].set_xlabel("month", fontsize="small")
+    axes["eof"].set_xticks(np.arange(1, 12 + 1, 3))
+    axes["eof"].tick_params(labelsize="small")
+    add_latitude_legend(axes["eof"], pdf["lat"].unique(), loc="best")
+
+
 def generate_co2_methods_figure(
     outfile: Path,
     bundle_dir: Path,
@@ -641,6 +700,17 @@ def generate_co2_methods_figure(
     )
 
     # TODO: seasonality change bits
+    seasonality_change_from_obs_network = xr.load_dataset(
+        bundle_dir
+        / "data/interim/co2/co2_observational-network_seasonality-change-eofs.nc"
+    )
+    plot_seasonality_change_from_obs_network(
+        seasonality_change_from_obs_network,
+        {
+            "pc": axes["seasonality-pc"],
+            "eof": axes["seasonality-eof"],
+        },
+    )
 
     lat_gradient_from_obs_network = xr.load_dataset(
         bundle_dir
