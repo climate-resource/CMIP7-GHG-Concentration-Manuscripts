@@ -348,6 +348,10 @@ def generate_n2o_methods_figure(  # noqa: PLR0915
         bundle_dir
         / "data/interim/n2o/n2o_observational-network_latitudinal-gradient-eofs.nc",
     )
+    # # Flip both PC signs
+    # with xr.set_options(keep_attrs=True):
+    #     lat_gradient_from_obs_network = -lat_gradient_from_obs_network
+
     plot_lat_gradient_pieces_from_obs_network(
         lat_gradient_from_obs_network,
         {

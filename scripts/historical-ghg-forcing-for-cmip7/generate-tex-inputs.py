@@ -13,15 +13,16 @@ from local.cmip_ghg_generation import (
 )
 from local.historical_ghg_forcing_for_cmip7 import (
     generate_ch4_methods_figure,
+    generate_co2_methods_figure,
     generate_n2o_methods_figure,
 )
 
 
 def main(
-    n2o_methods_figure_file: Annotated[
+    co2_methods_figure_file: Annotated[
         Path,
         typer.Option(
-            help="Path to in which to write the N2O methods figure. ",
+            help="Path to in which to write the CO2 methods figure. ",
             dir_okay=False,
             file_okay=True,
         ),
@@ -30,6 +31,14 @@ def main(
         Path,
         typer.Option(
             help="Path to in which to write the CH4 methods figure. ",
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
+    n2o_methods_figure_file: Annotated[
+        Path,
+        typer.Option(
+            help="Path to in which to write the N2O methods figure. ",
             dir_okay=False,
             file_okay=True,
         ),
@@ -67,8 +76,8 @@ def main(
     """
     Create the inputs
     """
-    generate_n2o_methods_figure(
-        n2o_methods_figure_file,
+    generate_co2_methods_figure(
+        co2_methods_figure_file,
         bundle_dir=bundle_dir,
         original_run_notebooks_dir=original_run_notebooks_dir,
         force_rerun=force_rerun,
@@ -76,6 +85,13 @@ def main(
 
     generate_ch4_methods_figure(
         ch4_methods_figure_file,
+        bundle_dir=bundle_dir,
+        original_run_notebooks_dir=original_run_notebooks_dir,
+        force_rerun=force_rerun,
+    )
+
+    generate_n2o_methods_figure(
+        n2o_methods_figure_file,
         bundle_dir=bundle_dir,
         original_run_notebooks_dir=original_run_notebooks_dir,
         force_rerun=force_rerun,

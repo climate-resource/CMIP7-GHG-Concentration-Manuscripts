@@ -1,23 +1,25 @@
 """
-Generation of the CH4 methods figure
+Generation of the CO2 methods figure
 
 The pieces this figure shares with the N2O methods figure
 live in [local.historical_ghg_forcing_for_cmip7.plotting][].
 What is here is the data this figure loads,
 the panels it has and how they are laid out.
 """
-# Differences from N2O
-# - regression against PRIMAP to get back to ice core overlap 1948.
-#   i.e. put the regression panel back in, combine the extended PCs panel ?
-#   (Or keep the split, add another column)
-# - first PC optimisation with ice cores
-# - first PC constant before ice core overlap
-# - note that Law Dome is different lat on the extended global-mean panel
+# Differences from co2
+# - lat grad.
+#   - PC1: linear back to 1850 then constant
+#   - PC0: emissions regresssion, constant pre 1750
+# - global-mean extension
+#   - harmonised Mauna Loa merged back to 1959
+#   - harmonised Menkin et al before then (note latitude)
+# - seasonality has PCs
+#   - regression against composite back to 1850, constant before
+#   - seasonality delta has to be plotted too: it is per latitude
 
 from __future__ import annotations
 
 import json
-import shutil
 from pathlib import Path
 
 import cartopy.crs as ccrs
@@ -25,7 +27,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
-import yaml
 from loguru import logger
 
 from local.cmip_ghg_generation import (
@@ -59,8 +60,6 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     plot_flying_carpet,
     plot_global_mean_extension,
     plot_global_mean_from_obs_network,
-    plot_lat_gradient_pcs_emissions_regression,
-    plot_lat_gradient_pcs_extended,
     plot_lat_gradient_pieces_from_obs_network,
     plot_monthly_means,
     plot_observation_counts,
@@ -69,9 +68,8 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     plot_station_timeseries,
     plot_yearly_means,
 )
-from local.paths import DATA_RAW_DIR
 
-ALL_DATA_WITH_BINS_FILE = Path("manuscript-outputs") / "ch4_all-data-with-bins.csv"
+ALL_DATA_WITH_BINS_FILE = Path("manuscript-outputs") / "co2_all-data-with-bins.csv"
 """Where the re-run notebook saves the data we want
 
 Relative to the bundle's root directory,
@@ -79,7 +77,7 @@ because that is the notebook's working directory.
 """
 
 PRIMAP_REGRESSION_DATA_FILE = (
-    Path("manuscript-outputs") / "ch4_primap-regression-data.nc"
+    Path("manuscript-outputs") / "co2_primap-regression-data.nc"
 )
 """Where the re-run notebook saves the PRIMAP regression data we want
 
@@ -88,7 +86,7 @@ because that is the notebook's working directory.
 """
 
 PRIMAP_REGRESSION_YEARS_FILE = (
-    Path("manuscript-outputs") / "ch4_primap-regression-years.json"
+    Path("manuscript-outputs") / "co2_primap-regression-years.json"
 )
 """Where the re-run notebook saves the PRIMAP regression years information we want
 
@@ -96,15 +94,12 @@ Relative to the bundle's root directory,
 because that is the notebook's working directory.
 """
 
-PC0_OPTIMISED_YEARS_FILE = Path("manuscript-outputs") / "ch4_pc0-optimised-years.json"
-"""Where the re-run notebook saves the PC0 optimised years information we want
-
-Relative to the bundle's root directory,
-because that is the notebook's working directory.
-"""
-
-LAW_DOME_SMOOTHED_DATA_FILE = Path("manuscript-outputs") / "ch4_law-dome-smoothed.csv"
-"""Where the re-run notebook saves the Law Dome data we want"""
+# PC0_OPTIMISED_YEARS_FILE = Path("manuscript-outputs") / "co2_pc0-optimised-years.json"
+# """Where the re-run notebook saves the PC0 optimised years information we want
+#
+# Relative to the bundle's root directory,
+# because that is the notebook's working directory.
+# """
 
 TITLES = {
     "timeseries": "Observational network values",
@@ -114,9 +109,13 @@ TITLES = {
     "interpolated-least": "Interpolation: fewest inputs",
     "gm": "Obs. global-mean",
     "seasonality": "Obs. seasonality",
+    "seasonality-eof": "Obs. seasonality EOF",
+    "seasonality-pc": "Obs. seasonality PC",
     "lat-grad-eof": "Obs. lat. gradient EOFs",
     "lat-grad-pc": "Obs. lat. gradient PCs",
     "gm-ext": "Extended global-mean",
+    "seasonality-eof-composite": "Seasonality PC0 against composite",  # might need to put a new line in this title
+    "seasonality-pc-ext": "Extended seasonality PC",
     "lat-grad-pc-emms": "Lat. gradient PC0 against geological emissions",
     "lat-grad-pc-ext": "Extended lat. gradient PCs",
     "monthly": "Monthly spatial-means",
@@ -139,26 +138,36 @@ ROWS = (
             for name in ("locations", "interpolated-most", "interpolated-least")
         ),
     ),
+    # Might need to shuffle from here done to get things looking ok
     Row(
         panels=(
             Panel("gm"),
             Panel("seasonality"),
+            Panel("seasonality-eof"),
+            Panel("seasonality-pc"),
+        ),
+        height=2.3,
+    ),
+    Row(
+        panels=(
             Panel("lat-grad-eof"),
             Panel("lat-grad-pc"),
+            Panel("gm-ext", width=1.5, broken=True),
+            Panel("seasonality-eof-composite"),
+            Panel("seasonality-pc-ext", width=1.5, broken=True),
         ),
         height=2.3,
     ),
     Row(
         panels=(
-            Panel("gm-ext", width=1.5, broken=True),
             Panel("lat-grad-pc-emms"),
             Panel("lat-grad-pc-ext", width=1.5, broken=True),
+            Panel("monthly"),
         ),
         height=2.3,
     ),
     Row(
         panels=(
-            Panel("monthly"),
             Panel("yearly", width=1.5, broken=True),
             Panel(
                 "flying-carpet",
@@ -192,13 +201,13 @@ so rows need not have the same number of panels.
 """
 
 
-def get_ch4_all_data_with_bins(
+def get_co2_all_data_with_bins(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
     force_rerun: bool = False,
 ) -> pd.DataFrame:
     """
-    Get the CH4 observational network data, as it went into the binning
+    Get the co2 observational network data, as it went into the binning
 
     This re-runs the original run's binning notebook if it needs to.
     That is slow the first time (the original run's environment has to be
@@ -228,9 +237,9 @@ def get_ch4_all_data_with_bins(
         return pd.read_csv(out_file)
 
     base_notebook = (
-        Path("calculate_ch4_monthly_fifteen_degree_pieces")
+        Path("calculate_co2_monthly_fifteen_degree_pieces")
         / "only"
-        / "1100_ch4_bin-observational-network.ipynb"
+        / "1200_co2_bin-observational-network.ipynb"
     )
 
     start_from = ensure_executed_notebook_available(
@@ -281,13 +290,13 @@ manuscript_out_file
     return pd.read_csv(out_file)
 
 
-def get_ch4_primap_regression_data(
+def get_co2_primap_regression_data(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
     force_rerun: bool = False,
 ) -> pd.DataFrame:
     """
-    Get the PRIMAP data used for the CH4 PC regression
+    Get the PRIMAP data used for the co2 PC regression
 
     Parameters
     ----------
@@ -316,7 +325,7 @@ def get_ch4_primap_regression_data(
     return xr.load_dataset(out_file)
 
 
-def get_ch4_primap_regression_years(
+def get_co2_primap_regression_years(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
     force_rerun: bool = False,
@@ -357,7 +366,7 @@ def get_ch4_primap_regression_years(
     return res
 
 
-def get_ch4_pc0_optimised_regression_years(
+def get_co2_pc0_optimised_regression_years(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
     force_rerun: bool = False,
@@ -406,9 +415,9 @@ def re_run_pc_extension_notebook(
     Re-run the pc extension notebook
     """
     base_notebook = (
-        Path("calculate_ch4_monthly_fifteen_degree_pieces")
+        Path("calculate_co2_monthly_fifteen_degree_pieces")
         / "only"
-        / "1103_ch4_extend-pcs.ipynb"
+        / "1203_co2_extend-lat-gradient-pcs.ipynb"
     )
 
     start_from = ensure_executed_notebook_available(
@@ -452,26 +461,26 @@ def re_run_pc_extension_notebook(
         bundle_dir=bundle_dir,
     )
 
-    # Put needed file in right directory
-    # TODO: try and reduce hard-coding here
-    for source_file, target_file in (
-        (
-            (
-                DATA_RAW_DIR
-                / "historical-ghg-forcing-for-cmip7/zenodo-missing/law-dome_ch4_smoothed_median.csv"  # noqa: E501
-            ),
-            bundle_dir / "data/interim/law_dome/law-dome_ch4_smoothed_median.csv",
-        ),
-        (
-            (
-                DATA_RAW_DIR
-                / "historical-ghg-forcing-for-cmip7/zenodo-missing/neem_with_location.csv"  # noqa: E501
-            ),
-            bundle_dir / "data/interim/neem/neem_with_location.csv",
-        ),
-    ):
-        target_file.parent.mkdir(exist_ok=True, parents=True)
-        shutil.copy2(source_file, target_file)
+    # # Put needed file in right directory
+    # # TODO: try and reduce hard-coding here
+    # for source_file, target_file in (
+    #     (
+    #         (
+    #             DATA_RAW_DIR
+    #             / "historical-ghg-forcing-for-cmip7/zenodo-missing/law-dome_co2_smoothed_median.csv"  # noqa: E501
+    #         ),
+    #         bundle_dir / "data/interim/law_dome/law-dome_co2_smoothed_median.csv",
+    #     ),
+    #     (
+    #         (
+    #             DATA_RAW_DIR
+    #             / "historical-ghg-forcing-for-cmip7/zenodo-missing/neem_with_location.csv"  # noqa: E501
+    #         ),
+    #         bundle_dir / "data/interim/neem/neem_with_location.csv",
+    #     ),
+    # ):
+    #     target_file.parent.mkdir(exist_ok=True, parents=True)
+    #     shutil.copy2(source_file, target_file)
 
     save_cell_primap_data = f"""
 # Added for the CMIP7 GHG manuscript.
@@ -489,19 +498,19 @@ primap_regression_data_file
 years_to_fill_with_regression_file = Path("{PRIMAP_REGRESSION_YEARS_FILE.as_posix()}")
 years_to_fill_with_regression_file.parent.mkdir(exist_ok=True, parents=True)
 with open(years_to_fill_with_regression_file, "w") as fh:
-    json.dump([int(v) for v in years_to_fill_with_regression], fh)
+    json.dump([int(v) for v in regression_years], fh)
 
 years_to_fill_with_regression_file
 """
 
-    save_cell_pc0_optimised_years = f"""
-pc0_optimised_years_file = Path("{PC0_OPTIMISED_YEARS_FILE.as_posix()}")
-pc0_optimised_years_file.parent.mkdir(exist_ok=True, parents=True)
-with open(pc0_optimised_years_file, "w") as fh:
-    json.dump([int(v) for v in pc0_optimised_years_to_optimise["year"].values], fh)
-
-pc0_optimised_years_file
-"""
+    #     save_cell_pc0_optimised_years = f"""
+    # pc0_optimised_years_file = Path("{PC0_OPTIMISED_YEARS_FILE.as_posix()}")
+    # pc0_optimised_years_file.parent.mkdir(exist_ok=True, parents=True)
+    # with open(pc0_optimised_years_file, "w") as fh:
+    #     json.dump([int(v) for v in pc0_optimised_years_to_optimise["year"].values], fh)
+    #
+    # pc0_optimised_years_file
+    # """
 
     notebook_name = base_notebook.stem
     ipynb_to_run = bundle_dir / "notebooks-rerun" / f"{notebook_name}.ipynb"
@@ -512,7 +521,7 @@ pc0_optimised_years_file
         extra_cells=[
             save_cell_primap_data,
             save_cell_primap_years,
-            save_cell_pc0_optimised_years,
+            # save_cell_pc0_optimised_years,
         ],
         step_config_id="only",
     )
@@ -523,14 +532,14 @@ pc0_optimised_years_file
     )
 
 
-def generate_ch4_methods_figure(  # noqa: PLR0915
+def generate_co2_methods_figure(
     outfile: Path,
     bundle_dir: Path,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
     force_rerun: bool = False,
 ) -> Path:
     """
-    Generate the CH4 methods figure
+    Generate the co2 methods figure
 
     Parameters
     ----------
@@ -551,7 +560,7 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
         `outfile`
     """
     all_data_with_bins = add_network_group(
-        get_ch4_all_data_with_bins(
+        get_co2_all_data_with_bins(
             bundle_dir=bundle_dir,
             original_run_notebooks_dir=original_run_notebooks_dir,
             force_rerun=force_rerun,
@@ -560,7 +569,7 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
 
     fig, axes = create_figure(ROWS)
 
-    axes["timeseries"].set_ylim([1400, 2200])
+    # axes["timeseries"].set_ylim([1400, 2200])
     timeseries_scatter = plot_station_timeseries(
         all_data_with_bins, axes["timeseries"], inset_y0=0.1
     )
@@ -597,7 +606,7 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
     axes["counts"].set_xlabel("year", fontsize="small")
 
     interpolated_obs_file = (
-        bundle_dir / "data/interim/ch4/ch4_observational-network_interpolated.nc"
+        bundle_dir / "data/interim/co2/co2_observational-network_interpolated.nc"
     )
     interpolated_obs = xr.load_dataset(interpolated_obs_file)
     most_least_coverage = get_interpolated_input_coverage_info(
@@ -618,12 +627,12 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
         )
 
     global_mean_from_obs_network = xr.load_dataset(
-        bundle_dir / "data/interim/ch4/ch4_observational-network_global-annual-mean.nc"
+        bundle_dir / "data/interim/co2/co2_observational-network_global-annual-mean.nc"
     )
     plot_global_mean_from_obs_network(global_mean_from_obs_network, axes["gm"])
 
     seasonality_from_obs_network = xr.load_dataset(
-        bundle_dir / "data/interim/ch4/ch4_observational-network_seasonality.nc",
+        bundle_dir / "data/interim/co2/co2_observational-network_seasonality.nc",
     )
     plot_seasonality_from_obs_network(
         seasonality_from_obs_network,
@@ -631,13 +640,17 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
         assumed_units="dimensionless",
     )
 
+    # TODO: seasonality change bits
+
     lat_gradient_from_obs_network = xr.load_dataset(
         bundle_dir
-        / "data/interim/ch4/ch4_observational-network_latitudinal-gradient-eofs.nc",
+        / "data/interim/co2/co2_observational-network_latitudinal-gradient-eofs.nc",
     )
-    # Flip both PC signs
+    # Flip sign of PC0 so it is more intuitive
     with xr.set_options(keep_attrs=True):
-        lat_gradient_from_obs_network = -lat_gradient_from_obs_network
+        lat_gradient_from_obs_network = lat_gradient_from_obs_network * xr.where(
+            lat_gradient_from_obs_network["eof"] == 0, -1, 1
+        )
 
     plot_lat_gradient_pieces_from_obs_network(
         lat_gradient_from_obs_network,
@@ -648,108 +661,109 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
     )
 
     global_mean_extended = xr.load_dataset(
-        bundle_dir / "data/interim/ch4/ch4_global-annual-mean_allyears.nc"
+        bundle_dir / "data/interim/co2/co2_global-annual-mean_allyears.nc"
     )
-    law_dome_smoothed = pd.read_csv(
-        DATA_RAW_DIR
-        / "historical-ghg-forcing-for-cmip7/zenodo-missing/law-dome_ch4_smoothed_median.csv"  # noqa: E501
-    )
-    law_dome_lat_l = law_dome_smoothed["latitude"].unique()
-    if len(law_dome_lat_l) > 1:
-        raise AssertionError
-    law_dome_lat = law_dome_lat_l[0]
-
-    epica = pd.read_csv(
-        DATA_RAW_DIR
-        / "historical-ghg-forcing-for-cmip7/zenodo-missing/epica_with_location.csv"
-    )
-    epica = epica[epica["year"] < law_dome_smoothed["year"].min()]
-    epica_lat_l = epica["latitude"].unique()
-    if len(epica_lat_l) > 1:
-        raise AssertionError
-    epica_lat = epica_lat_l[0]
+    # law_dome_smoothed = pd.read_csv(
+    #     DATA_RAW_DIR
+    #     / "historical-ghg-forcing-for-cmip7/zenodo-missing/law-dome_co2_smoothed_median.csv"  # noqa: E501
+    # )
+    # law_dome_lat_l = law_dome_smoothed["latitude"].unique()
+    # if len(law_dome_lat_l) > 1:
+    #     raise AssertionError
+    # law_dome_lat = law_dome_lat_l[0]
+    #
+    # epica = pd.read_csv(
+    #     DATA_RAW_DIR
+    #     / "historical-ghg-forcing-for-cmip7/zenodo-missing/epica_with_location.csv"
+    # )
+    # epica = epica[epica["year"] < law_dome_smoothed["year"].min()]
+    # epica_lat_l = epica["latitude"].unique()
+    # if len(epica_lat_l) > 1:
+    #     raise AssertionError
+    # epica_lat = epica_lat_l[0]
 
     plot_global_mean_extension(
         global_mean_extended,
         axes["gm-ext-l"],
         axes["gm-ext-r"],
         input_sources={
-            (
-                f"Law Dome (smoothed, {law_dome_lat:.2f}" + r"$^{\circ}$N)"
-            ): law_dome_smoothed,
-            (f"EPICA ({epica_lat:.2f}" + r"$^{\circ}$N)"): epica,
+            # (
+            #     f"Law Dome (smoothed, {law_dome_lat:.2f}" + r"$^{\circ}$N)"
+            # ): law_dome_smoothed,
+            # (f"EPICA ({epica_lat:.2f}" + r"$^{\circ}$N)"): epica,
         },
     )
 
-    pcs_extended = xr.load_dataset(
-        bundle_dir / "data/interim/ch4/ch4_allyears-lat-gradient-eofs-pcs.nc"
-    )
-    primap_regression_data = get_ch4_primap_regression_data(
-        bundle_dir=bundle_dir,
-        original_run_notebooks_dir=original_run_notebooks_dir,
-        force_rerun=force_rerun,
-    )
-    with open(
-        bundle_dir / "data/interim/ch4/ch4_pc0-ch4-fossil-emissions-regression.yaml"
-    ) as fh:
-        regression_info = yaml.safe_load(fh)
-
-    plot_lat_gradient_pcs_emissions_regression(
-        lat_gradient_from_obs_network,
-        primap_regression_data,
-        emissions_name=label_name("ch4 emissions of geological origin"),
-        regression_info=regression_info,
-        ax=axes["lat-grad-pc-emms"],
-    )
-
-    primap_regression_years_l = get_ch4_primap_regression_years(
-        bundle_dir=bundle_dir,
-        original_run_notebooks_dir=original_run_notebooks_dir,
-        force_rerun=force_rerun,
-    )
-    primap_regression_years = np.array(primap_regression_years_l)
-
-    pc0_optimised_years_l = get_ch4_pc0_optimised_regression_years(
-        bundle_dir=bundle_dir,
-        original_run_notebooks_dir=original_run_notebooks_dir,
-        force_rerun=force_rerun,
-    )
-    pc0_optimised_years = np.arange(
-        min(pc0_optimised_years_l), max(pc0_optimised_years_l) + 1
-    )
-
-    obs_based_years = lat_gradient_from_obs_network["year"].values
-
-    pc0_constant_years = pcs_extended["year"].values[
-        ~np.isin(pcs_extended["year"], obs_based_years)
-        & ~np.isin(pcs_extended["year"], primap_regression_years)
-        & ~np.isin(pcs_extended["year"], pc0_optimised_years)
-    ]
-    pc1_constant_years = pcs_extended["year"].values[
-        ~np.isin(pcs_extended["year"], obs_based_years)
-    ]
-
-    plot_lat_gradient_pcs_extended(
-        pcs_extended,
-        axes["lat-grad-pc-ext-l"],
-        axes["lat-grad-pc-ext-r"],
-        split_year=1930,
-        pieces={
-            0: {
-                "Obs.": obs_based_years,
-                "Emissions regression": primap_regression_years,
-                "Ice core optimised": pc0_optimised_years,
-                "Constant": pc0_constant_years,
-            },
-            1: {
-                "Obs.": obs_based_years,
-                "Constant": pc1_constant_years,
-            },
-        },
-    )
+    # TODO: check regressions file name
+    # pcs_extended = xr.load_dataset(
+    #     bundle_dir / "data/interim/co2/co2_allyears-lat-gradient-eofs-pcs.nc"
+    # )
+    # primap_regression_data = get_co2_primap_regression_data(
+    #     bundle_dir=bundle_dir,
+    #     original_run_notebooks_dir=original_run_notebooks_dir,
+    #     force_rerun=force_rerun,
+    # )
+    # with open(
+    #     bundle_dir / "data/interim/co2/co2_pc0-co2-fossil-emissions-regression.yaml"
+    # ) as fh:
+    #     regression_info = yaml.safe_load(fh)
+    #
+    # plot_lat_gradient_pcs_emissions_regression(
+    #     lat_gradient_from_obs_network,
+    #     primap_regression_data,
+    #     emissions_name=label_name("co2 emissions of geological origin"),
+    #     regression_info=regression_info,
+    #     ax=axes["lat-grad-pc-emms"],
+    # )
+    #
+    # primap_regression_years_l = get_co2_primap_regression_years(
+    #     bundle_dir=bundle_dir,
+    #     original_run_notebooks_dir=original_run_notebooks_dir,
+    #     force_rerun=force_rerun,
+    # )
+    # primap_regression_years = np.array(primap_regression_years_l)
+    #
+    # pc0_optimised_years_l = get_co2_pc0_optimised_regression_years(
+    #     bundle_dir=bundle_dir,
+    #     original_run_notebooks_dir=original_run_notebooks_dir,
+    #     force_rerun=force_rerun,
+    # )
+    # pc0_optimised_years = np.arange(
+    #     min(pc0_optimised_years_l), max(pc0_optimised_years_l) + 1
+    # )
+    #
+    # obs_based_years = lat_gradient_from_obs_network["year"].values
+    #
+    # pc0_constant_years = pcs_extended["year"].values[
+    #     ~np.isin(pcs_extended["year"], obs_based_years)
+    #     & ~np.isin(pcs_extended["year"], primap_regression_years)
+    #     & ~np.isin(pcs_extended["year"], pc0_optimised_years)
+    # ]
+    # pc1_constant_years = pcs_extended["year"].values[
+    #     ~np.isin(pcs_extended["year"], obs_based_years)
+    # ]
+    #
+    # plot_lat_gradient_pcs_extended(
+    #     pcs_extended,
+    #     axes["lat-grad-pc-ext-l"],
+    #     axes["lat-grad-pc-ext-r"],
+    #     split_year=1930,
+    #     pieces={
+    #         0: {
+    #             "Obs.": obs_based_years,
+    #             "Emissions regression": primap_regression_years,
+    #             "Ice core optimised": pc0_optimised_years,
+    #             "Constant": pc0_constant_years,
+    #         },
+    #         1: {
+    #             "Obs.": obs_based_years,
+    #             "Constant": pc1_constant_years,
+    #         },
+    #     },
+    # )
 
     native_resolution = xr.load_dataset(
-        bundle_dir / "data/interim/ch4/ch4_fifteen-degree_monthly.nc"
+        bundle_dir / "data/interim/co2/co2_fifteen-degree_monthly.nc"
     )
     max_year = int(native_resolution["year"].max())
     flying_carpet_mesh = plot_flying_carpet(
@@ -758,11 +772,11 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
     )
 
     gm_monthly = xr.load_dataset(
-        bundle_dir / "data/interim/ch4/ch4_global-mean_monthly.nc"
+        bundle_dir / "data/interim/co2/co2_global-mean_monthly.nc"
     )
     gm_monthly = gm_monthly.assign_coords(lat=["Global"])
     hm_monthly = xr.load_dataset(
-        bundle_dir / "data/interim/ch4/ch4_hemispheric-mean_monthly.nc"
+        bundle_dir / "data/interim/co2/co2_hemispheric-mean_monthly.nc"
     )
     sh_lat = -45.0
     hm_monthly = hm_monthly.assign_coords(
@@ -779,11 +793,11 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
     )
 
     gm_yearly = xr.load_dataset(
-        bundle_dir / "data/interim/ch4/ch4_global-mean_annual-mean.nc"
+        bundle_dir / "data/interim/co2/co2_global-mean_annual-mean.nc"
     )
     gm_yearly = gm_yearly.assign_coords(lat=["Global"])
     hm_yearly = xr.load_dataset(
-        bundle_dir / "data/interim/ch4/ch4_hemispheric-mean_annual-mean.nc"
+        bundle_dir / "data/interim/co2/co2_hemispheric-mean_annual-mean.nc"
     )
     hm_yearly = hm_yearly.assign_coords(
         lat=[
