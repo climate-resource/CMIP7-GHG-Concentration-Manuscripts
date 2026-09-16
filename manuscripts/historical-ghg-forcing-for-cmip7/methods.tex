@@ -970,7 +970,8 @@ Summary of differences from the baseline case
         reference source.
     }
     \item { In Step 4, we use the literature to set the pre-industrial value and when it should be reached.
-        We then fit a sigmoid function between this pre-industrial point
+        We then fit a quartic, which is flat at the pre-industrial point and rises monotonically away from it,
+        between this pre-industrial point
         and the earliest year of the global, annual-mean from the observational network and override sources.
     }
     \item when calculating the input components of Equation \ref{eq:native-resolution-sum}, we reduce the seasonality and/or latitudinal gradient where rounding errors would otherwise lead to negative values in the output dataset.
@@ -1069,8 +1070,27 @@ For all other gases, we use the global-mean derived from the observational netwo
 
 For all gases, we extend the global-, annual-mean back in time based on information about the gas' pre-industrial value and when this pre-industrial value should be reached.
 These are sourced from [TODO cite Velders et al. 2022] and [TODO cite the various sources used in M17] [TODO table].
-We then fit a sigmoid function between the pre-industrial value (assumed constant for all time points before the pre-industrial fitting year)
+We then fill the gap between the pre-industrial value (assumed constant for all time points before the pre-industrial fitting year)
 and the global-, annual-mean from the previous step.
+To do this, we fit the function
+\begin{equation}
+    \label{eq:sf6-like-global-mean-gap-fill}
+    c(y) = a \left( \frac{y - y_{pi}}{w} \right)^4 + b \left( \frac{y - y_{pi}}{w} \right)^2
+\end{equation}
+where $c$ is the global-, annual-mean concentration,
+$y$ is the year in which the value applies,
+$y_{pi}$ is the pre-industrial year
+and $w$ is half the width of the gap,
+to the three years immediately before the gap
+and up to the three years immediately after it,
+requiring that $a \geq 0$ and $b \geq 0$.
+Having only even powers of $y - y_{pi}$, with non-negative coefficients,
+means that the fit is flat at the pre-industrial year
+and rises monotonically away from it,
+which is the behaviour we want of a gas whose concentrations only start to move once it is manufactured.
+Where this fit takes the gap outside the values on either side of it,
+we instead interpolate through the same points with a quadratic
+and, failing that, a cubic spline.
 [TODO supplementary figure for each gas: global- annual-mean raw inputs, composite, pre-industrial value and interpolated spline]
 
 % \subsubsubsubsection{Seasonality}
@@ -1125,7 +1145,7 @@ Summary of differences from the baseline case (Section \ref{ssec:methods-general
     }
     \item Seasonality is assumed to be zero.
     \item{ In Step 5, as in Section \ref{ssec:methods-sf6-like}, when calculating the input components of
-           Equation \ref{eq:native-resolution-sum}, we reduce the seasonality and/or latitudinal gradient
+           Equation \ref{eq:native-resolution-sum}, we reduce the latitudinal gradient
             where rounding errors would otherwise lead to negative values in the output dataset.
     }
 \end{enumerate}

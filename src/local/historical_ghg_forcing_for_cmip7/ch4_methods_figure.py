@@ -561,9 +561,13 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
 
     fig, axes = create_figure(ROWS)
 
-    axes["timeseries"].set_ylim([1400, 2200])
     timeseries_scatter = plot_station_timeseries(
-        all_data_with_bins, axes["timeseries"], inset_y0=0.1
+        all_data_with_bins,
+        axes["timeseries"],
+        # ch4's high outliers are spread through the record, the inset's
+        # own years included, so putting them off scale would leave the
+        # inset showing points the panel around it does not have.
+        robust_y_limits=False,
     )
     plot_station_locations(all_data_with_bins, axes["locations"])
     counts_mesh = plot_observation_counts(all_data_with_bins, axes["counts"])

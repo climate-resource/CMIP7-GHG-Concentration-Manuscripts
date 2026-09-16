@@ -31,6 +31,33 @@ methods_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods.
 co2_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/co2_methods.pdf"
 ch4_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/ch4_methods.pdf"
 n2o_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/n2o_methods.pdf"
+# Every gas processed like SF6. These all share one figure,
+# so this is the list of gases to draw it for, not a list of figures.
+# It has to match local.historical_ghg_forcing_for_cmip7.SF6_LIKE_GASES;
+# a gas which is not in that tuple is rejected before anything is drawn.
+sf6_like_gases=(
+    c2f6 c3f8 ccl4 cf4
+    cfc11 cfc113 cfc114 cfc115 cfc12
+    ch2cl2 ch3br ch3ccl3 ch3cl chcl3
+    halon1211 halon1301 halon2402
+    hcfc141b hcfc142b hcfc22
+    hfc125 hfc134a hfc143a hfc152a hfc227ea
+    hfc23 hfc236fa hfc245fa hfc32 hfc365mfc hfc4310mee
+    nf3 sf6 so2f2
+)
+# Which of them to open once they are drawn.
+# Opening all thirty-four at once is nobody's idea of a good time.
+sf6_like_gases_to_open=(
+    sf6
+    cf4
+)
+
+sf6_like_methods_figure_files=()
+for sf6_like_gas in "${sf6_like_gases[@]}"; do
+    sf6_like_methods_figure_files+=(
+        "${sf6_like_gas}=${repo_root}/figures/historical-ghg-forcing-for-cmip7/${sf6_like_gas}_methods.pdf"
+    )
+done
 
 # methods_subfile="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods-detail.tex"
 results_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/results.tex"
@@ -56,13 +83,26 @@ mkdir -p "${output_pdf_dir}/"
 
 # run python stuff to generate inputs
 #   - caching in the python (just have user config to set the caching for each step with basic decorators)
+# `${a[@]+"${a[@]}"}` rather than `"${a[@]}"` throughout:
+# bash 3.2, which is what macOS ships, treats an empty array as unset
+# and `set -u` then kills the script, so an empty list of gases
+# would fail here rather than simply drawing no SF6-like figures.
+sf6_like_args=()
+for sf6_like_methods_figure_file in ${sf6_like_methods_figure_files[@]+"${sf6_like_methods_figure_files[@]}"}; do
+    sf6_like_args+=(--sf6-like-methods-figure-file "${sf6_like_methods_figure_file}")
+done
+
 uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-inputs.py" \
     --co2-methods-figure-file "${co2_methods_figure_file}" \
     --ch4-methods-figure-file "${ch4_methods_figure_file}" \
     --n2o-methods-figure-file "${n2o_methods_figure_file}" \
+    ${sf6_like_args[@]+"${sf6_like_args[@]}"} \
     --bundle-dir "${zenodo_bundle_dir}" \
     --original-run-notebooks-dir "${original_run_notebooks_dir}"
 
+for sf6_like_gas in ${sf6_like_gases_to_open[@]+"${sf6_like_gases_to_open[@]}"}; do
+    open "${repo_root}/figures/historical-ghg-forcing-for-cmip7/${sf6_like_gas}_methods.pdf"
+done
 open "${n2o_methods_figure_file}"
 open "${ch4_methods_figure_file}"
 open "${co2_methods_figure_file}"

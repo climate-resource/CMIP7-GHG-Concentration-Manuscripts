@@ -666,10 +666,7 @@ def generate_co2_methods_figure(  # noqa: PLR0915
 
     fig, axes = create_figure(ROWS)
 
-    # axes["timeseries"].set_ylim([1400, 2200])
-    timeseries_scatter = plot_station_timeseries(
-        all_data_with_bins, axes["timeseries"], inset_y0=0.1
-    )
+    timeseries_scatter = plot_station_timeseries(all_data_with_bins, axes["timeseries"])
     plot_station_locations(all_data_with_bins, axes["locations"])
     counts_mesh = plot_observation_counts(all_data_with_bins, axes["counts"])
 
