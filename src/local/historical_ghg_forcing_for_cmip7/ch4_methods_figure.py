@@ -46,6 +46,7 @@ from local.historical_ghg_forcing_for_cmip7.layout import (
     lay_out_figure,
 )
 from local.historical_ghg_forcing_for_cmip7.plotting import (
+    BROKEN_SPLIT,
     LAT_BIN_BOUNDS,
     MAP_ASPECT,
     add_colour_bar,
@@ -150,16 +151,16 @@ ROWS = (
     ),
     Row(
         panels=(
-            Panel("gm-ext", width=1.5, broken=True),
+            Panel("gm-ext", width=1.5, broken=True, broken_split=BROKEN_SPLIT),
             Panel("lat-grad-pc-emms"),
-            Panel("lat-grad-pc-ext", width=1.5, broken=True),
+            Panel("lat-grad-pc-ext", width=1.5, broken=True, broken_split=BROKEN_SPLIT),
         ),
         height=2.3,
     ),
     Row(
         panels=(
             Panel("monthly"),
-            Panel("yearly", width=1.5, broken=True),
+            Panel("yearly", width=1.5, broken=True, broken_split=BROKEN_SPLIT),
             Panel(
                 "flying-carpet",
                 aspect=1.0,

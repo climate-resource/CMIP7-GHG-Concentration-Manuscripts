@@ -44,6 +44,7 @@ from local.historical_ghg_forcing_for_cmip7.layout import (
     lay_out_figure,
 )
 from local.historical_ghg_forcing_for_cmip7.plotting import (
+    BROKEN_SPLIT,
     LAT_BIN_BOUNDS,
     LATITUDE_COLOUR_MAP,
     LATITUDE_NORMALISATION,
@@ -149,7 +150,7 @@ ROWS = (
             for name in ("locations", "interpolated-most", "interpolated-least")
         ),
     ),
-    # Might need to shuffle from here done to get things looking ok
+    # The global-mean and the seasonality, decomposed
     Row(
         panels=(
             Panel("gm"),
@@ -159,27 +160,31 @@ ROWS = (
         ),
         height=2.3,
     ),
+    # The latitudinal gradient, decomposed,
+    # then the regressions each extension leans on
     Row(
         panels=(
-            Panel("lat-grad-eof"),
-            Panel("lat-grad-pc"),
-            Panel("gm-ext", width=1.5, broken=True),
             Panel("seasonality-pc-composite"),
-            Panel("seasonality-pc-ext", width=1.5, broken=True),
-        ),
-        height=2.3,
-    ),
-    Row(
-        panels=(
+            Panel("lat-grad-eof", width=0.8),
+            Panel("lat-grad-pc"),
             Panel("lat-grad-pc-emms"),
-            Panel("lat-grad-pc-ext", width=1.5, broken=True),
-            Panel("monthly"),
+        ),
+        height=2.3,
+    ),
+    # The extensions: the same axes three times, once per piece,
+    # so the three are read against each other rather than hunted for.
+    Row(
+        panels=(
+            Panel("gm-ext", broken=True, broken_split=BROKEN_SPLIT),
+            Panel("seasonality-pc-ext", broken=True, broken_split=BROKEN_SPLIT),
+            Panel("lat-grad-pc-ext", broken=True, broken_split=BROKEN_SPLIT),
         ),
         height=2.3,
     ),
     Row(
         panels=(
-            Panel("yearly", width=1.5, broken=True),
+            Panel("monthly"),
+            Panel("yearly", width=1.5, broken=True, broken_split=BROKEN_SPLIT),
             Panel(
                 "flying-carpet",
                 aspect=1.0,
@@ -202,7 +207,14 @@ so the panels are labelled in reading order.
   so its row's height follows from how many maps share the row's width,
   and with all of them together we only pay for that once.
 - Decomposition into a global-mean, seasonality and latitudinal gradient.
+  co2 has more pieces to decompose than the other gases do,
+  so this takes two rows: the global-mean and the seasonality,
+  then the latitudinal gradient
+  and the regressions the extensions lean on.
 - Extending each of those back in time.
+  The three extended pieces share a row and a width,
+  so they are read against each other
+  rather than hunted for across the figure.
 - The outputs, including the flying carpet,
   which is square and so sets its row's height.
 
@@ -793,7 +805,7 @@ def generate_co2_methods_figure(  # noqa: PLR0915
         axes["gm-ext-l"],
         axes["gm-ext-r"],
         input_sources={
-            "Mauna Loa Law Dome merged smoothed record": mauna_loa_merged,
+            "Mauna Loa + Law Dome (merged)": mauna_loa_merged,
             f"Menking et al. ({menking_et_al_lat:.2f}" + r"$^{\circ}$N)": menking_et_al,
         },
     )
@@ -816,7 +828,7 @@ def generate_co2_methods_figure(  # noqa: PLR0915
     plot_pc_timeseries_regression(
         seasonality_change_from_obs_network,
         co2_seasonality_change_composite,
-        timeseries_name=label_name("Temperature - co2 concentration composite"),
+        timeseries_name=label_name("Temperature - co2 concentration\ncomposite"),
         regression_info=regression_info_seasonality_change,
         ax=axes["seasonality-pc-composite"],
         x_unit="dimensionless",
@@ -880,7 +892,7 @@ def generate_co2_methods_figure(  # noqa: PLR0915
         pcs_extended,
         axes["lat-grad-pc-ext-l"],
         axes["lat-grad-pc-ext-r"],
-        split_year=1930,
+        split_year=1800,
         pieces={
             0: {
                 "Obs.": obs_based_years,

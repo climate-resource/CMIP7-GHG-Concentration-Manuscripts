@@ -969,6 +969,10 @@ Summary of differences from the baseline case
         network based global-, annual-mean for the time period not covered by a key
         reference source.
     }
+    \item { In Step 4, we use the literature to set the pre-industrial value and when it should be reached.
+        We then fit a sigmoid function between this pre-industrial point
+        and the earliest year of the global, annual-mean from the observational network and override sources.
+    }
     \item when calculating the input components of Equation \ref{eq:native-resolution-sum}, we reduce the seasonality and/or latitudinal gradient where rounding errors would otherwise lead to negative values in the output dataset.
 \end{enumerate}
 
@@ -1064,7 +1068,7 @@ For CF_4, C_2F_6 and C_3F_8, we harmonise the global-mean from [TODO cite Trudin
 For all other gases, we use the global-mean derived from the observational network [TODO table].
 
 For all gases, we extend the global-, annual-mean back in time based on information about the gas' pre-industrial value and when this pre-industrial value should be reached.
-These are source from [TODO cite Velders et al. 2022] and [TODO cite the various sources used in M17] [TODO table].
+These are sourced from [TODO cite Velders et al. 2022] and [TODO cite the various sources used in M17] [TODO table].
 We then fit a sigmoid function between the pre-industrial value (assumed constant for all time points before the pre-industrial fitting year)
 and the global-, annual-mean from the previous step.
 [TODO supplementary figure for each gas: global- annual-mean raw inputs, composite, pre-industrial value and interpolated spline]

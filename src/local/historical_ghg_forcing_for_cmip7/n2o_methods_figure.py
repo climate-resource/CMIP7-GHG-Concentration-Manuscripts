@@ -36,6 +36,7 @@ from local.historical_ghg_forcing_for_cmip7.layout import (
     lay_out_figure,
 )
 from local.historical_ghg_forcing_for_cmip7.plotting import (
+    BROKEN_SPLIT,
     LAT_BIN_BOUNDS,
     MAP_ASPECT,
     add_colour_bar,
@@ -109,15 +110,15 @@ ROWS = (
     ),
     Row(
         panels=(
-            Panel("gm-ext", broken=True),
-            Panel("lat-grad-pc-ext", broken=True),
+            Panel("gm-ext", broken=True, broken_split=BROKEN_SPLIT),
+            Panel("lat-grad-pc-ext", broken=True, broken_split=BROKEN_SPLIT),
         ),
         height=2.3,
     ),
     Row(
         panels=(
             Panel("monthly"),
-            Panel("yearly", width=1.5, broken=True),
+            Panel("yearly", width=1.5, broken=True, broken_split=BROKEN_SPLIT),
             Panel(
                 "flying-carpet",
                 aspect=1.0,
@@ -398,6 +399,9 @@ def generate_n2o_methods_figure(  # noqa: PLR0915
                 "Constant": pc_constant_years,
             },
         },
+        # Both PCs are flat bands which sit near the top and the bottom
+        # of this panel, so the room for the legend is in the middle.
+        legend_loc="center left",
     )
 
     native_resolution = xr.load_dataset(

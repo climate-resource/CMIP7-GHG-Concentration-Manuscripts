@@ -69,6 +69,17 @@ and the map is as tall, relative to its width,
 as its latitude range is relative to the 360 degrees of longitude.
 """
 
+BROKEN_SPLIT = 0.35
+"""Share of a broken panel's width to give to its left half
+
+Every broken panel in these figures is a timeseries
+which has been extended back in time,
+so its left half is a long, flat run-up
+and its right half is where the values actually move.
+Splitting a broken panel evenly spends half of it on the run-up,
+so we give the left half rather less than half.
+"""
+
 NETWORK_GROUPS = {
     "NOAA": "NOAA",
     "AGAGE": "AGAGE",
@@ -1034,6 +1045,13 @@ def add_break_lines_and_setup(  # noqa: PLR0913
         it places the legend where the data is thinnest,
         which on a panel whose data hugs one edge
         is on top of the axis' own tick labels.
+
+        The legend goes on the left half, which is only part of a panel wide,
+        so a legend with long labels in it is wider than the axes it sits in.
+        `"best"` centres such a legend, which leaves it hanging out of
+        both sides of the half and over the neighbouring panel's tick labels.
+        Anchoring it to a corner instead keeps the overhang on one side,
+        over the panel's own other half.
     """
     # One legend for the pair, on the left half:
     # the two halves are one panel as far as a reader is concerned.
@@ -1044,6 +1062,15 @@ def add_break_lines_and_setup(  # noqa: PLR0913
         add_compact_legend(ax_left, loc=legend_loc)
     else:
         compact_existing_legend(ax_left, loc=legend_loc)
+
+    # A legend which is wider than the half it sits in
+    # has to draw over the other half to be read at all.
+    # Axes are drawn in the order they were added,
+    # so without this the right half's background
+    # paints over whatever hangs into it,
+    # which cuts the legend off mid-label.
+    ax_left.set_zorder(ax_right.get_zorder() + 1)
+    ax_left.patch.set_visible(False)
 
     ax_left.set_ylabel(f"[{units}]", fontsize="small")
     ax_right.set_ylabel("")
@@ -1133,12 +1160,13 @@ def clear_ticks_near_break(
     ax.set_xlim(x_min, x_max)
 
 
-def plot_global_mean_extension(
+def plot_global_mean_extension(  # noqa: PLR0913
     gm: xr.Dataset,
     ax_left: matplotlib.axes.Axes,
     ax_right: matplotlib.axes.Axes,
     input_sources=Mapping[str, pd.DataFrame],
     split_year: int = 1950,
+    legend_loc: str = "upper left",
 ) -> None:
     """
     Plot global-mean derived from the observational network
@@ -1170,6 +1198,7 @@ def plot_global_mean_extension(
         split_year,
         gm_da["year"].max(),
         gm_da.attrs["units"],
+        legend_loc=legend_loc,
     )
 
 
@@ -1246,6 +1275,7 @@ def plot_pcs_extended(  # noqa: PLR0913
     split_year: int = 1950,
     # Should be numpy array of int, anyway
     pieces: dict[int, dict[str, list[int]]] | None = None,
+    legend_loc: str = "upper left",
 ) -> None:
     """
     Plot extended latitudinal gradient PCs
@@ -1284,6 +1314,7 @@ def plot_pcs_extended(  # noqa: PLR0913
         split_year,
         pcs_da["year"].max(),
         pcs_da.attrs["units"],
+        legend_loc=legend_loc,
     )
 
     legend = ax_left.get_legend()
@@ -1299,7 +1330,9 @@ def plot_pcs_extended(  # noqa: PLR0913
 
     title = legend.get_title().get_text()
 
-    add_compact_legend(ax_left, handles=handles, labels=labels, title=title, ncols=2)
+    add_compact_legend(
+        ax_left, handles=handles, labels=labels, title=title, ncols=2, loc=legend_loc
+    )
     ax_left.get_legend().get_title().set_fontsize("x-small")
 
 

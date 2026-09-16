@@ -68,6 +68,21 @@ class Panel:
     `f"{name}-l"` and `f"{name}-r"`, side by side with a small gap between.
     """
 
+    broken_split: float = 0.5
+    """
+    Share of a broken panel's width given to its left half
+
+    Ignored if `broken` is `False`.
+
+    The two halves of a broken axis rarely cover spans
+    which deserve the same amount of room:
+    the left half of an extended timeseries
+    is usually a millennium of flat line,
+    while the right half is where everything happens.
+    Giving the left half less than half the panel
+    spends the panel's width where the reader needs it.
+    """
+
     colour_bar: bool = False
     """
     Whether the panel has a colour bar beside it
@@ -242,7 +257,7 @@ def label_panels(
         )
 
 
-def _place(  # noqa: PLR0912
+def _place(  # noqa: PLR0912, PLR0915
     fig: matplotlib.figure.Figure,
     axes: Mapping[str, matplotlib.axes.Axes],
     rows: tuple[Row, ...],
@@ -335,10 +350,19 @@ def _place(  # noqa: PLR0912
 
             names = get_panel_axes_names(panel)
             if panel.broken:
-                half = (width - settings.broken_gap) / 2.0
-                axes[names[0]].set_position(to_figure_coords(x0, y0, half, height))
+                usable = width - settings.broken_gap
+                left_width = usable * panel.broken_split
+                right_width = usable - left_width
+                axes[names[0]].set_position(
+                    to_figure_coords(x0, y0, left_width, height)
+                )
                 axes[names[1]].set_position(
-                    to_figure_coords(x0 + half + settings.broken_gap, y0, half, height)
+                    to_figure_coords(
+                        x0 + left_width + settings.broken_gap,
+                        y0,
+                        right_width,
+                        height,
+                    )
                 )
             else:
                 axes[names[0]].set_position(to_figure_coords(x0, y0, width, height))
