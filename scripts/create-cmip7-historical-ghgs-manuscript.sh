@@ -59,6 +59,27 @@ for sf6_like_gas in "${sf6_like_gases[@]}"; do
     )
 done
 
+# Every gas processed like C4F10. As with the SF6-like gases,
+# these all share one figure, so this is the list of gases to draw it for.
+# It has to match local.historical_ghg_forcing_for_cmip7.C4F10_LIKE_GASES.
+c4f10_like_gases=(
+    c4f10 c5f12 c6f14 c7f16 cc4f8
+)
+# Which of them to open once they are drawn.
+c4f10_like_gases_to_open=(
+    c4f10
+)
+
+c4f10_like_methods_figure_files=()
+for c4f10_like_gas in "${c4f10_like_gases[@]}"; do
+    c4f10_like_methods_figure_files+=(
+        "${c4f10_like_gas}=${repo_root}/figures/historical-ghg-forcing-for-cmip7/${c4f10_like_gas}_methods.pdf"
+    )
+done
+
+# C8F18 is in a group of its own, so it is a plain file rather than a list.
+c8f18_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/c8f18_methods.pdf"
+
 # methods_subfile="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods-detail.tex"
 results_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/results.tex"
 code_and_data_availability_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/code-and-data-availability.tex"
@@ -92,17 +113,28 @@ for sf6_like_methods_figure_file in ${sf6_like_methods_figure_files[@]+"${sf6_li
     sf6_like_args+=(--sf6-like-methods-figure-file "${sf6_like_methods_figure_file}")
 done
 
+c4f10_like_args=()
+for c4f10_like_methods_figure_file in ${c4f10_like_methods_figure_files[@]+"${c4f10_like_methods_figure_files[@]}"}; do
+    c4f10_like_args+=(--c4f10-like-methods-figure-file "${c4f10_like_methods_figure_file}")
+done
+
 uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-inputs.py" \
     --co2-methods-figure-file "${co2_methods_figure_file}" \
     --ch4-methods-figure-file "${ch4_methods_figure_file}" \
     --n2o-methods-figure-file "${n2o_methods_figure_file}" \
+    --c8f18-methods-figure-file "${c8f18_methods_figure_file}" \
     ${sf6_like_args[@]+"${sf6_like_args[@]}"} \
+    ${c4f10_like_args[@]+"${c4f10_like_args[@]}"} \
     --bundle-dir "${zenodo_bundle_dir}" \
     --original-run-notebooks-dir "${original_run_notebooks_dir}"
 
 for sf6_like_gas in ${sf6_like_gases_to_open[@]+"${sf6_like_gases_to_open[@]}"}; do
     open "${repo_root}/figures/historical-ghg-forcing-for-cmip7/${sf6_like_gas}_methods.pdf"
 done
+for c4f10_like_gas in ${c4f10_like_gases_to_open[@]+"${c4f10_like_gases_to_open[@]}"}; do
+    open "${repo_root}/figures/historical-ghg-forcing-for-cmip7/${c4f10_like_gas}_methods.pdf"
+done
+open "${c8f18_methods_figure_file}"
 open "${n2o_methods_figure_file}"
 open "${ch4_methods_figure_file}"
 open "${co2_methods_figure_file}"

@@ -1,6 +1,4 @@
-I have just committed.
-
-Now I would like you to make a function to plot the methods figures for the C4F10-like gases.
+I would like you to make a function to plot the methods figures for the C4F10-like gases.
 Base this on the CH4 figure.
 The key changes to make can be found in `methods.tex`.
 I put my summary of the changes below too.

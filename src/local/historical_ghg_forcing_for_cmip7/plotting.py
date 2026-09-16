@@ -316,6 +316,12 @@ GHG_LABELS = {
     "nf3": "NF$_3$",
     "sf6": "SF$_6$",
     "so2f2": "SO$_2$F$_2$",
+    "cc4f8": "c-C$_4$F$_8$",
+    "c4f10": "C$_4$F$_{10}$",
+    "c5f12": "C$_5$F$_{12}$",
+    "c6f14": "C$_6$F$_{14}$",
+    "c7f16": "C$_7$F$_{16}$",
+    "c8f18": "C$_8$F$_{18}$",
 }
 """How each gas' name is written when it is shown to a reader
 
@@ -716,6 +722,63 @@ def add_latitude_legend(
         **kwargs,
     )
     ax.get_legend().get_title().set_fontsize("xx-small")
+
+
+def plot_input_timeseries(
+    indf: pd.DataFrame,
+    ax: matplotlib.axes.Axes,
+    lat_column: str = "lat",
+    year_column: str = "year",
+    value_column: str = "value",
+) -> matplotlib.axes.Axes:
+    """
+    Plot the input timeseries of a gas which has no observational network
+
+    There are only a handful of latitudes here, one line each,
+    rather than the thousands of scattered points a network gives,
+    so the panel is a line plot and the latitudes go in a legend
+    rather than on a colour bar.
+    The colours are the same ones the network panels use,
+    so a colour means the same latitude everywhere in the figure.
+
+    Parameters
+    ----------
+    indf
+        Input data to plot
+
+    ax
+        Axes to plot on
+
+    lat_column
+        Column which holds the latitude of each observation
+
+    year_column
+        Column which holds the year of each observation
+
+    value_column
+        Column which holds the value of each observation
+
+    Returns
+    -------
+        `ax`
+    """
+    latitudes = np.sort(indf[lat_column].unique())[::-1]
+    for latitude in latitudes:
+        at_latitude = indf[indf[lat_column] == latitude].sort_values(year_column)
+        ax.plot(
+            at_latitude[year_column],
+            at_latitude[value_column],
+            color=latitude_colour(latitude),
+            linewidth=2,
+        )
+
+    ax.set_ylabel(f"[{unit(indf)}]", fontsize="small")
+    ax.set_xlabel("year", fontsize="small")
+    ax.tick_params(labelsize="small")
+    # Every latitude, because there are few enough of them to name them all
+    add_latitude_legend(ax, latitudes, ncols=1, every=1, loc="upper left")
+
+    return ax
 
 
 def plot_station_timeseries(  # noqa: PLR0913
@@ -1462,6 +1525,82 @@ def plot_seasonality_from_obs_network(
     return ax
 
 
+def linear_latitudinal_gradient_eof(units: str) -> xr.DataArray:
+    """
+    Get the latitudinal gradient EOF assumed for gases with no observational network
+
+    The original run assumes a single EOF for these gases,
+    linear in latitude before the area-weight of each latitudinal box
+    is taken into account, normalised so that its area-weighted mean is zero
+    and its northern (southern) hemispheric mean is a half (minus a half).
+    That makes the PC which goes with it
+    the difference between the hemispheric means.
+
+    This mirrors the EOF built in the original run's
+    `calculate_c4f10_like_monthly_fifteen_degree_pieces`
+    and `calculate_c8f18_like_monthly_fifteen_degree_pieces` steps.
+    The C4F10-like gases have theirs written into a data file,
+    so this is really only needed for C8F18, whose EOF was never saved out;
+    the C4F10-like figure checks its stored EOF against this one,
+    which is what keeps the two honest.
+
+    Parameters
+    ----------
+    units
+        Units to give the EOF
+
+        Which way round the units fall between the EOF and its PC
+        depends on the gas, so the caller has to say.
+
+    Returns
+    -------
+        The assumed latitudinal gradient EOF, by latitude
+
+    Raises
+    ------
+    AssertionError
+        The EOF does not have the properties it is normalised to have
+    """
+    lat_bin_weights = np.diff(np.sin(LAT_BIN_BOUNDS * np.pi / 180.0))
+    n_bins = len(LAT_BIN_CENTRES)
+    eof = np.linspace(-1.0, 1.0, n_bins) / lat_bin_weights
+
+    northern = slice(n_bins // 2, n_bins)
+    southern = slice(0, n_bins // 2)
+
+    def hemispheric_mean(half: slice) -> float:
+        return float(
+            np.sum(lat_bin_weights[half] * eof[half]) / np.sum(lat_bin_weights[half])
+        )
+
+    eof = eof / (2.0 * hemispheric_mean(northern))
+
+    # The same checks the original run made, for the same reason:
+    # the normalisation is what lets the PC be read as a hemispheric difference,
+    # so it is worth knowing straight away if it has gone wrong.
+    if not np.isclose((lat_bin_weights * eof).sum(), 0.0):
+        msg = "The spatial mean of the latitudinal gradient EOF is not zero"
+        raise AssertionError(msg)
+
+    for half, half_name, expected in (
+        (northern, "northern", 0.5),
+        (southern, "southern", -0.5),
+    ):
+        if not np.isclose(hemispheric_mean(half), expected):
+            msg = (
+                f"The {half_name} hemispheric mean of the latitudinal gradient EOF "
+                f"is {hemispheric_mean(half)}, expected {expected}"
+            )
+            raise AssertionError(msg)
+
+    return xr.DataArray(
+        eof,
+        dims=("lat",),
+        coords={"lat": LAT_BIN_CENTRES},
+        attrs={"units": units},
+    )
+
+
 def plot_lat_gradient_pieces_from_obs_network(
     lat_gradient_info: xr.Dataset,
     axes: Mapping[str, matplotlib.axes.Axes],
@@ -1485,22 +1624,44 @@ def plot_lat_gradient_pieces_from_obs_network(
     axes["pcs"].tick_params(labelsize="small")
     compact_existing_legend(axes["pcs"], loc="best")
 
-    da_eofs = lat_gradient_info[eofs_name]
+    plot_lat_gradient_eofs(lat_gradient_info[eofs_name], axes["eofs"])
+
+    return axes
+
+
+def plot_lat_gradient_eofs(
+    da_eofs: xr.DataArray, ax: matplotlib.axes.Axes
+) -> matplotlib.axes.Axes:
+    """
+    Plot the latitudinal gradient's EOFs
+
+    Parameters
+    ----------
+    da_eofs
+        EOFs to plot, with an `eof` and a `lat` dimension
+
+    ax
+        Axes to plot on
+
+    Returns
+    -------
+        `ax`
+    """
     pdf_eofs = da_eofs.to_pandas().stack().rename("value").to_frame().reset_index()
     sns.scatterplot(
         pdf_eofs,
         x="value",
         y="lat",
         hue="eof",
-        ax=axes["eofs"],
+        ax=ax,
     )
-    axes["eofs"].set_yticks(LAT_BIN_BOUNDS[::2])
-    axes["eofs"].set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
-    axes["eofs"].set_xlabel(f"[{da_eofs.attrs['units']}]", fontsize="small")
-    axes["eofs"].tick_params(labelsize="small")
-    compact_existing_legend(axes["eofs"], loc="best")
+    ax.set_yticks(LAT_BIN_BOUNDS[::2])
+    ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
+    ax.set_xlabel(f"[{da_eofs.attrs['units']}]", fontsize="small")
+    ax.tick_params(labelsize="small")
+    compact_existing_legend(ax, loc="best")
 
-    return axes
+    return ax
 
 
 def add_break_lines_and_setup(  # noqa: PLR0913
@@ -1796,6 +1957,91 @@ def plot_global_mean_extension(  # noqa: PLR0913
             y_min, y_max = ax.get_ylim()
             margin = PRE_INDUSTRIAL_MARKER_MARGIN * (y_max - y_min)
             ax.set_ylim(min(y_min, pre_industrial[1] - margin), y_max)
+
+
+def plot_extension_pieces(  # noqa: PLR0913
+    da: xr.DataArray,
+    ax_left: matplotlib.axes.Axes,
+    ax_right: matplotlib.axes.Axes,
+    pieces: Mapping[str, np.typing.ArrayLike],
+    split_year: int = 1900,
+    legend_loc: str = "upper left",
+) -> None:
+    """
+    Plot an extended timeseries, coloured by where each year's value came from
+
+    A component which has been extended in time looks like one line,
+    but only part of it is data: the rest is whatever assumption
+    filled the years the data does not reach.
+    Colouring the line by its source is the only thing which says so.
+
+    Parameters
+    ----------
+    da
+        Extended timeseries to plot, with a `year` dimension
+
+    ax_left
+        Left half of the broken axis
+
+    ax_right
+        Right half of the broken axis
+
+    pieces
+        Years which came from each source, labelled by source
+
+        Every year in `da` must appear in exactly one of these,
+        and they are drawn, and listed in the legend, in the order given.
+
+    split_year
+        Year the axis is broken at
+
+    legend_loc
+        Where to put the panel's legend
+
+    Raises
+    ------
+    AssertionError
+        Some year in `da` was not attributed to a source
+    """
+    pdf = da.to_pandas().rename("value").to_frame().reset_index()
+    pdf["source"] = None
+    for source, years in pieces.items():
+        pdf.loc[pdf["year"].isin(np.asarray(years)), "source"] = source
+
+    if pdf["source"].isnull().any(axis=None):
+        unattributed = pdf.loc[pdf["source"].isnull(), "year"]
+        msg = (
+            "Every year must come from somewhere, "
+            f"but {len(unattributed)} years were not attributed to a source, "
+            f"the first of them {unattributed.iloc[0]}"
+        )
+        raise AssertionError(msg)
+
+    # So the legend reads in the order the pieces were given,
+    # which is the order the reader meets them in as they go along the line.
+    pdf["source"] = pd.Categorical(pdf["source"], categories=list(pieces), ordered=True)
+
+    for ax in (ax_left, ax_right):
+        sns.scatterplot(
+            pdf,
+            x="year",
+            y="value",
+            hue="source",
+            ax=ax,
+            s=25,
+            edgecolor=None,
+            alpha=0.7,
+        )
+
+    add_break_lines_and_setup(
+        ax_left,
+        ax_right,
+        int(da["year"].min()),
+        split_year,
+        int(da["year"].max()),
+        da.attrs["units"],
+        legend_loc=legend_loc,
+    )
 
 
 def plot_pc_timeseries_regression(  # noqa: PLR0913
