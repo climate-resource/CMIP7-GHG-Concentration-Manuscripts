@@ -545,12 +545,16 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
         The original run's `notebooks-executed` directory
 
     force_rerun
-        Re-run the original run's notebook even if its output is already there
+        Re-generate the figure, even if the output file already exists
 
     Returns
     -------
         `outfile`
     """
+    if outfile.exists() and not force_rerun:
+        logger.info(f"Using existing {outfile}")
+        return outfile
+
     all_data_with_bins = add_network_group(
         get_ch4_all_data_with_bins(
             bundle_dir=bundle_dir,

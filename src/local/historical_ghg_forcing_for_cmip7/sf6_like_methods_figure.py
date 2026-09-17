@@ -605,10 +605,11 @@ def generate_sf6_like_methods_figure(  # noqa: PLR0915
         The original run's `notebooks-executed` directory
 
     force_rerun
-        Re-run the original run's notebook even if its output is already there
+        Re-generate the figure, even if the output file already exists
 
     Returns
     -------
+    :
         `outfile`
 
     Raises
@@ -617,6 +618,10 @@ def generate_sf6_like_methods_figure(  # noqa: PLR0915
         `gas` is not processed like SF6,
         or its latitudinal gradient has more than one EOF
     """
+    if outfile.exists() and not force_rerun:
+        logger.info(f"Using existing {outfile}")
+        return outfile
+
     if gas not in SF6_LIKE_GASES:
         msg = f"{gas=} is not processed like SF6, expected one of {SF6_LIKE_GASES}"
         raise AssertionError(msg)

@@ -45,12 +45,6 @@ sf6_like_gases=(
     hfc23 hfc236fa hfc245fa hfc32 hfc365mfc hfc4310mee
     nf3 sf6 so2f2
 )
-# Which of them to open once they are drawn.
-# Opening all thirty-four at once is nobody's idea of a good time.
-sf6_like_gases_to_open=(
-    sf6
-    cf4
-)
 
 sf6_like_methods_figure_files=()
 for sf6_like_gas in "${sf6_like_gases[@]}"; do
@@ -64,10 +58,6 @@ done
 # It has to match local.historical_ghg_forcing_for_cmip7.C4F10_LIKE_GASES.
 c4f10_like_gases=(
     c4f10 c5f12 c6f14 c7f16 cc4f8
-)
-# Which of them to open once they are drawn.
-c4f10_like_gases_to_open=(
-    c4f10
 )
 
 c4f10_like_methods_figure_files=()
@@ -127,18 +117,6 @@ uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-input
     ${c4f10_like_args[@]+"${c4f10_like_args[@]}"} \
     --bundle-dir "${zenodo_bundle_dir}" \
     --original-run-notebooks-dir "${original_run_notebooks_dir}"
-
-for sf6_like_gas in ${sf6_like_gases_to_open[@]+"${sf6_like_gases_to_open[@]}"}; do
-    open "${repo_root}/figures/historical-ghg-forcing-for-cmip7/${sf6_like_gas}_methods.pdf"
-done
-for c4f10_like_gas in ${c4f10_like_gases_to_open[@]+"${c4f10_like_gases_to_open[@]}"}; do
-    open "${repo_root}/figures/historical-ghg-forcing-for-cmip7/${c4f10_like_gas}_methods.pdf"
-done
-open "${c8f18_methods_figure_file}"
-open "${n2o_methods_figure_file}"
-open "${ch4_methods_figure_file}"
-open "${co2_methods_figure_file}"
-exit 0
 # --force-rerun \
 
 # create pdf or dump out to a single text file (that can then be dumped onto google docs, maybe easiest to do this with AI)

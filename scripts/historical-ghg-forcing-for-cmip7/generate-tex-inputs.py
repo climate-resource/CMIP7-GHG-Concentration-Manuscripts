@@ -3,7 +3,7 @@ Compile the tex inputs for the historical GHG manuscript
 """
 
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 
@@ -100,7 +100,7 @@ def main(  # noqa: PLR0913
         ),
     ],
     sf6_like_methods_figure_file: Annotated[
-        Optional[list[str]],
+        list[str] | None,
         typer.Option(
             help=(
                 "Gas which is processed like SF6 "
@@ -111,7 +111,7 @@ def main(  # noqa: PLR0913
         ),
     ] = None,
     c4f10_like_methods_figure_file: Annotated[
-        Optional[list[str]],
+        list[str] | None,
         typer.Option(
             help=(
                 "Gas which is processed like C4F10 "
@@ -206,11 +206,13 @@ def main(  # noqa: PLR0913
             gas,
             figure_file,
             bundle_dir=bundle_dir,
+            force_rerun=force_rerun,
         )
 
     generate_c8f18_methods_figure(
         c8f18_methods_figure_file,
         bundle_dir=bundle_dir,
+        force_rerun=force_rerun,
     )
 
 

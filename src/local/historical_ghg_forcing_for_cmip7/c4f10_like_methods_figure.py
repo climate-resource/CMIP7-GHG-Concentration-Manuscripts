@@ -252,6 +252,7 @@ def generate_c4f10_like_methods_figure(  # noqa: PLR0915
     gas: str,
     outfile: Path,
     bundle_dir: Path,
+    force_rerun: bool = False,
 ) -> Path:
     """
     Generate the methods figure for a gas which is processed like C4F10
@@ -269,8 +270,12 @@ def generate_c4f10_like_methods_figure(  # noqa: PLR0915
     bundle_dir
         Directory which holds the original run's bundle
 
+    force_rerun
+        Re-generate the figure, even if the output file already exists
+
     Returns
     -------
+    :
         `outfile`
 
     Raises
@@ -283,6 +288,10 @@ def generate_c4f10_like_methods_figure(  # noqa: PLR0915
     if gas not in C4F10_LIKE_GASES:
         msg = f"{gas=} is not processed like C4F10, expected one of {C4F10_LIKE_GASES}"
         raise AssertionError(msg)
+
+    if outfile.exists() and not force_rerun:
+        logger.info(f"Using existing {outfile}")
+        return outfile
 
     gas_dir = interim_dir(gas, bundle_dir)
 

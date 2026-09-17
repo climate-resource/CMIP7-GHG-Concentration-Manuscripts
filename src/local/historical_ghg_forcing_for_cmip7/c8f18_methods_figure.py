@@ -221,6 +221,7 @@ def get_latitudinal_gradient_pc(bundle_dir: Path) -> xr.DataArray:
 def generate_c8f18_methods_figure(
     outfile: Path,
     bundle_dir: Path,
+    force_rerun: bool = False,
 ) -> Path:
     """
     Generate the C8F18 methods figure
@@ -233,10 +234,18 @@ def generate_c8f18_methods_figure(
     bundle_dir
         Directory which holds the original run's bundle
 
+    force_rerun
+        Re-generate the figure, even if the output file already exists
+
     Returns
     -------
+    :
         `outfile`
     """
+    if outfile.exists() and not force_rerun:
+        logger.info(f"Using existing {outfile}")
+        return outfile
+
     gas_dir = interim_dir(bundle_dir)
 
     fig, axes = create_figure(ROWS)
