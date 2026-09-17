@@ -1,0 +1,50 @@
+# TODO: double check these mappings, particularly for minor species
+CO_2: CO\textsubscript{2}
+CH_4: CH\textsubscript{4}
+N_2O: N\textsubscript{2}O
+SF_6: SF\textsubscript{6}
+CF_4: CF\textsubscript{4}
+C_2F_6: C\textsubscript{2}F\textsubscript{6}
+C_3F_8: C\textsubscript{3}F\textsubscript{8}
+C_4F_10: C\textsubscript{4}F\textsubscript{10}
+cC_4F_8: c-C\textsubscript{4}F\textsubscript{8}
+C_5F_12: C\textsubscript{5}F\textsubscript{12}
+C_6F_14: C\textsubscript{6}F\textsubscript{14}
+C_7F_16: C\textsubscript{7}F\textsubscript{16}
+C_8F_18: C\textsubscript{8}F\textsubscript{18}
+CCl_4: CCl\textsubscript{4}
+CFC-11: CFC\nobreakdash-11
+CFC-113: CFC\nobreakdash-113
+CFC-114: CFC\nobreakdash-114
+CFC-115: CFC\nobreakdash-115
+CFC-12: CFC\nobreakdash-12
+CH_2Cl_2: CH\textsubscript{2}Cl\textsubscript{2}
+CH_3Br: CH\textsubscript{3}Br
+CH_3CCl_3: CH\textsubscript{3}CCl\textsubscript{3}
+CH_3Cl: CH\textsubscript{3}Cl
+CHCl_3: CHCl\textsubscript{3}
+# TODO: Halon 1202 or whatever it is that is in scenarios but not historical
+Halon-1211: Halon\nobreakdash-1211
+Halon-1301: Halon\nobreakdash-1301
+Halon-2402: Halon\nobreakdash-2402
+HCFC-141b: HCFC\nobreakdash-141b
+HCFC-142b: HCFC\nobreakdash-142b
+HCFC-22: HCFC\nobreakdash-22
+HFC-125: HFC\nobreakdash-125
+HFC-134a: HFC\nobreakdash-134a
+HFC-143a: HFC\nobreakdash-143a
+HFC-152a: HFC\nobreakdash-152a
+HFC-227ea: HFC\nobreakdash-227ea
+HFC-23: HFC\nobreakdash-23
+HFC-236fa: HFC\nobreakdash-236fa
+HFC-245fa: HFC\nobreakdash-245fa
+HFC-32: HFC\nobreakdash-32
+HFC-365mfc: HFC\nobreakdash-365mfc
+HFC-4310mee: HFC\nobreakdash-4310mee
+NF_3: NF\textsubscript{3}
+SO_2F_2: SO\textsubscript{2}F\textsubscript{2}
+W/m^2: W/m\textsuperscript{2}
+W/m2: W/m\textsuperscript{2}
+W / m^2: W/m\textsuperscript{2}
+W / m2: W/m\textsuperscript{2}
+<: \textless

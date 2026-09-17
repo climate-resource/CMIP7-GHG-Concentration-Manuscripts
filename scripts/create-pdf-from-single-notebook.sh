@@ -82,7 +82,7 @@ if [[ ! -f "${source_filepath_abs}" ]]; then
     exit 1
 fi
 
-cd "${repo_root}" || exit 1
+cd "${repo_root}"
 
 source_filename=$(basename "${source_filepath_abs}")
 stem="${source_filename%.*}"
