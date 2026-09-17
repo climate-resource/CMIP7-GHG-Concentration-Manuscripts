@@ -1,169 +1,171 @@
 \section{Methods}
-% Figures:
-% - version of the base figure per gas
-%     - N2O, CH4, CO2, CFC-12 in main: all others in supplementary
 
 To derive our dataset, we largely follow the methods described in \citet{meinshausen_historical_2017}.
 However, we have made changes in a number of places
-so we describe the method in full,
-while also highlighting places of clear divergence.
+so we describe the method in full, while also highlighting differences.
 
 ALTODO: divergence not yet clear
 
 \subsection{General approach}
 \label{ssec:methods-general-approach}
 
-In line with \citet{meinshausen_historical_2017}, we provide a series of data products
- containing complete values of concentrations for all forcing gasses,
-with a temporal and latitudinal dependency. No dependency on longitute is provided. For a brief
-discussion on extension in the vertical dimension, see section \ref{ssec:methods-vertical}
+In line with \citet{meinshausen_historical_2017},
+we provide a series of data products containing concentrations for all greenhouse gases,
+with a temporal and latitudinal dependency.
+No dependency on longitute is provided.
+For a brief discussion on how add a vertical dimension to these datasets, see section \ref{ssec:methods-vertical}.
 
-The first dataset that is generate has monthly temporal resolution and
-latitud15\textdegree~latitudinal spatial resolution.
-We refer to this grid as our `native resolution', and therefore to the dataset
-as our 'native resolution dataset'.
-We then create higher and lower resolution data products (see section
-\ref{ssec:methods-derived-grids}).
+For all greenhouse gases, the first dataset
+that we generate has monthly temporal resolution and 15\textdegree~latitudinal spatial resolution.
+We refer to this grid as our `native resolution', and therefore to these datasets
+as our `native resolution datasets'.
+From the native resolution datasets, we create higher and lower resolution data products
+(see section \ref{ssec:methods-derived-grids}).
 
 Although there are differences in the methods and limitations for each gas, the general approach can
 be broken down as follows:
 
 \begin{itemize}
-    \item { \textbf{Step 1: Collect observations}. Select surface observations from available observing networks.
-             These observations provide the surface concentration of the species at different
-             locations and times around the world.
+    \item {
+        \textbf{Step 1: Collect observations}
+
+        The first step is collecting surface observations from available observing networks.
+        These networks provide surface concentration at different locations and times around the world.
+
+        Where we have a choice, we use data that is already aggregated to a monthly temporal resolution, rather than raw data.
+        We make this choice because we believe that the raw data providers are best placed to produce monthly aggregations from the raw data,
+        including making subjective choices such as which measurements are appropriate to include in such an aggregation,
+        how to weight measurements and how to treat raw measurements taken at different points within each month.
+        This is different to \citet{meinshausen_historical_2017}, which used the raw data directly and performed its own aggregation step.
     }
 
-     \item { \textbf{Step 2: Bin and interpolate observations}. Raw observations are binned spatially,
-            into a coarse 15\textdegree~latitudinal
-            and 60\textdegree~longitudinal grid, and temporally, into monthly bins. Then, since
-            the surface observational network does not cover the entire globe,
-            we interpolate the
-            binned observations spatially to get complete global coverage.
+     \item {
+         \textbf{Step 2: Bin and interpolate observations}
 
-            We specify that at least five data points are required for us to do spatial interpolation
-            and we must have data points in both the most northern and most southern latitudinal box.
-            This is clearly a relatively low data requirement,
-            but higher thresholds result in a significant amount of the observational record being discarded.
-            More robust interpolation methods are an area for future work [TODO: forward ref].
+         The raw observations are binned spatially, into a coarse 15\textdegree~latitudinal
+         and 60\textdegree~longitudinal grid, and temporally, into monthly bins.
+         Then, since the surface observational network does not cover the entire globe,
+         we interpolate the binned observations spatially to get complete global coverage.
 
-            We use 2D interpolation, specifically linear barycentric interpolation,
-            as implemented in scipy's griddata function [TODO ref scipy].
-            Before interpolating, we put the data on a grid that is `wrapped around'
-            to avoid edge effects.
-            In practice, this means that we duplicate the data three times
-            and place these three copies next to each other in the longitudinal direction.
-            As a result, each point in the central `copy' `sees' its closest neighbours,
-            irrespective of its longitude.
-            After interpolating, we throw away the outer `copies'
-            and are left with an `edge effect free' interpolated dataset over the
-            domain of interest.
+         We specify that at least five data points are required for us to do spatial interpolation
+         and we must have data points in both the most northern and most southern latitudinal box.
+         This is clearly a relatively low data requirement,
+         but higher thresholds result in a significant amount of the observational record being discarded.
+         More robust interpolation methods are an area for future work [TODO: forward ref].
 
-            We then extract the longest time period over
-            which there are no data gaps after spatial interpolation for the next steps.
+         We use 2D interpolation, specifically linear barycentric interpolation,
+         as implemented in scipy's griddata function [TODO ref scipy].
+         Before interpolating, we put the data on a grid that is `wrapped around' to avoid edge effects.
+         In practice, this means that we duplicate the data three times
+         and place these three copies next to each other in the longitudinal direction.
+         As a result, each point in the central `copy' `sees' its closest neighbours, irrespective of its longitude.
+         After interpolating, we throw away the outer `copies'
+         and are left with an `edge effect free' interpolated dataset over the domain of interest.
 
+         We then extract the longest time period in our spatially interpolated dataset
+         over which there are no data gaps
+         (gaps can appear if a time point in the middle of the record failed the minimum requirement for spatial interpolation,
+         which is why we cannot simply use the timespan of the observational record itself).
     }
 
-    \item { \textbf{Step 3: Principal component analysis}. Decompose the interpolated observational network based into three components:
+    \item {
+        \textbf{Step 3: Principal component analysis}
+
+        We decompose the interpolated observational network based into three components:
 
         \begin{enumerate}
             \item Global-, annual-mean concentrations
-            \item Seasonal variations (i.e. seasonality, divided by the global-, annual-mean)
+            \item Relative seasonality at each latitude (i.e. seasonality at each latitude, divided by the global-, annual-mean)
             \item Latitudinal gradient components
         \end{enumerate}
 
         The latitudinal gradient components are a set of empirical orthogonal functions (EOFs, a function of latitude only)
-        and principal components (PCs, a function of year only) derived using principal component analysis (PCA).
-        The number of EOFs and PCs retained is either one or two,
-        depending on the gas. More information on this step
-        is provided in the different gas-specific sections.
+        and principal components (PCs, a function of year only)
+        derived using principal component analysis (PCA).
+        The number of EOFs and PCs retained is either one or two, depending on the gas.
+
+        The key to this decomposition is that the latitudinal gradient term has a spatial (area-weighted) mean of zero
+        and that the seasonality term has an annual-mean of zero
+        so that they can be added to the global- annual-mean term later (see Step 6)
+        without affecting the corresponding global- annual-mean values.
     }
 
-    \item { \textbf{Step 4: Backward extension}.
-        Extend the global-, annual-mean and latitudinal gradient PCs back to year 1
-        \begin{enumerate}
-            \item {The global-, annual-mean is extended using ice cores where available, otherwise based
-                    on simple assumptions about pre-industrial values and when those pre-industrial values
-                     should be reached
-            }
-            \item {The latitudinal gradient PCs are extended by performing a regression between emissions and the PCs, or, when emissions are not available,
-                    simple linear or constant extrapolation.
-            }
-        More information on this step
-        is provided in the different gas-specific sections.
-        \end{enumerate}
+    \item {
+        \textbf{Step 4: Extend}
+
+        We extend the global-, annual-mean and latitudinal gradient PC(s) back to year 1
+
+        The global-, annual-mean is extended using ice cores where available,
+        otherwise based on pre-industrial values from the literature and interpolation.
+
+        The latitudinal gradient PC(s) are extended in one of two ways.
+        The first is based on historical emissions, driven by a regression between emissions and the PC(s).
+        The second is simple linear or constant extrapolation.
     }
 
-    \item { \textbf{Step 5: Process components}. All components need to be consistent and complete.
-            To achieve consistency, first we need to give all components the same time dimension.
-             This introduces the first subtlety: while our approach is based on a timeseries of global-, annual-mean concentrations,
-            this timeseries has to be interpolated to monthly timesteps
-            in order to avoid the change from year to year resulting in step changes between December of one year and January of the next.
-            The same interpolation requirement applies to the latitudinal gradient
-            (which is initially calculated on a yearly timestep, see [TODO forward ref]).
-            Moreover, seasonality can vary by latitude.
-            As a result, the latitudinal variation of seasonality must be included
-            (i.e. seasonality must have a `latitude' dimension)
-             The following calculations are therefore performed:
+    \item {
+        \textbf{Step 5: Prepare the components to be combined}
+
+        The global-, annual-mean, seasonality and latitudinal gradient components must be prepared before they can be combined.
+
+        The first step is to to put all components on the same time axis.
+        This introduces the first subtlety: while our approach is based on a timeseries of global-, annual-mean concentrations,
+        this timeseries has to be interpolated to monthly timesteps
+        in order to avoid the change from year to year resulting in step changes between December of one year and January of the next.
+        The same interpolation requirement applies to the latitudinal gradient PC(s)
+        (which are initially calculated on a yearly timestep, see step 3).
+        Moreover, seasonality varies by latitude.
+        As a result, the latitudinal variation of seasonality must be included
+        (i.e. seasonality must have a `latitude' dimension)
+        The following calculations are therefore performed:
 
         \begin{enumerate}
             \item The global-, annual-mean is converted into a global-, monthly-mean using mean-preserving interpolation
             \item The relative seasonality is converted into an absolute seasonality over all time by multiplying it by the extended global-, annual-mean
             \item The latitudinal gradient is recovered by taking the product of the EOFs and the extended PCs
         \end{enumerate}
-        This step depends heavily on the outcome of steps 3 and 4.
-        More information on this step
-        is provided in the different gas-specific sections.
-
     }
 
-    \item { \textbf{Step 6: Generate concentration}:
-            Calculate native resolution dataset value from the components, using the equation:
-            \begin{equation}
-                \label{eq:native-resolution-sum}
-                gn(y, m, l) = gm(y, m) + lg(y, m, l) + s(y, m, l)
-            \end{equation}
-            where $gn$ is the native resolution dataset value
-            (`gn' is the `grid label' used for such output on ESGF, so we re-use it here for convenience and consistency with the published output, see [TODO forward ref]),
-            $y$ is the year in which the value applies,
-            $m$ is the month in which the value applies,
-            $l$ is the latitude at which the value applies,
-            $gm$ is the global-, annual-mean derived value (and is broadcast across all latitudes),
-            $lg$ is the latitudinal gradient contribution
-            and $s$ is the seasonality contribution.
-            The key to this decomposition is that the latitudinal gradient term, $lg$,
-            has a spatial (area-weighted) mean of zero
-            and that the seasonality term, $s$,
-            has an annual-mean of zero
-            so that they can be added to the global- annual-mean term, $gm$,
-            without affecting the corresponding global- annual-mean values.
-            The dataset is then formatted in a consistent way (we do not use the term
-             `standard' way here, because no standards are robustly defined for forcings data)
+    \item {
+        \textbf{Step 6: Generate native resolution}
 
+        We calculate the native resolution dataset value from the components, using the equation:
+
+        \begin{equation}
+            \label{eq:native-resolution-sum}
+            gn(y, m, l) = gm(y, m) + lg(y, m, l) + s(y, m, l)
+        \end{equation}
+        where $gn$ is the native resolution dataset value
+        (`gn' is the `grid label' used for such output on ESGF, so we re-use it here for convenience and consistency with the published output, see Section \ref{ssec:prep-for-esgf}),
+        $y$ is the year in which the value applies,
+        $m$ is the month in which the value applies,
+        $l$ is the latitude at which the value applies,
+        $gm$ is the global-, annual-mean derived value (this is broadcast across all latitudes during the sum),
+        $lg$ is the latitudinal gradient contribution
+        and $s$ is the seasonality contribution.
+        As stated in Step 3, the key to this sum is that $lg$ has an area-weighted spatial mean of zero
+        and $s$ has a temporal mean of zero
+        so that the sum does not change the global- annual-mean value we started with.
     }
+
 \end{itemize}
 
-
 The key choices are about how we arrive at $gm$, $lg$ and $s$ for each greenhouse gas species in our dataset.
-These decisions are often guided by data availability and quality, and by the chemical
-qualities of the gas species.
-We describe the specifics for each gas included in the dataset in the following sections, underlining
-gas-specific features and how the methods might stray from the general approach described here.
-
+These decisions are often guided by data availability and quality.
+The high-level summary is provided in Table \ref{table:methods-differences},
+while the specifics for each greenhouse gas are described in the following sections.
 
 \begin{table}
 \centering
 \begin{tabular}{c|c|c|c|c|c |c}
 
-
-   Gas name & 1: Obervations & 2: Bin and Interpolate & 3: PCA & 4: Extention & 5: Process & 6: Generate \\
+   Gas name & 1: Observations & 2: Bin and interpolate & 3: PCA & 4: Extend & 5: Prepare & 6: Generate \\
    CO_2 & & & & & &  \\
    CH_4 & & & & & &  \\
    & & & & & &  \\
    & & & & & &  \\
    & & & & & &  \\
    & & & & & &  \\
-
 
 \end{tabular}
 \caption{
@@ -1332,6 +1334,15 @@ These equivalent species are derived based on output that is already on the desi
 rather than on the native grid (with further processing applied thereafter).
 This avoids any consistency issues due to non-linearity in the processing operations,
 such as from mean-preserving interpolation.
+
+\subsection{Preparation for publication on ESGF}
+\label{ssec:prep-for-esgf}
+
+ZNTODO: briefly describe what this means i.e. get formats and attributes right, get them in line with other metadata that has been used previously.
+Note that there is no defined standard, so the consistency across datasets should be thought of as an emergent consistency that has been aided a bit by input4mips-validation, but should by no means be considered robust.
+
+The dataset is then formatted in a consistent way (we do not use the term
+`standard' way here, because no standards are robustly defined for forcings data)
 
 \subsection{Vertical dimension}
 \label{ssec:methods-vertical}
