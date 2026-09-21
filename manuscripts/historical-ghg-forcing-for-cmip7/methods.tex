@@ -152,9 +152,112 @@ be broken down as follows:
 
 The key choices are about how we arrive at $gm$, $lg$ and $s$ for each greenhouse gas species in our dataset.
 These decisions are often guided by data availability and quality.
-The high-level summary is provided in Table \ref{table:methods-differences},
+The high-level summary is provided in the dot points below,
+% The high-level summary is provided in Table \ref{table:methods-differences},
 while the specifics for each greenhouse gas are described in the following sections.
 
+\begin{enumerate}
+    \item {
+        CO_2
+
+        \begin{enumerate}
+            \item {
+                \textbf{Step 3: Principal component analysis}
+                An absolute seasonality and seasonality change EOF plus PC is derived,
+                rather than relative seasonality alone.
+            }
+            \item {
+                \textbf{Step 4: Extend}
+                Use the merged Law Dome - Mauna Loa record [TODO cite]
+                to extend the global-, annual-mean back in time where available
+                (rather than ice core data alone).
+                % TODO: remove hard-coded 1850?
+                Extend the seasonality change PC back to 1850
+                using a composite of global-, annual-mean CO_2 concentrations and global-mean surface air temperature.
+            }
+            \item {
+                \textbf{Step 5: Prepare the components to be combined}
+                Seasonality is calculated by adding the seasonality change from the EOF analysis to the base seasonality
+                (rather than multiplying relative seasonality by the global- annual-mean).
+            }
+        \end{enumerate}
+    }
+    \item {
+        CH_4
+
+        \begin{enumerate}
+            \item {
+                \textbf{Step 4: Extend}
+                The latitudinal gradient PC is extended back in time
+                by doing an optimisation against ice core data from both the Southern and Northern Hemispheres,
+                rather than based on a single ice core timeseries alone.
+                We check that we maintain agreement with available ice core data in both the Northern and Southern hemispheres
+                (based on the already extended latitudinal gradient)
+                to within 0.5\% when extending the global- annual-mean.
+            }
+        \end{enumerate}
+    }
+    \item {
+        N_2O
+
+        \begin{enumerate}
+            \item No changes from the general approach (see Section \ref{ssec:methods-general-approach})
+        \end{enumerate}
+    }
+    \item {
+        CFC-12 and other gases processed similarly
+
+        \begin{enumerate}
+            \item {
+                \textbf{Step 4: Extend}
+                In some cases, we use a specific source for the global- annual-mean
+                rather than the global- annual-mean derived from the observational network.
+                We extend the global- annual-mean back in time
+                based on pre-industrial values from the literature
+                and perform an interpolation between the pre-industrial value
+                and the global- annual-mean values (as far back as they go in time).
+            }
+            \item {
+                \textbf{Step 5: Prepare the components to be combined}
+                We reduce the relative seasonality and latitudinal gradient
+                as required to avoid negative values in output.
+            }
+        \end{enumerate}
+    }
+    \item {
+        C_4F_10 and other gases processed similarly
+
+        \begin{enumerate}
+            \item {
+                \textbf{Step 1: Collect observations}
+                We only use data from [TODO cite Droste et al]
+            }
+            \item {
+                \textbf{Step 3: Principal component analysis}
+                We assume that the latitudinal gradient is linear (when considering area-weighting),
+                then calculate the PCs based on the data from [TODO Droste et al].
+            }
+            \item {
+                \textbf{Step 4: Extend}
+                We assume that the concentration of these gases remains constant at zero before the timeseries provided by [Droste et al.].
+            }
+            \item {
+                \textbf{Step 5: Prepare the components to be combined}
+                We reduce the relative seasonality and latitudinal gradient
+                as required to avoid negative values in output.
+            }
+        \end{enumerate}
+    }
+    \item {
+        C_8F_18
+
+        We simply use CMIP6 data, taking the 2015-2022 time period from the SSP2-4.5 scenario
+        because of a lack of new input data since \citet{meinshausen_historical_2017}.
+    }
+\end{enumerate}
+
+\clearpage
+ZNTODO: I think this table looks terrible and can't work. I'd suggest just sticking with the dot points instead.
 ZNTODO: underline header row
 \begin{table}
 \centering
@@ -174,6 +277,7 @@ ALTODO: this might be a useful table for an overview on variations
 Differencesfrom the base case (N_2O) per gas, broken down by step}
 \label{table:methods-differences}
 \end{table}
+\clearpage
 
 \subsection{Generating N_2O concentrations}
 \label{ssec:methods-n2o}
