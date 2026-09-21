@@ -361,10 +361,10 @@ def main(  # noqa: PLR0913
     res = insert_file_content_after_tag(res, abstract, tag="<abstract-start>")
     res = insert_file_content_after_tag(res, introduction, tag="<introduction-start>")
 
-    section_text = "\n\n".join(
+    body_text = "\n\n".join(
         f"{get_source_file_str(sf)}\n{sf.read_text()}" for sf in section
     )
-    res = insert_after_tag(res, section_text, tag="<body-start>")
+    res = insert_after_tag(res, body_text, tag="<body-start>")
 
     res = insert_file_content_after_tag(res, conclusion, tag="<conclusions-start>")
 
@@ -387,6 +387,7 @@ def main(  # noqa: PLR0913
 
     replacements_map = yaml.safe_load(replacements.read_text())
     res = apply_replacements(res, replacements_map)
+    # Figure replacements and handling
 
     latex_dir = build_dir / "latex"
     latex_dir.mkdir(exist_ok=True, parents=True)

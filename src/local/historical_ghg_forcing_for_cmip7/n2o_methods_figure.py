@@ -68,7 +68,7 @@ because that is the notebook's working directory.
 """
 
 TITLES = {
-    "timeseries": "Observational network values",
+    "timeseries": "Observation network values",
     "counts": "Obs. counts",
     "locations": "Obs. locations",
     "interpolated-most": "Interpolation: most inputs",
@@ -353,9 +353,13 @@ def generate_n2o_methods_figure(  # noqa: PLR0915
         bundle_dir
         / "data/interim/n2o/n2o_observational-network_latitudinal-gradient-eofs.nc",
     )
-    # # Flip both PC signs
-    # with xr.set_options(keep_attrs=True):
-    #     lat_gradient_from_obs_network = -lat_gradient_from_obs_network
+    pcs_extended = xr.load_dataset(
+        bundle_dir / "data/interim/n2o/n2o_allyears-lat-gradient-eofs-pcs.nc"
+    )
+    # Flip both PC signs
+    with xr.set_options(keep_attrs=True):
+        lat_gradient_from_obs_network = -lat_gradient_from_obs_network
+        pcs_extended = -pcs_extended
 
     plot_lat_gradient_pieces_from_obs_network(
         lat_gradient_from_obs_network,
@@ -381,9 +385,6 @@ def generate_n2o_methods_figure(  # noqa: PLR0915
         },
     )
 
-    pcs_extended = xr.load_dataset(
-        bundle_dir / "data/interim/n2o/n2o_allyears-lat-gradient-eofs-pcs.nc"
-    )
     obs_based_years = lat_gradient_from_obs_network["year"].values
     pc_constant_years = pcs_extended["year"].values[
         ~np.isin(pcs_extended["year"], obs_based_years)

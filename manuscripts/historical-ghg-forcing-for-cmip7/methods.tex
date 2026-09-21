@@ -155,6 +155,13 @@ while the specifics for each greenhouse gas are described in the following secti
 
 \begin{enumerate}
     \item {
+        N_2O
+
+        \begin{enumerate}
+            \item No changes from the general approach (see Section \ref{ssec:methods-general-approach})
+        \end{enumerate}
+    }
+    \item {
         CO_2
 
         \begin{enumerate}
@@ -194,13 +201,6 @@ while the specifics for each greenhouse gas are described in the following secti
                 (based on the already extended latitudinal gradient)
                 to within 0.5\% when extending the global- annual-mean.
             }
-        \end{enumerate}
-    }
-    \item {
-        N_2O
-
-        \begin{enumerate}
-            \item No changes from the general approach (see Section \ref{ssec:methods-general-approach})
         \end{enumerate}
     }
     \item {
@@ -282,22 +282,46 @@ Differencesfrom the base case (N_2O) per gas, broken down by step}
 \subsection{Generating N_2O concentrations}
 \label{ssec:methods-n2o}
 
-We begin with N_2O because production of its concentrations follows the general approach described in section \ref{ssec:methods-general-approach}
+We begin with N_2O because it follows the general approach described in section \ref{ssec:methods-general-approach}
 and can therefore be considered as the `base case'.
 
-We detail here the exact data sources used and any gas-specific details,
+We detail here the exact data sources used and N_2O-specific details,
 following the process breakdown made in Section \ref{ssec:methods-general-approach}.
 
-ALTODO: a usefel plot might be location of observational network bases, colorcoded per network.
-Ideally also with a time trend, both from 1850 and from year 1 showing the ice cores data.
-True for all gases with ground observations
-ZNTODO: add plot somewhere
-
 \subsubsection{Step 1: Collect observations}
-[ALTODO: eventually remove all the 'step x's from the titles]
+% [ALTODO: eventually remove all the 'step x's from the titles]
 
-For N_2O, we use both the NOAA HATS [TODO ref] and AGAGE [TODO ref] networks.
-We use data from the AGAGE network, as well as from the predecessor GAGE [TODO ref] and ALE [TODO ref] networks.
+For N_2O, we use both the NOAA HATS [TODO ref] and AGAGE [TODO ref] networks (Figure \ref{fig:methods-n2o}).
+When referring to `AGAGE' data, we also mean data from the predecessor GAGE [TODO ref] and ALE [TODO ref] networks.
+
+\begin{figure}[t]
+% TODO: inject figure path
+% \includegraphics[width=12cm]{n2o_methods.pdf}
+\includegraphics[width=0.80\textwidth]{n2o_methods.pdf}
+\caption{
+    Production of the N_2O datasets (for full details, see Section \ref{ssec:methods-n2o}).
+    a) Raw observation network data.
+    % For N_2O we rely on NOAA HATS [TODO ref] and AGAGE [TODO ref].
+    % Here, `AGAGE' includes data from the predecessor GAGE [TODO ref] and ALE [TODO ref] networks.
+    b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
+    c) Location of each sampling site in the observation networks.
+    d), e) Demonstration of interpolation in the case where we have the most/least available values from the observation networks
+    (but still pass our minimum data for interpolation requirement).
+    f) Global-, annual-mean derived from the observation network values.
+    g) Seasonality derived from the observation network values.
+    % ZNTODO: re-order the figure to match this
+    h) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
+    % ZNTODO: add this plot
+    i) Variance explained by each latitudinal gradient empirical orthogonal function (EOF).
+    j) Latitudinal gradient EOF derived from the observation network values.
+    k) Latitudinal gradient principal components (PCs) derived from the observation network values.
+    l) Latitudinal gradient PCs for the entire output dataset timespan.
+    m) Hemispheric- and global- monthly-mean values from the last four years of the output dataset.
+    n) Hemispheric- and global- annual-mean values in the output dataset.
+    o) Three-dimensional surface plot of the last four years of the output dataset's native resolution.
+}
+\label{fig:methods-n2o}
+\end{figure}
 
 \subsubsection{Step 2: Bin and interpolate observations}
 \label{sssec:methods-n2o-spatial-interpolation}
@@ -307,7 +331,7 @@ follow the general approach described in Section \ref{ssec:methods-general-appro
 
 When we take the longest dataset that is continuous,
 we end up with an observational network dataset that runs from 1989 to 2023 (both inclusive).
-[TODO unify language re meaning of observational network, ice core extension etc.]
+[ZNTODO unify language re meaning of observational network, ice core extension etc.]
 
 \subsubsection{Step 3: Principal component analysis}
 \label{sssec:methods-n2o-pca}
@@ -328,8 +352,8 @@ We do this by first calculating an area-weighted mean, then the annual-mean.
 We weight each month equally.
 Weighting the months by their length would make a minor difference,
 but requires assuming that the processed data is truly representative of the entire month.
-We don't make that assumption because we often have point measurements
-i.e. measurements taken at a particular point in time
+We don't make that assumption because our workflow can include processing of point measurements,
+i.e. measurements taken at a particular point in time,
 and grouping them in months is a necessary processing step
 that should not be taken to mean
 that the monthly values robustly represent the average over the entire month, given the month's length.
@@ -343,9 +367,9 @@ On these residuals, we then perform principal component analysis.
 We do this by using numpy's [TODO ref] singular value decomposition function (numpy.linalg.svd [TODO figure out monospace font]).
 We translate the singular value decomposition output into two parts.
 The first is our empirical orthogonal functions (EOFs) ([TODO check name in M17] referred to as principal components in M17).
-These quantify the spatial, in this case latitudinal, variation in the dataset (and are a function of latitude only).
+These quantify the spatial, in this case latitudinal, variation in the dataset and are a function of latitude only.
 The second is our principal components (PCs) ([TODO check name in M17] referred to as principal component scores in M17).
-These quantify the temporal variation in the dataset (and are a function of year only).
+These quantify the temporal variation in the dataset and are a function of year only.
 If all EOFs are retained, then the product of the EOFs and the PCs
 reproduces the residuals we started with exactly.
 However, following \citet{meinshausen_historical_2017}
@@ -360,16 +384,17 @@ The fourth step is to calculate our seasonality.
 We do this by first calculating the residuals at each time and latitude.
 The first component in this calculation is our longitudinal mean (dimensions (year, month, lat)).
 The second component is the annual-mean at each latitude,
-interpolated to monthly timesteps (as a result, this data also has dimensions (year, month, lat)).
-We then calculate the residuals by subtracting the monthly-interpolated
-annual-mean at each latitude from the longitudinal mean.
+interpolated to monthly timesteps using mean-preserving interpolation, see [TODO forward ref]
+(as a result, this data also has dimensions (year, month, lat)).
 The interpolation to monthly timesteps is necessary
 so that the residuals do not include step changes at each year boundary
 (i.e. transition from December of year $Y$ to January of year $Y + 1$).
+We then calculate the residuals by subtracting the monthly-interpolated
+annual-mean at each latitude from the longitudinal mean.
 The seasonality is the average of these residuals over all available years
 and thus has dimensions (month, lat).
 
-\subsubsection{Step 4: Backward extension}
+\subsubsection{Step 4: Extend}
 \label{sssec:methods-n2o-backward-extension}
 
 % \subsubsubsubsection{Latitudinal gradient}
@@ -383,22 +408,16 @@ We rely on the ice core data from [TODO cite Menking et al 2025] to extend the g
 We extrapolate the [TODO cite Menking et al 2025] data from year 5 back to year 1 using linear extrapolation,
 which is imperfect but acceptable given the focus and intended use case of this dataset.
 
-ZNTODO: fix wording given this now comes before CO2
-We then take the same approach as is used for
-CO_2 (Section \ref{sssec:methods-co2-extending-components-in-time}),
-except we use the [TODO cite Menking et al 2025] data for the entire extension back in time
-(there is no equivalent of the [TODO cite Mauna Loa merged record] dataset for N_2O).
-As for CO_2, there is a small offset of around 2.0~ppb,
-between the [TODO cite Menking et al 2025]
-and the value implied by our global- annual-mean and latitudinal gradient
-in the time period in which they overlap.
-Like for CO_2, to avoid introducing an artificial step in the output,
-we harmonise the [TODO cite Menking et al 2025] data.
-We then calculate the temporally extended global- annual-mean such that,
-when it is combined with the (now temporally extended) latitudinal gradient,
-our output dataset matches the harmonised [TODO cite Menking et al 2025]
-in the latitudinal bin in which the ice cores were taken exactly
-(this is the -67.5\textdegree~bin on our native grid).
+We use the spline-interpolated data from [TODO cite Menking et al 2025],
+removing the need for us to make our own spline interpolation choices (unlike \citet{meinshausen_historical_2017}).
+There is a small offset of around 2.0~ppb between the [TODO cite Menking et al 2025] data
+and our global- annual-mean.
+To avoid introducing an artificial step in the output,
+we harmonise the [TODO cite Menking et al 2025] data to the observational network
+i.e. add a declining offset (with the decline set to reach zero over [TODO check number] years)
+to ensure that the [TODO cite Menking et al 2025] data and the observational network
+derived global- annual-mean agree in [TODO check year] - the earliest year in our observational network derived global- annual-mean.
+This is crude a clear area for further investigation in future work ([TODO forward ref discussion]).
 
 % \subsubsubsubsection{Seasonality}
 
@@ -411,6 +430,7 @@ and these values have been temporally extended in the previous step.
 \label{sssec:methods-n2o-process-components}
 
 ZNTODO: add refs back to \ref{ssec:methods-general-approach} at the start of each sub sub section
+
 The last step is to construct the inputs needed for Equation \ref{eq:native-resolution-sum}
 from the temporally extended components.
 
@@ -433,11 +453,16 @@ breaking the key requirement of the seasonality term).
 % \subsubsubsubsection{Constructing latitudinal gradient over time (including interpolating PCs to monthly timesteps)}
 
 Finally we calculate the latitudinal gradient term, $lg(y, m, l)$.
-This is done using mean-preserving interpolation on the PCs before the PCs and EOFs are multiplied,
-in the same way as is described for CO_2 (Section \ref{sssec:methods-co2-finalising-general-components}).
+Like for the global-, annual-mean,
+to avoid jumps at year boundaries, we must first interpolate the PCs to monthly timesteps
+(again using mean-preserving interpolation).
+Then the full latitudinal gradient is calculated
+by taking the product of the temporally extended, monthly interpolated PCs and the EOFs.
 
 \subsubsection{Step 6: Generate native resolution}
 \label{sssec:methods-n2o-generate-native-resolution}
+
+We calculate the native resolution from the derived components following the general approach (Section \ref{ssec:methods-general-approach}).
 
 \subsection{Generating CO_2 concentrations}
 \label{ssec:methods-co2}
@@ -877,7 +902,7 @@ This is done using mean-preserving interpolation on the PCs before the PCs and E
 in the same way as is described for CO_2 (Section \ref{sssec:methods-co2-finalising-general-components}).
 
 \subsection{Calculating the general components: N_2O}
-\label{ssec:methods-n2o}
+% \label{ssec:methods-n2o}
 
 Processing for N_2O follows thebaseline case (Section \ref{ssec:methods-general-components})
 so this section is simply detailing the exact data sources used and choices made.

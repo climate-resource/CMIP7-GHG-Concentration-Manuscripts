@@ -204,7 +204,7 @@ take their global-mean from the observational network alone.
 """
 
 TITLES = {
-    "timeseries": "Observational network values",
+    "timeseries": "Observation network values",
     "counts": "Obs. counts",
     "locations": "Obs. locations",
     "interpolated-most": "Interpolation: most inputs",

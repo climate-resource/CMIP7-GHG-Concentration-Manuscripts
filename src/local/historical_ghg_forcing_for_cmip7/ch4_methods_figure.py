@@ -108,7 +108,7 @@ LAW_DOME_SMOOTHED_DATA_FILE = Path("manuscript-outputs") / "ch4_law-dome-smoothe
 """Where the re-run notebook saves the Law Dome data we want"""
 
 TITLES = {
-    "timeseries": "Observational network values",
+    "timeseries": "Observation network values",
     "counts": "Obs. counts",
     "locations": "Obs. locations",
     "interpolated-most": "Interpolation: most inputs",
