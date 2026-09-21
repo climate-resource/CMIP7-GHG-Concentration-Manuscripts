@@ -10,9 +10,8 @@ ALTODO: divergence not yet clear
 \label{ssec:methods-general-approach}
 
 In line with \citet{meinshausen_historical_2017},
-we provide a series of data products containing concentrations for all greenhouse gases,
-with a temporal and latitudinal dependency.
-No dependency on longitute is provided.
+we provide datasets of atmospheric concentrations for a wide selection of greenhouse gases.
+No dependency on longitude is provided.
 For a brief discussion on how add a vertical dimension to these datasets, see section \ref{ssec:methods-vertical}.
 
 For all greenhouse gases, the first dataset
@@ -30,13 +29,13 @@ be broken down as follows:
         \textbf{Step 1: Collect observations}
 
         The first step is collecting surface observations from available observing networks.
-        These networks provide surface concentration at different locations and times around the world.
+        These networks provide surface concentrations at different locations and times around the world.
 
         Where we have a choice, we use data that is already aggregated to a monthly temporal resolution, rather than raw data.
         We make this choice because we believe that the raw data providers are best placed to produce monthly aggregations from the raw data,
         including making subjective choices such as which measurements are appropriate to include in such an aggregation,
         how to weight measurements and how to treat raw measurements taken at different points within each month.
-        This is different to \citet{meinshausen_historical_2017}, which used the raw data directly and performed its own aggregation step.
+        This is different to \citet{meinshausen_historical_2017}, which used the raw data directly and performed their own aggregation step.
     }
 
      \item {
@@ -93,7 +92,7 @@ be broken down as follows:
     \item {
         \textbf{Step 4: Extend}
 
-        We extend the global-, annual-mean and latitudinal gradient PC(s) back to year 1
+        We extend the global-, annual-mean and latitudinal gradient PC(s) back to year 1.
 
         The global-, annual-mean is extended using ice cores where available,
         otherwise based on pre-industrial values from the literature and interpolation.
@@ -114,14 +113,12 @@ be broken down as follows:
         in order to avoid the change from year to year resulting in step changes between December of one year and January of the next.
         The same interpolation requirement applies to the latitudinal gradient PC(s)
         (which are initially calculated on a yearly timestep, see step 3).
-        Moreover, seasonality varies by latitude.
-        As a result, the latitudinal variation of seasonality must be included
-        (i.e. seasonality must have a `latitude' dimension)
         The following calculations are therefore performed:
 
         \begin{enumerate}
             \item The global-, annual-mean is converted into a global-, monthly-mean using mean-preserving interpolation
             \item The relative seasonality is converted into an absolute seasonality over all time by multiplying it by the extended global-, annual-mean
+            \item The latitudinal gradient PCs are converted to monthly steps using mean-preserving interpolation
             \item The latitudinal gradient is recovered by taking the product of the EOFs and the extended PCs
         \end{enumerate}
     }
@@ -163,22 +160,24 @@ while the specifics for each greenhouse gas are described in the following secti
         \begin{enumerate}
             \item {
                 \textbf{Step 3: Principal component analysis}
-                An absolute seasonality and seasonality change EOF plus PC is derived,
+                An absolute seasonality and seasonality change EOF and associated PC is derived,
                 rather than relative seasonality alone.
             }
             \item {
                 \textbf{Step 4: Extend}
-                Use the merged Law Dome - Mauna Loa record [TODO cite]
+                We use the merged Law Dome - Mauna Loa record [TODO cite]
                 to extend the global-, annual-mean back in time where available
                 (rather than ice core data alone).
                 % TODO: remove hard-coded 1850?
-                Extend the seasonality change PC back to 1850
+                We extend the seasonality change PC back to 1850
                 using a composite of global-, annual-mean CO_2 concentrations and global-mean surface air temperature.
             }
             \item {
                 \textbf{Step 5: Prepare the components to be combined}
-                Seasonality is calculated by adding the seasonality change from the EOF analysis to the base seasonality
-                (rather than multiplying relative seasonality by the global- annual-mean).
+                Seasonality is calculated by taking the product of the seasonality change EOF and the extended PC
+                to get the seasonality change over time.
+                The seasonality change over time is then added to the base seasonality (derived from observations)
+                to get the full seasonality over time.
             }
         \end{enumerate}
     }
@@ -212,10 +211,11 @@ while the specifics for each greenhouse gas are described in the following secti
                 \textbf{Step 4: Extend}
                 In some cases, we use a specific source for the global- annual-mean
                 rather than the global- annual-mean derived from the observational network.
-                We extend the global- annual-mean back in time
-                based on pre-industrial values from the literature
-                and perform an interpolation between the pre-industrial value
-                and the global- annual-mean values (as far back as they go in time).
+                % % Already mentioned above, don't need to repeat
+                % We extend the global- annual-mean back in time
+                % based on pre-industrial values from the literature
+                % and perform an interpolation between the pre-industrial value
+                % and the global- annual-mean values (as far back as they go in time).
             }
             \item {
                 \textbf{Step 5: Prepare the components to be combined}
