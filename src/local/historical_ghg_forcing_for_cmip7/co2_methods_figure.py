@@ -53,6 +53,7 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     add_latitude_legend,
     add_network_group,
     compact_existing_legend,
+    eof_palette,
     get_decimal_year,
     get_interpolated_input_coverage_info,
     get_only_data_variable,
@@ -70,7 +71,12 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     plot_seasonality_from_obs_network,
     plot_station_locations,
     plot_station_timeseries,
+    plot_variance_explained,
     plot_yearly_means,
+)
+from local.historical_ghg_forcing_for_cmip7.variance_explained import (
+    DecompositionToSave,
+    get_variance_explained,
 )
 
 ALL_DATA_WITH_BINS_FILE = Path("manuscript-outputs") / "co2_all-data-with-bins.csv"
@@ -113,6 +119,45 @@ because that is the notebook's working directory.
 # because that is the notebook's working directory.
 # """
 
+LAT_GRADIENT_DECOMPOSITION = DecompositionToSave(
+    eofs_pcs_variable="lat_gradient_full_eofs_pcs",
+    variance_explained_file=(
+        Path("manuscript-outputs") / "co2_lat-gradient-variance-explained.csv"
+    ),
+    full_eofs_pcs_file=(
+        Path("manuscript-outputs") / "co2_lat-gradient-full-eofs-pcs.nc"
+    ),
+)
+"""The latitudinal gradient decomposition, as notebook 1202 leaves it"""
+
+SEASONALITY_CHANGE_DECOMPOSITION = DecompositionToSave(
+    eofs_pcs_variable="seasonality_change_full_eofs_pcs",
+    variance_explained_file=(
+        Path("manuscript-outputs") / "co2_seasonality-change-variance-explained.csv"
+    ),
+    full_eofs_pcs_file=(
+        Path("manuscript-outputs") / "co2_seasonality-change-full-eofs-pcs.nc"
+    ),
+)
+"""The seasonality change decomposition, as notebook 1202 leaves it
+
+CO2 is the only gas whose seasonality changes over time,
+so it is the only gas with this decomposition to show.
+"""
+
+DECOMPOSITIONS_NOTEBOOK = (
+    Path("calculate_co2_monthly_fifteen_degree_pieces")
+    / "only"
+    / (
+        "1202_co2_observational-network"
+        "-global-mean-latitudinal-gradient-seasonality.ipynb"
+    )
+)
+"""Notebook which calculates both of CO2's decompositions
+
+Both come out of the one notebook, so both are fetched from one re-run.
+"""
+
 TITLES = {
     "timeseries": "Observation network values",
     "counts": "Obs. counts",
@@ -121,8 +166,10 @@ TITLES = {
     "interpolated-least": "Interpolation: fewest inputs",
     "gm": "Obs. global-mean",
     "seasonality": "Obs. seasonality",
+    "seasonality-variance": "Seasonality change EOFs variance explained",
     "seasonality-eof": "Obs. seasonality change EOF",
     "seasonality-pc": "Obs. seasonality change PC",
+    "lat-grad-variance": "Lat. gradient EOFs variance explained",
     "lat-grad-eof": "Obs. lat. gradient EOFs",
     "lat-grad-pc": "Obs. lat. gradient PCs",
     "gm-ext": "Extended global-mean",
@@ -150,34 +197,45 @@ ROWS = (
             for name in ("locations", "interpolated-most", "interpolated-least")
         ),
     ),
-    # The global-mean and the seasonality, decomposed
+    # The global-mean, and its extension beside it
     Row(
         panels=(
             Panel("gm"),
             Panel("seasonality"),
+            Panel("gm-ext", width=2.0, broken=True, broken_split=BROKEN_SPLIT),
+        ),
+        height=2.3,
+    ),
+    # The seasonality change, the whole way through
+    Row(
+        panels=(
+            Panel("seasonality-variance", width=0.8),
             Panel("seasonality-eof"),
             Panel("seasonality-pc"),
+            Panel("seasonality-pc-composite"),
+            Panel(
+                "seasonality-pc-ext",
+                width=1.2,
+                broken=True,
+                broken_split=BROKEN_SPLIT,
+            ),
         ),
         height=2.3,
     ),
-    # The latitudinal gradient, decomposed,
-    # then the regressions each extension leans on
+    # The latitudinal gradient, the whole way through,
+    # in the same order, so the two are read against each other
     Row(
         panels=(
-            Panel("seasonality-pc-composite"),
-            Panel("lat-grad-eof", width=0.8),
+            Panel("lat-grad-variance", width=0.8),
+            Panel("lat-grad-eof"),
             Panel("lat-grad-pc"),
             Panel("lat-grad-pc-emms"),
-        ),
-        height=2.3,
-    ),
-    # The extensions: the same axes three times, once per piece,
-    # so the three are read against each other rather than hunted for.
-    Row(
-        panels=(
-            Panel("gm-ext", broken=True, broken_split=BROKEN_SPLIT),
-            Panel("seasonality-pc-ext", broken=True, broken_split=BROKEN_SPLIT),
-            Panel("lat-grad-pc-ext", broken=True, broken_split=BROKEN_SPLIT),
+            Panel(
+                "lat-grad-pc-ext",
+                width=1.2,
+                broken=True,
+                broken_split=BROKEN_SPLIT,
+            ),
         ),
         height=2.3,
     ),
@@ -206,15 +264,15 @@ so the panels are labelled in reading order.
   Every map is in the same row: a map's shape is fixed,
   so its row's height follows from how many maps share the row's width,
   and with all of them together we only pay for that once.
-- Decomposition into a global-mean, seasonality and latitudinal gradient.
-  co2 has more pieces to decompose than the other gases do,
-  so this takes two rows: the global-mean and the seasonality,
-  then the latitudinal gradient
-  and the regressions the extensions lean on.
-- Extending each of those back in time.
-  The three extended pieces share a row and a width,
-  so they are read against each other
-  rather than hunted for across the figure.
+- The global-mean and the seasonality, and the global-mean extended back in time.
+- The seasonality change, the whole way through: how much of it each EOF
+  explains, the EOFs themselves, their principal components, the regression
+  the extension leans on, and the principal components extended back in time.
+- The latitudinal gradient, the whole way through, in the same order.
+  CO2 is the only gas whose seasonality changes over time, so it is the only
+  one with two components decomposed this way. Giving them a row each, laid
+  out the same, is what lets the reader carry what they learnt from one
+  straight across to the other.
 - The outputs, including the flying carpet,
   which is square and so sets its row's height.
 
@@ -597,6 +655,7 @@ def plot_seasonality_change_from_obs_network(
         x="year",
         y="value",
         hue="eof",
+        palette=eof_palette(pdf_pcs["eof"].unique()),
         ax=axes["pc"],
     )
     axes["pc"].set_ylabel(f"[{da_pcs.attrs['units']}]", fontsize="small")
@@ -785,6 +844,28 @@ def generate_co2_methods_figure(  # noqa: PLR0915
         },
     )
 
+    lat_gradient_variance_explained, seasonality_change_variance_explained = (
+        get_variance_explained(
+            DECOMPOSITIONS_NOTEBOOK,
+            (LAT_GRADIENT_DECOMPOSITION, SEASONALITY_CHANGE_DECOMPOSITION),
+            bundle_dir=bundle_dir,
+            original_run_notebooks_dir=original_run_notebooks_dir,
+            force_rerun=force_rerun,
+        )
+    )
+    plot_variance_explained(
+        lat_gradient_variance_explained,
+        axes["lat-grad-variance"],
+        # Taken from the EOFs the original run kept,
+        # rather than hard-coded, so the panel can't disagree with its neighbours
+        n_eofs_used=lat_gradient_from_obs_network["eof"].size,
+    )
+    plot_variance_explained(
+        seasonality_change_variance_explained,
+        axes["seasonality-variance"],
+        n_eofs_used=seasonality_change_from_obs_network["eof"].size,
+    )
+
     global_mean_extended = xr.load_dataset(
         bundle_dir / "data/interim/co2/co2_global-annual-mean_allyears.nc"
     )
@@ -863,6 +944,9 @@ def generate_co2_methods_figure(  # noqa: PLR0915
                 "Simple extrapolation": seasonality_change_pc_constant_years,
             },
         },
+        # This panel now shares its row with four others,
+        # which is not enough room for matplotlib's choice of year labels.
+        max_ticks_per_half=3,
     )
 
     plot_pc_timeseries_regression(
@@ -906,6 +990,9 @@ def generate_co2_methods_figure(  # noqa: PLR0915
                 "Simple extrapolation": pc1_constant_years,
             },
         },
+        # This panel now shares its row with four others,
+        # which is not enough room for matplotlib's choice of year labels.
+        max_ticks_per_half=3,
     )
 
     native_resolution = xr.load_dataset(

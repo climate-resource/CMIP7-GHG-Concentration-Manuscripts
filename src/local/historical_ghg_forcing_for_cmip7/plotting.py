@@ -150,6 +150,17 @@ and spending a distinct colour per meaning across a figure this size would run
 the palette out long before the panels do.
 """
 
+REGRESSION_COLOURS = {
+    "raw data": OKABE_ITO["blue"],
+    "regression": OKABE_ITO["vermillion"],
+}
+"""Colour to use for each part of a regression panel
+
+The points are the observed values the fit was made from, so they take the
+same blue the observations take everywhere else in these figures, and the
+fitted line is set against them.
+"""
+
 REGION_COLOURS = {
     "Global": OKABE_ITO["blue"],
     "Northern hemisphere": OKABE_ITO["vermillion"],
@@ -2549,7 +2560,7 @@ def plot_pc_timeseries_regression(  # noqa: PLR0913
         label="raw data",
         marker="x",
         s=30,
-        color="tab:blue",
+        color=REGRESSION_COLOURS["raw data"],
         alpha=0.7,
     )
     xlim = ax.get_xlim()
@@ -2568,7 +2579,7 @@ def plot_pc_timeseries_regression(  # noqa: PLR0913
         slope=regression_gradient,
         label="regression",
         linestyle="-",
-        color="tab:orange",
+        color=REGRESSION_COLOURS["regression"],
         alpha=0.9,
     )
     ax.set_xlim(xlim)

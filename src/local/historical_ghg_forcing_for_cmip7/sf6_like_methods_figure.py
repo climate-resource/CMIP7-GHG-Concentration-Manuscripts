@@ -71,7 +71,12 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     plot_seasonality_from_obs_network,
     plot_station_locations,
     plot_station_timeseries,
+    plot_variance_explained,
     plot_yearly_means,
+)
+from local.historical_ghg_forcing_for_cmip7.variance_explained import (
+    DecompositionToSave,
+    get_variance_explained,
 )
 
 SF6_LIKE_GASES = (
@@ -203,6 +208,45 @@ The gases which appear in none of these entries
 take their global-mean from the observational network alone.
 """
 
+LAT_GRADIENT_NOTEBOOK = (
+    Path("calculate_sf6_like_monthly_fifteen_degree_pieces")
+    / "{gas}"
+    / (
+        "1302_sf6-like_observational-network"
+        "-global-mean-latitudinal-gradient-seasonality.ipynb"
+    )
+)
+"""Notebook which calculates the latitudinal gradient decomposition
+
+This step runs once per gas, so the gas goes in the path.
+"""
+
+
+def get_lat_gradient_decomposition(gas: str) -> DecompositionToSave:
+    """
+    Get the latitudinal gradient decomposition to pull out for a gas
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    Returns
+    -------
+    :
+        The decomposition, as notebook 1302 leaves it
+    """
+    return DecompositionToSave(
+        eofs_pcs_variable="lat_gradient_full_eofs_pcs",
+        variance_explained_file=(
+            Path("manuscript-outputs") / f"{gas}_lat-gradient-variance-explained.csv"
+        ),
+        full_eofs_pcs_file=(
+            Path("manuscript-outputs") / f"{gas}_lat-gradient-full-eofs-pcs.nc"
+        ),
+    )
+
+
 TITLES = {
     "timeseries": "Observation network values",
     "counts": "Obs. counts",
@@ -211,6 +255,7 @@ TITLES = {
     "interpolated-least": "Interpolation: fewest inputs",
     "gm": "Obs. global-mean",
     "seasonality": "Obs. seasonality",
+    "lat-grad-variance": "Lat. gradient EOFs variance explained",
     "lat-grad-eof": "Obs. lat. gradient EOF",
     "lat-grad-pc": "Obs. lat. gradient PC",
     "gm-ext": "Extended global-mean",
@@ -244,16 +289,22 @@ ROWS = (
         panels=(
             Panel("gm"),
             Panel("seasonality"),
-            Panel("lat-grad-eof"),
-            Panel("lat-grad-pc"),
+            Panel("gm-ext", width=2.0, broken=True, broken_split=BROKEN_SPLIT),
         ),
         height=2.3,
     ),
     Row(
         panels=(
-            Panel("gm-ext", width=1.5, broken=True, broken_split=BROKEN_SPLIT),
+            Panel("lat-grad-variance", width=0.8),
+            Panel("lat-grad-eof"),
+            Panel("lat-grad-pc"),
             Panel("lat-grad-pc-emms"),
-            Panel("lat-grad-pc-ext", width=1.5, broken=True, broken_split=BROKEN_SPLIT),
+            Panel(
+                "lat-grad-pc-ext",
+                width=1.2,
+                broken=True,
+                broken_split=BROKEN_SPLIT,
+            ),
         ),
         height=2.3,
     ),
@@ -748,6 +799,22 @@ def generate_sf6_like_methods_figure(  # noqa: PLR0915
         },
     )
 
+    (lat_gradient_variance_explained,) = get_variance_explained(
+        Path(str(LAT_GRADIENT_NOTEBOOK).format(gas=gas)),
+        (get_lat_gradient_decomposition(gas),),
+        step_config_id=gas,
+        bundle_dir=bundle_dir,
+        original_run_notebooks_dir=original_run_notebooks_dir,
+        force_rerun=force_rerun,
+    )
+    plot_variance_explained(
+        lat_gradient_variance_explained,
+        axes["lat-grad-variance"],
+        # Taken from the EOFs the original run kept,
+        # rather than hard-coded, so the panel can't disagree with its neighbours
+        n_eofs_used=lat_gradient_from_obs_network["eof"].size,
+    )
+
     global_mean_extended = xr.load_dataset(
         gas_dir / f"{gas}_global-annual-mean_allyears.nc"
     )
@@ -859,6 +926,9 @@ def generate_sf6_like_methods_figure(  # noqa: PLR0915
                 "Constant": extension_years[extension_years < emissions_start_year],
             },
         },
+        # This panel now shares its row with four others,
+        # which is not enough room for matplotlib's choice of year labels.
+        max_ticks_per_half=3,
     )
 
     native_resolution = xr.load_dataset(gas_dir / f"{gas}_fifteen-degree_monthly.nc")

@@ -68,7 +68,12 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     plot_seasonality_from_obs_network,
     plot_station_locations,
     plot_station_timeseries,
+    plot_variance_explained,
     plot_yearly_means,
+)
+from local.historical_ghg_forcing_for_cmip7.variance_explained import (
+    DecompositionToSave,
+    get_variance_explained,
 )
 from local.paths import DATA_RAW_DIR
 
@@ -107,6 +112,24 @@ because that is the notebook's working directory.
 LAW_DOME_SMOOTHED_DATA_FILE = Path("manuscript-outputs") / "ch4_law-dome-smoothed.csv"
 """Where the re-run notebook saves the Law Dome data we want"""
 
+LAT_GRADIENT_DECOMPOSITION = DecompositionToSave(
+    eofs_pcs_variable="full_eofs_pcs",
+    variance_explained_file=(
+        Path("manuscript-outputs") / "ch4_lat-gradient-variance-explained.csv"
+    ),
+    full_eofs_pcs_file=(
+        Path("manuscript-outputs") / "ch4_lat-gradient-full-eofs-pcs.nc"
+    ),
+)
+"""The latitudinal gradient decomposition, as notebook 1102 leaves it"""
+
+LAT_GRADIENT_NOTEBOOK = (
+    Path("calculate_ch4_monthly_fifteen_degree_pieces")
+    / "only"
+    / "1102_ch4_global-mean-latitudinal-gradient-seasonality.ipynb"
+)
+"""Notebook which calculates the latitudinal gradient decomposition"""
+
 TITLES = {
     "timeseries": "Observation network values",
     "counts": "Obs. counts",
@@ -115,6 +138,7 @@ TITLES = {
     "interpolated-least": "Interpolation: fewest inputs",
     "gm": "Obs. global-mean",
     "seasonality": "Obs. seasonality",
+    "lat-grad-variance": "Lat. gradient EOFs variance explained",
     "lat-grad-eof": "Obs. lat. gradient EOFs",
     "lat-grad-pc": "Obs. lat. gradient PCs",
     "gm-ext": "Extended global-mean",
@@ -144,16 +168,22 @@ ROWS = (
         panels=(
             Panel("gm"),
             Panel("seasonality"),
-            Panel("lat-grad-eof"),
-            Panel("lat-grad-pc"),
+            Panel("gm-ext", width=2.0, broken=True, broken_split=BROKEN_SPLIT),
         ),
         height=2.3,
     ),
     Row(
         panels=(
-            Panel("gm-ext", width=1.5, broken=True, broken_split=BROKEN_SPLIT),
+            Panel("lat-grad-variance", width=0.8),
+            Panel("lat-grad-eof"),
+            Panel("lat-grad-pc"),
             Panel("lat-grad-pc-emms"),
-            Panel("lat-grad-pc-ext", width=1.5, broken=True, broken_split=BROKEN_SPLIT),
+            Panel(
+                "lat-grad-pc-ext",
+                width=1.2,
+                broken=True,
+                broken_split=BROKEN_SPLIT,
+            ),
         ),
         height=2.3,
     ),
@@ -182,8 +212,10 @@ so the panels are labelled in reading order.
   Every map is in the same row: a map's shape is fixed,
   so its row's height follows from how many maps share the row's width,
   and with all of them together we only pay for that once.
-- Decomposition into a global-mean, seasonality and latitudinal gradient.
-- Extending each of those back in time.
+- The global-mean and the seasonality, and the global-mean extended back in time.
+- The latitudinal gradient, the whole way through: how much of it each EOF
+  explains, the EOFs themselves, their principal components, the regression
+  the extension leans on, and the principal components extended back in time.
 - The outputs, including the flying carpet,
   which is square and so sets its row's height.
 
@@ -672,6 +704,21 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
         },
     )
 
+    (lat_gradient_variance_explained,) = get_variance_explained(
+        LAT_GRADIENT_NOTEBOOK,
+        (LAT_GRADIENT_DECOMPOSITION,),
+        bundle_dir=bundle_dir,
+        original_run_notebooks_dir=original_run_notebooks_dir,
+        force_rerun=force_rerun,
+    )
+    plot_variance_explained(
+        lat_gradient_variance_explained,
+        axes["lat-grad-variance"],
+        # Taken from the EOFs the original run kept,
+        # rather than hard-coded, so the panel can't disagree with its neighbours
+        n_eofs_used=lat_gradient_from_obs_network["eof"].size,
+    )
+
     global_mean_extended = xr.load_dataset(
         bundle_dir / "data/interim/ch4/ch4_global-annual-mean_allyears.nc"
     )
@@ -759,6 +806,9 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
                 "Constant": pc1_constant_years,
             },
         },
+        # This panel now shares its row with four others,
+        # which is not enough room for matplotlib's choice of year labels.
+        max_ticks_per_half=3,
     )
 
     native_resolution = xr.load_dataset(
