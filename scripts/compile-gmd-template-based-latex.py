@@ -8,6 +8,7 @@ import subprocess
 import textwrap
 import tomllib
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -160,7 +161,47 @@ def aux_file_has_citations(aux_file: Path) -> bool:
     )
 
 
-def main(  # noqa: PLR0913
+@dataclass
+class FigureSpec:
+    """
+    Spec for including a figure in the output latex
+    """
+
+    full_path: Path
+    """
+    Full path to the figure
+    """
+
+    tag_to_replace: str
+    """
+    Tag in the raw latex to replace with the figure's path (relative to the build path)
+    """
+
+
+def pass_figure_specs(raw: list[str]) -> tuple[FigureSpec, ...]:
+    """
+    Pass CLI figure information into `FigureSpec`s
+    """
+    res_l = []
+    for v in raw:
+        tag, _, full_path = v.partition("=")
+        if not full_path:
+            msg = (
+                "Bad value for --figure-file. "
+                "Please format as `tag-to-replace=full-path`. "
+                f"Received: {v!r}"
+            )
+            raise ValueError(msg)
+
+        fs = FigureSpec(tag_to_replace=tag, full_path=Path(full_path))
+        res_l.append(fs)
+
+    res = tuple(res_l)
+
+    return res
+
+
+def main(  # noqa: PLR0913, PLR0915
     abstract: Annotated[
         Path,
         typer.Option(
@@ -340,10 +381,25 @@ def main(  # noqa: PLR0913
             )
         ),
     ] = None,
+    figure_file: Annotated[
+        list[str] | None,
+        typer.Option(
+            help=(
+                "Figure file to add. "
+                "Should be passed as `tag-to-replace-in-latex=path-to-figure`, "
+                "e.g. `--figure-file=<n2o-methods-figure>=/path/to/figure.pdf`"
+            )
+        ),
+    ] = None,
 ) -> None:
     """
     Compile the PDF
     """
+    if figure_file is not None:
+        figure_specs = pass_figure_specs(figure_file)
+    else:
+        figure_specs = None
+
     with open(metadata, "rb") as fh:
         metadata_values = tomllib.load(fh)
 
@@ -385,12 +441,27 @@ def main(  # noqa: PLR0913
         res, acknowledgements, tag="<acknowledgements-start>"
     )
 
-    replacements_map = yaml.safe_load(replacements.read_text())
-    res = apply_replacements(res, replacements_map)
-    # Figure replacements and handling
-
     latex_dir = build_dir / "latex"
     latex_dir.mkdir(exist_ok=True, parents=True)
+
+    if figure_specs is not None:
+        figure_replacements = {}
+        seen = set()
+        for fs in figure_specs:
+            dest = latex_dir / fs.full_path.name
+            dest.parent.mkdir(exist_ok=True, parents=True)
+            if dest in seen:
+                msg = f"Multiple figure files will land at {dest!r}"
+                raise AssertionError(msg)
+
+            shutil.copy2(fs.full_path, dest)
+            seen.add(dest)
+            figure_replacements[fs.tag_to_replace] = str(dest.relative_to(latex_dir))
+
+        res = apply_replacements(res, figure_replacements)
+
+    replacements_map = yaml.safe_load(replacements.read_text())
+    res = apply_replacements(res, replacements_map)
 
     latex_main = latex_dir / "main.tex"
     with open(latex_main, "w") as fh:
