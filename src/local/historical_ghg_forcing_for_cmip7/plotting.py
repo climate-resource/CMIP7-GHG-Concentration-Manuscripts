@@ -761,21 +761,81 @@ def compact_existing_legend(ax: matplotlib.axes.Axes, **kwargs: object) -> None:
     ax.get_legend().get_title().set_fontsize("x-small")
 
 
+def split_masks_at_year(
+    years: np.typing.ArrayLike, split_year: float
+) -> tuple[np.typing.NDArray[np.bool_], np.typing.NDArray[np.bool_]]:
+    """
+    Get the masks which pick out each half of a broken axis' years
+
+    Each half of a broken axis is drawn on its own axes, and an axes scales
+    itself to everything it was given. Handing both halves the whole record
+    makes each of them reach for years it does not show, so each half is
+    given only the years it covers.
+
+    Both halves keep the split year itself. The halves are drawn hard up
+    against each other, so a half which stopped short of the split year
+    would leave a gap at the break.
+
+    Parameters
+    ----------
+    years
+        Years to split
+
+    split_year
+        Year the axis is broken at
+
+    Returns
+    -------
+    :
+        Mask for the left half, then the mask for the right half
+    """
+    years = np.asarray(years)
+
+    return years <= split_year, years >= split_year
+
+
 def auto_set_split_axis_y_limits(
-    axes: Iterable[matplotlib.axes.Axes], y_values: list[float]
+    axes: Iterable[matplotlib.axes.Axes],
+    y_values: np.typing.ArrayLike,
+    margin: float = 0.05,
 ) -> None:
     """
-    Auto set the y-limits for split axes based on the data
-    """
-    min = np.min(y_values)
-    max = np.max(y_values)
-    values_range = max - min
+    Give every half of a broken axis the same y-limits, taken from the data
 
-    ymin = min - 0.05 * values_range
-    ymax = max + 0.05 * values_range
+    The halves of a broken axis share one vertical scale, and each half is
+    only given the years it shows, so neither half can work the scale out on
+    its own. It has to come from everything the panel draws.
+
+    Parameters
+    ----------
+    axes
+        Axes which make up the panel
+
+    y_values
+        Every value the panel draws, from all of its series
+
+        Leaving a series out here is what makes a panel clip it,
+        so this is the whole panel's data, not one series of it.
+
+    margin
+        Room to leave above and below the data, as a fraction of its range
+
+    Raises
+    ------
+    ValueError
+        `y_values` is empty, so there is nothing to take limits from
+    """
+    y_values = np.asarray(y_values, dtype=float)
+    if y_values.size < 1:
+        msg = "No values to take y-limits from"
+        raise ValueError(msg)
+
+    lowest = np.min(y_values)
+    highest = np.max(y_values)
+    values_range = highest - lowest
 
     for ax in axes:
-        ax.set_ylim(ymin, ymax)
+        ax.set_ylim(lowest - margin * values_range, highest + margin * values_range)
 
 
 def eof_palette(eofs: Iterable[int], n_eofs_used: int | None = None) -> dict[int, str]:
@@ -2266,15 +2326,16 @@ def plot_global_mean_extension(  # noqa: PLR0913
     extended_label = "Extended global-mean"
     palette = source_sequence_palette([extended_label, *input_sources])
 
-    for i, (ax, get_pdf_ax) in enumerate(
-        zip(
-            (ax_left, ax_right),
-            (lambda x: x[x["year"] < split_year], lambda x: x[x["year"] >= split_year]),
-        )
-    ):
+    gm_masks = split_masks_at_year(gm_years, split_year)
+    source_masks = {
+        label: split_masks_at_year(pdf["year"], split_year)
+        for label, pdf in input_sources.items()
+    }
+
+    for i, ax in enumerate((ax_left, ax_right)):
         ax.plot(
-            gm_years,
-            gm_values,
+            gm_years[gm_masks[i]],
+            gm_values[gm_masks[i]],
             label=extended_label if i < 1 else None,
             color=palette[extended_label],
             linewidth=2,
@@ -2282,17 +2343,22 @@ def plot_global_mean_extension(  # noqa: PLR0913
         )
 
         for label, pdf in input_sources.items():
-            pdf_ax = get_pdf_ax(pdf)
+            pdf_half = pdf[source_masks[label][i]]
             ax.plot(
-                pdf_ax["year"],
-                pdf_ax["value"],
+                pdf_half["year"],
+                pdf_half["value"],
                 label=label if i < 1 else None,
                 color=palette[label],
                 linewidth=2,
                 # s=30,
             )
 
-    auto_set_split_axis_y_limits([ax_left, ax_right], pdf["value"])
+    # Everything the panel draws, so that neither the extended global-mean
+    # nor any one source can be left hanging outside the limits.
+    auto_set_split_axis_y_limits(
+        [ax_left, ax_right],
+        np.concatenate([gm_values, *(pdf["value"] for pdf in input_sources.values())]),
+    )
 
     # Over the top of the line, so the stretches which are not a source
     # are marked out on the line itself rather than beside it.
@@ -2424,15 +2490,10 @@ def plot_extension_pieces(  # noqa: PLR0913
     # which is the order the reader meets them in as they go along the line.
     pdf["source"] = pd.Categorical(pdf["source"], categories=list(pieces), ordered=True)
 
-    for i, (ax, get_pdf_ax) in enumerate(
-        zip(
-            (ax_left, ax_right),
-            (lambda x: x[x["year"] < split_year], lambda x: x[x["year"] >= split_year]),
-        )
-    ):
-        pdf_ax = get_pdf_ax(pdf)
+    masks = split_masks_at_year(pdf["year"], split_year)
+    for ax, mask in zip((ax_left, ax_right), masks):
         sns.scatterplot(
-            pdf_ax,
+            pdf[mask],
             x="year",
             y="value",
             hue="source",
@@ -2546,22 +2607,26 @@ def plot_pcs_extended(  # noqa: PLR0913
     if pcs_df["source"].isnull().any(axis=None):
         raise AssertionError
 
-    for i, (ax, get_pdf_ax) in enumerate(
-        zip(
-            (ax_left, ax_right),
-            (lambda x: x[x["year"] < split_year], lambda x: x[x["year"] >= split_year]),
-        )
-    ):
-        pdf_ax = get_pdf_ax(pcs_df)
+    # A source which only appears on one side of the break is still one of
+    # the panel's sources. Making the column categorical keeps every source
+    # in the legend of the half which carries it, rather than only the ones
+    # that half happens to contain: the legend describes the whole panel.
+    sources = list(dict.fromkeys(source for info in pieces.values() for source in info))
+    pcs_df["source"] = pd.Categorical(
+        pcs_df["source"], categories=sources, ordered=True
+    )
+
+    masks = split_masks_at_year(pcs_df["year"], split_year)
+    for ax, mask in zip((ax_left, ax_right), masks):
         sns.scatterplot(
-            pdf_ax,
+            pcs_df[mask],
             x="year",
             y="value",
             # hue="eof",
             # style="source",
             style="eof",
             hue="source",
-            palette=extension_source_palette(pcs_df["source"].unique()),
+            palette=extension_source_palette(sources),
             ax=ax,
             s=25,
             edgecolor=None,
@@ -2587,7 +2652,9 @@ def plot_pcs_extended(  # noqa: PLR0913
     handles = legend.legend_handles
     labels = [text.get_text() for text in legend.get_texts()]
     # Add fake handles and legends for other EOFs so 2 col splits as we want.
-    for _ in range(len(pcs_df["source"].unique()) - len(pcs_df["eof"].unique())):
+    # Counted from the panel's sources rather than from the left half's, which
+    # need not carry all of them.
+    for _ in range(len(sources) - len(pcs_df["eof"].unique())):
         handles.append(matplotlib.lines.Line2D([], [], color="none", label=""))
         labels.append("")
 
@@ -2696,15 +2763,10 @@ def plot_yearly_means(
 
     pdf = pd.concat(pdf_l)
 
-    for i, (ax, get_pdf_ax) in enumerate(
-        zip(
-            (ax_left, ax_right),
-            (lambda x: x[x["year"] < split_year], lambda x: x[x["year"] >= split_year]),
-        )
-    ):
-        pdf_ax = get_pdf_ax(pdf)
+    masks = split_masks_at_year(pdf["year"], split_year)
+    for ax, mask in zip((ax_left, ax_right), masks):
         sns.scatterplot(
-            pdf_ax,
+            pdf[mask],
             x="year",
             y="value",
             hue="Region",

@@ -374,12 +374,7 @@ If all EOFs are retained, then the product of the EOFs and the PCs
 reproduces the residuals we started with exactly.
 However, following \citet{meinshausen_historical_2017}
 we only retain the first two EOFs as these are sufficient
-to reproduce the residuals to within 1~ppb N_2O (and are usually much closer than this).
-The variance explained by each EOF supports this choice:
-the first EOF explains 89.6\% of the variance in the residuals and the second a further 9.6\%,
-so the two we retain explain 99.2\% between them,
-while the third explains only 0.5\% and every subsequent EOF less again
-(Figure \ref{fig:methods-n2o}i).
+to explain almost all of the variance.
 
 % \subsubsubsubsection{seasonality}
 
@@ -387,7 +382,7 @@ The fourth step is to calculate our seasonality.
 We do this by first calculating the residuals at each time and latitude.
 The first component in this calculation is our longitudinal mean (dimensions (year, month, lat)).
 The second component is the annual-mean at each latitude,
-interpolated to monthly timesteps using mean-preserving interpolation, see [TODO forward ref]
+interpolated to monthly timesteps using mean-preserving interpolation, see Section \ref{sssec:methods-n2o-process-components}
 (as a result, this data also has dimensions (year, month, lat)).
 The interpolation to monthly timesteps is necessary
 so that the residuals do not include step changes at each year boundary
@@ -440,16 +435,21 @@ from the temporally extended components.
 % \subsubsubsubsection{Interpolating global- annual-mean to monthly timesteps}
 We start with the global-, annual-mean term, $gm(y, m)$.
 This must be interpolated onto monthly timesteps.
-We do this using [TODO find name], which allows us to perform a mean-preserving interpolation
-that ensures that the interpolated timeseries stays consistent with the global- annual-mean values.
-[TODO note somewhere that this is one of the most computationally expensive steps in the whole process]
+This interpolation must be mean-preserving, i.e. the mean of the interpolated values must match the mean of the input values (over the same time bounds),
+so that that the interpolated timeseries stays consistent with the global- annual-mean values.
+We do this using the Lai-Kaplan algorithm \citep{lai-kaplan}.
+We additionally use the Rymes-Meyers algorithm \citep{rymes-meyers}
+when we need to ensure that interpolated values remain within specified bounds.
+(Even with these algorithms,
+the mean-preserving interpolation remains one of the most computationally expensive steps in the whole process).
 
 % \subsubsubsubsection{Constructing seasonality over time}
 
 Next we calculate the seasonality term, $s(y, m, l)$.
 This is simply the product of the relative seasonality and the global-, annual-mean concentrations
-(not the monthly interpolation though, as the seasonality already includes a monthly dimension
-and using the monthly interpolation would lead to an absolute seasonality
+(not the monthly interpolation though:
+the seasonality already includes a monthly dimension
+so using the monthly interpolation would lead to an absolute seasonality
 which does not have an annual-mean of zero,
 breaking the key requirement of the seasonality term).
 
