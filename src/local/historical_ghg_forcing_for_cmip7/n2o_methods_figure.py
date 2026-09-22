@@ -57,11 +57,35 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     plot_seasonality_from_obs_network,
     plot_station_locations,
     plot_station_timeseries,
+    plot_variance_explained,
     plot_yearly_means,
 )
 
 ALL_DATA_WITH_BINS_FILE = Path("manuscript-outputs") / "n2o_all-data-with-bins.csv"
 """Where the re-run notebook saves the data we want
+
+Relative to the bundle's root directory,
+because that is the notebook's working directory.
+"""
+
+LAT_GRADIENT_FULL_EOFS_PCS_FILE = (
+    Path("manuscript-outputs") / "n2o_lat-gradient-full-eofs-pcs.nc"
+)
+"""Where the re-run notebook saves every EOF and PC of the latitudinal gradient
+
+The original run only saves the EOFs it keeps, so this is the only place
+the full decomposition is written down. We keep the whole thing, not just
+the variance explained we derive from it, so the decomposition can be looked
+at again without paying for another re-run.
+
+Relative to the bundle's root directory,
+because that is the notebook's working directory.
+"""
+
+LAT_GRADIENT_VARIANCE_EXPLAINED_FILE = (
+    Path("manuscript-outputs") / "n2o_lat-gradient-variance-explained.csv"
+)
+"""Where the re-run notebook saves the variance each latitudinal gradient EOF explains
 
 Relative to the bundle's root directory,
 because that is the notebook's working directory.
@@ -75,6 +99,7 @@ TITLES = {
     "interpolated-least": "Interpolation: fewest inputs",
     "gm": "Obs. global-mean",
     "seasonality": "Obs. seasonality",
+    "lat-grad-variance": "Lat. gradient EOFs variance explained",
     "lat-grad-eof": "Obs. lat. gradient EOFs",
     "lat-grad-pc": "Obs. lat. gradient PCs",
     "gm-ext": "Extended global-mean",
@@ -103,14 +128,15 @@ ROWS = (
         panels=(
             Panel("gm"),
             Panel("seasonality"),
-            Panel("lat-grad-eof"),
-            Panel("lat-grad-pc"),
+            Panel("gm-ext", width=2.0, broken=True, broken_split=BROKEN_SPLIT),
         ),
         height=2.3,
     ),
     Row(
         panels=(
-            Panel("gm-ext", broken=True, broken_split=BROKEN_SPLIT),
+            Panel("lat-grad-variance"),
+            Panel("lat-grad-eof"),
+            Panel("lat-grad-pc"),
             Panel("lat-grad-pc-ext", broken=True, broken_split=BROKEN_SPLIT),
         ),
         height=2.3,
@@ -140,8 +166,10 @@ so the panels are labelled in reading order.
   Every map is in the same row: a map's shape is fixed,
   so its row's height follows from how many maps share the row's width,
   and with all of them together we only pay for that once.
-- Decomposition into a global-mean, seasonality and latitudinal gradient.
-- Extending each of those back in time.
+- The global-mean and the seasonality, and the global-mean extended back in time.
+- The latitudinal gradient: how much of it each EOF explains,
+  the EOFs themselves, their principal components,
+  and those principal components extended back in time.
 - The outputs, including the flying carpet,
   which is square and so sets its row's height.
 
@@ -219,6 +247,125 @@ from pathlib import Path
 manuscript_out_file = Path("{ALL_DATA_WITH_BINS_FILE.as_posix()}")
 manuscript_out_file.parent.mkdir(exist_ok=True, parents=True)
 all_data_with_bins.to_csv(manuscript_out_file, index=False)
+manuscript_out_file
+"""
+
+    notebook_name = base_notebook.stem
+    ipynb_to_run = bundle_dir / "notebooks-rerun" / f"{notebook_name}.ipynb"
+    to_run = write_modified_notebook(
+        start_from=start_from,
+        out_py=MODIFIED_NOTEBOOKS_DIR / f"{notebook_name}.py",
+        out_ipynb=ipynb_to_run,
+        extra_cells=[save_cell],
+        step_config_id="only",
+    )
+    run_notebook_from_bundle_dir(
+        to_run,
+        ipynb_to_run,
+        bundle_dir=bundle_dir,
+    )
+
+    return pd.read_csv(out_file)
+
+
+def get_n2o_lat_gradient_variance_explained(
+    bundle_dir: Path = DEFAULT_BUNDLE_DIR,
+    original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
+    force_rerun: bool = False,
+) -> pd.DataFrame:
+    """
+    Get the variance explained by each of the latitudinal gradient's EOFs
+
+    The original run only saves the EOFs it keeps, so the ones it drops --
+    which are exactly the ones this tells us we can afford to drop --
+    only ever exist inside the notebook which calculates them.
+    This re-runs that notebook to get them back.
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    original_run_notebooks_dir
+        The original run's `notebooks-executed` directory
+
+        Only used if we don't already have a copy of the notebook we need.
+
+    force_rerun
+        Re-run the notebook even if its output is already there
+
+    Returns
+    -------
+        Fraction of the variance explained by each EOF
+    """
+    out_file = bundle_dir / LAT_GRADIENT_VARIANCE_EXPLAINED_FILE
+    full_eofs_pcs_file = bundle_dir / LAT_GRADIENT_FULL_EOFS_PCS_FILE
+    if out_file.exists() and full_eofs_pcs_file.exists() and not force_rerun:
+        logger.info(f"Using existing {out_file}")
+        return pd.read_csv(out_file)
+
+    base_notebook = (
+        Path("calculate_n2o_monthly_fifteen_degree_pieces")
+        / "only"
+        / "1002_n2o_global-mean-latitudinal-gradient-seasonality.ipynb"
+    )
+
+    start_from = ensure_executed_notebook_available(
+        base_notebook,
+        original_run_notebooks_dir=original_run_notebooks_dir,
+    )
+    ensure_bundle_available(
+        files_to_get=(
+            "pyproject.toml",
+            "pixi.lock",
+            "v1.0.0-config-raw.yaml",
+        ),
+        files_to_get_tarred=(
+            "src.tar.gz",
+            "data--interim.tar.gz",
+        ),
+        bundle_dir=bundle_dir,
+    )
+    ensure_bundle_environment(bundle_dir)
+
+    save_cell = f"""
+# Added for the CMIP7 GHG manuscript.
+# The original run only ever saved the EOFs it keeps,
+# but we want to show how much of the variance every EOF explains,
+# so that keeping only the first few can be justified.
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+# The EOFs are the right singular vectors of the residuals, so they are
+# orthonormal, which makes the principal components uncorrelated:
+# the principal components' cross-product is `diag(D) ** 2`,
+# i.e. the singular values squared with nothing off the diagonal.
+pcs = full_eofs_pcs["principal-components"].transpose("year", "eof").data.m
+singular_values_squared = pcs.T @ pcs
+
+off_diagonal = singular_values_squared - np.diag(np.diag(singular_values_squared))
+if not np.allclose(off_diagonal, 0.0, atol=1e-10 * np.trace(singular_values_squared)):
+    msg = "The principal components are not uncorrelated, so this is not an SVD"
+    raise AssertionError(msg)
+
+variance_explained = np.diag(singular_values_squared) / np.trace(
+    singular_values_squared
+)
+
+full_eofs_pcs_out_file = Path("{LAT_GRADIENT_FULL_EOFS_PCS_FILE.as_posix()}")
+full_eofs_pcs_out_file.parent.mkdir(exist_ok=True, parents=True)
+full_eofs_pcs.pint.dequantify().to_netcdf(full_eofs_pcs_out_file)
+
+manuscript_out_file = Path("{LAT_GRADIENT_VARIANCE_EXPLAINED_FILE.as_posix()}")
+manuscript_out_file.parent.mkdir(exist_ok=True, parents=True)
+pd.DataFrame(
+    {{
+        "eof": full_eofs_pcs["eof"].values,
+        "variance_explained_fraction": variance_explained,
+    }}
+).to_csv(manuscript_out_file, index=False)
 manuscript_out_file
 """
 
@@ -369,6 +516,18 @@ def generate_n2o_methods_figure(  # noqa: PLR0915
         },
     )
 
+    plot_variance_explained(
+        get_n2o_lat_gradient_variance_explained(
+            bundle_dir=bundle_dir,
+            original_run_notebooks_dir=original_run_notebooks_dir,
+            force_rerun=force_rerun,
+        ),
+        axes["lat-grad-variance"],
+        # Taken from the EOFs the original run kept,
+        # rather than hard-coded, so the panel can't disagree with its neighbours
+        n_eofs_used=lat_gradient_from_obs_network["eof"].size,
+    )
+
     global_mean_extended = xr.load_dataset(
         bundle_dir / "data/interim/n2o/n2o_global-annual-mean_allyears.nc"
     )
@@ -407,6 +566,9 @@ def generate_n2o_methods_figure(  # noqa: PLR0915
         # Both PCs are flat bands which sit near the top and the bottom
         # of this panel, so the room for the legend is in the middle.
         legend_loc="center left",
+        # This panel is a quarter of the figure wide,
+        # which is not enough room for matplotlib's choice of year labels.
+        max_ticks_per_half=3,
     )
 
     native_resolution = xr.load_dataset(

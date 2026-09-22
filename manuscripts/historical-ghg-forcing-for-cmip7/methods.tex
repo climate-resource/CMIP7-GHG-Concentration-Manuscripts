@@ -309,10 +309,10 @@ When referring to `AGAGE' data, we also mean data from the predecessor GAGE [TOD
     (but still pass our minimum data for interpolation requirement).
     f) Global-, annual-mean derived from the observation network values.
     g) Seasonality derived from the observation network values.
-    % ZNTODO: re-order the figure to match this
     h) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
-    % ZNTODO: add this plot
-    i) Variance explained by each latitudinal gradient empirical orthogonal function (EOF).
+    i) Variance explained by each latitudinal gradient empirical orthogonal function (EOF),
+    individually (bars) and cumulatively (line).
+    The EOFs we retain are coloured as in panels j) and k); the ones we discard are grey.
     j) Latitudinal gradient EOF derived from the observation network values.
     k) Latitudinal gradient principal components (PCs) derived from the observation network values.
     l) Latitudinal gradient PCs for the entire output dataset timespan.
@@ -375,8 +375,11 @@ reproduces the residuals we started with exactly.
 However, following \citet{meinshausen_historical_2017}
 we only retain the first two EOFs as these are sufficient
 to reproduce the residuals to within 1~ppb N_2O (and are usually much closer than this).
-[TODO figure and calculation of variance explained to
-make this easier to justify or not.]
+The variance explained by each EOF supports this choice:
+the first EOF explains 89.6\% of the variance in the residuals and the second a further 9.6\%,
+so the two we retain explain 99.2\% between them,
+while the third explains only 0.5\% and every subsequent EOF less again
+(Figure \ref{fig:methods-n2o}i).
 
 % \subsubsubsubsection{seasonality}
 

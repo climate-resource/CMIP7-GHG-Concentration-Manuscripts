@@ -10,7 +10,7 @@ the panels it has and how they are laid out.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
 import cartopy.crs as ccrs
@@ -79,6 +79,58 @@ and its right half is where the values actually move.
 Splitting a broken panel evenly spends half of it on the run-up,
 so we give the left half rather less than half.
 """
+
+EOF_COLOURS = ("#009e73", "#cc79a7", "#e69f00", "#56b4e9")
+"""Colour of each EOF, in order
+
+These are from the Okabe-Ito palette, i.e. they are colour-blind safe,
+as the observational network's colours are.
+
+They are the entries that palette has left once the networks have taken
+theirs: an EOF and a network can share a panel's figure, so a colour has to
+mean one or the other, not both. The two we usually keep are first, and are
+the two furthest apart of what remains, in lightness as well as in hue,
+so they stay apart in greyscale too.
+
+Naming them here, rather than letting each panel pick up whatever its
+plotting library offers, is what keeps an EOF the same colour across the
+panels which show it, and stops the figures moving if a default cycle changes.
+"""
+
+EXTENSION_SOURCE_COLOURS = {
+    "Obs.": "#0072b2",
+    "Constant": "#e69f00",
+    "Simple extrapolation": "#e69f00",
+    "Emissions regression": "#009e73",
+    "Composite regression": "#cc79a7",
+    "Ice core optimised": "#cc79a7",
+}
+"""Colour to use for each source of an extended principal component
+
+These are from the Okabe-Ito palette, i.e. they are colour-blind safe.
+
+A source is how a year's value was arrived at, so the observations get the
+one colour that is not an assumption, and the two names for holding a value
+constant -- which is what "Constant" and "Simple extrapolation" both are,
+under the names their gases give them -- share a colour, because they are
+the same assumption.
+
+Two sources may share a colour when no panel shows both of them, which is how
+the reddish purple serves CH4's ice core optimisation and CO2's composite
+regression. These colours also stand for other things in other panels of the
+same figure. Both are deliberate: a panel's legend says what its colours mean,
+and spending a distinct colour per meaning across a figure this size would run
+the palette out long before the panels do.
+"""
+
+UNUSED_EOF_COLOUR = "#b0b0b0"
+"""Colour for an EOF which the workflow calculates but does not keep
+
+The EOFs we keep are shown in their own colour, so they can be picked out
+in the panels which show them; the ones we drop are all the same grey,
+because the point of showing them is how little they add.
+"""
+
 
 NETWORK_GROUPS = {
     "NOAA": "NOAA",
@@ -648,6 +700,76 @@ def compact_existing_legend(ax: matplotlib.axes.Axes, **kwargs: object) -> None:
 
     add_compact_legend(ax, handles=handles, labels=labels, title=title, **kwargs)
     ax.get_legend().get_title().set_fontsize("x-small")
+
+
+def eof_palette(eofs: Iterable[int], n_eofs_used: int | None = None) -> dict[int, str]:
+    """
+    Get the colour to draw each EOF in
+
+    Parameters
+    ----------
+    eofs
+        EOFs to get colours for
+
+    n_eofs_used
+        Number of EOFs the workflow keeps
+
+        EOFs at or beyond this are drawn in
+        [`UNUSED_EOF_COLOUR`][local.historical_ghg_forcing_for_cmip7.plotting.UNUSED_EOF_COLOUR].
+        If `None`, every EOF is treated as kept.
+
+    Returns
+    -------
+    :
+        Colour for each EOF in `eofs`
+    """
+    res = {}
+    for eof in eofs:
+        eof = int(eof)  # noqa: PLW2901
+        used = n_eofs_used is None or eof < n_eofs_used
+        if used and eof < len(EOF_COLOURS):
+            res[eof] = EOF_COLOURS[eof]
+        else:
+            res[eof] = UNUSED_EOF_COLOUR
+
+    return res
+
+
+def extension_source_palette(sources: Iterable[str]) -> dict[str, str]:
+    """
+    Get the colour to draw each source of an extended component in
+
+    Parameters
+    ----------
+    sources
+        Sources to get colours for
+
+    Returns
+    -------
+    :
+        Colour for each source in `sources`
+
+    Raises
+    ------
+    KeyError
+        A source has no colour of its own
+
+        Falling back to whatever the plotting library offers is what this
+        exists to stop, so a new source has to be given a colour in
+        [`EXTENSION_SOURCE_COLOURS`][local.historical_ghg_forcing_for_cmip7.plotting.EXTENSION_SOURCE_COLOURS]
+        rather than picking one up by accident.
+    """
+    sources = list(sources)
+    unknown = [source for source in sources if source not in EXTENSION_SOURCE_COLOURS]
+    if unknown:
+        msg = (
+            f"No colour for {unknown}. "
+            f"Add one to EXTENSION_SOURCE_COLOURS, which covers "
+            f"{sorted(EXTENSION_SOURCE_COLOURS)}."
+        )
+        raise KeyError(msg)
+
+    return {source: EXTENSION_SOURCE_COLOURS[source] for source in sources}
 
 
 def latitude_colour(latitude: float) -> tuple[float, float, float, float]:
@@ -1617,6 +1739,7 @@ def plot_lat_gradient_pieces_from_obs_network(
         x="year",
         y="value",
         hue="eof",
+        palette=eof_palette(pdf_pcs["eof"].unique()),
         ax=axes["pcs"],
     )
     axes["pcs"].set_ylabel(f"[{da_pcs.attrs['units']}]", fontsize="small")
@@ -1653,6 +1776,7 @@ def plot_lat_gradient_eofs(
         x="value",
         y="lat",
         hue="eof",
+        palette=eof_palette(pdf_eofs["eof"].unique()),
         ax=ax,
     )
     ax.set_yticks(LAT_BIN_BOUNDS[::2])
@@ -1660,6 +1784,103 @@ def plot_lat_gradient_eofs(
     ax.set_xlabel(f"[{da_eofs.attrs['units']}]", fontsize="small")
     ax.tick_params(labelsize="small")
     compact_existing_legend(ax, loc="best")
+
+    return ax
+
+
+def plot_variance_explained(  # noqa: PLR0913
+    variance_explained: pd.DataFrame,
+    ax: matplotlib.axes.Axes,
+    n_eofs_used: int,
+    eof_col: str = "eof",
+    value_col: str = "variance_explained_fraction",
+    cumulative_colour: str = "#3a3b3a",
+) -> matplotlib.axes.Axes:
+    """
+    Plot how much of the variance each EOF explains
+
+    The bars are what each EOF explains on its own, the line is the running
+    total. Together they say how much is lost by keeping only the first
+    `n_eofs_used` EOFs, which is the choice this panel is here to justify.
+
+    Both are drawn against the same vertical axis. A running total deserves
+    its own axis when it would otherwise be squashed, but here the first EOF
+    explains almost everything, so the total starts at the top of the first
+    bar and has nowhere to go but the last few percent to 100 --
+    which is the panel's whole point, and is lost if the two are rescaled
+    against each other.
+
+    This is deliberately agnostic about what was decomposed,
+    so it serves the latitudinal gradient and the seasonality change alike.
+
+    Parameters
+    ----------
+    variance_explained
+        Fraction of the variance explained by each EOF
+
+    ax
+        Axes to plot on
+
+    n_eofs_used
+        Number of EOFs the workflow keeps
+
+        These are drawn in their own colour, the rest in
+        [`UNUSED_EOF_COLOUR`][local.historical_ghg_forcing_for_cmip7.plotting.UNUSED_EOF_COLOUR].
+
+    eof_col
+        Column of `variance_explained` which holds the EOF
+
+    value_col
+        Column of `variance_explained` which holds the fraction explained
+
+    cumulative_colour
+        Colour to draw the running total in
+
+    Returns
+    -------
+    :
+        `ax`
+    """
+    pdf = variance_explained.sort_values(eof_col)
+    eofs = pdf[eof_col].to_numpy()
+    percentages = 100.0 * pdf[value_col].to_numpy()
+
+    palette = eof_palette(eofs, n_eofs_used=n_eofs_used)
+    ax.bar(
+        eofs,
+        percentages,
+        color=[palette[int(eof)] for eof in eofs],
+        width=0.7,
+        label="Individual",
+    )
+    ax.plot(
+        eofs,
+        np.cumsum(percentages),
+        color=cumulative_colour,
+        marker="o",
+        markersize=3.0,
+        linewidth=1.0,
+        label="Cumulative",
+    )
+
+    ax.set_xlabel("EOF", fontsize="small")
+    ax.set_ylabel("[%]", fontsize="small")
+    ax.set_xticks(thin_ticks(eofs, max_ticks=6))
+    ax.set_ylim(0.0, 105.0)
+    ax.tick_params(labelsize="small")
+    # Named in the order the reader meets them, which is not the order
+    # matplotlib collects them in: it groups the artists by type,
+    # which puts the line before the bars it is the running total of.
+    handles = {
+        handle.get_label(): handle for handle in ax.get_legend_handles_labels()[0]
+    }
+    labels = ["Individual", "Cumulative"]
+    add_compact_legend(
+        ax,
+        handles=[handles[label] for label in labels],
+        labels=labels,
+        loc="center right",
+    )
 
     return ax
 
@@ -1672,6 +1893,7 @@ def add_break_lines_and_setup(  # noqa: PLR0913
     max_year: int,
     units: str,
     legend_loc: str = "best",
+    max_ticks_per_half: int | None = None,
 ) -> None:
     """
     Add break lines to axes and do other general setup for broken axes
@@ -1711,6 +1933,13 @@ def add_break_lines_and_setup(  # noqa: PLR0913
         both sides of the half and over the neighbouring panel's tick labels.
         Anchoring it to a corner instead keeps the overhang on one side,
         over the panel's own other half.
+
+    max_ticks_per_half
+        The most x tick labels to leave on each half
+
+        Matplotlib picks ticks for the range it is given, not for the room
+        it has to show them in, so a narrow half ends up with its year labels
+        run together. If `None`, matplotlib's answer is kept.
     """
     # One legend for the pair, on the left half:
     # the two halves are one panel as far as a reader is concerned.
@@ -1763,6 +1992,15 @@ def add_break_lines_and_setup(  # noqa: PLR0913
 
     clear_ticks_near_break(ax_left, at="right")
     clear_ticks_near_break(ax_right, at="left")
+
+    if max_ticks_per_half is not None:
+        # After clearing, not before: the ticks near the break go whatever
+        # happens, so thinning first would spend part of the budget on ticks
+        # which are about to be dropped anyway.
+        for ax in (ax_left, ax_right):
+            x_limits = ax.get_xlim()
+            ax.set_xticks(thin_ticks(ax.get_xticks(), max_ticks=max_ticks_per_half))
+            ax.set_xlim(x_limits)
 
     d = 0.015  # how big to make the diagonal lines in axes coordinates
     # arguments to pass plot, just so we don't keep repeating them
@@ -2118,6 +2356,7 @@ def plot_pcs_extended(  # noqa: PLR0913
     # Should be numpy array of int, anyway
     pieces: dict[int, dict[str, list[int]]] | None = None,
     legend_loc: str = "upper left",
+    max_ticks_per_half: int | None = None,
 ) -> None:
     """
     Plot extended latitudinal gradient PCs
@@ -2143,6 +2382,7 @@ def plot_pcs_extended(  # noqa: PLR0913
             # style="source",
             style="eof",
             hue="source",
+            palette=extension_source_palette(pcs_df["source"].unique()),
             ax=ax,
             s=25,
             edgecolor=None,
@@ -2157,6 +2397,7 @@ def plot_pcs_extended(  # noqa: PLR0913
         pcs_da["year"].max(),
         pcs_da.attrs["units"],
         legend_loc=legend_loc,
+        max_ticks_per_half=max_ticks_per_half,
     )
 
     legend = ax_left.get_legend()
