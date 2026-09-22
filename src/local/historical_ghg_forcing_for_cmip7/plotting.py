@@ -761,6 +761,23 @@ def compact_existing_legend(ax: matplotlib.axes.Axes, **kwargs: object) -> None:
     ax.get_legend().get_title().set_fontsize("x-small")
 
 
+def auto_set_split_axis_y_limits(
+    axes: Iterable[matplotlib.axes.Axes], y_values: list[float]
+) -> None:
+    """
+    Auto set the y-limits for split axes based on the data
+    """
+    min = np.min(y_values)
+    max = np.max(y_values)
+    values_range = max - min
+
+    ymin = min - 0.05 * values_range
+    ymax = max + 0.05 * values_range
+
+    for ax in axes:
+        ax.set_ylim(ymin, ymax)
+
+
 def eof_palette(eofs: Iterable[int], n_eofs_used: int | None = None) -> dict[int, str]:
     """
     Get the colour to draw each EOF in
@@ -2249,7 +2266,12 @@ def plot_global_mean_extension(  # noqa: PLR0913
     extended_label = "Extended global-mean"
     palette = source_sequence_palette([extended_label, *input_sources])
 
-    for i, ax in enumerate((ax_left, ax_right)):
+    for i, (ax, get_pdf_ax) in enumerate(
+        zip(
+            (ax_left, ax_right),
+            (lambda x: x[x["year"] < split_year], lambda x: x[x["year"] >= split_year]),
+        )
+    ):
         ax.plot(
             gm_years,
             gm_values,
@@ -2260,14 +2282,17 @@ def plot_global_mean_extension(  # noqa: PLR0913
         )
 
         for label, pdf in input_sources.items():
+            pdf_ax = get_pdf_ax(pdf)
             ax.plot(
-                pdf["year"],
-                pdf["value"],
+                pdf_ax["year"],
+                pdf_ax["value"],
                 label=label if i < 1 else None,
                 color=palette[label],
                 linewidth=2,
                 # s=30,
             )
+
+    auto_set_split_axis_y_limits([ax_left, ax_right], pdf["value"])
 
     # Over the top of the line, so the stretches which are not a source
     # are marked out on the line itself rather than beside it.
@@ -2399,9 +2424,15 @@ def plot_extension_pieces(  # noqa: PLR0913
     # which is the order the reader meets them in as they go along the line.
     pdf["source"] = pd.Categorical(pdf["source"], categories=list(pieces), ordered=True)
 
-    for ax in (ax_left, ax_right):
+    for i, (ax, get_pdf_ax) in enumerate(
+        zip(
+            (ax_left, ax_right),
+            (lambda x: x[x["year"] < split_year], lambda x: x[x["year"] >= split_year]),
+        )
+    ):
+        pdf_ax = get_pdf_ax(pdf)
         sns.scatterplot(
-            pdf,
+            pdf_ax,
             x="year",
             y="value",
             hue="source",
@@ -2412,6 +2443,7 @@ def plot_extension_pieces(  # noqa: PLR0913
             alpha=0.7,
         )
 
+    auto_set_split_axis_y_limits([ax_left, ax_right], pdf["value"])
     add_break_lines_and_setup(
         ax_left,
         ax_right,
@@ -2514,9 +2546,15 @@ def plot_pcs_extended(  # noqa: PLR0913
     if pcs_df["source"].isnull().any(axis=None):
         raise AssertionError
 
-    for i, ax in enumerate((ax_left, ax_right)):
+    for i, (ax, get_pdf_ax) in enumerate(
+        zip(
+            (ax_left, ax_right),
+            (lambda x: x[x["year"] < split_year], lambda x: x[x["year"] >= split_year]),
+        )
+    ):
+        pdf_ax = get_pdf_ax(pcs_df)
         sns.scatterplot(
-            pcs_df,
+            pdf_ax,
             x="year",
             y="value",
             # hue="eof",
@@ -2530,6 +2568,7 @@ def plot_pcs_extended(  # noqa: PLR0913
             alpha=0.7,
         )
 
+    auto_set_split_axis_y_limits([ax_left, ax_right], pcs_df["value"])
     add_break_lines_and_setup(
         ax_left,
         ax_right,
@@ -2657,9 +2696,15 @@ def plot_yearly_means(
 
     pdf = pd.concat(pdf_l)
 
-    for i, ax in enumerate((ax_left, ax_right)):
+    for i, (ax, get_pdf_ax) in enumerate(
+        zip(
+            (ax_left, ax_right),
+            (lambda x: x[x["year"] < split_year], lambda x: x[x["year"] >= split_year]),
+        )
+    ):
+        pdf_ax = get_pdf_ax(pdf)
         sns.scatterplot(
-            pdf,
+            pdf_ax,
             x="year",
             y="value",
             hue="Region",
@@ -2670,6 +2715,8 @@ def plot_yearly_means(
             edgecolor=None,
             # legend=False,
         )
+
+    auto_set_split_axis_y_limits([ax_left, ax_right], pdf["value"])
 
     add_break_lines_and_setup(
         ax_left,

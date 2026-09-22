@@ -414,6 +414,7 @@ def generate_n2o_methods_figure(  # noqa: PLR0915
     -------
         `outfile`
     """
+    outfile.unlink()
     if outfile.exists() and not force_rerun:
         logger.info(f"Using existing {outfile}")
         return outfile
