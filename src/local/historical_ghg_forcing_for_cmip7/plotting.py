@@ -80,7 +80,34 @@ Splitting a broken panel evenly spends half of it on the run-up,
 so we give the left half rather less than half.
 """
 
-EOF_COLOURS = ("#009e73", "#cc79a7", "#e69f00", "#56b4e9")
+OKABE_ITO = {
+    "orange": "#e69f00",
+    "sky blue": "#56b4e9",
+    "bluish green": "#009e73",
+    "yellow": "#f0e442",
+    "blue": "#0072b2",
+    "vermillion": "#d55e00",
+    "reddish purple": "#cc79a7",
+    "black": "#000000",
+}
+"""The Okabe-Ito qualitative palette
+
+Every colour these figures use to tell one series from another comes from
+here, so that the figures are colour-blind safe. Naming the colours rather
+than writing their hex codes at each use is what makes that checkable:
+a colour which is not in here is a colour someone has to justify.
+
+The yellow is the one entry these figures avoid: it is the palette's lightest
+colour by a long way, and these panels draw small scatter markers and thin
+lines on white.
+"""
+
+EOF_COLOURS = (
+    OKABE_ITO["bluish green"],
+    OKABE_ITO["reddish purple"],
+    OKABE_ITO["orange"],
+    OKABE_ITO["sky blue"],
+)
 """Colour of each EOF, in order
 
 These are from the Okabe-Ito palette, i.e. they are colour-blind safe,
@@ -98,12 +125,12 @@ panels which show it, and stops the figures moving if a default cycle changes.
 """
 
 EXTENSION_SOURCE_COLOURS = {
-    "Obs.": "#0072b2",
-    "Constant": "#e69f00",
-    "Simple extrapolation": "#e69f00",
-    "Emissions regression": "#009e73",
-    "Composite regression": "#cc79a7",
-    "Ice core optimised": "#cc79a7",
+    "Obs.": OKABE_ITO["blue"],
+    "Constant": OKABE_ITO["orange"],
+    "Simple extrapolation": OKABE_ITO["orange"],
+    "Emissions regression": OKABE_ITO["bluish green"],
+    "Composite regression": OKABE_ITO["reddish purple"],
+    "Ice core optimised": OKABE_ITO["reddish purple"],
 }
 """Colour to use for each source of an extended principal component
 
@@ -121,6 +148,38 @@ regression. These colours also stand for other things in other panels of the
 same figure. Both are deliberate: a panel's legend says what its colours mean,
 and spending a distinct colour per meaning across a figure this size would run
 the palette out long before the panels do.
+"""
+
+REGION_COLOURS = {
+    "Global": OKABE_ITO["blue"],
+    "Northern hemisphere": OKABE_ITO["vermillion"],
+    "Southern hemisphere": OKABE_ITO["bluish green"],
+}
+"""Colour to use for each region of a spatial mean
+
+The monthly and the yearly spatial-mean panels sit in the same row and show
+the same three regions, one zoomed in on the end of the other. They are read
+against each other, so they are given the same colours from here rather than
+each picking its own up from whatever is drawing it.
+"""
+
+SOURCE_SEQUENCE_COLOURS = (
+    OKABE_ITO["blue"],
+    OKABE_ITO["vermillion"],
+    OKABE_ITO["bluish green"],
+    OKABE_ITO["orange"],
+    OKABE_ITO["sky blue"],
+)
+"""Colours for a panel whose series are named by the caller, in order
+
+Some panels are told what their series are at the call site: the sources
+which went into a global-mean, or the stretches an extended component was
+built from. Those names vary by gas, and some of them are built at run time,
+so there is nothing stable to key a colour off. They take these colours in
+the order the caller lists them instead.
+
+The reddish purple is left out: it marks the fit period on the very panel
+these serve, so a source drawn in it would look like one.
 """
 
 UNUSED_EOF_COLOUR = "#b0b0b0"
@@ -157,9 +216,9 @@ so it is shown as its own group rather than folded in with the fixed sites.
 """
 
 NETWORK_GROUP_COLOURS = {
-    "NOAA": "#0072b2",
+    "NOAA": OKABE_ITO["blue"],
     "NOAA (moving)": "#3a3b3a",
-    "AGAGE": "#d55e00",
+    "AGAGE": OKABE_ITO["vermillion"],
 }
 """Colour to use for each group of observational networks
 
@@ -230,7 +289,7 @@ They all share a colour, so the style is the only thing left to tell them
 apart. A gas rarely has more than one, so this is short on purpose.
 """
 
-FIT_PERIOD_COLOUR = "tab:purple"
+FIT_PERIOD_COLOUR = OKABE_ITO["reddish purple"]
 """Colour to draw the years of a global-mean which came from a fit
 
 The extension is one line, but not every part of it is the same kind of
@@ -770,6 +829,77 @@ def extension_source_palette(sources: Iterable[str]) -> dict[str, str]:
         raise KeyError(msg)
 
     return {source: EXTENSION_SOURCE_COLOURS[source] for source in sources}
+
+
+def region_palette(regions: Iterable[str]) -> dict[str, str]:
+    """
+    Get the colour to draw each region of a spatial mean in
+
+    Parameters
+    ----------
+    regions
+        Regions to get colours for
+
+    Returns
+    -------
+    :
+        Colour for each region in `regions`
+
+    Raises
+    ------
+    KeyError
+        A region has no colour of its own
+
+        The monthly and the yearly panels are read against each other, so a
+        region which picked its colour up from whatever was drawing it could
+        be one colour in one and another in the other.
+    """
+    regions = list(regions)
+    unknown = [region for region in regions if region not in REGION_COLOURS]
+    if unknown:
+        msg = (
+            f"No colour for {unknown}. "
+            f"Add one to REGION_COLOURS, which covers {sorted(REGION_COLOURS)}."
+        )
+        raise KeyError(msg)
+
+    return {region: REGION_COLOURS[region] for region in regions}
+
+
+def source_sequence_palette(labels: Iterable[str]) -> dict[str, str]:
+    """
+    Get a colour for each of a panel's series, in the order they are given
+
+    Parameters
+    ----------
+    labels
+        Series of the panel, in the order the reader meets them
+
+    Returns
+    -------
+    :
+        Colour for each label
+
+    Raises
+    ------
+    ValueError
+        There are more labels than
+        [`SOURCE_SEQUENCE_COLOURS`][local.historical_ghg_forcing_for_cmip7.plotting.SOURCE_SEQUENCE_COLOURS]
+        has colours
+
+        Running off the end would mean either repeating a colour inside one
+        panel or falling back to a colour from outside the palette, and
+        neither is something to do quietly.
+    """
+    labels = list(labels)
+    if len(labels) > len(SOURCE_SEQUENCE_COLOURS):
+        msg = (
+            f"Only {len(SOURCE_SEQUENCE_COLOURS)} colours, "
+            f"but {len(labels)} series to draw: {labels}"
+        )
+        raise ValueError(msg)
+
+    return dict(zip(labels, SOURCE_SEQUENCE_COLOURS))
 
 
 def latitude_colour(latitude: float) -> tuple[float, float, float, float]:
@@ -1607,6 +1737,9 @@ def plot_global_mean_from_obs_network(gm: xr.Dataset, ax: matplotlib.axes.Axes) 
     ax.scatter(
         gm_da["year"].values.squeeze(),
         gm_da.values.squeeze(),
+        # The same colour the extended global-mean takes in its own panel,
+        # which sits in the same row: one quantity, one colour.
+        color=SOURCE_SEQUENCE_COLOURS[0],
         s=15,
     )
     ax.set_ylabel(f"[{gm_da.attrs['units']}]", fontsize="small")
@@ -2111,11 +2244,17 @@ def plot_global_mean_extension(  # noqa: PLR0913
     gm_years = gm_da["year"].values.squeeze()
     gm_values = gm_da.values.squeeze()
 
+    # The extended global-mean is the panel's subject and the sources are what
+    # it was built from, so it takes the first colour and they follow it.
+    extended_label = "Extended global-mean"
+    palette = source_sequence_palette([extended_label, *input_sources])
+
     for i, ax in enumerate((ax_left, ax_right)):
         ax.plot(
             gm_years,
             gm_values,
-            label="Extended global-mean" if i < 1 else None,
+            label=extended_label if i < 1 else None,
+            color=palette[extended_label],
             linewidth=2,
             # s=30,
         )
@@ -2125,6 +2264,7 @@ def plot_global_mean_extension(  # noqa: PLR0913
                 pdf["year"],
                 pdf["value"],
                 label=label if i < 1 else None,
+                color=palette[label],
                 linewidth=2,
                 # s=30,
             )
@@ -2265,6 +2405,7 @@ def plot_extension_pieces(  # noqa: PLR0913
             x="year",
             y="value",
             hue="source",
+            palette=source_sequence_palette(pieces),
             ax=ax,
             s=25,
             edgecolor=None,
@@ -2481,6 +2622,7 @@ def plot_monthly_means(
         x="time",
         y="value",
         hue="Region",
+        palette=region_palette(pdf["Region"].unique()),
         ax=ax,
         s=15,
         alpha=0.7,
@@ -2521,6 +2663,7 @@ def plot_yearly_means(
             x="year",
             y="value",
             hue="Region",
+            palette=region_palette(pdf["Region"].unique()),
             ax=ax,
             s=15,
             alpha=0.7,
