@@ -309,10 +309,8 @@ When referring to `AGAGE' data, we also mean data from the predecessor GAGE [TOD
     f) Global-, annual-mean derived from the observation network values.
     g) Seasonality derived from the observation network values.
     h) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
-    i) Variance explained by each latitudinal gradient empirical orthogonal function (EOF),
-    individually (bars) and cumulatively (line).
-    The EOFs we retain are coloured as in panels j) and k); the ones we discard are grey.
-    j) Latitudinal gradient EOF derived from the observation network values.
+    i) Variance explained by each latitudinal gradient empirical orthogonal function (EOF).
+    j) Latitudinal gradient EOFs derived from the observation network values.
     k) Latitudinal gradient principal components (PCs) derived from the observation network values.
     l) Latitudinal gradient PCs for the entire output dataset timespan.
     m) Hemispheric- and global- monthly-mean values from the last four years of the output dataset.
@@ -474,34 +472,36 @@ For CO_2, we use data from the NOAA observation network
 [TODO check whether in-situ and flask or just one, and what this means in terms of assuming scales are the same etc.]
 (Figure \ref{fig:methods-co2}).
 
-% % ZNTODO: update and add in
-% \begin{figure}[t]
-% % \includegraphics[width=12cm]{<co2-methods-figure>}
-% \includegraphics[width=0.80\textwidth]{<co2-methods-figure>}
-% \caption{
-%     Production of the N_2O datasets (for full details, see Section \ref{ssec:methods-co2}).
-%     a) Raw observation network data.
-%     % For N_2O we rely on NOAA HATS [TODO ref] and AGAGE [TODO ref].
-%     % Here, `AGAGE' includes data from the predecessor GAGE [TODO ref] and ALE [TODO ref] networks.
-%     b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
-%     c) Location of each sampling site in the observation networks.
-%     d), e) Demonstration of interpolation in the case where we have the most/least available values from the observation networks
-%     (but still pass our minimum data for interpolation requirement).
-%     f) Global-, annual-mean derived from the observation network values.
-%     g) Seasonality derived from the observation network values.
-%     h) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
-%     i) Variance explained by each latitudinal gradient empirical orthogonal function (EOF),
-%     individually (bars) and cumulatively (line).
-%     The EOFs we retain are coloured as in panels j) and k); the ones we discard are grey.
-%     j) Latitudinal gradient EOF derived from the observation network values.
-%     k) Latitudinal gradient principal components (PCs) derived from the observation network values.
-%     l) Latitudinal gradient PCs for the entire output dataset timespan.
-%     m) Hemispheric- and global- monthly-mean values from the last four years of the output dataset.
-%     n) Hemispheric- and global- annual-mean values in the output dataset.
-%     o) Three-dimensional surface plot of the last four years of the output dataset's native resolution.
-% }
-% \label{fig:methods-co2}
-% \end{figure}
+% ZNTODO: update and add in
+\begin{figure}[t]
+% \includegraphics[width=12cm]{<co2-methods-figure>}
+\includegraphics[width=0.60\textwidth]{<co2-methods-figure>}
+\caption{
+    Production of the CO_2 datasets (for full details, see Section \ref{ssec:methods-co2}).
+    a) Raw observation network data.
+    b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
+    c) Location of each sampling site in the observation networks.
+    d), e) Demonstration of interpolation in the case where we have the most/least available values from the observation networks
+    (but still pass our minimum data for interpolation requirement).
+    f) Global-, annual-mean derived from the observation network values.
+    g) Seasonality derived from the observation network values.
+    h) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
+    i) Variance explained by each seasonality change empirical orthogonal function (EOF).
+    j) Seasonality change EOF derived from the observation network values.
+    k) Seasonality change PC for the entire output dataset timespan.
+    l) Regression between the seasonality change PC and the temperature - CO_2 concentration composite.
+    m) Seasonality change PC for the entire output dataset timespan.
+    n) Variance explained by each latitudinal gradient EOF.
+    o) Latitudinal gradient EOFs derived from the observation network values.
+    p) Latitudinal gradient PCs derived from the observation network values.
+    q) Regression between the first latitudinal gradient PC and CO_2 emissions of geological origin.
+    r) Latitudinal gradient PCs for the entire output dataset timespan.
+    s) Hemispheric- and global- monthly-mean values from the last four years of the output dataset.
+    t) Hemispheric- and global- annual-mean values in the output dataset.
+    u) Three-dimensional surface plot of the last four years of the output dataset's native resolution.
+}
+\label{fig:methods-co2}
+\end{figure}
 
 \subsubsection{Step 2: Bin and interpolate observations}
 \label{sssec:methods-co2-spatial-interpolation}
@@ -635,7 +635,7 @@ $c(y)$ is global- annual-mean CO_2 concentrations,
 $_r$ indicates that the quantity is a mean over the reference period (1850-1880 in this study, following \citet{meinshausen_historical_2017}),
 and $_n$ indicates that the quantity is a mean over the normalisation period (2000-2010 in this study, following \citet{meinshausen_historical_2017}).
 
-Using this regression, we extend the PC back to the 1850,
+Using this regression, we extend the PC back to 1850,
 the start of [TODO cite HadCRUT]'s dataset.
 Before 1850, we keep the PC value constant.
 
@@ -646,7 +646,6 @@ The last step is to construct the inputs needed for Equation \ref{eq:native-reso
 from the temporally extended components.
 
 % \subsubsubsubsection{Interpolating global- annual-mean to monthly timesteps}
-
 
 As for N_2O (Section \ref{sssec:methods-n2o-process-components}),
 we do a mean-preserving interpolation of the global-, annual-mean
@@ -661,12 +660,13 @@ This seasonality change is then added onto our `base seasonality' to give the fu
 
 % \subsubsubsubsection{Constructing latitudinal gradient over time (including interpolating PCs to monthly timesteps)}
 
-Finally we calculate the latitudinal gradient term, $lg(y, m, l)$.
-Like for the global-, annual-mean,
-to avoid jumps at year boundaries, we must first interpolate the PCs to monthly timesteps
-(again using mean-preserving interpolation).
-Then the full latitudinal gradient is calculated
-by taking the product of the temporally extended, monthly interpolated PCs and the EOFs.
+As for N_2O (Section \ref{sssec:methods-n2o-process-components}),
+the last step is to calculate the latitudinal gradient term, $lg(y, m, l)$.
+
+\subsubsection{Step 6: Generate native resolution}
+\label{sssec:methods-co2-generate-native-resolution}
+
+We calculate the native resolution from the derived components following the general approach (Section \ref{ssec:methods-general-approach}).
 
 \subsection{Generating CH_4 concentrations}
 \label{ssec:methods-ch4}

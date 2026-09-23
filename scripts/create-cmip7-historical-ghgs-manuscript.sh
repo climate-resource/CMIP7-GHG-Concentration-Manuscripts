@@ -127,6 +127,7 @@ uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --section "${output_requirements_file}" \
     --section "${methods_file}" \
     --figure-file "<n2o-methods-figure>=${n2o_methods_figure_file}" \
+    --figure-file "<co2-methods-figure>=${co2_methods_figure_file}" \
     --section "${results_file}" \
     --conclusion "${conclusion_file}" \
     --code-and-data-availability "${code_and_data_availability_file}" \
