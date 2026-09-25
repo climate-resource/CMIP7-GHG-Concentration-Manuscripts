@@ -1,5 +1,5 @@
 """
-Generation of the methods figure for the gases processed like SF6
+Generation of the methods figure for the gases processed like CFC-12
 
 The pieces this figure shares with the CH4 methods figure
 live in [local.historical_ghg_forcing_for_cmip7.plotting][].
@@ -8,7 +8,7 @@ the panels it has and how they are laid out.
 
 One function serves every gas in this group,
 because the method is the same for all of them
-(see the SF6-like section of the manuscript's methods).
+(see the CFC-12-like section of the manuscript's methods).
 """
 # Differences from ch4
 # - the global-mean is, for many gases, overridden by a reference source,
@@ -21,6 +21,7 @@ because the method is the same for all of them
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
@@ -79,7 +80,7 @@ from local.historical_ghg_forcing_for_cmip7.variance_explained import (
     get_variance_explained,
 )
 
-SF6_LIKE_GASES = (
+CFC12_LIKE_GASES = (
     "c2f6",
     "c3f8",
     "ccl4",
@@ -115,7 +116,7 @@ SF6_LIKE_GASES = (
     "sf6",
     "so2f2",
 )
-"""Gases which are processed the way SF6 is
+"""Gases which are processed the way CFC-12 is
 
 These are the step config IDs of the original run's
 `calculate_sf6_like_monthly_fifteen_degree_pieces` step,
@@ -206,6 +207,19 @@ This mirrors `get_global_mean_supplement_config`
 in the original run's `local/global_mean_extension.py`.
 The gases which appear in none of these entries
 take their global-mean from the observational network alone.
+"""
+
+SOURCE_BIBKEYS = {
+    "WMO (2022)": "wmo_2022_ozone_ch7",
+    "Western et al. (2024)": "western_2024",
+    "Velders et al. (2022)": "velders_2022",
+    "Adam et al. (2024)": "adam_2024",
+    "Trudinger et al. (2016)": "trudinger_2016",
+}
+"""Bibtex key of each global-mean source, by its label
+
+Kept next to [`GLOBAL_MEAN_SUPPLEMENT_SOURCES`][]
+so a source can't be added there without being given a key here.
 """
 
 LAT_GRADIENT_NOTEBOOK = (
@@ -350,7 +364,7 @@ def interim_dir(gas: str, bundle_dir: Path) -> Path:
     return bundle_dir / "data" / "interim" / gas
 
 
-def get_sf6_like_all_data_with_bins(gas: str, bundle_dir: Path) -> pd.DataFrame:
+def get_cfc12_like_all_data_with_bins(gas: str, bundle_dir: Path) -> pd.DataFrame:
     """
     Get a gas' observational network data, as it went into the binning
 
@@ -500,6 +514,39 @@ manuscript_out_file
     )
 
 
+def get_step_config(gas: str, bundle_dir: Path) -> dict[str, Any]:
+    """
+    Get the original run's config for a gas, for the step which processed it
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory which holds the original run's bundle
+
+    Returns
+    -------
+    :
+        `gas`' config for [`BUNDLE_CONFIG_STEP`][], as loaded from the YAML
+
+    Raises
+    ------
+    AssertionError
+        The bundle's config has no entry for `gas`
+    """
+    with open(bundle_dir / BUNDLE_CONFIG_FILE) as fh:
+        config = yaml.safe_load(fh)
+
+    for step_config in config[BUNDLE_CONFIG_STEP]:
+        if step_config["step_config_id"] == gas:
+            return step_config  # type: ignore[no-any-return]
+
+    msg = f"No {BUNDLE_CONFIG_STEP} config for {gas=}"
+    raise AssertionError(msg)
+
+
 def get_pre_industrial(gas: str, bundle_dir: Path) -> tuple[int, float]:
     """
     Get the pre-industrial point a gas' global-mean is extended back to
@@ -516,25 +563,40 @@ def get_pre_industrial(gas: str, bundle_dir: Path) -> tuple[int, float]:
     -------
     :
         The pre-industrial year and the value reached in it
-
-    Raises
-    ------
-    AssertionError
-        The bundle's config has no entry for `gas`
     """
-    with open(bundle_dir / BUNDLE_CONFIG_FILE) as fh:
-        config = yaml.safe_load(fh)
+    pre_industrial = get_step_config(gas, bundle_dir)["pre_industrial"]
 
-    for step_config in config[BUNDLE_CONFIG_STEP]:
-        if step_config["step_config_id"] != gas:
-            continue
+    return int(pre_industrial["year"]), float(pre_industrial["value"][0])
 
-        pre_industrial = step_config["pre_industrial"]
 
-        return int(pre_industrial["year"]), float(pre_industrial["value"][0])
+def supplement_replaces_obs_network(
+    supplement: pd.DataFrame, max_year_extended: int
+) -> bool:
+    """
+    Get whether a global-mean source replaces the observational network's outright
 
-    msg = f"No {BUNDLE_CONFIG_STEP} config for {gas=}"
-    raise AssertionError(msg)
+    This is the rule the original run used
+    (`1304_sf6-like_create-global-annual-mean`):
+    a source which reaches the end of the dataset is used as-is,
+    while one which stops short of it is harmonised
+    to the observational network's global-mean
+    and the network's global-mean is used from there on.
+
+    Parameters
+    ----------
+    supplement
+        The source's data, with a `year` column
+
+    max_year_extended
+        Last year of the extended global-mean
+
+    Returns
+    -------
+    :
+        `True` if the source replaces the observational network's global-mean,
+        `False` if it is harmonised to it
+    """
+    return bool(supplement["year"].max() >= max_year_extended)
 
 
 def get_global_mean_supplement(
@@ -574,7 +636,7 @@ def get_flat_regression_info(
     """
     Get regression information with a scalar gradient and intercept
 
-    The SF6-like part of the original run wrote the gradient out
+    The CFC-12-like part of the original run wrote the gradient out
     one list deeper than the CO2, CH4 and N2O parts did,
     so the value has to be unwrapped before it can be used as a number.
 
@@ -629,7 +691,7 @@ def clip_to_years(
     return pdf[pdf[year_column] <= max_year]
 
 
-def generate_sf6_like_methods_figure(  # noqa: PLR0915
+def generate_cfc12_like_methods_figure(  # noqa: PLR0915
     gas: str,
     outfile: Path,
     bundle_dir: Path,
@@ -637,14 +699,14 @@ def generate_sf6_like_methods_figure(  # noqa: PLR0915
     force_rerun: bool = False,
 ) -> Path:
     """
-    Generate the methods figure for a gas which is processed like SF6
+    Generate the methods figure for a gas which is processed like CFC-12
 
     Parameters
     ----------
     gas
         Gas to draw the figure for
 
-        Must be one of [`SF6_LIKE_GASES`][].
+        Must be one of [`CFC12_LIKE_GASES`][].
 
     outfile
         File in which to write the figure
@@ -666,21 +728,21 @@ def generate_sf6_like_methods_figure(  # noqa: PLR0915
     Raises
     ------
     AssertionError
-        `gas` is not processed like SF6,
+        `gas` is not processed like CFC-12,
         or its latitudinal gradient has more than one EOF
     """
     if outfile.exists() and not force_rerun:
         logger.info(f"Using existing {outfile}")
         return outfile
 
-    if gas not in SF6_LIKE_GASES:
-        msg = f"{gas=} is not processed like SF6, expected one of {SF6_LIKE_GASES}"
+    if gas not in CFC12_LIKE_GASES:
+        msg = f"{gas=} is not processed like CFC-12, expected one of {CFC12_LIKE_GASES}"
         raise AssertionError(msg)
 
     gas_dir = interim_dir(gas, bundle_dir)
 
     all_data_with_bins = add_network_group(
-        get_sf6_like_all_data_with_bins(gas, bundle_dir)
+        get_cfc12_like_all_data_with_bins(gas, bundle_dir)
     )
 
     global_mean_supplement = get_global_mean_supplement(gas, bundle_dir)
@@ -825,7 +887,7 @@ def generate_sf6_like_methods_figure(  # noqa: PLR0915
         supplement_label, supplement = global_mean_supplement
         input_sources[supplement_label] = clip_to_years(supplement, max_year_extended)
 
-        if supplement["year"].max() >= max_year_extended:
+        if supplement_replaces_obs_network(supplement, max_year_extended):
             # This source replaces the observational network's global-mean
             # outright, so the network's own global-mean is an input to the
             # extension rather than the thing being extended, and the panel

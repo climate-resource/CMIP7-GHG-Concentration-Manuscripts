@@ -13,13 +13,15 @@ from local.cmip_ghg_generation import (
 )
 from local.historical_ghg_forcing_for_cmip7 import (
     C4F10_LIKE_GASES,
-    SF6_LIKE_GASES,
+    CFC12_LIKE_GASES,
     generate_c4f10_like_methods_figure,
     generate_c8f18_methods_figure,
+    generate_cfc12_like_methods_figure,
+    generate_cfc12_like_obs_network_sources_list,
+    generate_cfc12_like_per_gas_table,
     generate_ch4_methods_figure,
     generate_co2_methods_figure,
     generate_n2o_methods_figure,
-    generate_sf6_like_methods_figure,
 )
 
 
@@ -99,13 +101,35 @@ def main(  # noqa: PLR0913
             file_okay=True,
         ),
     ],
-    sf6_like_methods_figure_file: Annotated[
+    cfc12_like_obs_network_sources_list_file: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Path in which to write the list of which observational networks "
+                "observe which of the gases processed like CFC-12."
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
+    cfc12_like_per_gas_table_file: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Path in which to write the table of per-gas inputs and choices "
+                "for the gases processed like CFC-12."
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
+    cfc12_like_methods_figure_file: Annotated[
         list[str] | None,
         typer.Option(
             help=(
-                "Gas which is processed like SF6 "
+                "Gas which is processed like CFC-12 "
                 "and the path in which to write its methods figure, "
-                "as '<gas>=<file>' e.g. 'sf6=figures/sf6_methods.pdf'. "
+                "as '<gas>=<file>' e.g. 'cfc12=figures/cfc12_methods.pdf'. "
                 "Repeat the option for each gas you want a figure for."
             ),
         ),
@@ -156,9 +180,9 @@ def main(  # noqa: PLR0913
     """
     # Parsed before anything is drawn, so a typo in a gas name
     # is caught now rather than three figures from now.
-    sf6_like_figures = [
-        parse_methods_figure_file(value, SF6_LIKE_GASES, "SF6")
-        for value in sf6_like_methods_figure_file or []
+    cfc12_like_figures = [
+        parse_methods_figure_file(value, CFC12_LIKE_GASES, "CFC-12")
+        for value in cfc12_like_methods_figure_file or []
     ]
     c4f10_like_figures = [
         parse_methods_figure_file(value, C4F10_LIKE_GASES, "C4F10")
@@ -186,11 +210,11 @@ def main(  # noqa: PLR0913
         force_rerun=force_rerun,
     )
 
-    # One figure per gas asked for: the gases processed like SF6
+    # One figure per gas asked for: the gases processed like CFC-12
     # all share a figure, but there are thirty-four of them,
     # so which ones we draw is the caller's call.
-    for gas, figure_file in sf6_like_figures:
-        generate_sf6_like_methods_figure(
+    for gas, figure_file in cfc12_like_figures:
+        generate_cfc12_like_methods_figure(
             gas,
             figure_file,
             bundle_dir=bundle_dir,
@@ -211,6 +235,20 @@ def main(  # noqa: PLR0913
 
     generate_c8f18_methods_figure(
         c8f18_methods_figure_file,
+        bundle_dir=bundle_dir,
+        force_rerun=force_rerun,
+    )
+
+    # These summarise every gas processed like CFC-12,
+    # so unlike the figures, they don't depend on which gases were asked for.
+    generate_cfc12_like_obs_network_sources_list(
+        cfc12_like_obs_network_sources_list_file,
+        bundle_dir=bundle_dir,
+        force_rerun=force_rerun,
+    )
+
+    generate_cfc12_like_per_gas_table(
+        cfc12_like_per_gas_table_file,
         bundle_dir=bundle_dir,
         force_rerun=force_rerun,
     )

@@ -31,11 +31,11 @@ methods_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods.
 co2_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/co2_methods.pdf"
 ch4_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/ch4_methods.pdf"
 n2o_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/n2o_methods.pdf"
-# Every gas processed like SF6. These all share one figure,
+# Every gas processed like CFC-12. These all share one figure,
 # so this is the list of gases to draw it for, not a list of figures.
-# It has to match local.historical_ghg_forcing_for_cmip7.SF6_LIKE_GASES;
+# It has to match local.historical_ghg_forcing_for_cmip7.CFC12_LIKE_GASES;
 # a gas which is not in that tuple is rejected before anything is drawn.
-sf6_like_gases=(
+cfc12_like_gases=(
     c2f6 c3f8 ccl4 cf4
     cfc11 cfc113 cfc114 cfc115 cfc12
     ch2cl2 ch3br ch3ccl3 ch3cl chcl3
@@ -46,14 +46,14 @@ sf6_like_gases=(
     nf3 sf6 so2f2
 )
 
-sf6_like_methods_figure_files=()
-for sf6_like_gas in "${sf6_like_gases[@]}"; do
-    sf6_like_methods_figure_files+=(
-        "${sf6_like_gas}=${repo_root}/figures/historical-ghg-forcing-for-cmip7/${sf6_like_gas}_methods.pdf"
+cfc12_like_methods_figure_files=()
+for cfc12_like_gas in "${cfc12_like_gases[@]}"; do
+    cfc12_like_methods_figure_files+=(
+        "${cfc12_like_gas}=${repo_root}/figures/historical-ghg-forcing-for-cmip7/${cfc12_like_gas}_methods.pdf"
     )
 done
 
-# Every gas processed like C4F10. As with the SF6-like gases,
+# Every gas processed like C4F10. As with the CFC-12-like gases,
 # these all share one figure, so this is the list of gases to draw it for.
 # It has to match local.historical_ghg_forcing_for_cmip7.C4F10_LIKE_GASES.
 c4f10_like_gases=(
@@ -69,6 +69,11 @@ done
 
 # C8F18 is in a group of its own, so it is a plain file rather than a list.
 c8f18_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/c8f18_methods.pdf"
+
+# Summaries of the gases processed like CFC-12.
+# These are inlined into the methods in place of their tags.
+cfc12_like_obs_network_sources_list_file="${repo_root}/tables/historical-ghg-forcing-for-cmip7/cfc12_like_obs_network_sources.tex"
+cfc12_like_per_gas_table_file="${repo_root}/tables/historical-ghg-forcing-for-cmip7/cfc12_like_per_gas.tex"
 
 # methods_subfile="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods-detail.tex"
 results_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/results.tex"
@@ -97,10 +102,10 @@ mkdir -p "${output_pdf_dir}/"
 # `${a[@]+"${a[@]}"}` rather than `"${a[@]}"` throughout:
 # bash 3.2, which is what macOS ships, treats an empty array as unset
 # and `set -u` then kills the script, so an empty list of gases
-# would fail here rather than simply drawing no SF6-like figures.
-sf6_like_args=()
-for sf6_like_methods_figure_file in ${sf6_like_methods_figure_files[@]+"${sf6_like_methods_figure_files[@]}"}; do
-    sf6_like_args+=(--sf6-like-methods-figure-file "${sf6_like_methods_figure_file}")
+# would fail here rather than simply drawing no CFC-12-like figures.
+cfc12_like_args=()
+for cfc12_like_methods_figure_file in ${cfc12_like_methods_figure_files[@]+"${cfc12_like_methods_figure_files[@]}"}; do
+    cfc12_like_args+=(--cfc12-like-methods-figure-file "${cfc12_like_methods_figure_file}")
 done
 
 c4f10_like_args=()
@@ -113,7 +118,9 @@ uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-input
     --ch4-methods-figure-file "${ch4_methods_figure_file}" \
     --n2o-methods-figure-file "${n2o_methods_figure_file}" \
     --c8f18-methods-figure-file "${c8f18_methods_figure_file}" \
-    ${sf6_like_args[@]+"${sf6_like_args[@]}"} \
+    --cfc12-like-obs-network-sources-list-file "${cfc12_like_obs_network_sources_list_file}" \
+    --cfc12-like-per-gas-table-file "${cfc12_like_per_gas_table_file}" \
+    ${cfc12_like_args[@]+"${cfc12_like_args[@]}"} \
     ${c4f10_like_args[@]+"${c4f10_like_args[@]}"} \
     --bundle-dir "${zenodo_bundle_dir}" \
     --original-run-notebooks-dir "${original_run_notebooks_dir}"
@@ -129,6 +136,9 @@ uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --figure-file "<n2o-methods-figure>=${n2o_methods_figure_file}" \
     --figure-file "<co2-methods-figure>=${co2_methods_figure_file}" \
     --figure-file "<ch4-methods-figure>=${ch4_methods_figure_file}" \
+    --figure-file "<cfc12-methods-figure>=${repo_root}/figures/historical-ghg-forcing-for-cmip7/cfc12_methods.pdf" \
+    --table-file "<cfc12-like-obs-network-sources-list>=${cfc12_like_obs_network_sources_list_file}" \
+    --table-file "<cfc12-like-per-gas-table>=${cfc12_like_per_gas_table_file}" \
     --section "${results_file}" \
     --conclusion "${conclusion_file}" \
     --code-and-data-availability "${code_and_data_availability_file}" \

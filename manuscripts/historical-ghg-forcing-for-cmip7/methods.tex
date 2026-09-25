@@ -828,27 +828,40 @@ We calculate the native resolution from the derived components in the same way a
 
 The approach described in this section is also used for
 C_2F_6, C_3F_8, CCl_4, CF_4,
-CFC-11, CFC-113, CFC-114, CFC-115, CFC12,
+CFC-11, CFC-113, CFC-114, CFC-115,
 CH_2Cl_2, CH_3Br, CH_3CCl_3, CH_3Cl, CHCl_3,
 Halon-1211, Halon-1301, Halon-2402,
 HCFC-141b, HCFC-142b, HCFC-22,
 HFC-125, HFC-134a, HFC-143a, HFC-152a, HFC-227ea, HFC-23, HFC-236fa, HFC-245fa, HFC-32, HFC-365mfc, HFC-4310mee,
-NF_3 and SO_2F_2.
+NF_3, SF_6 and SO_2F_2.
+The inputs and choices which differ between these gases are summarised in Table \ref{tab:cfc12-like-per-gas}.
+
+<cfc12-like-per-gas-table>
 
 \subsubsection{Step 1: Collect observations}
 
-For CFC12, we use data from the NOAA [TODO ref] and AGAGE [TODO ref] observation networks
-[TODO check whether in-situ and flask or just one, and what this means in terms of assuming scales are the same etc.].
-In addition, we also use the global-mean timeseries from [TODO cite WMO (2022)] (Figure \ref{fig:methods-cfc12}).
+For CFC12, we use data from the NOAA HATS \citep{noaa_hats_cfc12} and AGAGE \citep{prinn_history_2000,prinn2018history} observation networks.
+The NOAA HATS data is NOAA's combined CFC12 product,
+which combines the measurements from NOAA's different halocarbon measurement programmes.
+The AGAGE data comes from three types of instrument (GC-MD, GC-MS and GC-MS-Medusa).
+We use the data from both networks as reported,
+i.e. we do not convert between the networks' calibration scales
+[TODO note this in discussion].
+In addition, we also use the global-mean timeseries from \citet{wmo_2022_ozone_ch7} (Figure \ref{fig:methods-cfc12}).
 
-For other gases, we use different input sources due to differences in data availability (Table \ref{tab:obs-network-sources-cfc-12-like}).
-[TODO: table of input sources used for each gas, group by common input sources rather than row per gas]
+For other gases, data availability differs, so we use a different combination of networks:
+
+<cfc12-like-obs-network-sources-list>
+
+As for CFC12, we use NOAA's combined HATS products where they are available
+(CFC-11, \citealp{noaa_hats_cfc11}; CFC-113, \citealp{noaa_hats_cfc113}; CCl_4, \citealp{noaa_hats_ccl4}; SF_6, \citealp{noaa_hats_sf6}).
+For the other gases, we use NOAA's HATS flask data \citep{montzka_1999}.
 
 \begin{figure}[t]
 % \includegraphics[width=12cm]{<cfc12-methods-figure>}
 \includegraphics[width=0.80\textwidth]{<cfc12-methods-figure>}
 \caption{
-    Production of the CFC12 datasets (for full details, see Section \ref{ssec:methods-cfc12}).
+    Production of the CFC12 datasets (for full details, see Section \ref{ssec:methods-cfc12-like}).
     a) Raw observation network data.
     b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
     c) Location of each sampling site in the observation networks.
@@ -879,9 +892,14 @@ However, due to a lack of data, we allow for extrapolation to the most northern 
 In order to avoid spurious effects due to extrapolation,
 we use constant extrapolation rather than linear or smoother extrapolations such as cubic
 [TODO note this as a clear weakness in discussion].
+For some gases (Table \ref{tab:cfc12-like-per-gas}), the observational network is so sparse
+that, even with this extrapolation, latitudinal bins near the poles cannot be filled in some months.
+For these gases, we extend further:
+in each month, we fill every latitudinal bin poleward of the most poleward interpolated value
+with the mean of the observations from the most poleward observing latitude in that hemisphere.
 When we take the longest dataset that is continuous for CFC12,
 we end up with an observational network dataset that runs from 1979 to 2023
-(both inclusive, see Table \ref{tab:cfc12-like-obs-network-temporal-extents} for the extents for other gases).
+(both inclusive, see Table \ref{tab:cfc12-like-per-gas} for the extents for other gases).
 
 \subsubsection{Step 3: Principal component analysis}
 \label{sssec:methods-cfc12-pca-derived-components}
@@ -898,20 +916,33 @@ we depart slightly from the method of \citet{meinshausen_historical_2017}.
 
 We extend the latitudinal gradient PC (as we retain only one)
 back in time by using a regression against total emissions
-from the [TODO cite RCMIP1] emissions dataset.
-Using this regression, we then extend emissions back to the 1750,
-the first year reported in the [TODO cite RCMIP1] dataset.
+from the SSP2-4.5 scenario (which includes the historical period) in the RCMIP v5.1.0 emissions dataset \citep{nicholls_rcmip_2020}.
+Using this regression, we then extend the PC back to 1750,
+the first year reported in the RCMIP emissions dataset.
 Before 1750, we keep the first PC constant.
 
 % \subsubsubsubsection{Global- annual-mean}
 
 The global-, annual-mean is calculated in two steps.
-For a number of gases, we use the global-mean from a specific source to set the global-mean.
-For CF_4, C_2F_6 and C_3F_8, we harmonise the global-mean from [TODO cite Trudinger et al 2016] to the global-mean from the observational network to create a longer, composite timeseries.
-For all other gases, we use the global-mean derived from the observational network (Table \ref{tab:global-mean-sources-cfc-12-like}).
+First, we set the global-, annual-mean over the period covered by our input data.
+For most gases, we use the global-, annual-mean from a specific source
+rather than the global-, annual-mean derived from the observational network
+(Table \ref{tab:cfc12-like-per-gas}).
+These sources are
+\citet{wmo_2022_ozone_ch7}, \citet{western_2024}, \citet{velders_2022} and \citet{adam_2024}.
+These sources extend to the end of our dataset,
+so, for these gases, the observational network does not contribute to the global-, annual-mean
+(it is still used to derive the seasonality and latitudinal gradient).
+For CF_4, C_2F_6 and C_3F_8, we use the global-, annual-mean from \citet{trudinger_2016}.
+This ends before our dataset does,
+so we harmonise it to the global-, annual-mean derived from the observational network
+in the first year of the observational network
+(adding an offset which declines linearly to zero over the preceding 100 years)
+and use the global-, annual-mean derived from the observational network from that year onwards.
+For the remaining gases, we use the global-, annual-mean derived from the observational network.
 
-For all gases, we extend the global-, annual-mean back in time based on information about the gas' pre-industrial value and when this pre-industrial value should be reached.
-These are sourced from [TODO cite Velders et al. 2022] and [TODO cite the various sources used in M17] (Table \ref{tab:pre-industrial-values-cfc-12-like}).
+Second, for all gases, we extend the global-, annual-mean back in time based on information about the gas' pre-industrial value and when this pre-industrial value should be reached.
+These are sourced from \citet{velders_2022} and \citet{meinshausen_historical_2017} (Table \ref{tab:cfc12-like-per-gas}).
 We then fill the gap between the pre-industrial value (assumed constant for all time points before the pre-industrial fitting year)
 and the global-, annual-mean from the previous step.
 To do this, we fit the following function
@@ -1074,7 +1105,7 @@ Finally we calculate the latitudinal gradient term, $lg(y, m, l)$.
 This is done using mean-preserving interpolation on the PCs before the PC and EOF are multiplied,
 in the same way as is described for CO_2 (Section \ref{sssec:methods-co2-finalising-general-components}).
 
-As for gases that are processed like SF_6 (Section \ref{sssec:methods-cfc12-like-finalising-general-components}),
+As for gases that are processed like CFC12 (Section \ref{sssec:methods-cfc12-like-finalising-general-components}),
 we do an extra check that no negative values will apply when we apply Equation \ref{eq:native-resolution-sum}.
 Where negative values are identified, we reduce the latitudinal gradient as required
 so that the negative values become zero.

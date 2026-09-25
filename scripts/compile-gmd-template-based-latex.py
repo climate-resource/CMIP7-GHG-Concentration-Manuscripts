@@ -178,25 +178,82 @@ class FigureSpec:
     """
 
 
+def split_tag_and_path(value: str, option: str) -> tuple[str, Path]:
+    """
+    Split a CLI value of the form `tag-to-replace=full-path`
+
+    Parameters
+    ----------
+    value
+        Value to split
+
+    option
+        CLI option the value was passed to, for the error message
+
+    Returns
+    -------
+    :
+        The tag to replace and the path
+    """
+    tag, _, full_path = value.partition("=")
+    if not full_path:
+        msg = (
+            f"Bad value for {option}. "
+            "Please format as `tag-to-replace=full-path`. "
+            f"Received: {value!r}"
+        )
+        raise ValueError(msg)
+
+    return tag, Path(full_path)
+
+
 def pass_figure_specs(raw: list[str]) -> tuple[FigureSpec, ...]:
     """
     Pass CLI figure information into `FigureSpec`s
     """
     res_l = []
     for v in raw:
-        tag, _, full_path = v.partition("=")
-        if not full_path:
-            msg = (
-                "Bad value for --figure-file. "
-                "Please format as `tag-to-replace=full-path`. "
-                f"Received: {v!r}"
-            )
-            raise ValueError(msg)
-
-        fs = FigureSpec(tag_to_replace=tag, full_path=Path(full_path))
+        tag, full_path = split_tag_and_path(v, option="--figure-file")
+        fs = FigureSpec(tag_to_replace=tag, full_path=full_path)
         res_l.append(fs)
 
     res = tuple(res_l)
+
+    return res
+
+
+def inline_table_files(in_text: str, table_files: list[str]) -> str:
+    """
+    Inline table files in place of their tags
+
+    The files' content is put straight into the text,
+    rather than being left for latex to pull in with an input command,
+    so the output stays a single file (which is what Copernicus wants)
+    and our replacements are applied to the tables too.
+
+    Parameters
+    ----------
+    in_text
+        Text in which to inline the tables
+
+    table_files
+        Values passed to `--table-file`, as `tag-to-replace=full-path`
+
+    Returns
+    -------
+    :
+        `in_text`, with each tag replaced by its file's content
+    """
+    res = in_text
+    for v in table_files:
+        tag, full_path = split_tag_and_path(v, option="--table-file")
+        if tag not in res:
+            msg = f"Did not find {tag=} in the text"
+            raise AssertionError(msg)
+
+        res = res.replace(
+            tag, f"{get_source_file_str(full_path)}\n{full_path.read_text()}"
+        )
 
     return res
 
@@ -391,6 +448,18 @@ def main(  # noqa: PLR0913, PLR0915
             )
         ),
     ] = None,
+    table_file: Annotated[
+        list[str] | None,
+        typer.Option(
+            help=(
+                "Table file to inline. "
+                "Should be passed as `tag-to-replace-in-latex=path-to-table`, "
+                "e.g. `--table-file=<per-gas-table>=/path/to/table.tex`. "
+                "The tag is replaced by the file's content "
+                "(so it can hold any latex, not only a table)."
+            )
+        ),
+    ] = None,
 ) -> None:
     """
     Compile the PDF
@@ -440,6 +509,11 @@ def main(  # noqa: PLR0913, PLR0915
     res = insert_file_content_after_tag(
         res, acknowledgements, tag="<acknowledgements-start>"
     )
+
+    # Before any other replacements,
+    # so the tables get the same replacements as the rest of the text.
+    if table_file is not None:
+        res = inline_table_files(res, table_file)
 
     latex_dir = build_dir / "latex"
     latex_dir.mkdir(exist_ok=True, parents=True)
