@@ -12,8 +12,8 @@ because the method is the same for all of them
 """
 # Differences from ch4
 # - the global-mean is, for many gases, overridden by a reference source,
-#   so that source has to appear on the observational network panel
-#   and the network's own global-mean becomes an input to the extension
+#   so that source appears as an input to the extension
+#   and the network's own global-mean only does if it was used
 # - the lat. gradient PC is regressed against total emissions,
 #   not emissions of geological origin
 # - only ever one lat. gradient EOF, hence one PC
@@ -35,12 +35,7 @@ from local.cmip_ghg_generation import (
     BUNDLE_CONFIG_FILE,
     DEFAULT_BUNDLE_DIR,
     DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
-    MODIFIED_NOTEBOOKS_DIR,
     ensure_bundle_available,
-    ensure_bundle_environment,
-    ensure_executed_notebook_available,
-    run_notebook_from_bundle_dir,
-    write_modified_notebook,
 )
 from local.historical_ghg_forcing_for_cmip7.layout import (
     Panel,
@@ -146,18 +141,20 @@ which is the one thing the figure needs
 that is not written into a data file somewhere.
 """
 
-HISTORICAL_EMISSIONS_FILE = Path("manuscript-outputs") / "historical-emissions.csv"
-"""Where the re-run notebook saves the historical emissions we want
+HISTORICAL_EMISSIONS_FILE = (
+    Path("data") / "processed" / "historical_emissions" / "historical_emissions.csv"
+)
+"""Where the original run saved its historical emissions compilation
 
-Relative to the bundle's root directory,
-because that is the notebook's working directory.
+Relative to the bundle's root directory.
+This is the original run's `complete_historical_emissions_file`.
 
-This holds every gas, not one, so it is re-run once for the whole group.
+This holds every gas, not one, so it is shared by the whole group.
 """
 
 GLOBAL_MEAN_SUPPLEMENT_SOURCES = {
     "wmo-2022-ozone-assessment-ch7/wmo_2022_ozone_assessment_ch7.csv": (
-        "WMO (2022)",
+        "Daniel et al. (2022)",
         (
             "cfc11",
             "cfc12",
@@ -202,6 +199,9 @@ GLOBAL_MEAN_SUPPLEMENT_SOURCES = {
 
 Each entry is the source's label and the gases it is used for,
 keyed by the source's file relative to the bundle's `data/interim` directory.
+The label is how the manuscript cites the source
+(i.e. what citing its key in [`SOURCE_BIBKEYS`][] gives),
+so the figure's legends say the same as the text and tables.
 
 This mirrors `get_global_mean_supplement_config`
 in the original run's `local/global_mean_extension.py`.
@@ -210,7 +210,7 @@ take their global-mean from the observational network alone.
 """
 
 SOURCE_BIBKEYS = {
-    "WMO (2022)": "wmo_2022_ozone_ch7",
+    "Daniel et al. (2022)": "wmo_2022_ozone_ch7",
     "Western et al. (2024)": "western_2024",
     "Velders et al. (2022)": "velders_2022",
     "Adam et al. (2024)": "adam_2024",
@@ -393,17 +393,13 @@ def get_cfc12_like_all_data_with_bins(gas: str, bundle_dir: Path) -> pd.DataFram
 def get_historical_emissions(
     gas: str,
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
-    original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
-    force_rerun: bool = False,
 ) -> pd.DataFrame:
     """
     Get the historical emissions a gas' latitudinal gradient PC is regressed against
 
     These come from the original run's historical emissions compilation,
     which the original run kept in `data/processed` rather than `data/interim`,
-    so it is not in the bundle and the notebook has to be re-run to get it.
-    The notebook compiles every gas at once, so the result is shared
-    by every gas in this group.
+    so we download the bundle's `data/processed` to get it.
 
     Parameters
     ----------
@@ -412,14 +408,6 @@ def get_historical_emissions(
 
     bundle_dir
         Directory in which to keep the original run's bundle
-
-    original_run_notebooks_dir
-        The original run's `notebooks-executed` directory
-
-        Only used if we don't already have a copy of the notebook we need.
-
-    force_rerun
-        Re-run the notebook even if its output is already there
 
     Returns
     -------
@@ -431,87 +419,20 @@ def get_historical_emissions(
     AssertionError
         The compilation has no emissions for `gas`
     """
-    out_file = bundle_dir / HISTORICAL_EMISSIONS_FILE
-    if not out_file.exists() or force_rerun:
-        re_run_historical_emissions_notebook(bundle_dir, original_run_notebooks_dir)
-    else:
-        logger.info(f"Using existing {out_file}")
+    ensure_bundle_available(
+        files_to_get=(),
+        files_to_get_tarred=("data--processed.tar.gz",),
+        bundle_dir=bundle_dir,
+    )
 
-    all_emissions = pd.read_csv(out_file)
+    in_file = bundle_dir / HISTORICAL_EMISSIONS_FILE
+    all_emissions = pd.read_csv(in_file)
     res = all_emissions[all_emissions["variable"] == f"Emissions|{gas}"]
     if res.empty:
-        msg = f"No historical emissions for {gas=}, check {out_file}"
+        msg = f"No historical emissions for {gas=}, check {in_file}"
         raise AssertionError(msg)
 
     return res.rename({"time": "year"}, axis="columns")
-
-
-def re_run_historical_emissions_notebook(
-    bundle_dir: Path = DEFAULT_BUNDLE_DIR,
-    original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
-) -> None:
-    """
-    Re-run the historical emissions compilation notebook
-
-    Parameters
-    ----------
-    bundle_dir
-        Directory in which to keep the original run's bundle
-
-    original_run_notebooks_dir
-        The original run's `notebooks-executed` directory
-    """
-    base_notebook = (
-        Path("compile_historical_emissions")
-        / "only"
-        / "0109_compile-complete-dataset.ipynb"
-    )
-
-    start_from = ensure_executed_notebook_available(
-        base_notebook,
-        original_run_notebooks_dir=original_run_notebooks_dir,
-    )
-    ensure_bundle_available(
-        files_to_get=(
-            "pyproject.toml",
-            "pixi.lock",
-            "v1.0.0-config-raw.yaml",
-        ),
-        files_to_get_tarred=(
-            "src.tar.gz",
-            "data--interim.tar.gz",
-        ),
-        bundle_dir=bundle_dir,
-    )
-    ensure_bundle_environment(bundle_dir)
-
-    save_cell = f"""
-# Added for the CMIP7 GHG manuscript.
-# The original run wrote this into `data/processed`,
-# which is not in the bundle, but we need it
-# for the latitudinal gradient PC regression panel.
-from pathlib import Path
-
-manuscript_out_file = Path("{HISTORICAL_EMISSIONS_FILE.as_posix()}")
-manuscript_out_file.parent.mkdir(exist_ok=True, parents=True)
-out.to_csv(manuscript_out_file, index=False)
-manuscript_out_file
-"""
-
-    notebook_name = base_notebook.stem
-    ipynb_to_run = bundle_dir / "notebooks-rerun" / f"{notebook_name}.ipynb"
-    to_run = write_modified_notebook(
-        start_from=start_from,
-        out_py=MODIFIED_NOTEBOOKS_DIR / f"{notebook_name}.py",
-        out_ipynb=ipynb_to_run,
-        extra_cells=[save_cell],
-        step_config_id="only",
-    )
-    run_notebook_from_bundle_dir(
-        to_run,
-        ipynb_to_run,
-        bundle_dir=bundle_dir,
-    )
 
 
 def get_step_config(gas: str, bundle_dir: Path) -> dict[str, Any]:
@@ -749,18 +670,7 @@ def generate_cfc12_like_methods_figure(  # noqa: PLR0915
 
     fig, axes = create_figure(ROWS)
 
-    # The reference global-mean, where there is one, is what the rest of the
-    # figure is built on, so it belongs on the panel which says what went in.
-    global_mean_sources = (
-        {global_mean_supplement[0]: global_mean_supplement[1]}
-        if global_mean_supplement is not None
-        else None
-    )
-    timeseries_scatter = plot_station_timeseries(
-        all_data_with_bins,
-        axes["timeseries"],
-        global_mean_sources=global_mean_sources,
-    )
+    timeseries_scatter = plot_station_timeseries(all_data_with_bins, axes["timeseries"])
     plot_station_locations(all_data_with_bins, axes["locations"])
     counts_mesh = plot_observation_counts(all_data_with_bins, axes["counts"])
 
@@ -882,23 +792,26 @@ def generate_cfc12_like_methods_figure(  # noqa: PLR0915
     )
     max_year_extended = int(global_mean_extended["year"].max())
 
+    # Only what actually went into the extension:
+    # where a source replaces the observational network's global-mean outright,
+    # the network's global-mean is not used, so it is not shown.
     input_sources = {}
+    obs_network_used = True
     if global_mean_supplement is not None:
         supplement_label, supplement = global_mean_supplement
         input_sources[supplement_label] = clip_to_years(supplement, max_year_extended)
+        obs_network_used = not supplement_replaces_obs_network(
+            supplement, max_year_extended
+        )
 
-        if supplement_replaces_obs_network(supplement, max_year_extended):
-            # This source replaces the observational network's global-mean
-            # outright, so the network's own global-mean is an input to the
-            # extension rather than the thing being extended, and the panel
-            # has to show it for the reader to see what was set aside.
-            input_sources["Obs. global-mean"] = (
-                get_only_data_variable(global_mean_from_obs_network)
-                .to_pandas()
-                .rename("value")
-                .to_frame()
-                .reset_index()
-            )
+    if obs_network_used:
+        input_sources[TITLES["gm"]] = (
+            get_only_data_variable(global_mean_from_obs_network)
+            .to_pandas()
+            .rename("value")
+            .to_frame()
+            .reset_index()
+        )
 
     # The extension is flat at the pre-industrial value up to the
     # pre-industrial year, then the sources take over from the first year
@@ -928,12 +841,7 @@ def generate_cfc12_like_methods_figure(  # noqa: PLR0915
         fit_period=fit_period,
     )
 
-    historical_emissions = get_historical_emissions(
-        gas,
-        bundle_dir=bundle_dir,
-        original_run_notebooks_dir=original_run_notebooks_dir,
-        force_rerun=force_rerun,
-    )
+    historical_emissions = get_historical_emissions(gas, bundle_dir=bundle_dir)
     emissions_unit_l = historical_emissions["unit"].unique()
     if len(emissions_unit_l) != 1:
         raise AssertionError(emissions_unit_l)

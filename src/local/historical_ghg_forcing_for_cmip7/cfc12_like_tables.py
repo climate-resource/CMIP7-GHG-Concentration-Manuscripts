@@ -280,8 +280,8 @@ def get_per_gas_row(gas: str, bundle_dir: Path) -> str:
 
     cells = (
         MANUSCRIPT_GAS_NAMES[gas],
-        obs_network_years,
         long_poleward_extension,
+        obs_network_years,
         get_global_mean_source_cell(gas, bundle_dir),
         str(pre_industrial["year"]),
         f"{pre_industrial_value:.2f}" if pre_industrial_value > 0.0 else "0",
@@ -326,8 +326,8 @@ def generate_cfc12_like_per_gas_table(
     header = " & ".join(
         (
             "Gas",
-            "Obs. network",
             "Long poleward",
+            "Obs. network",
             "Global-mean",
             r"\multicolumn{3}{l}{Pre-industrial}",
         )
@@ -335,8 +335,8 @@ def generate_cfc12_like_per_gas_table(
     sub_header = " & ".join(
         (
             "",
-            "years",
             "extension",
+            "years",
             "source",
             "year",
             f"value [{PRE_INDUSTRIAL_UNIT}]",

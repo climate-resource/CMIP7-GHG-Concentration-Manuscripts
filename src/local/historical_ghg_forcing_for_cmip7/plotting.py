@@ -293,12 +293,6 @@ In the timeseries panel colour shows latitude, so the legend
 can only speak about the marker shape.
 """
 
-GLOBAL_MEAN_SOURCE_LINESTYLES = ("-", "--", ":")
-"""Line styles to tell apart global-mean sources drawn over a network
-
-They all share a colour, so the style is the only thing left to tell them
-apart. A gas rarely has more than one, so this is short on purpose.
-"""
 
 FIT_PERIOD_COLOUR = OKABE_ITO["reddish purple"]
 """Colour to draw the years of a global-mean which came from a fit
@@ -367,14 +361,6 @@ is a network with a long tail, and the panel shows all of it.
 A network with a single reading half as far again as everything else
 is a network with an outlier, and showing it costs every other point
 the room it needs to be read at all.
-"""
-
-GLOBAL_MEAN_SOURCE_COLOUR = "k"
-"""Colour to draw a global-mean source over the observational network in
-
-Colour means latitude in that panel, so a source which has no latitude
-cannot take a colour from that scale without lying about where it is from.
-Black is not on the scale, and it reads over the scatter in greyscale too.
 """
 
 
@@ -1128,7 +1114,6 @@ def plot_station_timeseries(  # noqa: PLR0913
     inset_corner: tuple[float, float] | None = None,
     inset_width: float = 0.3,
     inset_height: float = 0.3,
-    global_mean_sources: Mapping[str, pd.DataFrame] | None = None,
     robust_y_limits: bool = True,
     clear_inset: bool = True,
 ) -> matplotlib.collections.PathCollection:
@@ -1160,16 +1145,6 @@ def plot_station_timeseries(  # noqa: PLR0913
     inset_height
         Height of the inset, in axes co-ordinates
 
-    global_mean_sources
-        Global-mean timeseries which are used in place of,
-        or alongside, this network's own global-mean, labelled by source
-
-        For some gases the global-mean does not come from this network at all,
-        and a panel which showed only the network would not say
-        where the numbers in the rest of the figure actually came from.
-        These are global-means, so they have no latitude
-        and are drawn as lines rather than on the latitude colour scale.
-
     robust_y_limits
         Whether to scale the panel by the bulk of the network's values,
         leaving a few far-out points off scale, see [set_robust_y_limits][]
@@ -1194,21 +1169,11 @@ def plot_station_timeseries(  # noqa: PLR0913
     # The panel's vertical limits are settled first, because where there is
     # room for the inset depends on them, and the inset has to exist before
     # anything can be drawn into it.
-    panel_values = [indf["value"].to_numpy(dtype=float)]
-    if global_mean_sources is not None:
-        # The sources are drawn on this panel too, so they get a say in
-        # how tall it is, even though the outlier question is about the
-        # network: these are global-means, they do not have outliers.
-        panel_values.extend(
-            in_panel_years(pdf, indf)["value"].to_numpy(dtype=float)
-            for pdf in global_mean_sources.values()
-        )
-
     n_off_scale = 0
     if ax.get_autoscaley_on():
         n_off_scale = set_robust_y_limits(
             ax,
-            np.concatenate(panel_values),
+            indf["value"].to_numpy(dtype=float),
             headroom_fraction=(
                 OUTLIER_HEADROOM_FRACTION if robust_y_limits else np.inf
             ),
@@ -1273,35 +1238,6 @@ def plot_station_timeseries(  # noqa: PLR0913
         for group in sorted(indf[NETWORK_GROUP_COLUMN].unique())
     ]
 
-    if global_mean_sources is not None:
-        for i, (label, pdf) in enumerate(global_mean_sources.items()):
-            in_panel = in_panel_years(pdf, indf)
-            # Drawn on both axes so the inset tells the same story as the panel
-            for axh in [ax, ax_inset]:
-                axh.plot(
-                    in_panel["year"],
-                    in_panel["value"],
-                    color=GLOBAL_MEAN_SOURCE_COLOUR,
-                    linestyle=GLOBAL_MEAN_SOURCE_LINESTYLES[
-                        i % len(GLOBAL_MEAN_SOURCE_LINESTYLES)
-                    ],
-                    linewidth=1.5,
-                    label=label,
-                )
-
-            handles.append(
-                matplotlib.lines.Line2D(
-                    [],
-                    [],
-                    color=GLOBAL_MEAN_SOURCE_COLOUR,
-                    linestyle=GLOBAL_MEAN_SOURCE_LINESTYLES[
-                        i % len(GLOBAL_MEAN_SOURCE_LINESTYLES)
-                    ],
-                    linewidth=1.5,
-                    label=label,
-                )
-            )
-
     if n_off_scale:
         # In the legend rather than on the panel: it is a note about what
         # is drawn, and the legend is the one place on a panel this full
@@ -1344,40 +1280,6 @@ def plot_station_timeseries(  # noqa: PLR0913
     add_compact_legend(ax, loc="upper left", handles=handles)
 
     return scatter
-
-
-def in_panel_years(
-    pdf: pd.DataFrame, indf: pd.DataFrame, year_column: str = "year"
-) -> pd.DataFrame:
-    """
-    Cut a source down to the years the observational network panel shows
-
-    These sources usually run well past the network in both directions
-    (Trudinger starts in 1901, the network in 2003), and the panel is held
-    to the network's years, so the rest is never seen. Keeping it would
-    leave it in the sums matplotlib scales the vertical axis by, which
-    squashes every point in the panel into a corner to make room for a line
-    nobody can see.
-
-    Parameters
-    ----------
-    pdf
-        Source to cut down
-
-    indf
-        Observational network data, whose years the panel shows
-
-    year_column
-        Column which holds the year
-
-    Returns
-    -------
-        `pdf`, with the years outside the network's own dropped
-    """
-    return pdf[
-        (pdf[year_column] >= indf[year_column].min())
-        & (pdf[year_column] <= indf[year_column].max())
-    ]
 
 
 def y_limits_to_clear_inset(  # noqa: PLR0913
@@ -2405,13 +2307,18 @@ def plot_global_mean_extension(  # noqa: PLR0913
             )
 
     if pre_industrial is not None:
-        for i, ax in enumerate((ax_left, ax_right)):
-            # Both halves: which half the pre-industrial year lands in
-            # depends on the gas, and each half shows only what is inside
-            # its own limits.
+        # Only on the half the pre-industrial year lands in, like everything
+        # else on the pair: a marker is drawn whole around its point,
+        # so one drawn on both halves would poke half a star over the break.
+        # The other half still gets its (empty) line,
+        # so the pair's legend, which is built on the left half, has the star.
+        pre_industrial_masks = split_masks_at_year(
+            np.array([pre_industrial_year]), split_year
+        )
+        for i, (ax, mask) in enumerate(zip((ax_left, ax_right), pre_industrial_masks)):
             ax.plot(
-                pre_industrial_year,
-                pre_industrial_value,
+                np.array([pre_industrial_year])[mask],
+                np.array([pre_industrial_value])[mask],
                 marker="*",
                 markersize=9,
                 linestyle="none",
