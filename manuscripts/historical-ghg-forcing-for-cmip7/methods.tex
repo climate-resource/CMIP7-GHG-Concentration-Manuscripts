@@ -836,7 +836,32 @@ HFC-125, HFC-134a, HFC-143a, HFC-152a, HFC-227ea, HFC-23, HFC-236fa, HFC-245fa, 
 NF_3, SF_6 and SO_2F_2.
 The inputs and choices which differ between these gases are summarised in Table \ref{tab:cfc12-like-per-gas}.
 
+\begin{table*}[t]
+\caption{
+    Per-gas inputs and choices for the gases processed like CFC12
+    (Section \ref{ssec:methods-cfc12-like}).
+    Obs. network years: years covered by the global-, annual-mean
+    derived from the observational network.
+    Global-mean source: replaces the global-, annual-mean
+    derived from the observational network, unless noted.
+    Pre-industrial: the assumed year at which, and value at which,
+    the global-, annual-mean reaches its pre-industrial value,
+    and the source for this value.
+}
+\label{tab:cfc12-like-per-gas}
+% Thirty-four rows only fit on a page at this size
+\footnotesize
 <cfc12-like-per-gas-table>
+\belowtable{
+    \textsuperscript{a} 1988 rather than the 1980 used for
+    the other \citet{velders_2022} pre-industrial years
+    so that the interpolation algorithm is stable.
+    \textsuperscript{b} Used to extend the observational timeseries back in time.
+    Harmonised to the observational network
+    in the first year of the observational network
+    (with a 100-year harmonisation convergence time).
+}
+\end{table*}
 
 \subsubsection{Step 1: Collect observations}
 
@@ -851,7 +876,12 @@ In addition, we also use the global-mean timeseries from \citet{wmo_2022_ozone_c
 
 For other gases, data availability differs, so we use a different combination of networks:
 
+\begin{itemize}
+% Gas names can't be broken at their hyphens,
+% so a justified line has too few places to stretch
+\raggedright
 <cfc12-like-obs-network-sources-list>
+\end{itemize}
 
 As for CFC12, we use NOAA's combined HATS products where they are available
 (CFC-11, \citealp{noaa_hats_cfc11}; CFC-113, \citealp{noaa_hats_cfc113}; CCl_4, \citealp{noaa_hats_ccl4}; SF_6, \citealp{noaa_hats_sf6}).

@@ -186,11 +186,10 @@ def generate_cfc12_like_obs_network_sources_list(
             networks_label = " and ".join(networks)
 
         gas_names = ", ".join(MANUSCRIPT_GAS_NAMES[gas] for gas in gases)
-        items.append(f"    \\item {networks_label}: {gas_names}")
+        items.append(f"    \\item {networks_label} ({len(gases)}): {gas_names}")
 
-    # Gas names can't be broken at their hyphens,
-    # so a justified line has too few places to stretch
-    res = "\n".join(["\\begin{itemize}", "\\raggedright", *items, "\\end{itemize}", ""])
+    # Only the items, the list around them is in the manuscript's text
+    res = "\n".join([*items, ""])
 
     outfile.parent.mkdir(exist_ok=True, parents=True)
     logger.info(f"Writing {outfile}")
@@ -285,7 +284,7 @@ def get_per_gas_row(gas: str, bundle_dir: Path) -> str:
         long_poleward_extension,
         get_global_mean_source_cell(gas, bundle_dir),
         str(pre_industrial["year"]),
-        f"{pre_industrial_value:g}",
+        f"{pre_industrial_value:.2f}" if pre_industrial_value > 0.0 else "0",
         PRE_INDUSTRIAL_SOURCE_CITATIONS[pre_industrial["source"]],
     )
 
@@ -330,7 +329,7 @@ def generate_cfc12_like_per_gas_table(
             "Obs. network",
             "Long poleward",
             "Global-mean",
-            r"\multicolumn{3}{c}{Pre-industrial}",
+            r"\multicolumn{3}{l}{Pre-industrial}",
         )
     )
     sub_header = " & ".join(
@@ -340,28 +339,15 @@ def generate_cfc12_like_per_gas_table(
             "extension",
             "source",
             "year",
-            f"value ({PRE_INDUSTRIAL_UNIT})",
+            f"value [{PRE_INDUSTRIAL_UNIT}]",
             "source",
         )
     )
 
+    # Only the tabular, the caption, footnotes etc. are in the manuscript's text
     res = "\n".join(
         [
-            r"\begin{table*}[t]",
-            r"\caption{",
-            "    Per-gas inputs and choices for the gases processed like CFC12",
-            r"    (Section \ref{ssec:methods-cfc12-like}).",
-            "    Obs. network years: years covered by the global-, annual-mean",
-            "    derived from the observational network.",
-            "    Global-mean source: replaces the global-, annual-mean",
-            "    derived from the observational network, unless noted.",
-            "    Pre-industrial: the year from which, and value at which,",
-            "    the global-, annual-mean is held constant, and their source.",
-            "}",
-            r"\label{tab:cfc12-like-per-gas}",
-            # Thirty-four rows only fit on a page at this size
-            r"\footnotesize",
-            r"\begin{tabular}{lcclccl}",
+            r"\begin{tabular}{lcclcrl}",
             r"\tophline",
             f"{header} \\\\",
             f"{sub_header} \\\\",
@@ -369,17 +355,6 @@ def generate_cfc12_like_per_gas_table(
             *rows,
             r"\bottomhline",
             r"\end{tabular}",
-            r"\belowtable{",
-            "    \\textsuperscript{a} 1988 rather than the 1980 used for",
-            r"    the other \citet{velders_2022} pre-industrial years,",
-            "    as from 1980, no gap-filling method (Step 4)",
-            "    can follow the rapid rise at the start of their data.",
-            "    \\textsuperscript{b} Harmonised to the observational network",
-            "    in the first year of the observational network",
-            "    (with a 100-year transition),",
-            "    then the observational network is used from that year on.",
-            "}",
-            r"\end{table*}",
             "",
         ]
     )
