@@ -19,8 +19,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import xarray as xr
+import yaml
 from loguru import logger
 
+from local.cmip_ghg_generation import BUNDLE_CONFIG_FILE
 from local.historical_ghg_forcing_for_cmip7.cfc12_like_methods_figure import (
     CFC12_LIKE_GASES,
     SOURCE_BIBKEYS,
@@ -75,12 +77,22 @@ which is where they are turned into tex.
 
 NETWORK_LABELS = {
     "AGAGE": "AGAGE",
-    "NOAA": "NOAA HATS",
 }
 """How each observational network is written in the manuscript
 
 Keyed by the network's name in the `network` column
 of the original run's binned observational network data.
+NOAA is not here because its label depends on which of its HATS products
+was used, see [`NOAA_HATS_PRODUCT_LABELS`][].
+"""
+
+NOAA_HATS_PRODUCT_LABELS = {
+    "combined": "NOAA HATS combined",
+    "flask": "NOAA HATS flask",
+}
+"""How each NOAA HATS product is written in the manuscript
+
+Keyed by the product, as [get_noaa_hats_product][] returns it.
 """
 
 PRE_INDUSTRIAL_SOURCE_CITATIONS = {
@@ -104,6 +116,54 @@ PRE_INDUSTRIAL_UNIT = "ppt"
 
 Every gas in this group uses it, so it goes in the column heading.
 """
+
+
+def get_noaa_hats_product(gas: str, bundle_dir: Path) -> str:
+    """
+    Get which NOAA HATS product the original run used for a gas
+
+    The binned observational network data doesn't say,
+    so we take it from the URLs the original run downloaded the data from.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory which holds the original run's bundle
+
+    Returns
+    -------
+    :
+        `"combined"` for NOAA's combined HATS product,
+        `"flask"` for the HATS flask data
+
+    Raises
+    ------
+    AssertionError
+        The bundle's config has no NOAA HATS download for `gas`,
+        or its URLs aren't all for one of the products
+    """
+    with open(bundle_dir / BUNDLE_CONFIG_FILE) as fh:
+        config = yaml.safe_load(fh)
+
+    for step_config in config["retrieve_and_extract_noaa_data"]:
+        if step_config["gas"] == gas and step_config["source"] == "hats":
+            urls = [v["url"] for v in step_config["download_urls"]]
+            break
+    else:
+        msg = f"No NOAA HATS download config for {gas=}"
+        raise AssertionError(msg)
+
+    if all("/combined/" in url for url in urls):
+        return "combined"
+
+    if all(url.endswith("_flask.txt") for url in urls):
+        return "flask"
+
+    msg = f"Can't tell which NOAA HATS product {gas=} used from {urls=}"
+    raise AssertionError(msg)
 
 
 def get_networks(gas: str, bundle_dir: Path) -> tuple[str, ...]:
@@ -138,9 +198,14 @@ def get_networks(gas: str, bundle_dir: Path) -> tuple[str, ...]:
         msg = f"Expected only NOAA HATS data for {gas=}, found {noaa_sources}"
         raise AssertionError(msg)
 
-    return tuple(
-        sorted(NETWORK_LABELS[v] for v in all_data_with_bins["network"].unique())
-    )
+    labels = [
+        NOAA_HATS_PRODUCT_LABELS[get_noaa_hats_product(gas, bundle_dir)]
+        if network == "NOAA"
+        else NETWORK_LABELS[network]
+        for network in all_data_with_bins["network"].unique()
+    ]
+
+    return tuple(sorted(labels))
 
 
 def generate_cfc12_like_obs_network_sources_list(
@@ -176,9 +241,9 @@ def generate_cfc12_like_obs_network_sources_list(
         gases_by_networks.setdefault(get_networks(gas, bundle_dir), []).append(gas)
 
     items = []
-    # Most networks first, which also puts the group most gases are in first
+    # Most networks first, then the groups with the most gases in them first
     for networks, gases in sorted(
-        gases_by_networks.items(), key=lambda kv: (-len(kv[0]), kv[0])
+        gases_by_networks.items(), key=lambda kv: (-len(kv[0]), -len(kv[1]), kv[0])
     ):
         if len(networks) == 1:
             networks_label = f"{networks[0]} only"

@@ -466,6 +466,13 @@ We calculate the native resolution from the derived components following the gen
 \subsection{Generating CO_2 concentrations}
 \label{ssec:methods-co2}
 
+Next we consider CO_2.
+This follows the `base case' (section \ref{ssec:methods-general-approach}),
+with adjustments made to the principal component analysis,
+extension back in time
+and preparation of components to be used in Equation \ref{eq:native-resolution-sum}
+in order to accomodate the more sophisticated handling of seasonality.
+
 \subsubsection{Step 1: Collect observations}
 
 For CO_2, we use data from the NOAA observation network
@@ -670,6 +677,11 @@ We calculate the native resolution from the derived components following the gen
 \subsection{Generating CH_4 concentrations}
 \label{ssec:methods-ch4}
 
+Next we consider CH_4
+This follows the `base case' (section \ref{ssec:methods-general-approach}),
+with adjustments made to the extension back in time
+in order to make use of the fact that there are ice core observations available from ice cores in both hemispheres.
+
 \subsubsection{Step 1: Collect observations}
 
 For CH_4, we use data from the NOAA [TODO ref] and AGAGE [TODO ref] observation networks
@@ -823,8 +835,15 @@ The components are processed in the same way as is done for N_2O (Section \ref{s
 
 We calculate the native resolution from the derived components in the same way as is done for N_2O (Section \ref{sssec:methods-n2o-generate-native-resolution}).
 
-\subsection{Calculating the general components: CFC-12 and similarly processed species}
+\subsection{Generating CFC-12 and similarly processed species concentrations}
 \label{ssec:methods-cfc12-like}
+
+Next we consider CFC12.
+This follows the `base case' (section \ref{ssec:methods-general-approach}),
+with adjustments made to the extension back in time
+and preparation of components to be used in Equation \ref{eq:native-resolution-sum}
+in order to accomodate the fact that some sources take priority over our observing network based method
+and to avoid spurious negative values in the output due to rounding.
 
 The approach described in this section is also used for
 C_2F_6, C_3F_8, CCl_4, CF_4,
