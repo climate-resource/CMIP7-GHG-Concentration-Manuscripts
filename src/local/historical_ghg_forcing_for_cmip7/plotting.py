@@ -168,10 +168,10 @@ REGION_COLOURS = {
 }
 """Colour to use for each region of a spatial mean
 
-The monthly and the yearly spatial-mean panels sit in the same row and show
-the same three regions, one zoomed in on the end of the other. They are read
-against each other, so they are given the same colours from here rather than
-each picking its own up from whatever is drawing it.
+The results figures show the same regions in more than one panel,
+and show CMIP6's regions next to ours.
+They are read against each other, so they are given the same colours from here
+rather than each picking its own up from whatever is drawing it.
 """
 
 SOURCE_SEQUENCE_COLOURS = (
@@ -903,41 +903,6 @@ def extension_source_palette(sources: Iterable[str]) -> dict[str, str]:
         raise KeyError(msg)
 
     return {source: EXTENSION_SOURCE_COLOURS[source] for source in sources}
-
-
-def region_palette(regions: Iterable[str]) -> dict[str, str]:
-    """
-    Get the colour to draw each region of a spatial mean in
-
-    Parameters
-    ----------
-    regions
-        Regions to get colours for
-
-    Returns
-    -------
-    :
-        Colour for each region in `regions`
-
-    Raises
-    ------
-    KeyError
-        A region has no colour of its own
-
-        The monthly and the yearly panels are read against each other, so a
-        region which picked its colour up from whatever was drawing it could
-        be one colour in one and another in the other.
-    """
-    regions = list(regions)
-    unknown = [region for region in regions if region not in REGION_COLOURS]
-    if unknown:
-        msg = (
-            f"No colour for {unknown}. "
-            f"Add one to REGION_COLOURS, which covers {sorted(REGION_COLOURS)}."
-        )
-        raise KeyError(msg)
-
-    return {region: REGION_COLOURS[region] for region in regions}
 
 
 def source_sequence_palette(labels: Iterable[str]) -> dict[str, str]:
@@ -2618,98 +2583,6 @@ def plot_flying_carpet(
     ax.tick_params(labelsize="small", pad=0.0)
 
     return mesh
-
-
-def plot_monthly_means(
-    pda: xr.Dataset,
-    ax: matplotlib.axes.Axes,
-) -> None:
-    """
-    Plot monthly means
-    """
-    tmp = convert_year_month_to_time(get_only_data_variable(pda))
-    tmp = tmp.assign_coords(
-        time=tmp["time"].dt.year + tmp["time"].dt.month / 12 - 1 / 24
-    )
-    pdf_l = []
-    for region, rda in tmp.groupby("Region"):
-        tmp_df = (
-            rda.sel(Region=region).to_pandas().rename("value").to_frame().reset_index()
-        )
-        tmp_df["Region"] = region
-        pdf_l.append(tmp_df)
-
-    pdf = pd.concat(pdf_l)
-
-    sns.scatterplot(
-        pdf,
-        x="time",
-        y="value",
-        hue="Region",
-        palette=region_palette(pdf["Region"].unique()),
-        ax=ax,
-        s=15,
-        alpha=0.7,
-        edgecolor=None,
-    )
-
-    ax.set_ylabel(f"[{tmp.attrs['units']}]", fontsize="small")
-    ax.set_xlabel("time", fontsize="small")
-    ax.tick_params(labelsize="small")
-    ax.set_xlim(pda["year"].min(), pda["year"].max())
-    ax.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
-    compact_existing_legend(ax, loc="best")
-
-
-def plot_yearly_means(
-    pda: xr.Dataset,
-    ax_left: matplotlib.axes.Axes,
-    ax_right: matplotlib.axes.Axes,
-    split_year: int = 1850,
-) -> None:
-    """
-    Plot global-mean derived from the observational network
-    """
-    tmp = get_only_data_variable(pda)
-    pdf_l = []
-    for region, rda in tmp.groupby("Region"):
-        tmp_df = (
-            rda.sel(Region=region).to_pandas().rename("value").to_frame().reset_index()
-        )
-        tmp_df["Region"] = region
-        pdf_l.append(tmp_df)
-
-    pdf = pd.concat(pdf_l)
-
-    masks = split_masks_at_year(pdf["year"], split_year)
-    for ax, mask in zip((ax_left, ax_right), masks):
-        sns.scatterplot(
-            pdf[mask],
-            x="year",
-            y="value",
-            hue="Region",
-            palette=region_palette(pdf["Region"].unique()),
-            ax=ax,
-            s=15,
-            alpha=0.7,
-            edgecolor=None,
-            # legend=False,
-        )
-
-    auto_set_split_axis_y_limits([ax_left, ax_right], pdf["value"])
-
-    add_break_lines_and_setup(
-        ax_left,
-        ax_right,
-        pda["year"].min(),
-        split_year,
-        pda["year"].max(),
-        tmp.attrs["units"],
-        # The record is flat and low until its last century, so the top of
-        # the left half is the only part of this panel with room in it,
-        # and centring keeps the legend off the axis' tick labels.
-        legend_loc="upper center",
-    )
 
 
 def thin_ticks(ticks: np.typing.ArrayLike, max_ticks: int) -> np.typing.NDArray:

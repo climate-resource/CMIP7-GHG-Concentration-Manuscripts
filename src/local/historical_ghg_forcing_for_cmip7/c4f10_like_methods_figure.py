@@ -44,17 +44,12 @@ from local.historical_ghg_forcing_for_cmip7.layout import (
 )
 from local.historical_ghg_forcing_for_cmip7.plotting import (
     BROKEN_SPLIT,
-    add_colour_bar,
     get_only_data_variable,
-    label_name,
     linear_latitudinal_gradient_eof,
     plot_extension_pieces,
-    plot_flying_carpet,
     plot_global_mean_from_obs_network,
     plot_input_timeseries,
     plot_lat_gradient_pieces_from_obs_network,
-    plot_monthly_means,
-    plot_yearly_means,
 )
 
 C4F10_LIKE_GASES = (
@@ -96,9 +91,6 @@ TITLES = {
     "gm": "Derived global-mean",
     "gm-ext": "Extended global-mean",
     "lat-grad-pc-ext": "Extended lat. gradient PC",
-    "monthly": "Monthly spatial-means",
-    "yearly": "Yearly spatial-means",
-    "flying-carpet": "Native resolution",
 }
 """Title of each panel"""
 
@@ -122,20 +114,6 @@ ROWS = (
         ),
         height=2.3,
     ),
-    Row(
-        panels=(
-            Panel("monthly"),
-            Panel("yearly", width=1.5, broken=True, broken_split=BROKEN_SPLIT),
-            Panel(
-                "flying-carpet",
-                aspect=1.0,
-                projection="3d",
-                colour_bar=True,
-                colour_bar_height=0.6,
-            ),
-        ),
-        height=2.8,
-    ),
 )
 """Layout of the figure's panels, top to bottom
 
@@ -149,8 +127,6 @@ so the panels are labelled in reading order.
   and the global-mean is whatever is left over.
   There is no seasonality panel: seasonality is assumed zero for these gases.
 - Extending each of those back and forward in time.
-- The outputs, including the flying carpet,
-  which is square and so sets its row's height.
 
 Each row is laid out independently of the others,
 see [local.historical_ghg_forcing_for_cmip7.layout][],
@@ -248,7 +224,7 @@ def get_extension_pieces(
     }
 
 
-def generate_c4f10_like_methods_figure(  # noqa: PLR0915
+def generate_c4f10_like_methods_figure(
     gas: str,
     outfile: Path,
     bundle_dir: Path,
@@ -361,55 +337,6 @@ def generate_c4f10_like_methods_figure(  # noqa: PLR0915
         axes["lat-grad-pc-ext-r"],
         pieces=get_extension_pieces(pcs_extended["year"].values, input_years),
         split_year=split_year,
-    )
-
-    native_resolution = xr.load_dataset(gas_dir / f"{gas}_fifteen-degree_monthly.nc")
-    max_year = int(native_resolution["year"].max())
-    flying_carpet_mesh = plot_flying_carpet(
-        native_resolution.sel(year=range(max_year - 9, max_year + 1)),
-        axes["flying-carpet"],
-    )
-
-    gm_monthly = xr.load_dataset(gas_dir / f"{gas}_global-mean_monthly.nc")
-    gm_monthly = gm_monthly.assign_coords(lat=["Global"])
-    hm_monthly = xr.load_dataset(gas_dir / f"{gas}_hemispheric-mean_monthly.nc")
-    sh_lat = -45.0
-    hm_monthly = hm_monthly.assign_coords(
-        lat=[
-            "Southern hemisphere" if v == sh_lat else "Northern hemisphere"
-            for v in hm_monthly["lat"]
-        ]
-    )
-    pda = xr.concat([gm_monthly, hm_monthly], "lat")
-    pda = pda.rename({"lat": "Region"})
-    max_year = int(pda["year"].max())
-    plot_monthly_means(
-        pda.sel(year=range(max_year - 4, max_year + 1)), ax=axes["monthly"]
-    )
-
-    gm_yearly = xr.load_dataset(gas_dir / f"{gas}_global-mean_annual-mean.nc")
-    gm_yearly = gm_yearly.assign_coords(lat=["Global"])
-    hm_yearly = xr.load_dataset(gas_dir / f"{gas}_hemispheric-mean_annual-mean.nc")
-    hm_yearly = hm_yearly.assign_coords(
-        lat=[
-            "Southern hemisphere" if v == sh_lat else "Northern hemisphere"
-            for v in hm_yearly["lat"]
-        ]
-    )
-    pda = xr.concat([gm_yearly, hm_yearly], "lat")
-    pda = pda.rename({"lat": "Region"})
-    plot_yearly_means(pda, ax_left=axes["yearly-l"], ax_right=axes["yearly-r"])
-
-    add_colour_bar(
-        fig,
-        flying_carpet_mesh,
-        cax=axes["flying-carpet-colour-bar"],
-        # The panel's own vertical axis carries no label, so this says
-        # both what is plotted and what its units are.
-        label=label_name(
-            f"{gas} [{get_only_data_variable(native_resolution).attrs['units']}]"
-        ),
-        label_on_top=True,
     )
 
     label_panels(ROWS, axes, TITLES)

@@ -18,6 +18,7 @@ from .cfc12_like_tables import (
 from .ch4_methods_figure import generate_ch4_methods_figure
 from .co2_methods_figure import generate_co2_methods_figure
 from .n2o_methods_figure import generate_n2o_methods_figure
+from .results_figure import generate_results_figure_for_gas
 
 __all__ = [
     "C4F10_LIKE_GASES",
@@ -30,4 +31,5 @@ __all__ = [
     "generate_ch4_methods_figure",
     "generate_co2_methods_figure",
     "generate_n2o_methods_figure",
+    "generate_results_figure_for_gas",
 ]

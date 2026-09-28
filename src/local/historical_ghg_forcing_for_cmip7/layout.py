@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import itertools
 import string
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 
 import matplotlib.axes
@@ -64,13 +64,19 @@ class Panel:
     """
     Whether the panel is a broken axis
 
-    If `True`, the panel is made of two axes,
-    `f"{name}-l"` and `f"{name}-r"`, side by side with a small gap between.
+    If `True`, the panel is made of axes side by side with a small gap between.
+    If `broken_split` is a float, there are two of them,
+    `f"{name}-l"` and `f"{name}-r"`.
+    If it is a tuple, there is one per element,
+    `f"{name}-0"`, `f"{name}-1"` etc.
     """
 
-    broken_split: float = 0.5
+    broken_split: float | tuple[float, ...] = 0.5
     """
     Share of a broken panel's width given to its left half
+
+    If a tuple, the share of the panel's width given to each of its pieces,
+    left to right, which is how a panel is broken into more than two pieces.
 
     Ignored if `broken` is `False`.
 
@@ -81,6 +87,15 @@ class Panel:
     while the right half is where everything happens.
     Giving the left half less than half the panel
     spends the panel's width where the reader needs it.
+    """
+
+    broken_gap: float | None = None
+    """
+    Gap between the pieces of a broken axis, in inches
+
+    If `None`, [LayoutSettings.broken_gap][] is used.
+    Pieces which each carry their own vertical axis need a gap wide enough
+    to hold that axis' tick labels, which the default is not.
     """
 
     colour_bar: bool = False
@@ -151,6 +166,16 @@ class LayoutSettings:
     colour_bar_width: float = 0.15
     """Width of a colour bar"""
 
+    align_right: bool = False
+    """
+    Whether every row's data should end at the same place on the right
+
+    By default, each row runs all the way to the edge of the figure.
+    Rows whose panels share a time axis have to line up at both ends,
+    in which case every row stops where the row which needs the most room
+    for its right-hand decorations does.
+    """
+
 
 def get_panel_axes_names(panel: Panel) -> tuple[str, ...]:
     """
@@ -167,9 +192,33 @@ def get_panel_axes_names(panel: Panel) -> tuple[str, ...]:
         Names of the axes, left to right (colour bar not included)
     """
     if panel.broken:
+        if isinstance(panel.broken_split, tuple):
+            return tuple(f"{panel.name}-{i}" for i in range(len(panel.broken_split)))
+
         return (f"{panel.name}-l", f"{panel.name}-r")
 
     return (panel.name,)
+
+
+def get_broken_shares(panel: Panel) -> tuple[float, ...]:
+    """
+    Get the share of a broken panel's width which each of its pieces takes
+
+    Parameters
+    ----------
+    panel
+        Panel of interest
+
+    Returns
+    -------
+    :
+        Share of the panel's width each piece takes, left to right
+    """
+    if isinstance(panel.broken_split, tuple):
+        total = sum(panel.broken_split)
+        return tuple(share / total for share in panel.broken_split)
+
+    return (panel.broken_split, 1.0 - panel.broken_split)
 
 
 def get_colour_bar_axes_name(panel: Panel) -> str:
@@ -227,6 +276,7 @@ def label_panels(
     rows: tuple[Row, ...],
     axes: Mapping[str, matplotlib.axes.Axes],
     titles: Mapping[str, str],
+    unlabelled: Collection[str] = (),
 ) -> None:
     """
     Give each panel its title, labelled in reading order
@@ -241,8 +291,15 @@ def label_panels(
 
     titles
         Title of each panel
+
+    unlabelled
+        Panels which get neither a title nor a label
+
+        For panels which hold something other than data, e.g. a legend.
     """
-    panels = [panel for row in rows for panel in row.panels]
+    panels = [
+        panel for row in rows for panel in row.panels if panel.name not in unlabelled
+    ]
     if set(titles) != {panel.name for panel in panels}:
         msg = f"Titles don't match the panels: {set(titles)=}"
         raise AssertionError(msg)
@@ -276,15 +333,25 @@ def _place(  # noqa: PLR0912, PLR0915
     # Every row's data starts at the same place on the left,
     # so the vertical axes line up.
     # On the right, each row runs all the way to the edge,
-    # otherwise a colour bar in one row would leave a gap at the end of all the others.
+    # otherwise a colour bar in one row would leave a gap at the end of all the others,
+    # unless we've been asked to line the rows up on the right too.
     left_edge = settings.margin + max(pads[row.panels[0].name].left for row in rows)
+    shared_right_edge = (
+        settings.width
+        - settings.margin
+        - max(pads[row.panels[-1].name].right for row in rows)
+    )
 
     # Positions from the top first, because we don't know the figure's height yet
     boxes_from_top = {}
     y = settings.margin
     for row in rows:
         panels = row.panels
-        right_edge = settings.width - settings.margin - pads[panels[-1].name].right
+        if settings.align_right:
+            right_edge = shared_right_edge
+        else:
+            right_edge = settings.width - settings.margin - pads[panels[-1].name].right
+
         between = sum(
             pads[left.name].right + settings.wspace + pads[right.name].left
             for left, right in itertools.pairwise(panels)
@@ -350,20 +417,19 @@ def _place(  # noqa: PLR0912, PLR0915
 
             names = get_panel_axes_names(panel)
             if panel.broken:
-                usable = width - settings.broken_gap
-                left_width = usable * panel.broken_split
-                right_width = usable - left_width
-                axes[names[0]].set_position(
-                    to_figure_coords(x0, y0, left_width, height)
+                gap = (
+                    settings.broken_gap
+                    if panel.broken_gap is None
+                    else panel.broken_gap
                 )
-                axes[names[1]].set_position(
-                    to_figure_coords(
-                        x0 + left_width + settings.broken_gap,
-                        y0,
-                        right_width,
-                        height,
+                usable = width - gap * (len(names) - 1)
+                x_piece = x0
+                for name, share in zip(names, get_broken_shares(panel)):
+                    piece_width = usable * share
+                    axes[name].set_position(
+                        to_figure_coords(x_piece, y0, piece_width, height)
                     )
-                )
+                    x_piece += piece_width + gap
             else:
                 axes[names[0]].set_position(to_figure_coords(x0, y0, width, height))
 
@@ -400,9 +466,13 @@ def _measure(
             if panel.colour_bar:
                 names.append(get_colour_bar_axes_name(panel))
 
-            tight = Bbox.union(
-                [axes[name].get_tightbbox(renderer) for name in names]
-            ).transformed(fig.dpi_scale_trans.inverted())
+            # An axes which has been hidden has no box, and takes no room
+            tight_boxes = [
+                box
+                for name in names
+                if (box := axes[name].get_tightbbox(renderer)) is not None
+            ]
+            tight = Bbox.union(tight_boxes).transformed(fig.dpi_scale_trans.inverted())
 
             x0, y0, width, height = boxes[panel.name]
             pads[panel.name] = Pads(

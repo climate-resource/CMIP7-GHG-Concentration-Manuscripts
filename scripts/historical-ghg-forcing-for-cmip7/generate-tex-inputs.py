@@ -22,14 +22,18 @@ from local.historical_ghg_forcing_for_cmip7 import (
     generate_ch4_methods_figure,
     generate_co2_methods_figure,
     generate_n2o_methods_figure,
+    generate_results_figure_for_gas,
+)
+from local.historical_ghg_forcing_for_cmip7.comparison_data import (
+    RADIATIVE_EFFICIENCIES,
 )
 
 
-def parse_methods_figure_file(
+def parse_figure_file(
     value: str, gases: tuple[str, ...], group: str
 ) -> tuple[str, Path]:
     """
-    Parse a gas and a file to write that gas' methods figure in
+    Parse a gas and a file to write that gas' figure in
 
     Parameters
     ----------
@@ -37,7 +41,7 @@ def parse_methods_figure_file(
         Value to parse, as `"<gas>=<file>"`
 
     gases
-        Gases which share the figure this value is for
+        Gases which the figure this value is for can be drawn for
 
     group
         How the group of gases is named in an error message
@@ -51,7 +55,7 @@ def parse_methods_figure_file(
     ------
     typer.BadParameter
         `value` is not a gas and a file,
-        or the gas is not one which is processed like `group`
+        or the gas is not one of `group`
     """
     gas, _, figure_file = value.partition("=")
     if not figure_file:
@@ -59,10 +63,7 @@ def parse_methods_figure_file(
         raise typer.BadParameter(msg)
 
     if gas not in gases:
-        msg = (
-            f"{gas!r} is not processed like {group}. "
-            f"Expected one of: {', '.join(gases)}"
-        )
+        msg = f"{gas!r} is not one of {group}. Expected one of: {', '.join(gases)}"
         raise typer.BadParameter(msg)
 
     return gas, Path(figure_file)
@@ -145,6 +146,16 @@ def main(  # noqa: PLR0913
             ),
         ),
     ] = None,
+    results_figure_file: Annotated[
+        list[str] | None,
+        typer.Option(
+            help=(
+                "Gas and the path in which to write its results figure, "
+                "as '<gas>=<file>' e.g. 'ch4=figures/ch4_results.pdf'. "
+                "Repeat the option for each gas you want a figure for."
+            ),
+        ),
+    ] = None,
     bundle_dir: Annotated[
         Path,
         typer.Option(
@@ -181,12 +192,22 @@ def main(  # noqa: PLR0913
     # Parsed before anything is drawn, so a typo in a gas name
     # is caught now rather than three figures from now.
     cfc12_like_figures = [
-        parse_methods_figure_file(value, CFC12_LIKE_GASES, "CFC-12")
+        parse_figure_file(value, CFC12_LIKE_GASES, "the gases processed like CFC-12")
         for value in cfc12_like_methods_figure_file or []
     ]
     c4f10_like_figures = [
-        parse_methods_figure_file(value, C4F10_LIKE_GASES, "C4F10")
+        parse_figure_file(value, C4F10_LIKE_GASES, "the gases processed like C4F10")
         for value in c4f10_like_methods_figure_file or []
+    ]
+    # Every gas has a radiative efficiency, so this is the list of gases
+    # (the equivalent species aside, which we don't draw figures for).
+    results_figures = [
+        parse_figure_file(
+            value,
+            tuple(gas for gas in RADIATIVE_EFFICIENCIES if not gas.endswith("eq")),
+            "the gases we produce",
+        )
+        for value in results_figure_file or []
     ]
 
     generate_co2_methods_figure(
@@ -238,6 +259,15 @@ def main(  # noqa: PLR0913
         bundle_dir=bundle_dir,
         force_rerun=force_rerun,
     )
+
+    for gas, figure_file in results_figures:
+        generate_results_figure_for_gas(
+            gas,
+            figure_file,
+            bundle_dir=bundle_dir,
+            original_run_notebooks_dir=original_run_notebooks_dir,
+            force_rerun=force_rerun,
+        )
 
     # These summarise every gas processed like CFC-12,
     # so unlike the figures, they don't depend on which gases were asked for.

@@ -30,6 +30,7 @@ dependencies = [
     "cartopy>=0.24",
     "nbformat>=5.10",
     "openscm-zenodo @ git+https://github.com/openscm/openscm-zenodo.git@3617c4fbe26282c810a6379721864b57a3892555",
+    "openpyxl>=3.1.5",
 ]
 name = "local"
 version = "0.1.0"

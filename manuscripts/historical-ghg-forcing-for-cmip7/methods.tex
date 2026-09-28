@@ -313,9 +313,6 @@ When referring to `AGAGE' data, we also mean data from the predecessor GAGE [TOD
     j) Latitudinal gradient EOFs derived from the observation network values.
     k) Latitudinal gradient principal components (PCs) derived from the observation network values.
     l) Latitudinal gradient PCs for the entire output dataset timespan.
-    m) Hemispheric- and global- monthly-mean values from the last four years of the output dataset.
-    n) Hemispheric- and global- annual-mean values in the output dataset.
-    o) Three-dimensional surface plot of the last four years of the output dataset's native resolution.
 }
 \label{fig:methods-n2o}
 \end{figure}
@@ -462,6 +459,7 @@ by taking the product of the temporally extended, monthly interpolated PCs and t
 \label{sssec:methods-n2o-generate-native-resolution}
 
 We calculate the native resolution from the derived components following the general approach (Section \ref{ssec:methods-general-approach}).
+The resulting output is shown in Figure \ref{fig:results-n2o}.
 
 \subsection{Generating CO_2 concentrations}
 \label{ssec:methods-co2}
@@ -502,9 +500,6 @@ For CO_2, we use data from the NOAA observation network
     p) Latitudinal gradient PCs derived from the observation network values.
     q) Regression between the first latitudinal gradient PC and CO_2 emissions of geological origin.
     r) Latitudinal gradient PCs for the entire output dataset timespan.
-    s) Hemispheric- and global- monthly-mean values from the last four years of the output dataset.
-    t) Hemispheric- and global- annual-mean values in the output dataset.
-    u) Three-dimensional surface plot of the last four years of the output dataset's native resolution.
 }
 \label{fig:methods-co2}
 \end{figure}
@@ -673,6 +668,7 @@ the last step is to calculate the latitudinal gradient term, $lg(y, m, l)$.
 \label{sssec:methods-co2-generate-native-resolution}
 
 We calculate the native resolution from the derived components following the general approach (Section \ref{ssec:methods-general-approach}).
+The resulting output is shown in Figure \ref{fig:results-co2}.
 
 \subsection{Generating CH_4 concentrations}
 \label{ssec:methods-ch4}
@@ -706,9 +702,6 @@ For CH_4, we use data from the NOAA [TODO ref] and AGAGE [TODO ref] observation 
     k) Latitudinal gradient PCs derived from the observation network values.
     l) Regression between the first latitudinal gradient PC and CH_4 emissions of geological origin.
     m) Latitudinal gradient PCs for the entire output dataset timespan.
-    n) Hemispheric- and global- monthly-mean values from the last four years of the output dataset.
-    o) Hemispheric- and global- annual-mean values in the output dataset.
-    p) Three-dimensional surface plot of the last four years of the output dataset's native resolution.
 }
 \label{fig:methods-ch4}
 \end{figure}
@@ -834,6 +827,7 @@ The components are processed in the same way as is done for N_2O (Section \ref{s
 \label{sssec:methods-ch4-generate-native-resolution}
 
 We calculate the native resolution from the derived components in the same way as is done for N_2O (Section \ref{sssec:methods-n2o-generate-native-resolution}).
+The resulting output is shown in Figure \ref{fig:results-ch4}.
 
 \subsection{Generating CFC-12 and similarly processed species concentrations}
 \label{ssec:methods-cfc12-like}
@@ -901,9 +895,6 @@ The networks used are:
     k) Latitudinal gradient PCs derived from the observation network values.
     l) Regression between the first latitudinal gradient PC and CFC12 emissions.
     m) Latitudinal gradient PCs for the entire output dataset timespan.
-    n) Hemispheric- and global- monthly-mean values from the last four years of the output dataset.
-    o) Hemispheric- and global- annual-mean values in the output dataset.
-    p) Three-dimensional surface plot of the last four years of the output dataset's native resolution.
 }
 \label{fig:methods-cfc12}
 \end{figure}
@@ -1041,6 +1032,7 @@ so we view this as an acceptable fix given the intended application of the datas
 \label{sssec:methods-cfc12-generate-native-resolution}
 
 We calculate the native resolution from the derived components in the same way as is done for N_2O (Section \ref{sssec:methods-n2o-generate-native-resolution}).
+The resulting output is shown in Figure \ref{fig:results-cfc12}.
 
 \subsection{Generating concentrations for C_4F_10 and similarly processed species}
 \label{ssec:methods-c4f10-like}

@@ -36,15 +36,10 @@ from local.historical_ghg_forcing_for_cmip7.layout import (
 )
 from local.historical_ghg_forcing_for_cmip7.plotting import (
     BROKEN_SPLIT,
-    add_colour_bar,
     get_only_data_variable,
-    label_name,
     linear_latitudinal_gradient_eof,
     plot_extension_pieces,
-    plot_flying_carpet,
     plot_lat_gradient_eofs,
-    plot_monthly_means,
-    plot_yearly_means,
 )
 
 GAS = "c8f18"
@@ -86,9 +81,6 @@ TITLES = {
     "gm-ext": "Extended global-mean",
     "lat-grad-pc-ext": "Extended lat. gradient PC",
     "lat-grad-eof": "Lat. gradient EOF",
-    "monthly": "Monthly spatial-means",
-    "yearly": "Yearly spatial-means",
-    "flying-carpet": "Native resolution",
 }
 """Title of each panel"""
 
@@ -101,27 +93,14 @@ ROWS = (
         ),
         height=2.3,
     ),
-    Row(
-        panels=(
-            Panel("monthly"),
-            Panel("yearly", width=1.5, broken=True, broken_split=BROKEN_SPLIT),
-            Panel(
-                "flying-carpet",
-                aspect=1.0,
-                projection="3d",
-                colour_bar=True,
-                colour_bar_height=0.6,
-            ),
-        ),
-        height=2.8,
-    ),
 )
 """Layout of the figure's panels, top to bottom
 
-Two rows is all this gas needs:
-the components it is built from, and the outputs they make.
+One row is all this gas needs: the components it is built from.
 There is no observational network row and no extension row,
 because the components are taken from CMIP6 whole.
+The outputs they make are in the results figure,
+see [local.historical_ghg_forcing_for_cmip7.results_figure][].
 """
 
 
@@ -277,54 +256,6 @@ def generate_c8f18_methods_figure(
     plot_lat_gradient_eofs(
         lat_gradient_eof.assign_coords(eof=0).expand_dims({"eof": [0]}),
         axes["lat-grad-eof"],
-    )
-
-    native_resolution = xr.load_dataset(gas_dir / f"{GAS}_fifteen-degree_monthly.nc")
-    max_year = int(native_resolution["year"].max())
-    flying_carpet_mesh = plot_flying_carpet(
-        native_resolution.sel(year=range(max_year - 9, max_year + 1)),
-        axes["flying-carpet"],
-    )
-
-    gm_monthly = xr.load_dataset(gas_dir / f"{GAS}_global-mean_monthly.nc")
-    gm_monthly = gm_monthly.assign_coords(lat=["Global"])
-    hm_monthly = xr.load_dataset(gas_dir / f"{GAS}_hemispheric-mean_monthly.nc")
-    hm_monthly = hm_monthly.assign_coords(
-        lat=[
-            "Southern hemisphere" if v == SH_LAT else "Northern hemisphere"
-            for v in hm_monthly["lat"]
-        ]
-    )
-    pda = xr.concat([gm_monthly, hm_monthly], "lat")
-    pda = pda.rename({"lat": "Region"})
-    max_year = int(pda["year"].max())
-    plot_monthly_means(
-        pda.sel(year=range(max_year - 4, max_year + 1)), ax=axes["monthly"]
-    )
-
-    gm_yearly = xr.load_dataset(gas_dir / f"{GAS}_global-mean_annual-mean.nc")
-    gm_yearly = gm_yearly.assign_coords(lat=["Global"])
-    hm_yearly = xr.load_dataset(gas_dir / f"{GAS}_hemispheric-mean_annual-mean.nc")
-    hm_yearly = hm_yearly.assign_coords(
-        lat=[
-            "Southern hemisphere" if v == SH_LAT else "Northern hemisphere"
-            for v in hm_yearly["lat"]
-        ]
-    )
-    pda = xr.concat([gm_yearly, hm_yearly], "lat")
-    pda = pda.rename({"lat": "Region"})
-    plot_yearly_means(pda, ax_left=axes["yearly-l"], ax_right=axes["yearly-r"])
-
-    add_colour_bar(
-        fig,
-        flying_carpet_mesh,
-        cax=axes["flying-carpet-colour-bar"],
-        # The panel's own vertical axis carries no label, so this says
-        # both what is plotted and what its units are.
-        label=label_name(
-            f"{GAS} [{get_only_data_variable(native_resolution).attrs['units']}]"
-        ),
-        label_on_top=True,
     )
 
     label_panels(ROWS, axes, TITLES)

@@ -56,15 +56,12 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     eof_palette,
     get_decimal_year,
     get_interpolated_input_coverage_info,
-    get_only_data_variable,
     ghg,
     label_name,
     plot_coverage_and_interpolated,
-    plot_flying_carpet,
     plot_global_mean_extension,
     plot_global_mean_from_obs_network,
     plot_lat_gradient_pieces_from_obs_network,
-    plot_monthly_means,
     plot_observation_counts,
     plot_pc_timeseries_regression,
     plot_pcs_extended,
@@ -72,7 +69,6 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     plot_station_locations,
     plot_station_timeseries,
     plot_variance_explained,
-    plot_yearly_means,
 )
 from local.historical_ghg_forcing_for_cmip7.variance_explained import (
     DecompositionToSave,
@@ -177,9 +173,6 @@ TITLES = {
     "seasonality-pc-ext": "Extended seasonality PC",
     "lat-grad-pc-emms": "Lat. gradient PC0 against geological emissions",
     "lat-grad-pc-ext": "Extended lat. gradient PCs",
-    "monthly": "Monthly spatial-means",
-    "yearly": "Yearly spatial-means",
-    "flying-carpet": "Native resolution",
 }
 """Title of each panel"""
 
@@ -239,20 +232,6 @@ ROWS = (
         ),
         height=2.3,
     ),
-    Row(
-        panels=(
-            Panel("monthly"),
-            Panel("yearly", width=1.5, broken=True, broken_split=BROKEN_SPLIT),
-            Panel(
-                "flying-carpet",
-                aspect=1.0,
-                projection="3d",
-                colour_bar=True,
-                colour_bar_height=0.6,
-            ),
-        ),
-        height=2.8,
-    ),
 )
 """Layout of the figure's panels, top to bottom
 
@@ -273,8 +252,6 @@ so the panels are labelled in reading order.
   one with two components decomposed this way. Giving them a row each, laid
   out the same, is what lets the reader carry what they learnt from one
   straight across to the other.
-- The outputs, including the flying carpet,
-  which is square and so sets its row's height.
 
 Each row is laid out independently of the others,
 see [local.historical_ghg_forcing_for_cmip7.layout][],
@@ -993,66 +970,6 @@ def generate_co2_methods_figure(  # noqa: PLR0915
         # This panel now shares its row with four others,
         # which is not enough room for matplotlib's choice of year labels.
         max_ticks_per_half=3,
-    )
-
-    native_resolution = xr.load_dataset(
-        bundle_dir / "data/interim/co2/co2_fifteen-degree_monthly.nc"
-    )
-    max_year = int(native_resolution["year"].max())
-    flying_carpet_mesh = plot_flying_carpet(
-        native_resolution.sel(year=range(max_year - 9, max_year + 1)),
-        axes["flying-carpet"],
-    )
-
-    gm_monthly = xr.load_dataset(
-        bundle_dir / "data/interim/co2/co2_global-mean_monthly.nc"
-    )
-    gm_monthly = gm_monthly.assign_coords(lat=["Global"])
-    hm_monthly = xr.load_dataset(
-        bundle_dir / "data/interim/co2/co2_hemispheric-mean_monthly.nc"
-    )
-    sh_lat = -45.0
-    hm_monthly = hm_monthly.assign_coords(
-        lat=[
-            "Southern hemisphere" if v == sh_lat else "Northern hemisphere"
-            for v in hm_monthly["lat"]
-        ]
-    )
-    pda = xr.concat([gm_monthly, hm_monthly], "lat")
-    pda = pda.rename({"lat": "Region"})
-    max_year = int(pda["year"].max())
-    plot_monthly_means(
-        pda.sel(year=range(max_year - 4, max_year + 1)), ax=axes["monthly"]
-    )
-
-    gm_yearly = xr.load_dataset(
-        bundle_dir / "data/interim/co2/co2_global-mean_annual-mean.nc"
-    )
-    gm_yearly = gm_yearly.assign_coords(lat=["Global"])
-    hm_yearly = xr.load_dataset(
-        bundle_dir / "data/interim/co2/co2_hemispheric-mean_annual-mean.nc"
-    )
-    hm_yearly = hm_yearly.assign_coords(
-        lat=[
-            "Southern hemisphere" if v == sh_lat else "Northern hemisphere"
-            for v in hm_yearly["lat"]
-        ]
-    )
-    pda = xr.concat([gm_yearly, hm_yearly], "lat")
-    pda = pda.rename({"lat": "Region"})
-    plot_yearly_means(pda, ax_left=axes["yearly-l"], ax_right=axes["yearly-r"])
-
-    add_colour_bar(
-        fig,
-        flying_carpet_mesh,
-        cax=axes["flying-carpet-colour-bar"],
-        # The panel's own vertical axis carries no label, so this says
-        # both what is plotted and what its units are.
-        label=label_name(
-            f"{ghg(all_data_with_bins)} "
-            f"[{get_only_data_variable(native_resolution).attrs['units']}]"
-        ),
-        label_on_top=True,
     )
 
     label_panels(ROWS, axes, TITLES)

@@ -70,6 +70,21 @@ done
 # C8F18 is in a group of its own, so it is a plain file rather than a list.
 c8f18_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/c8f18_methods.pdf"
 
+# Every gas gets a results figure, and they all share one layout.
+results_gases=(
+    co2 ch4 n2o
+    "${cfc12_like_gases[@]}"
+    "${c4f10_like_gases[@]}"
+    c8f18
+)
+
+results_figure_files=()
+for results_gas in "${results_gases[@]}"; do
+    results_figure_files+=(
+        "${results_gas}=${repo_root}/figures/historical-ghg-forcing-for-cmip7/${results_gas}_results.pdf"
+    )
+done
+
 # Summaries of the gases processed like CFC-12.
 # These are inlined into the methods in place of their tags.
 cfc12_like_obs_network_sources_list_file="${repo_root}/tables/historical-ghg-forcing-for-cmip7/cfc12_like_obs_network_sources.tex"
@@ -113,6 +128,11 @@ for c4f10_like_methods_figure_file in ${c4f10_like_methods_figure_files[@]+"${c4
     c4f10_like_args+=(--c4f10-like-methods-figure-file "${c4f10_like_methods_figure_file}")
 done
 
+results_args=()
+for results_figure_file in ${results_figure_files[@]+"${results_figure_files[@]}"}; do
+    results_args+=(--results-figure-file "${results_figure_file}")
+done
+
 uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-inputs.py" \
     --co2-methods-figure-file "${co2_methods_figure_file}" \
     --ch4-methods-figure-file "${ch4_methods_figure_file}" \
@@ -122,6 +142,7 @@ uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-input
     --cfc12-like-per-gas-table-file "${cfc12_like_per_gas_table_file}" \
     ${cfc12_like_args[@]+"${cfc12_like_args[@]}"} \
     ${c4f10_like_args[@]+"${c4f10_like_args[@]}"} \
+    ${results_args[@]+"${results_args[@]}"} \
     --bundle-dir "${zenodo_bundle_dir}" \
     --original-run-notebooks-dir "${original_run_notebooks_dir}"
 # --force-rerun \
@@ -140,6 +161,10 @@ uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --table-file "<cfc12-like-obs-network-sources-list>=${cfc12_like_obs_network_sources_list_file}" \
     --table-file "<cfc12-like-per-gas-table>=${cfc12_like_per_gas_table_file}" \
     --section "${results_file}" \
+    --figure-file "<co2-results-figure>=${repo_root}/figures/historical-ghg-forcing-for-cmip7/co2_results.pdf" \
+    --figure-file "<ch4-results-figure>=${repo_root}/figures/historical-ghg-forcing-for-cmip7/ch4_results.pdf" \
+    --figure-file "<n2o-results-figure>=${repo_root}/figures/historical-ghg-forcing-for-cmip7/n2o_results.pdf" \
+    --figure-file "<cfc12-results-figure>=${repo_root}/figures/historical-ghg-forcing-for-cmip7/cfc12_results.pdf" \
     --conclusion "${conclusion_file}" \
     --code-and-data-availability "${code_and_data_availability_file}" \
     --author-contribution "${author_contribution_file}" \
