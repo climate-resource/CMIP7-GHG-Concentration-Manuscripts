@@ -52,9 +52,6 @@ for cfc12_like_gas in "${cfc12_like_gases[@]}"; do
         "${cfc12_like_gas}=${repo_root}/figures/historical-ghg-forcing-for-cmip7/${cfc12_like_gas}_methods.pdf"
     )
 done
-# The CFC-12-like figure which is shown in the manuscript.
-# CFC-12 must be in cfc12_like_gases above, otherwise this file is never drawn.
-cfc12_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/cfc12_methods.pdf"
 
 # Every gas processed like C4F10. As with the CFC-12-like gases,
 # these all share one figure, so this is the list of gases to draw it for.
@@ -69,9 +66,6 @@ for c4f10_like_gas in "${c4f10_like_gases[@]}"; do
         "${c4f10_like_gas}=${repo_root}/figures/historical-ghg-forcing-for-cmip7/${c4f10_like_gas}_methods.pdf"
     )
 done
-# The C4F10-like figure which is shown in the manuscript.
-# C4F10 must be in c4f10_like_gases above, otherwise this file is never drawn.
-c4f10_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/c4f10_methods.pdf"
 
 # C8F18 is in a group of its own, so it is a plain file rather than a list.
 c8f18_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/c8f18_methods.pdf"
@@ -90,12 +84,6 @@ for results_gas in "${results_gases[@]}"; do
         "${results_gas}=${repo_root}/figures/historical-ghg-forcing-for-cmip7/${results_gas}_results.pdf"
     )
 done
-# The results figures which are shown in the manuscript.
-# Each gas must be in results_gases above, otherwise its file is never drawn.
-co2_results_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/co2_results.pdf"
-ch4_results_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/ch4_results.pdf"
-n2o_results_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/n2o_results.pdf"
-cfc12_results_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/cfc12_results.pdf"
 
 # Summaries of the gases processed like CFC-12.
 # These are inlined into the methods in place of their tags.
@@ -118,6 +106,10 @@ clean_copernicus_template_filename="template_clean.tex"
 copernicus_latex_template_dir="${repo_root}/copernicus-latex-package"
 
 build_dir="${repo_root}/build/historical-ghg-forcing-for-cmip7"
+# Written by the input generation, read by the compilation.
+# It says which tag in the latex each figure and table replaces,
+# so the paths above don't have to be repeated for the compilation.
+tex_inputs_manifest_file="${build_dir}/tex-inputs.json"
 
 output_pdf_dir="${repo_root}/compiled-manuscripts"
 output_pdf="${output_pdf_dir}/historical-ghg-forcing-for-cmip7.pdf"
@@ -155,6 +147,7 @@ uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-input
     ${cfc12_like_args[@]+"${cfc12_like_args[@]}"} \
     ${c4f10_like_args[@]+"${c4f10_like_args[@]}"} \
     ${results_args[@]+"${results_args[@]}"} \
+    --tex-inputs-manifest-file "${tex_inputs_manifest_file}" \
     --bundle-dir "${zenodo_bundle_dir}" \
     --original-run-notebooks-dir "${original_run_notebooks_dir}"
 # --force-rerun \
@@ -166,18 +159,8 @@ uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --introduction "${introduction_file}" \
     --section "${output_requirements_file}" \
     --section "${methods_file}" \
-    --figure-file "<n2o-methods-figure>=${n2o_methods_figure_file}" \
-    --figure-file "<co2-methods-figure>=${co2_methods_figure_file}" \
-    --figure-file "<ch4-methods-figure>=${ch4_methods_figure_file}" \
-    --figure-file "<cfc12-methods-figure>=${cfc12_methods_figure_file}" \
-    --figure-file "<c4f10-methods-figure>=${c4f10_methods_figure_file}" \
-    --table-file "<cfc12-like-obs-network-sources-list>=${cfc12_like_obs_network_sources_list_file}" \
-    --table-file "<cfc12-like-per-gas-table>=${cfc12_like_per_gas_table_file}" \
     --section "${results_file}" \
-    --figure-file "<co2-results-figure>=${co2_results_figure_file}" \
-    --figure-file "<ch4-results-figure>=${ch4_results_figure_file}" \
-    --figure-file "<n2o-results-figure>=${n2o_results_figure_file}" \
-    --figure-file "<cfc12-results-figure>=${cfc12_results_figure_file}" \
+    --tex-inputs-manifest "${tex_inputs_manifest_file}" \
     --conclusion "${conclusion_file}" \
     --code-and-data-availability "${code_and_data_availability_file}" \
     --author-contribution "${author_contribution_file}" \

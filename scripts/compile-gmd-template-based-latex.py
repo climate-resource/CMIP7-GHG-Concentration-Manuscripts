@@ -3,6 +3,8 @@ Compile a GMD-templated based latex document to PDF
 """
 
 import copy
+import json
+import re
 import shutil
 import subprocess
 import textwrap
@@ -220,6 +222,73 @@ def pass_figure_specs(raw: list[str]) -> tuple[FigureSpec, ...]:
     res = tuple(res_l)
 
     return res
+
+
+def load_tex_inputs_manifest(manifest_file: Path) -> tuple[list[str], list[str]]:
+    """
+    Load a manifest of figure and table files
+
+    Parameters
+    ----------
+    manifest_file
+        JSON file with a `figures` and a `tables` entry,
+        each of which maps a tag to replace to a full path
+
+    Returns
+    -------
+    :
+        The figures and tables, formatted as for `--figure-file` and `--table-file`
+    """
+    manifest = json.loads(manifest_file.read_text())
+
+    figure_files = [f"{tag}={path}" for tag, path in manifest["figures"].items()]
+    table_files = [f"{tag}={path}" for tag, path in manifest["tables"].items()]
+
+    return figure_files, table_files
+
+
+def tag_is_used(value: str, text: str) -> bool:
+    """
+    Check whether the tag in a `tag-to-replace=full-path` value appears in the text
+    """
+    tag, _, _ = value.partition("=")
+
+    return tag in text
+
+
+UNREPLACED_FIGURE_TAG = re.compile(r"\\includegraphics(\[[^\]]*\])?\{(<[^}]*>)\}")
+"""
+A figure which is still a tag, i.e. one we were never given a file for
+"""
+
+
+def check_no_unreplaced_figure_tags(text: str) -> None:
+    """
+    Check that every figure included in the text has been given a file
+
+    Parameters
+    ----------
+    text
+        Text to check
+
+    Raises
+    ------
+    AssertionError
+        A figure included in `text` (outside a comment) is still a tag
+    """
+    unreplaced = [
+        match.group(2)
+        for line in text.splitlines()
+        if not line.lstrip().startswith("%")
+        for match in UNREPLACED_FIGURE_TAG.finditer(line)
+    ]
+    if unreplaced:
+        msg = (
+            "No figure file was given for these tags: "
+            f"{', '.join(unreplaced)}. "
+            "Pass them with `--figure-file` or `--tex-inputs-manifest`."
+        )
+        raise AssertionError(msg)
 
 
 def inline_table_files(in_text: str, table_files: list[str]) -> str:
@@ -460,14 +529,34 @@ def main(  # noqa: PLR0913, PLR0915
             )
         ),
     ] = None,
+    tex_inputs_manifest: Annotated[
+        Path | None,
+        typer.Option(
+            help=(
+                "JSON file of figure and table files to add. "
+                "It should have a `figures` and a `tables` entry, "
+                "each of which maps a tag to replace in the latex "
+                "to the path of the file, "
+                "i.e. the same information as `--figure-file` and `--table-file`. "
+                "Unlike those options, entries whose tag is not in the text "
+                "are skipped, so the manifest can list more than is used."
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ] = None,
 ) -> None:
     """
     Compile the PDF
     """
-    if figure_file is not None:
-        figure_specs = pass_figure_specs(figure_file)
+    if tex_inputs_manifest is not None:
+        manifest_figure_files, manifest_table_files = load_tex_inputs_manifest(
+            tex_inputs_manifest
+        )
     else:
-        figure_specs = None
+        manifest_figure_files, manifest_table_files = [], []
+
+    figure_specs = pass_figure_specs([*(figure_file or []), *manifest_figure_files])
 
     with open(metadata, "rb") as fh:
         metadata_values = tomllib.load(fh)
@@ -515,24 +604,34 @@ def main(  # noqa: PLR0913, PLR0915
     if table_file is not None:
         res = inline_table_files(res, table_file)
 
+    res = inline_table_files(
+        res, [v for v in manifest_table_files if tag_is_used(v, res)]
+    )
+
     latex_dir = build_dir / "latex"
     latex_dir.mkdir(exist_ok=True, parents=True)
 
-    if figure_specs is not None:
-        figure_replacements = {}
-        seen = set()
-        for fs in figure_specs:
-            dest = latex_dir / fs.full_path.name
-            dest.parent.mkdir(exist_ok=True, parents=True)
-            if dest in seen:
-                msg = f"Multiple figure files will land at {dest!r}"
-                raise AssertionError(msg)
+    figure_replacements = {}
+    seen = set()
+    for fs in figure_specs:
+        # Otherwise every figure we are given ends up in the build,
+        # whether the text uses it or not.
+        if fs.tag_to_replace not in res:
+            continue
 
-            shutil.copy2(fs.full_path, dest)
-            seen.add(dest)
-            figure_replacements[fs.tag_to_replace] = str(dest.relative_to(latex_dir))
+        dest = latex_dir / fs.full_path.name
+        dest.parent.mkdir(exist_ok=True, parents=True)
+        if dest in seen:
+            msg = f"Multiple figure files will land at {dest!r}"
+            raise AssertionError(msg)
 
-        res = apply_replacements(res, figure_replacements)
+        shutil.copy2(fs.full_path, dest)
+        seen.add(dest)
+        figure_replacements[fs.tag_to_replace] = str(dest.relative_to(latex_dir))
+
+    res = apply_replacements(res, figure_replacements)
+
+    check_no_unreplaced_figure_tags(res)
 
     replacements_map = yaml.safe_load(replacements.read_text())
     res = apply_replacements(res, replacements_map)
