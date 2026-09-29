@@ -174,3 +174,12 @@ dmypy.json
 # These negations must come last, so they beat the *.ipynb rule above.
 !data/raw/historical-ghg-forcing-for-cmip7/
 !data/raw/historical-ghg-forcing-for-cmip7/**
+
+# Comparison data which its providers revise in place
+# (NOAA's trends data every month, the Global Methane Budget's supplement),
+# as we downloaded it. Downloading it again won't necessarily give
+# the same numbers, so we track our copy.
+!data/raw/comparison-data/
+data/raw/comparison-data/*
+!data/raw/comparison-data/noaa-trends/
+!data/raw/comparison-data/gcp-ch4-2024/

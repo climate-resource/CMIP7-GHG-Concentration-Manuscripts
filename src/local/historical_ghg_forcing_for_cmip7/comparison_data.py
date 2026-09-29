@@ -17,6 +17,7 @@ whether its data has a latitude column.
 
 from __future__ import annotations
 
+import dataclasses
 import urllib.request
 from dataclasses import dataclass, field
 from functools import cache
@@ -34,6 +35,7 @@ from local.data_loading import fetch_and_load_ghg_dataset, fix_broken_calendar_s
 from local.esgf.db_helpers import create_all_tables, get_sqlite_engine
 from local.esgf.models import ESGFDataset
 from local.esgf.search.search_query import KnownIndexNode
+from local.historical_ghg_forcing_for_cmip7.plotting import OKABE_ITO
 from local.paths import DATA_RAW_DIR, REPO_ROOT
 from local.xarray_loading import load_xarray_from_esgf_dataset
 
@@ -73,6 +75,16 @@ class ComparisonTimeseries:
 
     marker: str = "o"
     """Marker to draw a spatial dataset's points with"""
+
+    spatial_as_line: bool = False
+    """
+    Whether to draw a spatial dataset as a line rather than as points
+
+    The line is still coloured by latitude.
+    For dense records (e.g. a station's monthly means),
+    whose points would run into one another.
+    Ignored for global-mean datasets, which are always drawn as lines.
+    """
 
     colour: str | None = None
     """
@@ -137,17 +149,7 @@ class ComparisonTimeseries:
             ur.Quantity(data[VALUE_COLUMN].to_numpy(), self.units).to(units).m
         )
 
-        return ComparisonTimeseries(
-            label=self.label,
-            data=data,
-            units=units,
-            marker=self.marker,
-            colour=self.colour,
-            linestyle=self.linestyle,
-            region=self.region,
-            legend_group=self.legend_group,
-            notes=self.notes,
-        )
+        return dataclasses.replace(self, data=data, units=units)
 
 
 RADIATIVE_EFFICIENCIES: dict[str, pint.Quantity] = {
@@ -493,7 +495,9 @@ Each site gets its own marker, because colour is taken by latitude.
 """
 
 
-def ensure_file_downloaded(url: str, out_file: Path) -> Path:
+def ensure_file_downloaded(
+    url: str, out_file: Path, headers: dict[str, str] | None = None
+) -> Path:
     """
     Download a file, unless we already have it
 
@@ -504,6 +508,9 @@ def ensure_file_downloaded(url: str, out_file: Path) -> Path:
 
     out_file
         Where to save the file
+
+    headers
+        Headers to send with the request
 
     Returns
     -------
@@ -516,7 +523,9 @@ def ensure_file_downloaded(url: str, out_file: Path) -> Path:
 
     out_file.parent.mkdir(exist_ok=True, parents=True)
     logger.info(f"Downloading {url} to {out_file}")
-    urllib.request.urlretrieve(url, out_file)  # noqa: S310
+    request = urllib.request.Request(url, headers=headers or {})  # noqa: S310
+    with urllib.request.urlopen(request) as response:  # noqa: S310
+        out_file.write_bytes(response.read())
 
     return out_file
 
@@ -571,3 +580,217 @@ def get_ch4_ice_core_comparisons(
         )
 
     return tuple(res)
+
+
+NOAA_TRENDS_URL = "https://gml.noaa.gov/webdata/ccgg/trends"
+"""Where NOAA GML's trends data lives
+
+See https://gml.noaa.gov/ccgg/trends/
+(CO2, including https://gml.noaa.gov/ccgg/trends/mlo.html)
+and https://gml.noaa.gov/ccgg/trends_ch4/ (CH4, N2O and SF6).
+"""
+
+NOAA_TRENDS_DIR = DATA_RAW_DIR / "comparison-data" / "noaa-trends"
+"""Where we keep our copy of NOAA GML's trends data
+
+Tracked in git, because NOAA revise these files every month,
+so downloading them again won't necessarily give the same numbers.
+Delete them to pick up the latest data.
+"""
+
+NOAA_TRENDS_UNITS = {
+    "co2": "ppm",
+    "ch4": "ppb",
+    "n2o": "ppb",
+    "sf6": "ppt",
+}
+"""Units of each gas NOAA GML report trends for, as their files state them"""
+
+MAUNA_LOA_LATITUDE = 19.54
+"""Latitude of the Mauna Loa Observatory"""
+
+
+def load_noaa_trends_file(gas: str, filename: str, value_column: str) -> pd.DataFrame:
+    """
+    Load one of NOAA GML's monthly trends files
+
+    Parameters
+    ----------
+    gas
+        Gas the file is for
+
+    filename
+        Name of the file, e.g. `co2_mm_gl.csv`
+
+    value_column
+        Column to take the values from
+
+    Returns
+    -------
+    :
+        Data with a [TIME_COLUMN][] and a [VALUE_COLUMN][]
+    """
+    raw = pd.read_csv(
+        ensure_file_downloaded(
+            f"{NOAA_TRENDS_URL}/{gas}/{filename}", NOAA_TRENDS_DIR / filename
+        ),
+        comment="#",
+    )
+    # Mid-point of each month, as a decimal year,
+    # the same way our own output is placed on the time axis
+    res = pd.DataFrame(
+        {
+            TIME_COLUMN: raw["year"] + (raw["month"] - 0.5) / 12.0,
+            VALUE_COLUMN: raw[value_column],
+        }
+    )
+    # Missing values are marked with negative numbers
+    return res[res[VALUE_COLUMN] > 0.0].reset_index(drop=True)
+
+
+def get_noaa_comparisons(
+    gas: str, deseasonalised: bool
+) -> tuple[ComparisonTimeseries, ...]:
+    """
+    Get NOAA GML's records of a gas
+
+    For every gas, NOAA's global-mean.
+    For CO2, also the Mauna Loa record.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest, one of [NOAA_TRENDS_UNITS][]
+
+    deseasonalised
+        Whether to get the records with their seasonal cycle removed
+
+        If `False`, the monthly means.
+
+    Returns
+    -------
+    :
+        NOAA's records of `gas` (for CO2, the Mauna Loa record first)
+    """
+    units = NOAA_TRENDS_UNITS[gas]
+    notes = ("Seasonal cycle removed by NOAA",) if deseasonalised else ()
+
+    res = []
+    if gas == "co2":
+        mauna_loa = load_noaa_trends_file(
+            gas,
+            "co2_mm_mlo.csv",
+            "deseasonalized" if deseasonalised else "average",
+        )
+        mauna_loa[LATITUDE_COLUMN] = MAUNA_LOA_LATITUDE
+        res.append(
+            ComparisonTimeseries(
+                label="NOAA Mauna Loa",
+                data=mauna_loa,
+                units=units,
+                spatial_as_line=True,
+                notes=notes,
+            )
+        )
+
+    res.append(
+        ComparisonTimeseries(
+            label="NOAA global-mean",
+            data=load_noaa_trends_file(
+                gas,
+                f"{gas}_mm_gl.csv",
+                # NOAA call the global-mean with its seasonal cycle removed the trend
+                "trend" if deseasonalised else "average",
+            ),
+            units=units,
+            colour=OKABE_ITO["bluish green"],
+            notes=notes,
+        )
+    )
+
+    return tuple(res)
+
+
+GCP_CH4_2024_OBJECT_ID = "-MqGCn38zUlEi4_aQm-1_w2I"
+"""ICOS Carbon Portal ID of the Global Methane Budget 2000-2020 data supplement
+
+Saunois et al. (2025), https://doi.org/10.5194/essd-17-1873-2025,
+data at https://doi.org/10.18160/GKQ9-2RHT.
+"""
+
+GCP_CH4_2024_FILE = (
+    DATA_RAW_DIR
+    / "comparison-data"
+    / "gcp-ch4-2024"
+    / "Global_methane_budget_2023_2000_2020_v1.xlsx"
+)
+"""Where we keep our copy of the Global Methane Budget 2000-2020 data supplement
+
+Tracked in git, because the Global Carbon Project may revise it in place,
+so downloading it again won't necessarily give the same numbers.
+"""
+
+
+def get_uci_ch4_comparison(deseasonalised: bool) -> ComparisonTimeseries:
+    """
+    Get UCI's global-mean CH4 record
+
+    UCI (University of California, Irvine) sample the remote Pacific
+    (71N to 46S) every three months,
+    so the record is quarterly.
+    The record's reference is Simpson et al. (2012),
+    https://doi.org/10.1038/nature11342.
+    The archived version of it (https://doi.org/10.3334/CDIAC/ATG.002)
+    stops in 2009, so we take the version compiled for
+    the Global Methane Budget 2000-2020, which runs to the end of 2022.
+
+    Parameters
+    ----------
+    deseasonalised
+        Whether to get the record with its seasonal cycle removed
+
+        If `False`, the quarterly means.
+
+    Returns
+    -------
+    :
+        UCI's global-mean CH4 record
+    """
+    raw = pd.read_excel(
+        ensure_file_downloaded(
+            f"https://data.icos-cp.eu/objects/{GCP_CH4_2024_OBJECT_ID}",
+            GCP_CH4_2024_FILE,
+            # The portal only serves the file once its licence has been accepted,
+            # which the browser records in this cookie
+            headers={"Cookie": f"CpLicenseAcceptedFor={GCP_CH4_2024_OBJECT_ID}"},
+        ),
+        sheet_name="CH4_observation -fig 1",
+        header=None,
+    )
+    # The sheet holds one block of five columns per network, side by side,
+    # (date, mixing ratio, deseasonalised mixing ratio, trend, growth rate).
+    # UCI's is the fourth block,
+    # even though its header says "CSIRO" (CSIRO's is the third block).
+    # The sheet's notes list the networks as NOAA, AGAGE, CSIRO, UCI,
+    # and this block's quarterly sampling and 1978 start are UCI's.
+    uci_first_column = 15
+    header_row = 13
+    time_column = uci_first_column
+    value_column = uci_first_column + (2 if deseasonalised else 1)
+    if not str(raw.iloc[header_row, value_column]).startswith(
+        "Deseasonalized" if deseasonalised else "Mixing ratio"
+    ):
+        raise AssertionError(raw.iloc[header_row, value_column])
+
+    data = (
+        raw.iloc[header_row + 1 :, [time_column, value_column]].dropna().astype(float)
+    )
+    data.columns = [TIME_COLUMN, VALUE_COLUMN]
+
+    return ComparisonTimeseries(
+        label="UCI global-mean",
+        data=data.sort_values(TIME_COLUMN).reset_index(drop=True),
+        units="ppb",
+        colour=OKABE_ITO["reddish purple"],
+        notes=("Seasonal cycle removed by the GCP",) if deseasonalised else (),
+    )

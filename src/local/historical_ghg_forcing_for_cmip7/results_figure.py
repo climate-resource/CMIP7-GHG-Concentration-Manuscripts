@@ -26,6 +26,7 @@ from pathlib import Path
 
 import matplotlib.axes
 import matplotlib.lines
+import matplotlib.patheffects
 import matplotlib.pyplot as plt
 import matplotlib.ticker
 import numpy as np
@@ -51,12 +52,15 @@ from local.historical_ghg_forcing_for_cmip7.co2_methods_figure import (
 )
 from local.historical_ghg_forcing_for_cmip7.comparison_data import (
     LATITUDE_COLUMN,
+    NOAA_TRENDS_UNITS,
     TIME_COLUMN,
     VALUE_COLUMN,
     ComparisonTimeseries,
     get_ch4_ice_core_comparisons,
     get_cmip6_comparisons,
+    get_noaa_comparisons,
     get_radiative_effect_per_unit,
+    get_uci_ch4_comparison,
 )
 from local.historical_ghg_forcing_for_cmip7.layout import (
     LayoutSettings,
@@ -791,7 +795,38 @@ def plot_comparisons(
         pdf = comparison_units.data
         plotted.append(pdf)
 
-        if comparison.is_spatial:
+        if comparison.is_spatial and comparison.spatial_as_line:
+            latitudes = pdf[LATITUDE_COLUMN].unique()
+            for latitude in latitudes:
+                handle = plot_line_in_segments(
+                    pdf[pdf[LATITUDE_COLUMN] == latitude],
+                    axes,
+                    segments,
+                    color=latitude_colour(latitude),
+                    linestyle=comparison.linestyle,
+                    linewidth=OTHER_LINE_WIDTH,
+                    zorder=ZORDERS["spatial-comparison"],
+                    # Outlined, like the spatial comparisons' markers,
+                    # so it stands out from the observational network
+                    # even where it is the same colour
+                    path_effects=[
+                        matplotlib.patheffects.Stroke(
+                            linewidth=OTHER_LINE_WIDTH + 1.2, foreground="k"
+                        ),
+                        matplotlib.patheffects.Normal(),
+                    ],
+                )
+
+            latitude_label = (
+                f" ({latitudes[0]:.1f}" + r"$^{\circ}$N)" if len(latitudes) == 1 else ""
+            )
+            legend.add(
+                f"{comparison.label}{latitude_label}",
+                handle,
+                group=comparison.legend_group,
+            )
+
+        elif comparison.is_spatial:
             for ax, segment in zip(axes, segments):
                 in_seg = pdf[in_segment(pdf[TIME_COLUMN], segment)]
                 ax.scatter(
@@ -1613,11 +1648,26 @@ def get_comparisons(
         regions=("Global", "Northern hemisphere", "Southern hemisphere"),
     )
 
-    other: tuple[ComparisonTimeseries, ...] = ()
-    if gas == "ch4":
-        other = get_ch4_ice_core_comparisons()
+    yearly_other: list[ComparisonTimeseries] = []
+    monthly_other: list[ComparisonTimeseries] = []
+    if gas in NOAA_TRENDS_UNITS:
+        # The yearly panel is about the trend, not the seasonal cycle,
+        # so it gets the records with their seasonal cycle removed
+        yearly_other.extend(get_noaa_comparisons(gas, deseasonalised=True))
+        monthly_other.extend(get_noaa_comparisons(gas, deseasonalised=False))
 
-    return (cmip6_yearly, *other), (*cmip6_monthly, *other), cmip6_yearly
+    if gas == "ch4":
+        ice_cores = get_ch4_ice_core_comparisons()
+        yearly_other.extend(ice_cores)
+        monthly_other.extend(ice_cores)
+        yearly_other.append(get_uci_ch4_comparison(deseasonalised=True))
+        monthly_other.append(get_uci_ch4_comparison(deseasonalised=False))
+
+    return (
+        (cmip6_yearly, *yearly_other),
+        (*cmip6_monthly, *monthly_other),
+        cmip6_yearly,
+    )
 
 
 def get_context(
