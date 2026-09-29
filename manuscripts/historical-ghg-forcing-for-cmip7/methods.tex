@@ -459,7 +459,6 @@ by taking the product of the temporally extended, monthly interpolated PCs and t
 \label{sssec:methods-n2o-generate-native-resolution}
 
 We calculate the native resolution from the derived components following the general approach (Section \ref{ssec:methods-general-approach}).
-The resulting output is shown in Figure \ref{fig:results-n2o}.
 
 \subsection{Generating CO_2 concentrations}
 \label{ssec:methods-co2}
@@ -668,7 +667,6 @@ the last step is to calculate the latitudinal gradient term, $lg(y, m, l)$.
 \label{sssec:methods-co2-generate-native-resolution}
 
 We calculate the native resolution from the derived components following the general approach (Section \ref{ssec:methods-general-approach}).
-The resulting output is shown in Figure \ref{fig:results-co2}.
 
 \subsection{Generating CH_4 concentrations}
 \label{ssec:methods-ch4}
@@ -827,7 +825,6 @@ The components are processed in the same way as is done for N_2O (Section \ref{s
 \label{sssec:methods-ch4-generate-native-resolution}
 
 We calculate the native resolution from the derived components in the same way as is done for N_2O (Section \ref{sssec:methods-n2o-generate-native-resolution}).
-The resulting output is shown in Figure \ref{fig:results-ch4}.
 
 \subsection{Generating CFC-12 and similarly processed species concentrations}
 \label{ssec:methods-cfc12-like}
@@ -1032,30 +1029,24 @@ so we view this as an acceptable fix given the intended application of the datas
 \label{sssec:methods-cfc12-generate-native-resolution}
 
 We calculate the native resolution from the derived components in the same way as is done for N_2O (Section \ref{sssec:methods-n2o-generate-native-resolution}).
-The resulting output is shown in Figure \ref{fig:results-cfc12}.
 
 \subsection{Generating concentrations for C_4F_10 and similarly processed species}
 \label{ssec:methods-c4f10-like}
 
-Summary of differences from the baseline case (Section \ref{ssec:methods-general-approach}):
+Next we consider C_4F_10.
+This adjusts the `base case' (section \ref{ssec:methods-general-approach})
+due to a lack of a comprehensive observation network.
+Instead, we only use data from a single source,
+assume that we know the latitudinal gradient,
+assume that seasonality is zero,
+assume that these gases' concentrations were zero before the data provided by our source
+and prepare components to be used in Equation \ref{eq:native-resolution-sum}
+to avoid spurious negative values in the output due to rounding.
 
-\begin{enumerate}
-    \item { Given that there is no comprehensive observational network, we instead calculate the latitudinal
-        gradient and global- annual-mean based on a single source and simple assumptions.
-    }
-    \item Seasonality is assumed to be zero.
-    \item{ In Step 5, as in Section \ref{ssec:methods-cfc12-like}, when calculating the input components of
-           Equation \ref{eq:native-resolution-sum}, we reduce the latitudinal gradient
-            where rounding errors would otherwise lead to negative values in the output dataset.
-    }
-\end{enumerate}
-
-Calculating the components of Equation \ref{eq:native-resolution-sum}
-for C_4F_10 is highly simplified.
-The same approach is used for
+The approach described in this section is also used for
 cC_4F_8, C_5F_12, C_6F_14 and C_7F_16.
 
-\subsubsection{Step 1: Use source data instead of oservations}
+\subsubsection{Step 1: Collect observations}
 
 % \subsubsubsection{Spatial interpolation}
 % \subsubsubsection{PCA}
@@ -1065,29 +1056,40 @@ Hence we do not perform spatial interpolation or PCA analysis.
 
 % \subsubsubsubsection{latitudinal gradient}
 
-Instead, we simply start from the data provided in \cite{acp-20-4787-2020}.
+We use the data provided in [TODO cite Droste et al].
+% \cite{acp-20-4787-2020}.
 This provides observations of these gases at two observational sites:
- Cape Grim: Tasmania, Australia, 41\degree S, 145\degree E, and
- Tacolneston: Norfolk, UK, 52\degree N, 1\degree E, 85 m tower, or possibly
- Taiwan: Cape Fuguei, 25\degree N, 122\degree E , and Hengchun, 22\degree N, 121\degree E
+Cape Grim: Tasmania, Australia, 41\degree S, 145\degree E, and
+Tacolneston: Norfolk, UK, 52\degree N, 1\degree E (Figure \ref{fig:methods-c4f10}).
+%  Taiwan: Cape Fuguei, 25\degree N, 122\degree E , and Hengchun, 22\degree N, 121\degree E
+\begin{figure}[t]
+% \includegraphics[width=12cm]{<c4f10-methods-figure>}
+\includegraphics[width=0.80\textwidth]{<c4f10-methods-figure>}
+\caption{
+    Production of the C_4F_10 datasets (for full details, see Section \ref{ssec:methods-c4f10-like}).
+    a) [TODO cite Droste et al] data.
+    b) Assumed latitudinal gradient EOF.
+    c) Derived latitudinal gradient PC.
+    d) Derived global-, annual-mean.
+    e) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
+    f) Latitudinal gradient PCs for the entire output dataset timespan.
+}
+\label{fig:methods-c4f10}
+\end{figure}
 
- [TODO figure out what CG and TAL are and specify their latitudes].
-[ALTODO: in the article they mention three different locations but I assume Taiwan is excluded]
 \subsubsection{Step 2: Bin and interpolate observations}
 
 This step is not needed due to the nature of the data source.
 
-\subsubsection{Step 3: Source data derived components instead of
-Principal component analysis}
+\subsubsection{Step 3: Principal component analysis}
 
 Principal component analysis cannot be performed due to lack of observations.
 
-
-We then assume a single linear EOF
-(note that this linearity is before considering the area-weight given to each latitudinal box,
+Instead, we assume a single linear EOF for the latitudinal gradient
+(note that this linearity is there when considering the area-weight given to each latitudinal box,
 the EOF (and therefore the latitudinal gradient) does not appear linear if the area-weights are not considered).
 We then set the PCs such that change in value between the
-[TODO CG and TAL] observations in each year
+Cape Grim and Tacolneston observations in each year
 is matched by our latitudinal gradient (i.e. the product of the EOF and the PC).
 As the [TODO cite Droste] data only extends to 2018,
 we use a basic linear extrapolation to extend the PCs to 2022.
@@ -1097,18 +1099,16 @@ the sensitivity of climate simulations to this choice is negligible.
 % \subsubsubsubsection{global-, annual-mean}
 
 We calculate the global-, annual-mean such that the values in the
-CG ([TODO CG lat]) and TAL ([TODO TAL lat]) latitudinal boxes are matched
+Cape Grim and Tacolneston latitudinal boxes are matched
 when the global-, annual-mean is combined with the latitudinal gradient we just derived.
 As the [TODO cite Droste] data only extends to 2018,
-we use a basic linear extrapolation to extend the data to 2022.
-This is very simple, but given that these gases account for [TODO \% of total ERF],
-the sensitivity of climate simulations to this choice is negligible.
+we use a basic linear extrapolation to extend the global-, annual-mean to 2022.
+As above, this is very simple, but acceptable given the small climate impact of these gases.
 
 % \subsubsubsubsection{seasonality}
 % NA: assumed zero
 
-
-\subsubsection{Step 4: Backward extension}
+\subsubsection{Step 4: Extend}
 
 Like for other gases, the next step is to then extend these components back in time.
 
@@ -1129,64 +1129,38 @@ we assume that concentrations remain at zero before the first year of data provi
 % \subsubsubsubsection{Seasonality}
 % NA: assumed zero
 
-\subsubsection{Finalising the general components}
+\subsubsection{Step 5: Process components}
 
-The last step is to construct the inputs needed for Equation \ref{eq:native-resolution-sum}
-from the temporally extended components.
+The components are processed in the same way as is done for N_2O (Section \ref{sssec:methods-n2o-process-components}).
 
-% \subsubsubsubsection{Interpolating global- annual-mean to monthly timesteps}
+We apply the same negative value check as is done for CFC12-like gases
+(Section \ref{sssec:methods-cfc12-like-finalising-general-components}).
 
-As for CO_2 (Section \ref{sssec:methods-co2-finalising-general-components}),
-we do a mean-preserving interpolation of the global-, annual-mean
-onto monthly timesteps to get the term, $gm(y, m)$.
+\subsubsection{Step 6: Generate native resolution}
 
-% \subsubsubsubsection{Constructing seasonality over time}
-
-As above, seasonality is assumed to be zero.
-
-% \subsubsubsubsection{Constructing latitudinal gradient over time (including interpolating PCs to monthly timesteps)}
-
-Finally we calculate the latitudinal gradient term, $lg(y, m, l)$.
-This is done using mean-preserving interpolation on the PCs before the PC and EOF are multiplied,
-in the same way as is described for CO_2 (Section \ref{sssec:methods-co2-finalising-general-components}).
-
-As for gases that are processed like CFC12 (Section \ref{sssec:methods-cfc12-like-finalising-general-components}),
-we do an extra check that no negative values will apply when we apply Equation \ref{eq:native-resolution-sum}.
-Where negative values are identified, we reduce the latitudinal gradient as required
-so that the negative values become zero.
-This is a crude method, but these negative values are only introduced because of rounding errors
-so we view this as an acceptable fix given the intended application of the dataset.
+We calculate the native resolution from the derived components in the same way as is done for N_2O (Section \ref{sssec:methods-n2o-generate-native-resolution}).
 
 \subsection{Generating concentrations for C_8F_18}
 \label{ssec:methods-c8f18}
 
-Summary of differences from the baseline case
-(Section \ref{ssec:methods-general-approach}):
+Last is C_8F_18.
+Due to a lack of data, we simply use the CMIP6 historical data \citep{meinshausen_historical_2017}
+with SSP2-4.5 values after 2015 [TODO cite M2020] (Figure \ref{fig:methods-c8f18}).
 
-\begin{enumerate}
-    \item{ For Step 1, there are no updated input data sources,
-         so we simply use the CMIP6 historical \cite{meinshausen_historical_2017}
-         and SSP2-4.5 values [TODO cite M2020]
-    }
-\end{enumerate}
+\begin{figure}[t]
+% \includegraphics[width=12cm]{<c8f18-methods-figure>}
+\includegraphics[width=0.80\textwidth]{<c8f18-methods-figure>}
+\caption{
+    Production of the C_8F_18 datasets (for full details, see Section \ref{ssec:methods-c8f18-like}).
+    a) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
+    b) Latitudinal gradient PCs for the entire output dataset timespan.
+    c) Latitudinal gradient EOF.
+}
+\label{fig:methods-c8f18}
 
-
-\subsubsection{Step 1: Use CMIP6 data and oservations}
-
-
-For C_8F_18, there have been no updated measurements since [TODO cite Ivy].
-Hence we simply use CMIP6 historical values, with SSP2-4.5 [TODO cite M2020] for the values from 2015 to 2022.
-Given that C_8F_18 accounts for [TODO \% of total ERF],
-the sensitivity of climate simulations to this choice is negligible.
-
-We process the \citet{meinshausen_historical_2017} data
-to extract the seasonality and latitudinal gradient
-and apply the same checks to avoid negative values as in Seciton \ref{ssec:methods-c4f10-like}
-hence values may not be exactly identical to those reported in \citet{meinshausen_historical_2017} [TODO cite M2020].
-
+\end{figure}
 \subsection{Derived output grids}
 \label{ssec:methods-derived-grids}
-
 
 For each gas, we apply Equation \ref{eq:native-resolution-sum}
 to create a gridded dataset on our 15\textdegree~latitudinal (spatial), monthly (temporal) `native resolution' grid.
@@ -1248,4 +1222,4 @@ The dataset is then formatted in a consistent way (we do not use the term
 For any modelling team which requires suggestions for handling the vertical dimension,
 we refer to \citet{meinshausen_historical_2017}.
 
-ALTODO: add a short review of what is said about it
+ALTODO: add a short summary of what is said about it

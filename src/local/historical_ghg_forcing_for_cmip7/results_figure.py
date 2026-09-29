@@ -19,11 +19,12 @@ are what these figures are about, so they are drawn over the top of it.
 
 from __future__ import annotations
 
+import itertools
+import string
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 
 import matplotlib.axes
-import matplotlib.cm
 import matplotlib.lines
 import matplotlib.pyplot as plt
 import matplotlib.ticker
@@ -33,6 +34,21 @@ import xarray as xr
 from loguru import logger
 
 from local.cmip_ghg_generation import DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR
+from local.historical_ghg_forcing_for_cmip7.c4f10_like_methods_figure import (
+    C4F10_LIKE_GASES,
+    DROSTE_LABEL,
+    get_droste_data,
+)
+from local.historical_ghg_forcing_for_cmip7.cfc12_like_methods_figure import (
+    CFC12_LIKE_GASES,
+    get_cfc12_like_all_data_with_bins,
+)
+from local.historical_ghg_forcing_for_cmip7.ch4_methods_figure import (
+    get_ch4_all_data_with_bins,
+)
+from local.historical_ghg_forcing_for_cmip7.co2_methods_figure import (
+    get_co2_all_data_with_bins,
+)
 from local.historical_ghg_forcing_for_cmip7.comparison_data import (
     LATITUDE_COLUMN,
     TIME_COLUMN,
@@ -48,8 +64,10 @@ from local.historical_ghg_forcing_for_cmip7.layout import (
     Row,
     create_figure,
     get_panel_axes_names,
-    label_panels,
     lay_out_figure,
+)
+from local.historical_ghg_forcing_for_cmip7.n2o_methods_figure import (
+    get_n2o_all_data_with_bins,
 )
 from local.historical_ghg_forcing_for_cmip7.plotting import (
     LAT_BIN_BOUNDS,
@@ -63,6 +81,7 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     REGION_COLOURS,
     add_colour_bar,
     add_compact_legend,
+    add_network_group,
     clear_ticks_near_break,
     get_decimal_year,
     get_only_data_variable,
@@ -121,6 +140,30 @@ It is context, not the subject, so it is drawn faint enough
 that anything drawn over it stands out.
 """
 
+RECENT_MONTHLY_CONTEXT_ALPHA = 0.6
+"""How see-through to draw the observational network in the last monthly piece
+
+That piece covers only a few years, so the individual measurements
+are far enough apart to be read, which is worth drawing them solidly enough for.
+"""
+
+CMIP7_LINE_WIDTH = 3.0
+"""Width of the lines which show our output
+
+Twice the width of everything else's lines, so our output stands out.
+"""
+
+OTHER_LINE_WIDTH = 1.5
+"""Width of every other line"""
+
+SHOW_OUTPUT_AT_COMPARISON_LATITUDES = False
+"""Whether to draw our output in the latitudinal bins the spatial comparisons fall in
+
+This is the fairer comparison for a site record,
+but with more than a couple of sites the lines are too hard to read
+(and to explain), so it is off for now.
+"""
+
 CONTEXT_MARKER_SIZE = 6.0
 """Marker size to draw the observational network with"""
 
@@ -137,19 +180,52 @@ DIFFERENCE_COLOUR = OKABE_ITO["black"]
 ZORDERS = {
     "context": 1.0,
     "output-at-latitude": 2.0,
-    "global-mean-comparison": 3.0,
-    "output": 4.0,
+    "output": 3.0,
+    "global-mean-comparison": 4.0,
     "spatial-comparison": 5.0,
 }
-"""Order to draw things in, back to front"""
+"""Order to draw things in, back to front
+
+The global-mean comparisons (e.g. CMIP6) are drawn over our output:
+they are thin dashed lines, so they can be seen on top of our thick ones,
+but our thick lines would hide them completely where the two agree.
+"""
 
 TITLES = {
     "flying-carpet": "Native resolution",
     "monthly": "Monthly spatial-means",
-    "yearly": "Yearly global-mean and comparison data",
-    "yearly-diff": f"Difference from CMIP6 ({CMIP7_LABEL} - CMIP6)",
+    "yearly": "Global- annual-mean",
+    "yearly-diff": f"Yearly {CMIP7_LABEL} - CMIP6",
 }
-"""Title of each panel"""
+"""Title of each panel
+
+For a panel split into pieces which each have their own vertical scale,
+the title goes on the first piece only.
+"""
+
+PANELS_LABELLED_BY_PIECE = ("monthly", "yearly")
+"""Panels whose pieces each get their own letter
+
+Each piece of these has its own vertical scale,
+so each has to be something the text can point at on its own.
+The difference panel's pieces share one vertical scale, so it is one panel.
+"""
+
+LEGEND_HEADERS = ("CMIP forcings", "Comparison data", "Input data", "Latitude")
+"""Sub-headers of the legend, in the order they are listed"""
+
+LEGEND_COLUMNS = (
+    ("CMIP forcings", "Input data"),
+    ("Comparison data", "Latitude"),
+)
+"""Which sub-headers go in which column of the legend
+
+Balanced by eye: the CMIP forcings always have six entries,
+the other groups vary by gas.
+"""
+
+LEGEND_LATITUDES = LAT_BIN_BOUNDS[::-2]
+"""Latitudes to show in the legend's latitude entries, north first"""
 
 LEGEND_PANEL = "legend"
 """Name of the panel which holds the figure's legend"""
@@ -182,8 +258,6 @@ ROWS = (
                 broken=True,
                 broken_split=YEARLY_SEGMENT_SHARES,
                 broken_gap=SEGMENT_GAP,
-                colour_bar=True,
-                colour_bar_height=0.8,
             ),
         ),
         height=3.2,
@@ -203,8 +277,10 @@ ROWS = (
 """Layout of the figure's panels, top to bottom
 
 - Our output: the native resolution in the top-left,
-  then the monthly means, and a panel to hold the figure's legend,
-  which serves every panel because they all draw the same things the same way.
+  then the monthly means, and a panel to hold the legend
+  for the monthly and yearly panels, which draw the same things the same way.
+  The legend also says which colour stands for which latitude,
+  so there is no latitude colour bar.
 - The yearly global-mean.
 - The yearly global-mean's difference from CMIP6,
   directly under the yearly global-mean and on the same time axis.
@@ -327,30 +403,18 @@ def get_lat_bin(latitude: float) -> float:
     return float(LAT_BIN_CENTRES[i])
 
 
-LEGEND_GROUP_ORDER = (
-    "output",
-    "output-at-latitude",
-    "global-mean-comparison",
-    "spatial-comparison",
-    "context",
-)
-"""Order of the groups in the legend
-
-Our output first, because it is the figure's subject,
-then what it is compared against, then the context behind it all.
-"""
-
-
 class LegendCollector:
     """
     Collects the handles for the figure's legend
 
-    Every panel draws the same things the same way,
-    so the figure has one legend, which each panel adds to as it goes.
+    The monthly and yearly panels draw the same things the same way,
+    so they share one legend, which each panel adds to as it goes.
     """
 
     def __init__(self) -> None:
-        self._handles: dict[str, tuple[str, matplotlib.artist.Artist]] = {}
+        self._handles: dict[str, dict[str, matplotlib.artist.Artist]] = {
+            header: {} for header in LEGEND_HEADERS
+        }
 
     def add(self, label: str, handle: matplotlib.artist.Artist, group: str) -> None:
         """
@@ -365,26 +429,145 @@ class LegendCollector:
             Handle to add
 
         group
-            Group the handle belongs to, one of [LEGEND_GROUP_ORDER][]
+            Sub-header to list the handle under, one of [LEGEND_HEADERS][]
         """
-        if group not in LEGEND_GROUP_ORDER:
+        if group not in LEGEND_HEADERS:
             raise ValueError(group)
 
-        self._handles.setdefault(label, (group, handle))
+        self._handles[group].setdefault(label, handle)
 
-    @property
-    def handles(self) -> dict[str, matplotlib.artist.Artist]:
+    def get_columns(
+        self,
+    ) -> list[list[tuple[str, matplotlib.artist.Artist, bool]]]:
         """
-        Handles, by label, grouped as [LEGEND_GROUP_ORDER][] says
+        Get the legend's entries, column by column
 
-        Within a group, handles are in the order they were first added.
+        Returns
+        -------
+        :
+            Entries of each column, top to bottom,
+            as (label, handle, whether the entry is a sub-header).
+            Within a group, handles are in the order they were first added.
+            Groups with no entries, and columns with no groups, are left out.
         """
-        ordered = sorted(
-            self._handles.items(),
-            key=lambda kv: LEGEND_GROUP_ORDER.index(kv[1][0]),
+        columns = []
+        for headers in LEGEND_COLUMNS:
+            column = []
+            for header in headers:
+                if not self._handles[header]:
+                    continue
+
+                column.append(
+                    (header, matplotlib.lines.Line2D([], [], linestyle="none"), True)
+                )
+                column.extend(
+                    (label, handle, False)
+                    for label, handle in self._handles[header].items()
+                )
+
+            if column:
+                columns.append(column)
+
+        return columns
+
+
+def add_legend_with_sub_headers(
+    ax: matplotlib.axes.Axes,
+    legend: LegendCollector,
+    title: str,
+    fontsize: str = "x-small",
+) -> None:
+    """
+    Add a legend whose entries are grouped under sub-headers
+
+    Matplotlib's legend has a title but no sub-headers,
+    so the sub-headers are entries with an empty handle,
+    written in bold and moved over to where the handles start.
+
+    Parameters
+    ----------
+    ax
+        Axes to add the legend to
+
+    legend
+        Collector holding the entries
+
+    title
+        Title of the whole legend
+
+    fontsize
+        Size to draw the legend's text at
+    """
+    columns = legend.get_columns()
+    # Matplotlib fills a legend column by column,
+    # so padding each column out to the same length
+    # is what puts each group in the column we asked for
+    n_rows = max(len(column) for column in columns)
+    entries = []
+    for column in columns:
+        entries.extend(column)
+        entries.extend(
+            ("", matplotlib.lines.Line2D([], [], linestyle="none"), False)
+            for _ in range(n_rows - len(column))
         )
 
-        return {label: handle for label, (_, handle) in ordered}
+    ax.axis("off")
+    add_compact_legend(
+        ax,
+        fontsize=fontsize,
+        handles=[handle for _, handle, _ in entries],
+        labels=[label for label, _, _ in entries],
+        loc="center left",
+        frameon=False,
+        ncols=len(columns),
+        title=title,
+        alignment="left",
+    )
+    mpl_legend = ax.get_legend()
+    mpl_legend.get_title().set_fontsize("small")
+    mpl_legend.get_title().set_fontweight("bold")
+
+    header_labels = {label for label, _, is_header in entries if is_header}
+    # Relies on how matplotlib packs a legend (one box per column,
+    # holding one box per entry, each of which is the handle then the label).
+    # This is private, but there is no public way to line a sub-header up
+    # with the handles rather than with the labels.
+    for column_box in mpl_legend._legend_handle_box.get_children():
+        for entry_box in column_box.get_children():
+            handle_box, text_box = entry_box.get_children()
+            if text_box._text.get_text() in header_labels:
+                handle_box.set_width(0.0)
+                entry_box.sep = 0.0
+                text_box._text.set_fontweight("bold")
+
+
+def add_latitude_entries(
+    legend: LegendCollector, latitudes: Iterable[float] = LEGEND_LATITUDES
+) -> None:
+    """
+    Add entries which say which colour stands for which latitude
+
+    Parameters
+    ----------
+    legend
+        Collector for the figure's legend
+
+    latitudes
+        Latitudes to add an entry for, in the order to list them
+    """
+    for latitude in latitudes:
+        legend.add(
+            f"{latitude:.0f}" + r"$^{\circ}$N",
+            matplotlib.lines.Line2D(
+                [],
+                [],
+                linestyle="none",
+                marker="o",
+                markersize=5,
+                color=latitude_colour(latitude),
+            ),
+            group="Latitude",
+        )
 
 
 def plot_obs_network_context(
@@ -392,6 +575,7 @@ def plot_obs_network_context(
     axes: Sequence[matplotlib.axes.Axes],
     segments: Sequence[tuple[float, float]],
     legend: LegendCollector,
+    alphas: Sequence[float] | None = None,
 ) -> None:
     """
     Plot the observational network, faded, as context
@@ -413,9 +597,17 @@ def plot_obs_network_context(
 
     legend
         Collector for the figure's legend
+
+    alphas
+        How see-through to draw the network in each piece of the time axis
+
+        If `None`, [CONTEXT_ALPHA][] everywhere.
     """
+    if alphas is None:
+        alphas = [CONTEXT_ALPHA] * len(axes)
+
     decimal_year = get_decimal_year(obs_network)
-    for ax, segment in zip(axes, segments):
+    for ax, segment, alpha in zip(axes, segments, alphas):
         in_seg = obs_network[in_segment(decimal_year, segment)]
         for group, group_df in in_seg.groupby(NETWORK_GROUP_COLUMN):
             ax.scatter(
@@ -426,7 +618,7 @@ def plot_obs_network_context(
                 norm=LATITUDE_NORMALISATION,
                 marker=NETWORK_GROUP_MARKERS[group],
                 s=CONTEXT_MARKER_SIZE,
-                alpha=CONTEXT_ALPHA,
+                alpha=alpha,
                 linewidths=0.0,
                 zorder=ZORDERS["context"],
                 # Thousands of points which are only there for context
@@ -446,16 +638,17 @@ def plot_obs_network_context(
                 alpha=0.6,
                 markersize=4,
             ),
-            group="context",
+            group="Input data",
         )
 
 
-def plot_input_timeseries_context(
+def plot_input_timeseries_context(  # noqa: PLR0913
     inputs: pd.DataFrame,
     axes: Sequence[matplotlib.axes.Axes],
     segments: Sequence[tuple[float, float]],
     legend: LegendCollector,
     label: str,
+    alphas: Sequence[float] | None = None,
 ) -> None:
     """
     Plot the inputs of a gas without an observational network, faded, as context
@@ -476,28 +669,36 @@ def plot_input_timeseries_context(
 
     label
         Label to give the inputs in the legend
+
+    alphas
+        How see-through to draw the inputs in each piece of the time axis
+
+        If `None`, 0.5 everywhere.
     """
+    if alphas is None:
+        alphas = [0.5] * len(axes)
+
     for latitude, lat_df in inputs.groupby("lat"):
         lat_df_sorted = lat_df.sort_values("year")
         # Annual values, so placed at the middle of the year
         times = lat_df_sorted["year"].to_numpy(dtype=float) + 0.5
-        for ax, segment in zip(axes, segments):
+        for ax, segment, alpha in zip(axes, segments, alphas):
             mask = in_segment(times, segment)
             ax.plot(
                 times[mask],
                 lat_df_sorted["value"].to_numpy()[mask],
                 color=latitude_colour(latitude),
-                alpha=0.5,
-                linewidth=1.5,
+                alpha=alpha,
+                linewidth=OTHER_LINE_WIDTH,
                 zorder=ZORDERS["context"],
             )
 
     legend.add(
         label,
         matplotlib.lines.Line2D(
-            [], [], color=LEGEND_MARKER_COLOUR, alpha=0.5, linewidth=1.5
+            [], [], color=LEGEND_MARKER_COLOUR, alpha=0.5, linewidth=OTHER_LINE_WIDTH
         ),
-        group="context",
+        group="Input data",
     )
 
 
@@ -626,7 +827,7 @@ def plot_comparisons(
                     markeredgewidth=0.6,
                     markersize=6,
                 ),
-                group="spatial-comparison",
+                group=comparison.legend_group,
             )
 
         else:
@@ -641,10 +842,10 @@ def plot_comparisons(
                 segments,
                 color=colour,
                 linestyle=comparison.linestyle,
-                linewidth=1.5,
+                linewidth=OTHER_LINE_WIDTH,
                 zorder=ZORDERS["global-mean-comparison"],
             )
-            legend.add(comparison.label, handle, group="global-mean-comparison")
+            legend.add(comparison.label, handle, group=comparison.legend_group)
 
     return plotted
 
@@ -716,7 +917,7 @@ def plot_output_at_comparison_latitudes(
     legend.add(
         f"{CMIP7_LABEL} at comparison latitudes",
         matplotlib.lines.Line2D([], [], color=LEGEND_MARKER_COLOUR, linewidth=1.0),
-        group="output-at-latitude",
+        group="CMIP forcings",
     )
 
     return plotted
@@ -832,12 +1033,50 @@ def set_up_segments(  # noqa: PLR0913
             # so its first tick label says the same thing
             clear_ticks_near_break(ax, at="right")
 
-        if share_y and i > 0:
-            ax.set_ylim(axes[0].get_ylim())
-            ax.tick_params(labelleft=False)
+        if share_y:
+            # The pieces are one axis with bits cut out of it,
+            # so only its outer ends are drawn (the broken axis trick)
+            if i > 0:
+                ax.set_ylim(axes[0].get_ylim())
+                ax.spines["left"].set_visible(False)
+                ax.tick_params(left=False, labelleft=False)
+
+            if i < len(axes) - 1:
+                ax.spines["right"].set_visible(False)
+
+    if share_y:
+        add_break_marks(axes)
 
     axes[0].set_ylabel(label_name(f"[{units}]"), fontsize="small")
     axes[len(axes) // 2].set_xlabel(xlabel, fontsize="small")
+
+
+def add_break_marks(axes: Sequence[matplotlib.axes.Axes], size: float = 8.0) -> None:
+    """
+    Mark the breaks between the pieces of a broken axis
+
+    Drawn as markers rather than lines, so that every mark is the same size
+    and slant however wide the piece it is on.
+
+    Parameters
+    ----------
+    axes
+        Axes of each piece of the axis, left to right
+
+    size
+        Size of the marks, in points
+    """
+    kwargs = dict(
+        marker=[(-1.0, -1.0), (1.0, 1.0)],
+        markersize=size,
+        linestyle="none",
+        color="k",
+        markeredgewidth=0.8,
+        clip_on=False,
+    )
+    for left, right in itertools.pairwise(axes):
+        left.plot([1.0, 1.0], [0.0, 1.0], transform=left.transAxes, **kwargs)
+        right.plot([0.0, 0.0], [0.0, 1.0], transform=right.transAxes, **kwargs)
 
 
 def get_compact_scalar_formatter() -> matplotlib.ticker.ScalarFormatter:
@@ -903,7 +1142,7 @@ def plot_yearly(  # noqa: PLR0913
     obs_network: pd.DataFrame | None = None,
     inputs: pd.DataFrame | None = None,
     inputs_label: str = "Inputs",
-    output_at_comparison_latitudes: bool = True,
+    output_at_comparison_latitudes: bool = SHOW_OUTPUT_AT_COMPARISON_LATITUDES,
 ) -> None:
     """
     Plot our yearly global-mean against the comparison datasets
@@ -954,10 +1193,10 @@ def plot_yearly(  # noqa: PLR0913
         axes,
         segments,
         color=REGION_COLOURS["Global"],
-        linewidth=2.0,
+        linewidth=CMIP7_LINE_WIDTH,
         zorder=ZORDERS["output"],
     )
-    legend.add(CMIP7_LABEL, handle, group="output")
+    legend.add(f"{CMIP7_LABEL} global-mean", handle, group="CMIP forcings")
 
     foreground = [gm_pdf]
     foreground.extend(plot_comparisons(comparisons, axes, segments, units, legend))
@@ -1017,11 +1256,21 @@ def plot_monthly(  # noqa: PLR0913
         Label for `inputs` in the legend
     """
     units = gm_monthly.attrs["units"]
+    # The last piece is short enough that the individual inputs can be read,
+    # so they are drawn more solidly there
+    alphas = [CONTEXT_ALPHA] * (len(axes) - 1) + [RECENT_MONTHLY_CONTEXT_ALPHA]
     if obs_network is not None:
-        plot_obs_network_context(obs_network, axes, segments, legend)
+        plot_obs_network_context(obs_network, axes, segments, legend, alphas=alphas)
 
     if inputs is not None:
-        plot_input_timeseries_context(inputs, axes, segments, legend, inputs_label)
+        plot_input_timeseries_context(
+            inputs,
+            axes,
+            segments,
+            legend,
+            inputs_label,
+            alphas=[0.5] * (len(axes) - 1) + [RECENT_MONTHLY_CONTEXT_ALPHA],
+        )
 
     foreground = []
     # In the same order as the regions are named everywhere else
@@ -1039,13 +1288,13 @@ def plot_monthly(  # noqa: PLR0913
             axes,
             segments,
             color=REGION_COLOURS[region],
-            linewidth=1.5,
+            linewidth=CMIP7_LINE_WIDTH,
             zorder=ZORDERS["output"],
         )
         legend.add(
-            CMIP7_LABEL if region == "Global" else f"{CMIP7_LABEL} {region.lower()}",
+            f"{CMIP7_LABEL} {'global-mean' if region == 'Global' else region.lower()}",
             handle,
-            group="output",
+            group="CMIP forcings",
         )
 
     foreground.extend(plot_comparisons(comparisons, axes, segments, units, legend))
@@ -1092,7 +1341,7 @@ def plot_difference_from_cmip6(
         axes,
         segments,
         color=DIFFERENCE_COLOUR,
-        linewidth=1.5,
+        linewidth=OTHER_LINE_WIDTH,
     )
     for ax in axes:
         ax.axhline(0.0, color="0.6", linewidth=0.8, zorder=0)
@@ -1103,6 +1352,50 @@ def plot_difference_from_cmip6(
     set_up_segments(axes, segments, units=units, xlabel="year", share_y=True)
     axes[0].yaxis.set_major_formatter(get_compact_scalar_formatter())
     add_radiative_effect_axis(axes[-1], gas, units)
+
+
+def label_results_panels(
+    axes: Mapping[str, matplotlib.axes.Axes],
+) -> dict[str, list[str]]:
+    """
+    Give each panel its title, labelled in reading order
+
+    Unlike [local.historical_ghg_forcing_for_cmip7.layout.label_panels][],
+    each piece of the panels in [PANELS_LABELLED_BY_PIECE][]
+    gets its own letter.
+
+    Parameters
+    ----------
+    axes
+        The figure's axes
+
+    Returns
+    -------
+    :
+        Labels given to each panel's pieces, e.g. `{"monthly": ["(b)", "(c)"]}`
+    """
+    letters = iter(string.ascii_lowercase)
+    res = {}
+    for row in ROWS:
+        for panel in row.panels:
+            if panel.name == LEGEND_PANEL:
+                continue
+
+            names = get_panel_axes_names(panel)
+            if panel.name not in PANELS_LABELLED_BY_PIECE:
+                names = names[:1]
+
+            res[panel.name] = []
+            for i, name in enumerate(names):
+                label = f"({next(letters)})"
+                res[panel.name].append(label)
+                title = f"$\\bf{{{label}}}$"
+                if i < 1:
+                    title = f"{title} {TITLES[panel.name]}"
+
+                axes[name].set_title(title, loc="left", fontsize="medium")
+
+    return res
 
 
 def load_output(
@@ -1262,38 +1555,24 @@ def generate_results_figure(  # noqa: PLR0913
         or inputs is not None
         or any(c.is_spatial for c in (*yearly_comparisons, *monthly_comparisons))
     )
+    # Not for e.g. C8F18, which has neither an observational network nor inputs
     if anything_coloured_by_latitude:
-        latitude_colour_bar = add_colour_bar(
-            fig,
-            matplotlib.cm.ScalarMappable(
-                norm=LATITUDE_NORMALISATION, cmap=LATITUDE_COLOUR_MAP
-            ),
-            cax=axes["yearly-colour-bar"],
-            label=r"latitude [$^{\circ}$N]",
-            ticks=LAT_BIN_BOUNDS[::2],
-        )
-        latitude_colour_bar.solids.set_alpha(1.0)
-    else:
-        # E.g. C8F18, which has neither an observational network nor inputs
-        axes["yearly-colour-bar"].set_visible(False)
+        add_latitude_entries(legend)
 
     plot_difference_from_cmip6(
         gas, gm_yearly, cmip6_yearly, panel_axes("yearly-diff"), yearly_segments
     )
 
-    legend_ax = axes[LEGEND_PANEL]
-    legend_ax.axis("off")
-    add_compact_legend(
-        legend_ax,
-        fontsize="small",
-        handles=list(legend.handles.values()),
-        labels=list(legend.handles),
-        loc="center left",
-        frameon=False,
-        ncols=1 if len(legend.handles) <= 8 else 2,  # noqa: PLR2004
+    piece_labels = label_results_panels(axes)
+    add_legend_with_sub_headers(
+        axes[LEGEND_PANEL],
+        legend,
+        title=(
+            f"Legend for panels {piece_labels['monthly'][0]} "
+            f"to {piece_labels['yearly'][-1]}"
+        ),
     )
 
-    label_panels(ROWS, axes, TITLES, unlabelled=(LEGEND_PANEL,))
     # Last, because it needs to know how much room everything takes up
     lay_out_figure(fig, axes, ROWS, settings=LAYOUT_SETTINGS)
 
@@ -1373,30 +1652,6 @@ def get_context(
         Keyword arguments for [generate_results_figure][]
         which give it its context
     """
-    # Imported here because these modules are about the methods figures,
-    # and all we want from them is their data loading
-    from local.historical_ghg_forcing_for_cmip7.c4f10_like_methods_figure import (
-        C4F10_LIKE_GASES,
-        DROSTE_LABEL,
-        get_droste_data,
-    )
-    from local.historical_ghg_forcing_for_cmip7.cfc12_like_methods_figure import (
-        CFC12_LIKE_GASES,
-        get_cfc12_like_all_data_with_bins,
-    )
-    from local.historical_ghg_forcing_for_cmip7.ch4_methods_figure import (
-        get_ch4_all_data_with_bins,
-    )
-    from local.historical_ghg_forcing_for_cmip7.co2_methods_figure import (
-        get_co2_all_data_with_bins,
-    )
-    from local.historical_ghg_forcing_for_cmip7.n2o_methods_figure import (
-        get_n2o_all_data_with_bins,
-    )
-    from local.historical_ghg_forcing_for_cmip7.plotting import (
-        add_network_group,
-    )
-
     obs_network_getters = {
         "co2": get_co2_all_data_with_bins,
         "ch4": get_ch4_all_data_with_bins,

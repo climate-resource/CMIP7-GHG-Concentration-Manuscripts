@@ -94,6 +94,14 @@ class ComparisonTimeseries:
     as our hemispheric means.
     """
 
+    legend_group: str = "Comparison data"
+    """
+    Group to list the dataset under in the figures' legends
+
+    The CMIP forcings are listed apart from the other comparison data,
+    because they are what we are updating, not an independent check on it.
+    """
+
     notes: tuple[str, ...] = field(default_factory=tuple)
     """Anything worth knowing about the dataset which the figure doesn't say"""
 
@@ -137,6 +145,7 @@ class ComparisonTimeseries:
             colour=self.colour,
             linestyle=self.linestyle,
             region=self.region,
+            legend_group=self.legend_group,
             notes=self.notes,
         )
 
@@ -416,7 +425,7 @@ def get_cmip6_comparisons(
     label
         Label to give the dataset
 
-        The region is added for anything other than the global-mean.
+        The region is added to it.
 
     Returns
     -------
@@ -430,7 +439,9 @@ def get_cmip6_comparisons(
         region_da = da.sel(sector=region)
         res.append(
             ComparisonTimeseries(
-                label=label if region == "Global" else f"{label} {region.lower()}",
+                label=(
+                    f"{label} {'global-mean' if region == 'Global' else region.lower()}"
+                ),
                 data=pd.DataFrame(
                     {
                         TIME_COLUMN: region_da["time"].values,
@@ -440,6 +451,7 @@ def get_cmip6_comparisons(
                 units=da.attrs["units"],
                 linestyle="--",
                 region=region,
+                legend_group="CMIP forcings",
             )
         )
 
@@ -461,6 +473,7 @@ CH4_ICE_CORE_SUPPLEMENT_FILE = (
 Ignored by git, because we can always download it again.
 """
 
+# TODO: check
 CH4_ICE_CORE_SUPPLEMENT_SITES = {
     # Column prefix: (label, latitude, marker)
     # The new record the paper presents

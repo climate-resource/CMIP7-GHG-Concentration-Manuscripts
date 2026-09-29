@@ -162,11 +162,17 @@ fitted line is set against them.
 """
 
 REGION_COLOURS = {
-    "Global": OKABE_ITO["blue"],
+    "Global": OKABE_ITO["black"],
     "Northern hemisphere": OKABE_ITO["vermillion"],
-    "Southern hemisphere": OKABE_ITO["bluish green"],
+    "Southern hemisphere": OKABE_ITO["blue"],
 }
 """Colour to use for each region of a spatial mean
+
+The hemispheres roughly follow the latitude colour map (north red, south blue),
+so they read the same way as the observational network drawn behind them.
+The global-mean is black: it sits between the two hemispheres,
+and black is the one colour which contrasts with both of them
+and with every latitude in the colour map, whatever the reader's colour vision.
 
 The results figures show the same regions in more than one panel,
 and show CMIP6's regions next to ours.
