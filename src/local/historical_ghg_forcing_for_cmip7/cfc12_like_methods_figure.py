@@ -9,6 +9,14 @@ the panels it has and how they are laid out.
 One function serves every gas in this group,
 because the method is the same for all of them
 (see the CFC-12-like section of the manuscript's methods).
+
+Each gas has two methods figures.
+The main one follows the method from the observations to the extended components.
+The appendix one holds the panels which show the working along the way:
+the interpolation at its best and worst, how much variance each EOF explains,
+the principal components the observations give
+and the regressions their extension leans on.
+Both are drawn by the one function, because they are drawn from the same data.
 """
 # Differences from ch4
 # - the global-mean is, for many gases, overridden by a reference source,
@@ -24,7 +32,6 @@ from pathlib import Path
 from typing import Any
 
 import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -41,12 +48,13 @@ from local.historical_ghg_forcing_for_cmip7.layout import (
     Panel,
     Row,
     create_figure,
-    label_panels,
-    lay_out_figure,
+    manuscript_style,
+    merge_axes,
+    save_figure,
 )
 from local.historical_ghg_forcing_for_cmip7.plotting import (
     BROKEN_SPLIT,
-    LAT_BIN_BOUNDS,
+    LATITUDE_KEY,
     MAP_ASPECT,
     add_colour_bar,
     add_network_group,
@@ -260,19 +268,16 @@ def get_lat_gradient_decomposition(gas: str) -> DecompositionToSave:
 TITLES = {
     "timeseries": "Observation network values",
     "counts": "Obs. counts",
-    "locations": "Obs. locations",
-    "interpolated-most": "Interpolation: most inputs",
-    "interpolated-least": "Interpolation: fewest inputs",
+    # The empty last line is where the map's legend goes,
+    # see plot_station_locations
+    "locations": "Obs. locations\n",
     "gm": "Obs. global-mean",
     "seasonality": "Obs. seasonality",
-    "lat-grad-variance": "Lat. gradient EOFs variance explained",
-    "lat-grad-eof": "Obs. lat. gradient EOF",
-    "lat-grad-pc": "Obs. lat. gradient PC",
     "gm-ext": "Extended global-mean",
-    "lat-grad-pc-emms": "Lat. gradient PC0 against total emissions",
+    "lat-grad-eof": "Obs. lat. gradient EOF",
     "lat-grad-pc-ext": "Extended lat. gradient PC",
 }
-"""Title of each panel
+"""Title of each panel of the main figure
 
 Singular where CH4 is plural: these gases only ever use one
 latitudinal gradient EOF, so there is only ever one PC to go with it.
@@ -280,43 +285,66 @@ latitudinal gradient EOF, so there is only ever one PC to go with it.
 
 ROWS = (
     Row(
-        panels=(
-            Panel("timeseries", width=2.0, colour_bar=True),
-            Panel("counts", colour_bar=True),
-        ),
-        height=3.6,
+        panels=(Panel("timeseries", colour_bar=True),),
+        height=0.95,
     ),
     Row(
-        panels=tuple(
-            Panel(name, aspect=MAP_ASPECT, projection=ccrs.PlateCarree())
-            for name in ("locations", "interpolated-most", "interpolated-least")
+        panels=(
+            Panel("counts", colour_bar=True),
+            Panel("locations", aspect=MAP_ASPECT, projection=ccrs.PlateCarree()),
         ),
+        height=0.75,
     ),
     Row(
         panels=(
             Panel("gm"),
             Panel("seasonality"),
-            Panel("gm-ext", width=2.0, broken=True, broken_split=BROKEN_SPLIT),
+            Panel("lat-grad-eof"),
         ),
-        height=2.3,
+        height=0.75,
     ),
     Row(
         panels=(
-            Panel("lat-grad-variance", width=0.8),
-            Panel("lat-grad-eof"),
-            Panel("lat-grad-pc"),
-            Panel("lat-grad-pc-emms"),
-            Panel(
-                "lat-grad-pc-ext",
-                width=1.2,
-                broken=True,
-                broken_split=BROKEN_SPLIT,
-            ),
+            Panel("gm-ext", broken=True, broken_split=BROKEN_SPLIT),
+            Panel("lat-grad-pc-ext", broken=True, broken_split=BROKEN_SPLIT),
         ),
-        height=2.3,
+        height=0.8,
     ),
 )
-"""Layout of the figure's panels, top to bottom
+"""Layout of the main figure's panels, top to bottom
+
+The same layout as CH4 uses, see
+[local.historical_ghg_forcing_for_cmip7.ch4_methods_figure][],
+because these gases follow the same steps.
+"""
+
+APPENDIX_TITLES = {
+    "interpolated-most": "Interpolation: most inputs",
+    "interpolated-least": "Interpolation: fewest inputs",
+    "lat-grad-variance": "Lat. gradient EOF\nvariance explained",
+    "lat-grad-pc": "Obs. lat. gradient PC",
+    # Which emissions is on the panel's horizontal axis
+    "lat-grad-pc-emms": "Lat. gradient PC0\nvs. emissions",
+}
+"""Title of each panel of the appendix figure"""
+
+APPENDIX_ROWS = (
+    Row(
+        panels=tuple(
+            Panel(name, aspect=MAP_ASPECT, projection=ccrs.PlateCarree())
+            for name in ("interpolated-most", "interpolated-least")
+        ),
+    ),
+    Row(
+        panels=(
+            Panel("lat-grad-variance"),
+            Panel("lat-grad-pc"),
+            Panel("lat-grad-pc-emms"),
+        ),
+        height=0.85,
+    ),
+)
+"""Layout of the appendix figure's panels, top to bottom
 
 The same layout as CH4 uses, see
 [local.historical_ghg_forcing_for_cmip7.ch4_methods_figure][],
@@ -591,13 +619,15 @@ def clip_to_years(
     return pdf[pdf[year_column] <= max_year]
 
 
-def generate_cfc12_like_methods_figure(  # noqa: PLR0915
+@manuscript_style
+def generate_cfc12_like_methods_figure(  # noqa: PLR0913, PLR0915
     gas: str,
     outfile: Path,
+    appendix_outfile: Path,
     bundle_dir: Path,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
     force_rerun: bool = False,
-) -> Path:
+) -> tuple[Path, Path]:
     """
     Generate the methods figure for a gas which is processed like CFC-12
 
@@ -609,7 +639,10 @@ def generate_cfc12_like_methods_figure(  # noqa: PLR0915
         Must be one of [`CFC12_LIKE_GASES`][].
 
     outfile
-        File in which to write the figure
+        File in which to write the main figure
+
+    appendix_outfile
+        File in which to write the appendix figure
 
     bundle_dir
         Directory in which to keep the original run's bundle
@@ -618,12 +651,12 @@ def generate_cfc12_like_methods_figure(  # noqa: PLR0915
         The original run's `notebooks-executed` directory
 
     force_rerun
-        Re-generate the figure, even if the output file already exists
+        Re-generate the figures, even if the output files already exist
 
     Returns
     -------
     :
-        `outfile`
+        `outfile` and `appendix_outfile`
 
     Raises
     ------
@@ -631,9 +664,9 @@ def generate_cfc12_like_methods_figure(  # noqa: PLR0915
         `gas` is not processed like CFC-12,
         or its latitudinal gradient has more than one EOF
     """
-    if outfile.exists() and not force_rerun:
-        logger.info(f"Using existing {outfile}")
-        return outfile
+    if outfile.exists() and appendix_outfile.exists() and not force_rerun:
+        logger.info(f"Using existing {outfile} and {appendix_outfile}")
+        return outfile, appendix_outfile
 
     if gas not in CFC12_LIKE_GASES:
         msg = f"{gas=} is not processed like CFC-12, expected one of {CFC12_LIKE_GASES}"
@@ -647,7 +680,10 @@ def generate_cfc12_like_methods_figure(  # noqa: PLR0915
 
     global_mean_supplement = get_global_mean_supplement(gas, bundle_dir)
 
-    fig, axes = create_figure(ROWS)
+    fig, main_axes = create_figure(ROWS)
+    appendix_fig, appendix_axes = create_figure(APPENDIX_ROWS)
+    # Everything below draws each panel into whichever figure it is in
+    axes = merge_axes(main_axes, appendix_axes)
 
     timeseries_scatter = plot_station_timeseries(all_data_with_bins, axes["timeseries"])
     plot_station_locations(all_data_with_bins, axes["locations"])
@@ -658,7 +694,7 @@ def generate_cfc12_like_methods_figure(  # noqa: PLR0915
         timeseries_scatter,
         cax=axes["timeseries-colour-bar"],
         label=r"latitude [$^{\circ}$N]",
-        ticks=LAT_BIN_BOUNDS[::2],
+        ticks=LATITUDE_KEY,
     )
     # The points are drawn see-through so they don't hide each other,
     # but the colour bar should show the colours at full strength
@@ -668,7 +704,7 @@ def generate_cfc12_like_methods_figure(  # noqa: PLR0915
         fig,
         counts_mesh,
         cax=axes["counts-colour-bar"],
-        label="Number of input data points",
+        label="Number of input\ndata points",
         ticks=np.arange(1, int(counts_mesh.norm.vmax) + 1),
     )
 
@@ -848,7 +884,8 @@ def generate_cfc12_like_methods_figure(  # noqa: PLR0915
     plot_pc_timeseries_regression(
         lat_gradient_from_obs_network,
         regression_emissions_xr,
-        timeseries_name=label_name(f"{gas} total emissions"),
+        # Over two lines, so it is no wider than the panel above it
+        timeseries_name=label_name(f"{gas} total\nemissions"),
         regression_info=regression_info,
         ax=axes["lat-grad-pc-emms"],
         x_unit=emissions_unit,
@@ -875,18 +912,18 @@ def generate_cfc12_like_methods_figure(  # noqa: PLR0915
                 "Constant": extension_years[extension_years < emissions_start_year],
             },
         },
-        # This panel now shares its row with four others,
+        # The panel's halves are narrow,
         # which is not enough room for matplotlib's choice of year labels.
         max_ticks_per_half=3,
     )
 
-    label_panels(ROWS, axes, TITLES)
-    # Last, because it needs to know how much room everything takes up
-    lay_out_figure(fig, axes, ROWS)
-
-    outfile.parent.mkdir(exist_ok=True, parents=True)
-    logger.info(f"Writing {outfile}")
-    fig.savefig(outfile)
-    plt.close(fig)
-
-    return outfile
+    return (
+        save_figure(fig, main_axes, ROWS, TITLES, outfile),
+        save_figure(
+            appendix_fig,
+            appendix_axes,
+            APPENDIX_ROWS,
+            APPENDIX_TITLES,
+            appendix_outfile,
+        ),
+    )

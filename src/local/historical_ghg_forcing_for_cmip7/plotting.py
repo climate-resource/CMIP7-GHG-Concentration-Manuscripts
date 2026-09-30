@@ -10,7 +10,8 @@ the panels it has and how they are laid out.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+import textwrap
+from collections.abc import Iterable, Mapping, Sequence
 from typing import TYPE_CHECKING
 
 import cartopy.crs as ccrs
@@ -21,15 +22,18 @@ import matplotlib.figure
 import matplotlib.lines
 import matplotlib.pyplot as plt
 import matplotlib.ticker
+import matplotlib.transforms
 import numpy as np
 import openscm_units
 import pandas as pd
 import seaborn as sns
 import xarray as xr
 
+from local.historical_ghg_forcing_for_cmip7.layout import LEGEND_FONT_SIZE
 from local.xarray_time import convert_time_to_year_month, convert_year_month_to_time
 
 if TYPE_CHECKING:
+    import matplotlib.artist
     import matplotlib.cm
     import matplotlib.collections
 
@@ -41,6 +45,14 @@ This mirrors `local.binning.LAT_BIN_BOUNDS` in the original run.
 
 LAT_BIN_CENTRES = (LAT_BIN_BOUNDS[:-1] + LAT_BIN_BOUNDS[1:]) / 2.0
 """Centres of the latitudinal bins used by the original run
+"""
+
+LATITUDE_KEY = np.array([90.0, 45.0, 0.0, -45.0, -90.0])
+"""Latitudes to label, north first
+
+Used wherever latitude is labelled rather than plotted:
+the latitude colour bar, the legends which stand in for it, and latitude axes.
+The same few round numbers everywhere, so every figure reads the same way.
 """
 
 LON_BIN_BOUNDS = np.arange(-180, 181, 60)
@@ -261,9 +273,9 @@ so the figure still works in greyscale.
 """
 
 NETWORK_GROUP_MARKER_SIZES = {
-    "NOAA": 50.0,
-    "NOAA (moving)": 10.0,
-    "AGAGE": 25.0,
+    "NOAA": 14.0,
+    "NOAA (moving)": 3.0,
+    "AGAGE": 7.0,
 }
 """Marker size to use for each group of observational networks on the map
 
@@ -312,6 +324,36 @@ Not one of the first colours in matplotlib's cycle,
 because those go to the extension itself and to the sources.
 """
 
+GLOBAL_MEAN_EXTENSION_LINE_WIDTH = 1.2
+"""Width of the lines in the extended global-mean panels
+
+The same for every piece of the extension and for the sources,
+so that where a piece is drawn over the line it covers it exactly.
+"""
+
+GLOBAL_MEAN_EXTENSION_ZORDERS = {
+    "extended": 2.0,
+    "stretches": 2.5,
+    "sources": 3.0,
+    "pre-industrial": 5.0,
+}
+"""Order to draw the extended global-mean panels' pieces in, back to front
+
+The extended global-mean goes at the back,
+with the sources it was built from drawn over it dashed
+(see [GLOBAL_MEAN_EXTENSION_SOURCE_LINESTYLE][]),
+so it shows through the gaps wherever the two agree.
+The stretches which mark which part of it is assumed or fitted
+are drawn over it, because they are marking the line itself.
+The pre-industrial value is a single point, so it goes on top of everything.
+"""
+
+GLOBAL_MEAN_EXTENSION_SOURCE_LINESTYLE = "--"
+"""Line style of the sources in the extended global-mean panels
+
+Dashed, so the extended global-mean underneath shows through.
+"""
+
 ASSUMED_CONSTANT_COLOUR = "0.55"
 """Colour to draw the years of a global-mean which are simply assumed
 
@@ -330,7 +372,7 @@ because it is a single point rather than a source.
 """
 
 INSET_CANDIDATE_CORNERS = (
-    (0.65, 0.10),
+    (0.65, 0.18),
     (0.65, 0.60),
 )
 """Corners the inset may be put in, as (x0, y0) in axes co-ordinates
@@ -343,6 +385,10 @@ which is the choice between a gas whose values are rising
 and a gas whose values are falling.
 
 The panel's legend sits in the top left, which is why that corner is not here.
+
+The low corner is high enough off the bottom of the panel
+for the inset's tick labels to stay inside the panel,
+rather than landing on the panel's own tick labels.
 
 In preference order, so a gas with nothing in either corner
 keeps the one the figures have always used.
@@ -698,7 +744,9 @@ def get_network_groups_largest_first(indf: pd.DataFrame) -> list[str]:
 
 
 def add_compact_legend(
-    ax: matplotlib.axes.Axes, fontsize: str = "x-small", **kwargs: object
+    ax: matplotlib.axes.Axes,
+    fontsize: str | float = LEGEND_FONT_SIZE,
+    **kwargs: object,
 ) -> None:
     """
     Add a legend which takes as little of its panel as it can
@@ -761,7 +809,7 @@ def compact_existing_legend(ax: matplotlib.axes.Axes, **kwargs: object) -> None:
     title = legend.get_title().get_text()
 
     add_compact_legend(ax, handles=handles, labels=labels, title=title, **kwargs)
-    ax.get_legend().get_title().set_fontsize("x-small")
+    ax.get_legend().get_title().set_fontsize(LEGEND_FONT_SIZE)
 
 
 def split_masks_at_year(
@@ -963,11 +1011,46 @@ def latitude_colour(latitude: float) -> tuple[float, float, float, float]:
     return plt.get_cmap(LATITUDE_COLOUR_MAP)(LATITUDE_NORMALISATION(latitude))
 
 
+def get_beside_legend_kwargs(
+    ax: matplotlib.axes.Axes, gap: float = 3.0
+) -> dict[str, object]:
+    """
+    Get the arguments which put a legend beside a panel, level with its top
+
+    The legend's top lines up with the top of the panel,
+    so it reads as belonging to the panel rather than floating beside it.
+
+    Parameters
+    ----------
+    ax
+        Axes the legend goes beside (on the right)
+
+    gap
+        Space between the axes and the legend, in points
+
+        Only ever sideways: a gap given as `borderaxespad`
+        would push the legend down from the panel's top as well.
+
+    Returns
+    -------
+    :
+        Keyword arguments for `ax.legend`
+        (or [add_compact_legend][])
+    """
+    return {
+        "loc": "upper left",
+        "bbox_to_anchor": (1.0, 1.0),
+        "bbox_transform": matplotlib.transforms.offset_copy(
+            ax.transAxes, fig=ax.get_figure(), x=gap, y=0.0, units="points"
+        ),
+        "borderaxespad": 0.0,
+    }
+
+
 def add_latitude_legend(
     ax: matplotlib.axes.Axes,
-    latitudes: np.typing.ArrayLike,
-    ncols: int = 2,
-    every: int = 2,
+    latitudes: np.typing.ArrayLike = LATITUDE_KEY,
+    ncols: int = 1,
     **kwargs: object,
 ) -> None:
     """
@@ -979,29 +1062,24 @@ def add_latitude_legend(
         Axes to add the legend to
 
     latitudes
-        Latitudes which appear on `ax`
+        Latitudes to give an entry to
 
         Listed north first, so the legend runs the same way up as a map does.
 
+        Where colour stands for latitude as a scale,
+        rather than for a handful of series,
+        the legend only has to sample the scale finely enough to be read off,
+        so the default is [LATITUDE_KEY][] rather than the latitudes on `ax`.
+
     ncols
         Number of columns to lay the legend out in
-
-    every
-        Show every nth latitude rather than all of them
-
-        Colour stands for latitude here rather than for a category,
-        so the legend is a scale, and a scale only has to be sampled
-        finely enough to be read off:
-        an entry for every latitudinal bin is more entries
-        than a panel this size has room for,
-        and says no more than every second one does.
 
     **kwargs
         Passed on to [add_compact_legend][]
     """
     add_compact_legend(
         ax,
-        fontsize="xx-small",
+        fontsize=LEGEND_FONT_SIZE,
         ncols=ncols,
         handles=[
             matplotlib.lines.Line2D(
@@ -1009,16 +1087,16 @@ def add_latitude_legend(
                 [],
                 linestyle="none",
                 marker="o",
-                markersize=3,
+                markersize=2.5,
                 color=latitude_colour(latitude),
                 label=f"{latitude:.0f}",
             )
-            for latitude in sorted(np.asarray(latitudes), reverse=True)[::every]
+            for latitude in sorted(np.asarray(latitudes), reverse=True)
         ],
         title=r"lat [$^{\circ}$N]",
         **kwargs,
     )
-    ax.get_legend().get_title().set_fontsize("xx-small")
+    ax.get_legend().get_title().set_fontsize(LEGEND_FONT_SIZE)
 
 
 def plot_input_timeseries(
@@ -1066,14 +1144,14 @@ def plot_input_timeseries(
             at_latitude[year_column],
             at_latitude[value_column],
             color=latitude_colour(latitude),
-            linewidth=2,
+            linewidth=1.2,
         )
 
     ax.set_ylabel(f"[{unit(indf)}]", fontsize="small")
     ax.set_xlabel("year", fontsize="small")
     ax.tick_params(labelsize="small")
     # Every latitude, because there are few enough of them to name them all
-    add_latitude_legend(ax, latitudes, ncols=1, every=1, loc="upper left")
+    add_latitude_legend(ax, latitudes, loc="upper left")
 
     return ax
 
@@ -1173,8 +1251,11 @@ def plot_station_timeseries(  # noqa: PLR0913
         # xticklabels=[],
         # yticklabels=[],
     )
-    ax_inset.tick_params(labelsize="small")
-    ax_inset.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
+    ax_inset.tick_params(labelsize="x-small")
+    # Only the years at either end: the inset is too narrow to label every year,
+    # and its ends are what say which years it magnifies
+    ax_inset.set_xticks(inset_xlim)
+    ax_inset.set_xlim(inset_xlim)
 
     scatter = None
     for group, group_df in indf.groupby(NETWORK_GROUP_COLUMN):
@@ -1186,7 +1267,7 @@ def plot_station_timeseries(  # noqa: PLR0913
                 cmap=LATITUDE_COLOUR_MAP,
                 norm=LATITUDE_NORMALISATION,
                 marker=NETWORK_GROUP_MARKERS[group],
-                s=10.0,
+                s=2.0,
                 alpha=0.4,
                 linewidths=0.0,
             )
@@ -1203,7 +1284,7 @@ def plot_station_timeseries(  # noqa: PLR0913
             linestyle="none",
             marker=NETWORK_GROUP_MARKERS[group],
             color=LEGEND_MARKER_COLOUR,
-            markersize=5,
+            markersize=3,
             label=group,
         )
         for group in sorted(indf[NETWORK_GROUP_COLUMN].unique())
@@ -1483,16 +1564,16 @@ def plot_station_locations(
 
         This must have been created with a cartopy projection.
     """
-    ax.coastlines(linewidth=0.4, color="0.55")
+    ax.coastlines(linewidth=0.3, color="0.55")
     ax.set_global()
 
     # The bins the observations are binned into,
     # so this panel can be read against the counts panel
     for lat_bound in LAT_BIN_BOUNDS:
-        ax.axhline(lat_bound, linewidth=0.4, color="0.85", zorder=0)
+        ax.axhline(lat_bound, linewidth=0.3, color="0.85", zorder=0)
 
     for lon_bound in LON_BIN_BOUNDS:
-        ax.axvline(lon_bound, linewidth=0.4, color="0.85", zorder=0)
+        ax.axvline(lon_bound, linewidth=0.3, color="0.85", zorder=0)
 
     stations = indf[
         [NETWORK_GROUP_COLUMN, "station", "latitude", "longitude"]
@@ -1509,7 +1590,7 @@ def plot_station_locations(
             edgecolors=NETWORK_GROUP_COLOURS[group],
             marker=NETWORK_GROUP_MARKERS[group],
             s=NETWORK_GROUP_MARKER_SIZES[group],
-            linewidths=1.1,
+            linewidths=0.6,
             label=group,
             zorder=3,
             # Cartopy clips to the projection boundary,
@@ -1517,7 +1598,7 @@ def plot_station_locations(
             clip_on=False,
         )
 
-    ax.set_yticks(LAT_BIN_BOUNDS[::2], crs=ccrs.PlateCarree())
+    ax.set_yticks(LATITUDE_KEY, crs=ccrs.PlateCarree())
     ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
     ax.set_xticks(LON_BIN_BOUNDS[::2], crs=ccrs.PlateCarree())
     ax.set_xlabel(r"longitude [$^{\circ}$E]", fontsize="small")
@@ -1526,26 +1607,31 @@ def plot_station_locations(
     ax.set_anchor("N")
     ax.tick_params(labelsize="small")
     ax.set_ylim(LAT_AXIS_LIMITS)
-    # On the panel's title line, which has room to spare and is the only
-    # place around this panel that does: the map cannot be drawn over
-    # (that would cover stations), its row is only as tall as the map itself
-    # so there is no band under it, and the gap beside it is a gap between
-    # two columns rather than space belonging to this panel.
+    # Between the map and its title, which is the only place around this panel
+    # with room to spare: the map cannot be drawn over (that would cover
+    # stations), its row is only as tall as the map itself so there is no band
+    # under it, and the gap beside it is a gap between two panels rather than
+    # space belonging to this one.
+    # The room is made by giving the title an empty last line,
+    # see the `"locations"` title in the figures which use this panel.
     add_compact_legend(
         ax,
-        fontsize="xx-small",
-        loc="lower right",
-        bbox_to_anchor=(1.0, 1.0),
-        # All on one row, so the legend is no taller than the title line it shares.
-        # The maps are wide enough that it still stays clear of the title.
+        fontsize=LEGEND_FONT_SIZE,
+        loc="lower left",
+        bbox_to_anchor=(0.0, 1.0),
+        # All on one row, and with no frame,
+        # so the legend is no taller than the line it sits in.
         ncols=len(get_network_groups_largest_first(stations)),
+        frameon=False,
+        borderpad=0.0,
+        borderaxespad=0.1,
         handlelength=1.0,
         handletextpad=0.3,
+        columnspacing=0.8,
     )
-    # The gap beside the map is there whether or not we put the legend in it,
-    # so the legend is placed by hand and kept out of the layout engine's sums.
-    # Left in them, it would ask for its width from the next panel's column,
-    # which every panel in that column would then pay for.
+    # The title makes the room for the legend, so the legend is kept
+    # out of the layout's sums. Left in them, the part of it which reaches
+    # past the map would be charged to the width of the whole row.
     ax.get_legend().set_in_layout(False)
 
 
@@ -1576,7 +1662,7 @@ def plot_observation_counts(
     """
     # The bins the observations are binned into
     for lat_bound in LAT_BIN_BOUNDS:
-        ax.axhline(lat_bound, linewidth=0.4, color="0.85", zorder=3)
+        ax.axhline(lat_bound, linewidth=0.3, color="0.85", zorder=3)
 
     counts = (
         indf.groupby(["year", "month", "lat_bin"]).size().rename("count").reset_index()
@@ -1612,7 +1698,7 @@ def plot_observation_counts(
         norm=matplotlib.colors.BoundaryNorm(np.arange(0.5, max_count + 1.0), max_count),
         shading="flat",
     )
-    ax.set_yticks(LAT_BIN_BOUNDS[::2])
+    ax.set_yticks(LATITUDE_KEY)
     ax.set_ylim(LAT_AXIS_LIMITS)
     ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
     ax.tick_params(labelsize="small")
@@ -1630,14 +1716,14 @@ def plot_coverage_and_interpolated(
     """
     Plot the interpolated values and the coverage of input data
     """
-    ax.coastlines(linewidth=0.6, color="0.3", zorder=2.0)
+    ax.coastlines(linewidth=0.4, color="0.3", zorder=2.0)
     ax.set_global()
 
     for lat_bound in LAT_BIN_BOUNDS:
-        ax.axhline(lat_bound, linewidth=0.4, color="0.85", zorder=0)
+        ax.axhline(lat_bound, linewidth=0.3, color="0.85", zorder=0)
 
     for lon_bound in LON_BIN_BOUNDS:
-        ax.axvline(lon_bound, linewidth=0.4, color="0.85", zorder=0)
+        ax.axvline(lon_bound, linewidth=0.3, color="0.85", zorder=0)
 
     lon_grid, lat_grid = np.meshgrid(
         LON_BIN_CENTRES,
@@ -1671,12 +1757,12 @@ def plot_coverage_and_interpolated(
         transform=ccrs.PlateCarree(),
         c="k",
         marker="o",
-        s=10.0,
+        s=3.0,
         label="Input point",
         zorder=3,
     )
 
-    ax.set_yticks(LAT_BIN_BOUNDS[::2], crs=ccrs.PlateCarree())
+    ax.set_yticks(LATITUDE_KEY, crs=ccrs.PlateCarree())
     ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
     ax.set_xticks(LON_BIN_BOUNDS[::2], crs=ccrs.PlateCarree())
     ax.set_xlabel(r"longitude [$^{\circ}$E]", fontsize="small")
@@ -1690,19 +1776,81 @@ def plot_coverage_and_interpolated(
     return mesh
 
 
+def get_ticks_with_ends(
+    start: float,
+    end: float,
+    max_ticks: int = 5,
+    clear_of_ends: float = 0.15,
+    label_end: bool = True,
+) -> list[float]:
+    """
+    Get ticks for a time axis which label where it starts (and ends)
+
+    The ends are always labelled, so the reader can see exactly
+    which years a panel covers.
+    In between, matplotlib's usual choice of round years,
+    less any so close to an end that their labels would run into the end's.
+
+    Parameters
+    ----------
+    start
+        Start of the axis
+
+    end
+        End of the axis
+
+    max_ticks
+        The most ticks to put between the ends
+
+    clear_of_ends
+        How much of the axis to keep clear of ticks at either labelled end,
+        as a fraction of the axis' length
+
+    label_end
+        Whether to label the end as well as the start
+
+    Returns
+    -------
+    :
+        Ticks for the axis, in order
+    """
+    keep_clear = clear_of_ends * (end - start)
+    upper = end - keep_clear if label_end else end
+    between = [
+        tick
+        for tick in matplotlib.ticker.MaxNLocator(
+            nbins=max_ticks, integer=True
+        ).tick_values(start, end)
+        if start + keep_clear < tick <= upper
+    ]
+
+    return [start, *between, end] if label_end else [start, *between]
+
+
 def plot_global_mean_from_obs_network(gm: xr.Dataset, ax: matplotlib.axes.Axes) -> None:
     """
     Plot global-mean derived from the observational network
+
+    The first year is labelled, because when the observations start
+    is the thing about this panel which differs most from gas to gas.
     """
     gm_da = get_only_data_variable(gm)
+    years = gm_da["year"].values.squeeze()
     ax.scatter(
-        gm_da["year"].values.squeeze(),
+        years,
         gm_da.values.squeeze(),
-        # The same colour the extended global-mean takes in its own panel,
-        # which sits in the same row: one quantity, one colour.
+        # The same colour the extended global-mean takes in its own panel:
+        # one quantity, one colour.
         color=SOURCE_SEQUENCE_COLOURS[0],
-        s=15,
+        s=4,
     )
+    x_limits = ax.get_xlim()
+    ax.set_xticks(
+        get_ticks_with_ends(
+            float(years.min()), x_limits[1], max_ticks=4, label_end=False
+        )
+    )
+    ax.set_xlim(x_limits)
     ax.set_ylabel(f"[{gm_da.attrs['units']}]", fontsize="small")
     ax.tick_params(labelsize="small")
 
@@ -1729,14 +1877,16 @@ def plot_seasonality_from_obs_network(
         c=pdf["lat"],
         cmap=LATITUDE_COLOUR_MAP,
         norm=LATITUDE_NORMALISATION,
-        s=30.0,
+        s=5.0,
         linewidths=0.0,
     )
     ax.set_ylabel(f"[{seasonality_da.attrs['units']}]", fontsize="small")
     ax.set_xlabel("month", fontsize="small")
     ax.set_xticks(np.arange(1, 12 + 1, 3))
     ax.tick_params(labelsize="small")
-    add_latitude_legend(ax, pdf["lat"].unique(), loc="best")
+    # Beside the panel rather than on it: the points fill most of the panel,
+    # so there is nowhere on it the legend would not cover some of them
+    add_latitude_legend(ax, **get_beside_legend_kwargs(ax))
 
     return ax
 
@@ -1873,7 +2023,7 @@ def plot_lat_gradient_eofs(
         palette=eof_palette(pdf_eofs["eof"].unique()),
         ax=ax,
     )
-    ax.set_yticks(LAT_BIN_BOUNDS[::2])
+    ax.set_yticks(LATITUDE_KEY)
     ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
     ax.set_xlabel(f"[{da_eofs.attrs['units']}]", fontsize="small")
     ax.tick_params(labelsize="small")
@@ -1952,8 +2102,8 @@ def plot_variance_explained(  # noqa: PLR0913
         np.cumsum(percentages),
         color=cumulative_colour,
         marker="o",
-        markersize=3.0,
-        linewidth=1.0,
+        markersize=2.0,
+        linewidth=0.8,
         label="Cumulative",
     )
 
@@ -1973,7 +2123,10 @@ def plot_variance_explained(  # noqa: PLR0913
         ax,
         handles=[handles[label] for label in labels],
         labels=labels,
-        loc="center right",
+        # The bars which are more than a sliver are all on the far left,
+        # and the running total starts at the height of the first of them,
+        # so the bottom right is empty
+        loc="lower right",
     )
 
     return ax
@@ -2041,7 +2194,9 @@ def add_break_lines_and_setup(  # noqa: PLR0913
         ax_right.get_legend().remove()
 
     if ax_left.get_legend() is None:
-        add_compact_legend(ax_left, loc=legend_loc)
+        # Some callers draw without labels and build the legend themselves
+        if ax_left.get_legend_handles_labels()[0]:
+            add_compact_legend(ax_left, loc=legend_loc)
     else:
         compact_existing_legend(ax_left, loc=legend_loc)
 
@@ -2056,8 +2211,12 @@ def add_break_lines_and_setup(  # noqa: PLR0913
 
     ax_left.set_ylabel(f"[{units}]", fontsize="small")
     ax_right.set_ylabel("")
+    # Once, under the half which is most of the panel:
+    # the halves are one time axis, and one label under each
+    # reads as two axes to a reader.
+    ax_left.set_xlabel("")
+    ax_right.set_xlabel("year", fontsize="small")
     for ax in (ax_left, ax_right):
-        ax.set_xlabel("year", fontsize="small")
         ax.tick_params(labelsize="small")
     # ax.set_xlabel("year")
     ax_left.set_xlim(xmin=min_year, xmax=split_year)
@@ -2151,13 +2310,68 @@ def clear_ticks_near_break(
     ax.set_xlim(x_min, x_max)
 
 
+EXTENDED_LEGEND_LABEL_WIDTH = 14
+"""Most characters on a line of the extension panels' legends"""
+
+
+def add_legend_beside_broken_panel(
+    ax_left: matplotlib.axes.Axes,
+    ax_right: matplotlib.axes.Axes,
+    handles: Sequence[matplotlib.artist.Artist],
+    labels: Sequence[str],
+) -> None:
+    """
+    Add a broken panel's legend beside it rather than on it
+
+    The extension panels are filled edge to edge by the extended timeseries,
+    so there is no corner of them a legend could sit in
+    without covering some of it.
+    The legend goes in one column, with its labels wrapped,
+    because the width it takes comes out of the panel's row.
+
+    Parameters
+    ----------
+    ax_left
+        Left half of the broken axis
+
+        Any legend already on it is removed.
+
+    ax_right
+        Right half of the broken axis, which the legend goes beside
+
+    handles
+        Legend handles
+
+    labels
+        Legend labels, one per handle
+    """
+    if ax_left.get_legend() is not None:
+        ax_left.get_legend().remove()
+
+    add_compact_legend(
+        ax_right,
+        handles=list(handles),
+        labels=[
+            textwrap.fill(
+                label,
+                width=EXTENDED_LEGEND_LABEL_WIDTH,
+                break_long_words=False,
+                break_on_hyphens=False,
+            )
+            for label in labels
+        ],
+        # Far enough out to clear the last tick label,
+        # which sits half past the end of the axis
+        **get_beside_legend_kwargs(ax_right, gap=9.0),
+    )
+
+
 def plot_global_mean_extension(  # noqa: PLR0913
     gm: xr.Dataset,
     ax_left: matplotlib.axes.Axes,
     ax_right: matplotlib.axes.Axes,
     input_sources=Mapping[str, pd.DataFrame],
     split_year: int = 1950,
-    legend_loc: str = "upper left",
     pre_industrial: tuple[int, float] | None = None,
     fit_period: tuple[int, int] | None = None,
 ) -> None:
@@ -2180,9 +2394,6 @@ def plot_global_mean_extension(  # noqa: PLR0913
 
     split_year
         Year the axis is broken at
-
-    legend_loc
-        Where to put the panel's legend
 
     pre_industrial
         Year and value of the pre-industrial point the extension is anchored to
@@ -2222,7 +2433,8 @@ def plot_global_mean_extension(  # noqa: PLR0913
             gm_values[gm_masks[i]],
             label=extended_label if i < 1 else None,
             color=palette[extended_label],
-            linewidth=2,
+            linewidth=GLOBAL_MEAN_EXTENSION_LINE_WIDTH,
+            zorder=GLOBAL_MEAN_EXTENSION_ZORDERS["extended"],
             # s=30,
         )
 
@@ -2233,7 +2445,9 @@ def plot_global_mean_extension(  # noqa: PLR0913
                 pdf_half["value"],
                 label=label if i < 1 else None,
                 color=palette[label],
-                linewidth=2,
+                linewidth=GLOBAL_MEAN_EXTENSION_LINE_WIDTH,
+                linestyle=GLOBAL_MEAN_EXTENSION_SOURCE_LINESTYLE,
+                zorder=GLOBAL_MEAN_EXTENSION_ZORDERS["sources"],
                 # s=30,
             )
 
@@ -2256,7 +2470,8 @@ def plot_global_mean_extension(  # noqa: PLR0913
                 gm_years[assumed_constant],
                 gm_values[assumed_constant],
                 color=ASSUMED_CONSTANT_COLOUR,
-                linewidth=2,
+                linewidth=GLOBAL_MEAN_EXTENSION_LINE_WIDTH,
+                zorder=GLOBAL_MEAN_EXTENSION_ZORDERS["stretches"],
                 # The pair shares one legend, which is built on the left half
                 label="Assumed constant" if i < 1 else None,
             )
@@ -2273,7 +2488,8 @@ def plot_global_mean_extension(  # noqa: PLR0913
                 gm_years[fitted],
                 gm_values[fitted],
                 color=FIT_PERIOD_COLOUR,
-                linewidth=2,
+                linewidth=GLOBAL_MEAN_EXTENSION_LINE_WIDTH,
+                zorder=GLOBAL_MEAN_EXTENSION_ZORDERS["stretches"],
                 label="Fit period" if i < 1 else None,
             )
 
@@ -2291,11 +2507,11 @@ def plot_global_mean_extension(  # noqa: PLR0913
                 np.array([pre_industrial_year])[mask],
                 np.array([pre_industrial_value])[mask],
                 marker="*",
-                markersize=9,
+                markersize=5,
                 linestyle="none",
                 color=PRE_INDUSTRIAL_COLOUR,
                 label="Pre-industrial value" if i < 1 else None,
-                zorder=5,
+                zorder=GLOBAL_MEAN_EXTENSION_ZORDERS["pre-industrial"],
             )
 
     add_break_lines_and_setup(
@@ -2305,7 +2521,9 @@ def plot_global_mean_extension(  # noqa: PLR0913
         split_year,
         gm_da["year"].max(),
         gm_da.attrs["units"],
-        legend_loc=legend_loc,
+    )
+    add_legend_beside_broken_panel(
+        ax_left, ax_right, *ax_left.get_legend_handles_labels()
     )
     if pre_industrial is not None:
         # The pre-industrial value is usually the lowest thing on the panel,
@@ -2388,7 +2606,7 @@ def plot_extension_pieces(  # noqa: PLR0913
             hue="source",
             palette=source_sequence_palette(pieces),
             ax=ax,
-            s=25,
+            s=4,
             edgecolor=None,
             alpha=0.7,
         )
@@ -2437,7 +2655,8 @@ def plot_pc_timeseries_regression(  # noqa: PLR0913
         y=pc_values,
         label="raw data",
         marker="x",
-        s=30,
+        s=6,
+        linewidths=0.6,
         color=REGRESSION_COLOURS["raw data"],
         alpha=0.7,
     )
@@ -2464,7 +2683,9 @@ def plot_pc_timeseries_regression(  # noqa: PLR0913
     ax.set_ylim(ylim)
 
     ax.set_xlabel(f"{timeseries_name} [{x_unit}]", fontsize="small")
-    ax.set_ylabel(f"PC{eof} [{pc_units}]", fontsize="small")
+    # Units only, like the other panels: the panel's title says which PC it is,
+    # and a longer label is taller than the panel it labels
+    ax.set_ylabel(f"[{pc_units}]", fontsize="small")
     ax.tick_params(labelsize="small")
 
     add_compact_legend(ax, loc="best")
@@ -2478,7 +2699,6 @@ def plot_pcs_extended(  # noqa: PLR0913
     split_year: int = 1950,
     # Should be numpy array of int, anyway
     pieces: dict[int, dict[str, list[int]]] | None = None,
-    legend_loc: str = "upper left",
     max_ticks_per_half: int | None = None,
 ) -> None:
     """
@@ -2505,21 +2725,27 @@ def plot_pcs_extended(  # noqa: PLR0913
         pcs_df["source"], categories=sources, ordered=True
     )
 
+    palette = extension_source_palette(sources)
+    eofs = sorted(int(eof) for eof in pcs_df["eof"].unique())
+    # Named here rather than left to seaborn, so the legend can be built
+    # from the same markers the points are drawn with
+    markers = dict(zip(eofs, EXTENDED_PC_MARKERS))
+
     masks = split_masks_at_year(pcs_df["year"], split_year)
     for ax, mask in zip((ax_left, ax_right), masks):
         sns.scatterplot(
             pcs_df[mask],
             x="year",
             y="value",
-            # hue="eof",
-            # style="source",
             style="eof",
+            markers=markers,
             hue="source",
-            palette=extension_source_palette(sources),
+            palette=palette,
             ax=ax,
-            s=25,
+            s=4,
             edgecolor=None,
             alpha=0.7,
+            legend=False,
         )
 
     auto_set_split_axis_y_limits([ax_left, ax_right], pcs_df["value"])
@@ -2530,29 +2756,41 @@ def plot_pcs_extended(  # noqa: PLR0913
         split_year,
         pcs_da["year"].max(),
         pcs_da.attrs["units"],
-        legend_loc=legend_loc,
         max_ticks_per_half=max_ticks_per_half,
     )
 
-    legend = ax_left.get_legend()
-    if legend is None:
-        raise AssertionError
+    # One column, with no titles, beside the panel rather than on it:
+    # the extension fills the panel, so there is no corner of it
+    # a legend could sit in without covering some of it.
+    # The sources are told apart by colour, the EOFs by marker,
+    # and each entry says which it is, so the titles would add nothing.
+    handles = [
+        matplotlib.lines.Line2D(
+            [], [], linestyle="none", marker="o", markersize=2.5, color=palette[source]
+        )
+        for source in sources
+    ]
+    labels = list(sources)
+    # The marker only means something if there is more than one EOF
+    if len(eofs) > 1:
+        handles.extend(
+            matplotlib.lines.Line2D(
+                [],
+                [],
+                linestyle="none",
+                marker=markers[eof],
+                markersize=2.5,
+                color=LEGEND_MARKER_COLOUR,
+            )
+            for eof in eofs
+        )
+        labels.extend(f"EOF {eof}" for eof in eofs)
 
-    handles = legend.legend_handles
-    labels = [text.get_text() for text in legend.get_texts()]
-    # Add fake handles and legends for other EOFs so 2 col splits as we want.
-    # Counted from the panel's sources rather than from the left half's, which
-    # need not carry all of them.
-    for _ in range(len(sources) - len(pcs_df["eof"].unique())):
-        handles.append(matplotlib.lines.Line2D([], [], color="none", label=""))
-        labels.append("")
+    add_legend_beside_broken_panel(ax_left, ax_right, handles, labels)
 
-    title = legend.get_title().get_text()
 
-    add_compact_legend(
-        ax_left, handles=handles, labels=labels, title=title, ncols=2, loc=legend_loc
-    )
-    ax_left.get_legend().get_title().set_fontsize("x-small")
+EXTENDED_PC_MARKERS = ("o", "X", "s", "^")
+"""Marker for each EOF's principal component, in order, in the extension panels"""
 
 
 def plot_flying_carpet(

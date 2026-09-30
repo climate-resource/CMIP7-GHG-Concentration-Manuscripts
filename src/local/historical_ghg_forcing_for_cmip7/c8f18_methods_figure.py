@@ -33,6 +33,7 @@ from local.historical_ghg_forcing_for_cmip7.layout import (
     create_figure,
     label_panels,
     lay_out_figure,
+    manuscript_style,
 )
 from local.historical_ghg_forcing_for_cmip7.plotting import (
     BROKEN_SPLIT,
@@ -78,9 +79,9 @@ SH_LAT = -45.0
 """Latitude which stands for the southern hemisphere in the hemispheric means"""
 
 TITLES = {
-    "gm-ext": "Extended global-mean",
-    "lat-grad-pc-ext": "Extended lat. gradient PC",
-    "lat-grad-eof": "Lat. gradient EOF",
+    "gm-ext": "Extended\nglobal-mean",
+    "lat-grad-pc-ext": "Extended\nlat. gradient PC",
+    "lat-grad-eof": "Lat. gradient\nEOF",
 }
 """Title of each panel"""
 
@@ -89,9 +90,9 @@ ROWS = (
         panels=(
             Panel("gm-ext", width=1.5, broken=True, broken_split=BROKEN_SPLIT),
             Panel("lat-grad-pc-ext", width=1.5, broken=True, broken_split=BROKEN_SPLIT),
-            Panel("lat-grad-eof"),
+            Panel("lat-grad-eof", width=0.8),
         ),
-        height=2.3,
+        height=1.0,
     ),
 )
 """Layout of the figure's panels, top to bottom
@@ -197,6 +198,7 @@ def get_latitudinal_gradient_pc(bundle_dir: Path) -> xr.DataArray:
     return res
 
 
+@manuscript_style
 def generate_c8f18_methods_figure(
     outfile: Path,
     bundle_dir: Path,

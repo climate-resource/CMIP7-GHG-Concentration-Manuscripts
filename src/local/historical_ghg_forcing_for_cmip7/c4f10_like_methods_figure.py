@@ -41,6 +41,7 @@ from local.historical_ghg_forcing_for_cmip7.layout import (
     create_figure,
     label_panels,
     lay_out_figure,
+    manuscript_style,
 )
 from local.historical_ghg_forcing_for_cmip7.plotting import (
     BROKEN_SPLIT,
@@ -86,9 +87,9 @@ so the reader can see the line was flat before the data starts.
 
 TITLES = {
     "inputs": f"Inputs: {DROSTE_LABEL}",
-    "lat-grad-eof": "Assumed lat. gradient",
-    "lat-grad-pc": "Derived lat. gradient PC",
-    "gm": "Derived global-mean",
+    "lat-grad-eof": "Assumed\nlat. gradient",
+    "lat-grad-pc": "Derived\nlat. gradient PC",
+    "gm": "Derived\nglobal-mean",
     "gm-ext": "Extended global-mean",
     "lat-grad-pc-ext": "Extended lat. gradient PC",
 }
@@ -97,7 +98,7 @@ TITLES = {
 ROWS = (
     Row(
         panels=(Panel("inputs"),),
-        height=2.5,
+        height=0.8,
     ),
     Row(
         panels=(
@@ -105,14 +106,14 @@ ROWS = (
             Panel("lat-grad-pc"),
             Panel("gm"),
         ),
-        height=2.3,
+        height=0.95,
     ),
     Row(
         panels=(
             Panel("gm-ext", broken=True, broken_split=BROKEN_SPLIT),
             Panel("lat-grad-pc-ext", broken=True, broken_split=BROKEN_SPLIT),
         ),
-        height=2.3,
+        height=0.95,
     ),
 )
 """Layout of the figure's panels, top to bottom
@@ -224,6 +225,7 @@ def get_extension_pieces(
     }
 
 
+@manuscript_style
 def generate_c4f10_like_methods_figure(
     gas: str,
     outfile: Path,

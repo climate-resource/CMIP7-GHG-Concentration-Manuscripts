@@ -97,6 +97,14 @@ class ComparisonTimeseries:
     linestyle: str = "-"
     """Line style to draw a global-mean dataset in"""
 
+    alpha: float = 1.0
+    """
+    How opaque to draw a spatial dataset's points
+
+    For datasets with so many points that, drawn solid,
+    they hide what is drawn underneath them.
+    """
+
     region: str = "Global"
     """
     Region a spatial mean dataset covers
@@ -494,6 +502,14 @@ The spreadsheet has no locations in it, so they are written out here.
 Each site gets its own marker, because colour is taken by latitude.
 """
 
+CH4_SUPPLEMENT_ATMOSPHERIC_SITES = ("ML",)
+"""The sites in the CH4 ice core supplementary data which are not ice cores
+
+These are a handful of recent atmospheric measurements,
+so they are drawn solid rather than see-through like the ice cores,
+see [ICE_CORE_ALPHA][].
+"""
+
 
 def ensure_file_downloaded(
     url: str, out_file: Path, headers: dict[str, str] | None = None
@@ -528,6 +544,14 @@ def ensure_file_downloaded(
         out_file.write_bytes(response.read())
 
     return out_file
+
+
+ICE_CORE_ALPHA = 0.3
+"""How opaque to draw the CH4 ice core records' points
+
+There are hundreds of them before the industrial era,
+and drawn solid they cover our output (and CMIP6's) completely.
+"""
 
 
 def get_ch4_ice_core_comparisons(
@@ -576,6 +600,9 @@ def get_ch4_ice_core_comparisons(
                 data=site_df.reset_index(drop=True),
                 units="ppb",
                 marker=marker,
+                alpha=(
+                    1.0 if site in CH4_SUPPLEMENT_ATMOSPHERIC_SITES else ICE_CORE_ALPHA
+                ),
             )
         )
 

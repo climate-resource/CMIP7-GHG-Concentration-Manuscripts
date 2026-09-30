@@ -31,6 +31,11 @@ methods_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods.
 co2_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/co2_methods.pdf"
 ch4_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/ch4_methods.pdf"
 n2o_methods_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/n2o_methods.pdf"
+# The panels which show the working behind each methods figure,
+# destined for an appendix
+co2_methods_appendix_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/co2_methods_appendix.pdf"
+ch4_methods_appendix_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/ch4_methods_appendix.pdf"
+n2o_methods_appendix_figure_file="${repo_root}/figures/historical-ghg-forcing-for-cmip7/n2o_methods_appendix.pdf"
 # Every gas processed like CFC-12. These all share one figure,
 # so this is the list of gases to draw it for, not a list of figures.
 # It has to match local.historical_ghg_forcing_for_cmip7.CFC12_LIKE_GASES;
@@ -47,9 +52,13 @@ cfc12_like_gases=(
 )
 
 cfc12_like_methods_figure_files=()
+cfc12_like_methods_appendix_figure_files=()
 for cfc12_like_gas in "${cfc12_like_gases[@]}"; do
     cfc12_like_methods_figure_files+=(
         "${cfc12_like_gas}=${repo_root}/figures/historical-ghg-forcing-for-cmip7/${cfc12_like_gas}_methods.pdf"
+    )
+    cfc12_like_methods_appendix_figure_files+=(
+        "${cfc12_like_gas}=${repo_root}/figures/historical-ghg-forcing-for-cmip7/${cfc12_like_gas}_methods_appendix.pdf"
     )
 done
 
@@ -126,6 +135,9 @@ cfc12_like_args=()
 for cfc12_like_methods_figure_file in ${cfc12_like_methods_figure_files[@]+"${cfc12_like_methods_figure_files[@]}"}; do
     cfc12_like_args+=(--cfc12-like-methods-figure-file "${cfc12_like_methods_figure_file}")
 done
+for cfc12_like_methods_appendix_figure_file in ${cfc12_like_methods_appendix_figure_files[@]+"${cfc12_like_methods_appendix_figure_files[@]}"}; do
+    cfc12_like_args+=(--cfc12-like-methods-appendix-figure-file "${cfc12_like_methods_appendix_figure_file}")
+done
 
 c4f10_like_args=()
 for c4f10_like_methods_figure_file in ${c4f10_like_methods_figure_files[@]+"${c4f10_like_methods_figure_files[@]}"}; do
@@ -141,6 +153,9 @@ uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-input
     --co2-methods-figure-file "${co2_methods_figure_file}" \
     --ch4-methods-figure-file "${ch4_methods_figure_file}" \
     --n2o-methods-figure-file "${n2o_methods_figure_file}" \
+    --co2-methods-appendix-figure-file "${co2_methods_appendix_figure_file}" \
+    --ch4-methods-appendix-figure-file "${ch4_methods_appendix_figure_file}" \
+    --n2o-methods-appendix-figure-file "${n2o_methods_appendix_figure_file}" \
     --c8f18-methods-figure-file "${c8f18_methods_figure_file}" \
     --cfc12-like-obs-network-sources-list-file "${cfc12_like_obs_network_sources_list_file}" \
     --cfc12-like-per-gas-table-file "${cfc12_like_per_gas_table_file}" \

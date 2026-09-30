@@ -5,6 +5,14 @@ The pieces this figure shares with the N2O methods figure
 live in [local.historical_ghg_forcing_for_cmip7.plotting][].
 What is here is the data this figure loads,
 the panels it has and how they are laid out.
+
+Each gas has two methods figures.
+The main one follows the method from the observations to the extended components.
+The appendix one holds the panels which show the working along the way:
+the interpolation at its best and worst, how much variance each EOF explains,
+the principal components the observations give
+and the regressions their extension leans on.
+Both are drawn by the one function, because they are drawn from the same data.
 """
 # Differences from ch4
 # - seasonality has PCs
@@ -18,7 +26,6 @@ from pathlib import Path
 
 import cartopy.crs as ccrs
 import matplotlib.axes
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -40,13 +47,14 @@ from local.historical_ghg_forcing_for_cmip7.layout import (
     Panel,
     Row,
     create_figure,
-    label_panels,
-    lay_out_figure,
+    manuscript_style,
+    merge_axes,
+    save_figure,
 )
 from local.historical_ghg_forcing_for_cmip7.plotting import (
     BROKEN_SPLIT,
-    LAT_BIN_BOUNDS,
     LATITUDE_COLOUR_MAP,
+    LATITUDE_KEY,
     LATITUDE_NORMALISATION,
     MAP_ASPECT,
     add_colour_bar,
@@ -54,6 +62,7 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     add_network_group,
     compact_existing_legend,
     eof_palette,
+    get_beside_legend_kwargs,
     get_decimal_year,
     get_interpolated_input_coverage_info,
     ghg,
@@ -157,105 +166,128 @@ Both come out of the one notebook, so both are fetched from one re-run.
 TITLES = {
     "timeseries": "Observation network values",
     "counts": "Obs. counts",
-    "locations": "Obs. locations",
-    "interpolated-most": "Interpolation: most inputs",
-    "interpolated-least": "Interpolation: fewest inputs",
+    # The empty last line is where the map's legend goes,
+    # see plot_station_locations
+    "locations": "Obs. locations\n",
     "gm": "Obs. global-mean",
     "seasonality": "Obs. seasonality",
-    "seasonality-variance": "Seasonality change EOFs variance explained",
-    "seasonality-eof": "Obs. seasonality change EOF",
-    "seasonality-pc": "Obs. seasonality change PC",
-    "lat-grad-variance": "Lat. gradient EOFs variance explained",
-    "lat-grad-eof": "Obs. lat. gradient EOFs",
-    "lat-grad-pc": "Obs. lat. gradient PCs",
     "gm-ext": "Extended global-mean",
-    "seasonality-pc-composite": "Seasonality PC0 against composite",  # might need to put a new line in this title # noqa: E501
-    "seasonality-pc-ext": "Extended seasonality PC",
-    "lat-grad-pc-emms": "Lat. gradient PC0 against geological emissions",
+    "seasonality-eof": "Obs. seasonality change EOF",
+    "seasonality-pc-ext": "Extended seasonality change PC",
+    "lat-grad-eof": "Obs. lat. gradient EOFs",
     "lat-grad-pc-ext": "Extended lat. gradient PCs",
 }
-"""Title of each panel"""
+"""Title of each panel of the main figure"""
 
 ROWS = (
     Row(
-        panels=(
-            Panel("timeseries", width=2.0, colour_bar=True),
-            Panel("counts", colour_bar=True),
-        ),
-        height=3.6,
+        panels=(Panel("timeseries", colour_bar=True),),
+        height=0.95,
     ),
     Row(
-        panels=tuple(
-            Panel(name, aspect=MAP_ASPECT, projection=ccrs.PlateCarree())
-            for name in ("locations", "interpolated-most", "interpolated-least")
+        panels=(
+            Panel("counts", colour_bar=True),
+            Panel("locations", aspect=MAP_ASPECT, projection=ccrs.PlateCarree()),
         ),
+        height=0.75,
     ),
-    # The global-mean, and its extension beside it
     Row(
         panels=(
             Panel("gm"),
             Panel("seasonality"),
-            Panel("gm-ext", width=2.0, broken=True, broken_split=BROKEN_SPLIT),
+            Panel("lat-grad-eof"),
         ),
-        height=2.3,
+        height=0.75,
     ),
-    # The seasonality change, the whole way through
     Row(
         panels=(
-            Panel("seasonality-variance", width=0.8),
             Panel("seasonality-eof"),
-            Panel("seasonality-pc"),
-            Panel("seasonality-pc-composite"),
             Panel(
                 "seasonality-pc-ext",
-                width=1.2,
+                width=1.6,
                 broken=True,
                 broken_split=BROKEN_SPLIT,
             ),
         ),
-        height=2.3,
+        height=0.75,
     ),
-    # The latitudinal gradient, the whole way through,
-    # in the same order, so the two are read against each other
     Row(
         panels=(
-            Panel("lat-grad-variance", width=0.8),
-            Panel("lat-grad-eof"),
-            Panel("lat-grad-pc"),
-            Panel("lat-grad-pc-emms"),
-            Panel(
-                "lat-grad-pc-ext",
-                width=1.2,
-                broken=True,
-                broken_split=BROKEN_SPLIT,
-            ),
+            Panel("gm-ext", broken=True, broken_split=BROKEN_SPLIT),
+            Panel("lat-grad-pc-ext", broken=True, broken_split=BROKEN_SPLIT),
         ),
-        height=2.3,
+        height=0.8,
     ),
 )
-"""Layout of the figure's panels, top to bottom
+"""Layout of the main figure's panels, top to bottom
 
 The rows follow the steps of the method,
 so the panels are labelled in reading order.
 
-- The observational network: what was measured and when.
-- The maps: where it was measured and how we interpolate between measurements.
-  Every map is in the same row: a map's shape is fixed,
-  so its row's height follows from how many maps share the row's width,
-  and with all of them together we only pay for that once.
-- The global-mean and the seasonality, and the global-mean extended back in time.
-- The seasonality change, the whole way through: how much of it each EOF
-  explains, the EOFs themselves, their principal components, the regression
-  the extension leans on, and the principal components extended back in time.
-- The latitudinal gradient, the whole way through, in the same order.
-  CO2 is the only gas whose seasonality changes over time, so it is the only
-  one with two components decomposed this way. Giving them a row each, laid
-  out the same, is what lets the reader carry what they learnt from one
-  straight across to the other.
+- The observational network: what was measured and when,
+  across the whole width of the figure, because it is the figure's starting point
+  and has the most in it.
+- How many observations go into each bin, and where they were taken.
+- What the observations give for each component:
+  the global-mean, the seasonality and the latitudinal gradient's EOFs.
+- The seasonality change: its EOF and its principal component,
+  extended back in time.
+  CO2 is the only gas whose seasonality changes over time,
+  so this row is the only thing this figure has which the others do not.
+- The global-mean and the latitudinal gradient's principal components,
+  extended back in time, which is where the method ends up.
+  The latitudinal gradient goes on the right,
+  so its legend (which sits beside it) has the edge of the figure to itself.
 
 Each row is laid out independently of the others,
 see [local.historical_ghg_forcing_for_cmip7.layout][],
 so rows need not have the same number of panels.
+"""
+
+APPENDIX_TITLES = {
+    "interpolated-most": "Interpolation: most inputs",
+    "interpolated-least": "Interpolation: fewest inputs",
+    "seasonality-variance": "Seasonality change EOF\nvariance explained",
+    "seasonality-pc": "Obs. seasonality change PC",
+    "seasonality-pc-composite": "Seasonality change PC0\nvs. composite",
+    "lat-grad-variance": "Lat. gradient EOF\nvariance explained",
+    "lat-grad-pc": "Obs. lat. gradient PCs",
+    # Which emissions is on the panel's horizontal axis
+    "lat-grad-pc-emms": "Lat. gradient PC0\nvs. emissions",
+}
+"""Title of each panel of the appendix figure"""
+
+APPENDIX_ROWS = (
+    Row(
+        panels=tuple(
+            Panel(name, aspect=MAP_ASPECT, projection=ccrs.PlateCarree())
+            for name in ("interpolated-most", "interpolated-least")
+        ),
+    ),
+    Row(
+        panels=(
+            Panel("seasonality-variance"),
+            Panel("seasonality-pc"),
+            Panel("seasonality-pc-composite"),
+        ),
+        height=0.85,
+    ),
+    Row(
+        panels=(
+            Panel("lat-grad-variance"),
+            Panel("lat-grad-pc"),
+            Panel("lat-grad-pc-emms"),
+        ),
+        height=0.85,
+    ),
+)
+"""Layout of the appendix figure's panels, top to bottom
+
+- The interpolation, with the most and the fewest inputs.
+- The seasonality change: how much of it each EOF explains,
+  the principal component the observations give,
+  and the regression its extension leans on.
+- The latitudinal gradient, in the same order.
 """
 
 
@@ -655,29 +687,36 @@ def plot_seasonality_change_from_obs_network(
         c=pdf["lat"],
         cmap=LATITUDE_COLOUR_MAP,
         norm=LATITUDE_NORMALISATION,
-        s=30.0,
+        s=5.0,
         linewidths=0.0,
     )
     axes["eof"].set_ylabel(f"[{sc_eof.attrs['units']}]", fontsize="small")
     axes["eof"].set_xlabel("month", fontsize="small")
     axes["eof"].set_xticks(np.arange(1, 12 + 1, 3))
     axes["eof"].tick_params(labelsize="small")
-    add_latitude_legend(axes["eof"], pdf["lat"].unique(), loc="best")
+    # Beside the panel rather than on it: the points fill most of the panel,
+    # so there is nowhere on it the legend would not cover some of them
+    add_latitude_legend(axes["eof"], **get_beside_legend_kwargs(axes["eof"]))
 
 
+@manuscript_style
 def generate_co2_methods_figure(  # noqa: PLR0915
     outfile: Path,
+    appendix_outfile: Path,
     bundle_dir: Path,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
     force_rerun: bool = False,
-) -> Path:
+) -> tuple[Path, Path]:
     """
     Generate the co2 methods figure
 
     Parameters
     ----------
     outfile
-        File in which to write the figure
+        File in which to write the main figure
+
+    appendix_outfile
+        File in which to write the appendix figure
 
     bundle_dir
         Directory in which to keep the original run's bundle
@@ -686,16 +725,16 @@ def generate_co2_methods_figure(  # noqa: PLR0915
         The original run's `notebooks-executed` directory
 
     force_rerun
-        Re-generate the figure, even if the output file already exists
+        Re-generate the figures, even if the output files already exist
 
     Returns
     -------
     :
-        `outfile`
+        `outfile` and `appendix_outfile`
     """
-    if outfile.exists() and not force_rerun:
-        logger.info(f"Using existing {outfile}")
-        return outfile
+    if outfile.exists() and appendix_outfile.exists() and not force_rerun:
+        logger.info(f"Using existing {outfile} and {appendix_outfile}")
+        return outfile, appendix_outfile
 
     all_data_with_bins = add_network_group(
         get_co2_all_data_with_bins(
@@ -705,7 +744,10 @@ def generate_co2_methods_figure(  # noqa: PLR0915
         )
     )
 
-    fig, axes = create_figure(ROWS)
+    fig, main_axes = create_figure(ROWS)
+    appendix_fig, appendix_axes = create_figure(APPENDIX_ROWS)
+    # Everything below draws each panel into whichever figure it is in
+    axes = merge_axes(main_axes, appendix_axes)
 
     timeseries_scatter = plot_station_timeseries(all_data_with_bins, axes["timeseries"])
     plot_station_locations(all_data_with_bins, axes["locations"])
@@ -716,7 +758,7 @@ def generate_co2_methods_figure(  # noqa: PLR0915
         timeseries_scatter,
         cax=axes["timeseries-colour-bar"],
         label=r"latitude [$^{\circ}$N]",
-        ticks=LAT_BIN_BOUNDS[::2],
+        ticks=LATITUDE_KEY,
     )
     # The points are drawn see-through so they don't hide each other,
     # but the colour bar should show the colours at full strength
@@ -726,7 +768,7 @@ def generate_co2_methods_figure(  # noqa: PLR0915
         fig,
         counts_mesh,
         cax=axes["counts-colour-bar"],
-        label="Number of input data points",
+        label="Number of input\ndata points",
         ticks=np.arange(1, int(counts_mesh.norm.vmax) + 1),
     )
 
@@ -888,6 +930,7 @@ def generate_co2_methods_figure(  # noqa: PLR0915
     plot_pc_timeseries_regression(
         seasonality_change_from_obs_network,
         co2_seasonality_change_composite,
+        # Over two lines, so it is no wider than the panel above it
         timeseries_name=label_name("Temperature - co2 concentration\ncomposite"),
         regression_info=regression_info_seasonality_change,
         ax=axes["seasonality-pc-composite"],
@@ -921,7 +964,7 @@ def generate_co2_methods_figure(  # noqa: PLR0915
                 "Simple extrapolation": seasonality_change_pc_constant_years,
             },
         },
-        # This panel now shares its row with four others,
+        # The panel's halves are narrow,
         # which is not enough room for matplotlib's choice of year labels.
         max_ticks_per_half=3,
     )
@@ -929,7 +972,8 @@ def generate_co2_methods_figure(  # noqa: PLR0915
     plot_pc_timeseries_regression(
         lat_gradient_from_obs_network,
         primap_regression_data,
-        timeseries_name=label_name("co2 emissions of geological origin"),
+        # Over two lines, so it is no wider than the panel above it
+        timeseries_name=label_name("co2 emissions of\ngeological origin"),
         regression_info=regression_info,
         ax=axes["lat-grad-pc-emms"],
         x_unit="GtC / yr",
@@ -967,18 +1011,18 @@ def generate_co2_methods_figure(  # noqa: PLR0915
                 "Simple extrapolation": pc1_constant_years,
             },
         },
-        # This panel now shares its row with four others,
+        # The panel's halves are narrow,
         # which is not enough room for matplotlib's choice of year labels.
         max_ticks_per_half=3,
     )
 
-    label_panels(ROWS, axes, TITLES)
-    # Last, because it needs to know how much room everything takes up
-    lay_out_figure(fig, axes, ROWS)
-
-    outfile.parent.mkdir(exist_ok=True, parents=True)
-    logger.info(f"Writing {outfile}")
-    fig.savefig(outfile)
-    plt.close(fig)
-
-    return outfile
+    return (
+        save_figure(fig, main_axes, ROWS, TITLES, outfile),
+        save_figure(
+            appendix_fig,
+            appendix_axes,
+            APPENDIX_ROWS,
+            APPENDIX_TITLES,
+            appendix_outfile,
+        ),
+    )

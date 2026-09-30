@@ -63,12 +63,15 @@ from local.historical_ghg_forcing_for_cmip7.comparison_data import (
     get_uci_ch4_comparison,
 )
 from local.historical_ghg_forcing_for_cmip7.layout import (
+    LEGEND_FONT_SIZE,
+    TITLE_FONT_SIZE,
     LayoutSettings,
     Panel,
     Row,
     create_figure,
     get_panel_axes_names,
     lay_out_figure,
+    manuscript_style,
 )
 from local.historical_ghg_forcing_for_cmip7.n2o_methods_figure import (
     get_n2o_all_data_with_bins,
@@ -77,6 +80,7 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     LAT_BIN_BOUNDS,
     LAT_BIN_CENTRES,
     LATITUDE_COLOUR_MAP,
+    LATITUDE_KEY,
     LATITUDE_NORMALISATION,
     LEGEND_MARKER_COLOUR,
     NETWORK_GROUP_COLUMN,
@@ -86,9 +90,9 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     add_colour_bar,
     add_compact_legend,
     add_network_group,
-    clear_ticks_near_break,
     get_decimal_year,
     get_only_data_variable,
+    get_ticks_with_ends,
     label_name,
     latitude_colour,
     plot_flying_carpet,
@@ -127,7 +131,7 @@ so their seasonal cycle can be read.
 MONTHLY_SEGMENT_SHARES = (0.6, 0.4)
 """Share of the monthly panel's width each piece of the time axis gets"""
 
-SEGMENT_GAP = 0.5
+SEGMENT_GAP = 0.38
 """Gap between the pieces of a broken time axis, in inches
 
 Each piece has its own vertical scale, hence its own tick labels,
@@ -151,13 +155,13 @@ That piece covers only a few years, so the individual measurements
 are far enough apart to be read, which is worth drawing them solidly enough for.
 """
 
-CMIP7_LINE_WIDTH = 3.0
+CMIP7_LINE_WIDTH = 1.4
 """Width of the lines which show our output
 
 Twice the width of everything else's lines, so our output stands out.
 """
 
-OTHER_LINE_WIDTH = 1.5
+OTHER_LINE_WIDTH = 0.7
 """Width of every other line"""
 
 SHOW_OUTPUT_AT_COMPARISON_LATITUDES = False
@@ -168,10 +172,10 @@ but with more than a couple of sites the lines are too hard to read
 (and to explain), so it is off for now.
 """
 
-CONTEXT_MARKER_SIZE = 6.0
+CONTEXT_MARKER_SIZE = 1.5
 """Marker size to draw the observational network with"""
 
-COMPARISON_MARKER_SIZE = 30.0
+COMPARISON_MARKER_SIZE = 8.0
 """Marker size to draw spatial comparison datasets with
 
 Much bigger than the observational network's markers, and outlined,
@@ -228,8 +232,12 @@ Balanced by eye: the CMIP forcings always have six entries,
 the other groups vary by gas.
 """
 
-LEGEND_LATITUDES = LAT_BIN_BOUNDS[::-2]
-"""Latitudes to show in the legend's latitude entries, north first"""
+LEGEND_LATITUDES = LATITUDE_KEY
+"""Latitudes to show in the legend's latitude entries, north first
+
+The same ones the methods figures label, see
+[local.historical_ghg_forcing_for_cmip7.plotting.LATITUDE_KEY][].
+"""
 
 LEGEND_PANEL = "legend"
 """Name of the panel which holds the figure's legend"""
@@ -244,16 +252,20 @@ ROWS = (
                 colour_bar=True,
                 colour_bar_height=0.6,
             ),
+            Panel(LEGEND_PANEL, width=1.0),
+        ),
+        height=1.05,
+    ),
+    Row(
+        panels=(
             Panel(
                 "monthly",
-                width=2.2,
                 broken=True,
                 broken_split=MONTHLY_SEGMENT_SHARES,
                 broken_gap=SEGMENT_GAP,
             ),
-            Panel(LEGEND_PANEL, width=1.0),
         ),
-        height=3.0,
+        height=0.9,
     ),
     Row(
         panels=(
@@ -264,7 +276,7 @@ ROWS = (
                 broken_gap=SEGMENT_GAP,
             ),
         ),
-        height=3.2,
+        height=0.9,
     ),
     Row(
         panels=(
@@ -275,16 +287,19 @@ ROWS = (
                 broken_gap=SEGMENT_GAP,
             ),
         ),
-        height=1.6,
+        height=0.65,
     ),
 )
 """Layout of the figure's panels, top to bottom
 
-- Our output: the native resolution in the top-left,
-  then the monthly means, and a panel to hold the legend
+- Our output at its native resolution,
+  beside a panel to hold the legend
   for the monthly and yearly panels, which draw the same things the same way.
   The legend also says which colour stands for which latitude,
   so there is no latitude colour bar.
+  The legend is too big to share its row with anything wider
+  than the native resolution panel at the width the figure is printed at.
+- The monthly means.
 - The yearly global-mean.
 - The yearly global-mean's difference from CMIP6,
   directly under the yearly global-mean and on the same time axis.
@@ -479,7 +494,7 @@ def add_legend_with_sub_headers(
     ax: matplotlib.axes.Axes,
     legend: LegendCollector,
     title: str,
-    fontsize: str = "x-small",
+    fontsize: str | float = LEGEND_FONT_SIZE,
 ) -> None:
     """
     Add a legend whose entries are grouped under sub-headers
@@ -524,6 +539,11 @@ def add_legend_with_sub_headers(
         loc="center left",
         frameon=False,
         ncols=len(columns),
+        # As narrow as it can be:
+        # it shares its row with the native resolution panel
+        handlelength=1.2,
+        columnspacing=0.8,
+        borderaxespad=0.0,
         title=title,
         alignment="left",
     )
@@ -567,7 +587,7 @@ def add_latitude_entries(
                 [],
                 linestyle="none",
                 marker="o",
-                markersize=5,
+                markersize=3,
                 color=latitude_colour(latitude),
             ),
             group="Latitude",
@@ -640,7 +660,7 @@ def plot_obs_network_context(
                 marker=NETWORK_GROUP_MARKERS[group],
                 color=LEGEND_MARKER_COLOUR,
                 alpha=0.6,
-                markersize=4,
+                markersize=2.5,
             ),
             group="Input data",
         )
@@ -838,7 +858,8 @@ def plot_comparisons(
                     marker=comparison.marker,
                     s=COMPARISON_MARKER_SIZE,
                     edgecolors="k",
-                    linewidths=0.6,
+                    linewidths=0.4,
+                    alpha=comparison.alpha,
                     zorder=ZORDERS["spatial-comparison"],
                 )
 
@@ -859,8 +880,10 @@ def plot_comparisons(
                         else LEGEND_MARKER_COLOUR
                     ),
                     markeredgecolor="k",
-                    markeredgewidth=0.6,
-                    markersize=6,
+                    markeredgewidth=0.4,
+                    markersize=3,
+                    # As the points are drawn, so the legend matches them
+                    alpha=comparison.alpha,
                 ),
                 group=comparison.legend_group,
             )
@@ -945,13 +968,13 @@ def plot_output_at_comparison_latitudes(
             axes,
             segments,
             color=latitude_colour(lat_bin),
-            linewidth=1.0,
+            linewidth=0.7,
             zorder=ZORDERS["output-at-latitude"],
         )
 
     legend.add(
         f"{CMIP7_LABEL} at comparison latitudes",
-        matplotlib.lines.Line2D([], [], color=LEGEND_MARKER_COLOUR, linewidth=1.0),
+        matplotlib.lines.Line2D([], [], color=LEGEND_MARKER_COLOUR, linewidth=0.7),
         group="CMIP forcings",
     )
 
@@ -1055,18 +1078,14 @@ def set_up_segments(  # noqa: PLR0913
         If they do, only the first piece labels it.
 
     max_x_ticks
-        The most tick labels to put on each piece's time axis
+        The most tick labels to put between each piece's ends
     """
     for i, (ax, segment) in enumerate(zip(axes, segments)):
         ax.set_xlim(segment)
-        ax.xaxis.set_major_locator(
-            matplotlib.ticker.MaxNLocator(nbins=max_x_ticks, integer=True)
-        )
+        ax.set_xticks(get_ticks_with_ends(*segment, max_ticks=max_x_ticks))
+        # Setting the ticks can move the limits
+        ax.set_xlim(segment)
         ax.tick_params(labelsize="small")
-        if i < len(axes) - 1:
-            # The next piece starts where this one ends,
-            # so its first tick label says the same thing
-            clear_ticks_near_break(ax, at="right")
 
         if share_y:
             # The pieces are one axis with bits cut out of it,
@@ -1086,7 +1105,7 @@ def set_up_segments(  # noqa: PLR0913
     axes[len(axes) // 2].set_xlabel(xlabel, fontsize="small")
 
 
-def add_break_marks(axes: Sequence[matplotlib.axes.Axes], size: float = 8.0) -> None:
+def add_break_marks(axes: Sequence[matplotlib.axes.Axes], size: float = 4.0) -> None:
     """
     Mark the breaks between the pieces of a broken axis
 
@@ -1106,7 +1125,7 @@ def add_break_marks(axes: Sequence[matplotlib.axes.Axes], size: float = 8.0) -> 
         markersize=size,
         linestyle="none",
         color="k",
-        markeredgewidth=0.8,
+        markeredgewidth=0.6,
         clip_on=False,
     )
     for left, right in itertools.pairwise(axes):
@@ -1161,7 +1180,7 @@ def add_radiative_effect_axis(
         functions=(lambda x: x * per_unit, lambda x: x / per_unit),
     )
     secondary.yaxis.set_major_formatter(get_compact_scalar_formatter())
-    secondary.set_ylabel(r"approx. radiative effect [W / m$^2$]", fontsize="small")
+    secondary.set_ylabel("approx. radiative\n" r"effect [W / m$^2$]", fontsize="small")
     secondary.tick_params(labelsize="small")
 
     return secondary
@@ -1379,7 +1398,7 @@ def plot_difference_from_cmip6(
         linewidth=OTHER_LINE_WIDTH,
     )
     for ax in axes:
-        ax.axhline(0.0, color="0.6", linewidth=0.8, zorder=0)
+        ax.axhline(0.0, color="0.6", linewidth=0.5, zorder=0)
 
     # One scale for every piece, so a difference means the same everywhere
     # and the radiative effect axis on the right can speak for all of them
@@ -1428,7 +1447,7 @@ def label_results_panels(
                 if i < 1:
                     title = f"{title} {TITLES[panel.name]}"
 
-                axes[name].set_title(title, loc="left", fontsize="medium")
+                axes[name].set_title(title, loc="left", fontsize=TITLE_FONT_SIZE)
 
     return res
 
@@ -1479,6 +1498,7 @@ def load_output(
     return native_resolution, gm_yearly, gm_monthly, hm_monthly
 
 
+@manuscript_style
 def generate_results_figure(  # noqa: PLR0913
     gas: str,
     outfile: Path,
