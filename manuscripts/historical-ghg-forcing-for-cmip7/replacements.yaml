@@ -14,10 +14,12 @@ C_7F_16: C\textsubscript{7}F\textsubscript{16}
 C_8F_18: C\textsubscript{8}F\textsubscript{18}
 CCl_4: CCl\textsubscript{4}
 CFC-11: CFC\nobreakdash-11
+CFC-11-eq: CFC\nobreakdash-11\nobreakdash-eq
 CFC-113: CFC\nobreakdash-113
 CFC-114: CFC\nobreakdash-114
 CFC-115: CFC\nobreakdash-115
 CFC12: CFC\nobreakdash-12
+CFC12-eq: CFC\nobreakdash-12\nobreakdash-eq
 CH_2Cl_2: CH\textsubscript{2}Cl\textsubscript{2}
 CH_3Br: CH\textsubscript{3}Br
 CH_3CCl_3: CH\textsubscript{3}CCl\textsubscript{3}
@@ -31,7 +33,9 @@ HCFC-141b: HCFC\nobreakdash-141b
 HCFC-142b: HCFC\nobreakdash-142b
 HCFC-22: HCFC\nobreakdash-22
 HFC-125: HFC\nobreakdash-125
-HFC-134a: HFC\nobreakdash-134a
+HFC134a: HFC\nobreakdash-134a
+HFC134aeq: HFC\nobreakdash-134a-\nobreakdash-eq
+HFC134a-eq: HFC\nobreakdash-134a-\nobreakdash-eq
 HFC-143a: HFC\nobreakdash-143a
 HFC-152a: HFC\nobreakdash-152a
 HFC-227ea: HFC\nobreakdash-227ea

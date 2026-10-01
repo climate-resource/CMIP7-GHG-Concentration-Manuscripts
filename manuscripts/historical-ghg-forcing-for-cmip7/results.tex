@@ -37,7 +37,7 @@ and that the method we have used allows us to reproduce the key spatial and temp
 
 The dataset has changed relatively little from the CMIP6 dataset, despite the completely new implementation of the methods.
 Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 2~ppm, which is approximately 0.02~W/m2 in radiative forcing terms.
-Over the length of the dataset, the maximum deviation is 4~ppm in around year 200 (\textasciitilde{}0.05~ W/m2).
+Over the length of the dataset, the maximum deviation is 4~ppm in around year 200 (\textasciitilde{}0.05~W/m2).
 The changes over the period where we use the observation network, i.e. from 1981 onwards, are approximately zero.
 
 The changes from CMIP6 are driven by how we extend the dataset back in time before the availability of the observation network.
@@ -191,84 +191,97 @@ which are based on an updated assessment by the World Meteorological Organisatio
 \label{fig:results-cfc12}
 \end{figure}
 
-\subsection{Equivalent species}
-\label{ssec:results-equivalent-species}
+\subsection{Equivalence datasets}
+\label{ssec:results-equivalence-datasets}
 
-The equivalent species summarise the changes across the minor greenhouse gases.
-Atmospheric CFC12 equivalent concentrations plateaued through the 2000s and have been declining at an accelerating rate since around 2010 (Figure \ref{fig:results-cfc12eq}),
-following the decline in the ozone-depleting substances they represent.
-In contrast, atmospheric HFC-134a equivalent concentrations continue to rise rapidly,
-roughly quadrupling since 2000 (Figure \ref{fig:results-hfc134aeq}).
+The last datasets we consider are the equivalence datasets, CFC12-eq and HFC134a-eq.
+As described in Section \ref{ssec:methods-equivalent-species},
+CFC12-eq approximates the equivalent effect of all ozone-depleting substances
+while HFC134a-eq approximates the equivalent effect of all other fluorinated gases.
+For species by species comparisons, please see [TODO ref to Appendix section].
 
-The CFC12 equivalent dataset is lower than the CMIP6 dataset by up to 44~ppt (approximately 4\%, \textasciitilde{}0.016~W/m2) in the observational period
-and by approximately 8~ppt (\textasciitilde{}0.003~W/m2) in the pre-industrial period.
-These differences are driven by the radiative efficiencies used to calculate the equivalence,
-rather than by changes in the concentrations of the underlying gases.
-CMIP6 used the radiative efficiencies from the IPCC's Fifth Assessment Report [TODO citation, AR5 WG1 Ch. 8 Appendix 8.A],
-whereas we use those from the Sixth Assessment Report (Section \ref{ssec:methods-equivalent-species}).
-Recalculating the CMIP6 equivalent species from the CMIP6 concentrations of the individual gases
-using the Fifth Assessment Report radiative efficiencies reproduces the published CMIP6 equivalent species exactly (to within 0.001~ppt in every year),
-which confirms that the CMIP6 equivalent species include each gas once and only once.
-If the CMIP6 CFC12 equivalent is instead recalculated using the Sixth Assessment Report radiative efficiencies,
-the difference from our dataset reduces to at most 8~ppt (\textasciitilde{}0.003~W/m2) over the length of the dataset
-and becomes effectively zero in the pre-industrial period.
-For modelling teams who use the equivalent species, the radiative efficiency driven difference is real:
-it brings the forcing from ozone-depleting substances in line with the latest assessment.
+\subsubsection{CFC-12-eq}
+\label{sssec:results-equivalence-datasets-cfc12eq}
 
-The HFC-134a equivalent dataset has changed very little from the CMIP6 dataset.
-Over the length of the dataset, the maximum deviation is 3~ppt in around 1980 (\textasciitilde{}0.0005~W/m2).
-Recalculating the CMIP6 HFC-134a equivalent with the Sixth Assessment Report radiative efficiencies removes the 1~ppt difference in the pre-industrial period,
-leaving a maximum deviation of 3~ppt, driven by the updated concentrations of the individual HFCs.
+CFC12-eq has continued to decline since 2015 at an accelerating rate (Figure \ref{fig:results-cfc12eq}).
+The seasonal cycle and latitudinal gradient is also clear for this equivalence species.
+Our dataset is around 30~ppt lower than the IGCC dataset (\textasciitilde{}0.01~W/m2).
+This is driven by two factors: a) we use radiative efficiencies from the IPCC's Sixth Assessment Report (AR6) [TODO check if this AR6 is already defined and do ref]
+whereas IGCC uses radiative efficiencies from \citet{hodnebrog_2020} [TODO check]
+and b) the IGCC dataset contains gases which we do not include.
+Of these two, the difference in radiative efficiencies is the dominant one,
+contributing approximately 80\% of the difference.
+[TODO notebook which demonstrates this in case we need to explain it or show it to a reviewer,
+put an assertion in the notebook that the split is around 80\% and fail with an assertion error if it isn't that says the latex needs to be updated]
+This is a key takeaway for users of these equivalent species:
+their definition and calculation methodology matters
+and the IGCC products are not calculated in the same way as our CMIP forcing datasets.
+Nonetheless, in approximate radiative forcing terms the difference is less than 0.01~W/m2
+so the distinction may not always be a crucial one to recognise.
 
-The Indicators of Global Climate Change (IGCC) assessment \citep{forster_indicators_2026,smith_forcing_timeseries_2026}
-also reports CFC12 and HFC-134a equivalent concentrations.
-These are not comparable to our equivalent species, because they are based on a different group of gases
-(IGCC's CFC12 equivalent includes eight ozone-depleting substances which are not in our dataset,
-while IGCC's HFC-134a equivalent includes only the HFCs, i.e. none of the PFCs, SF_6, NF_3 or SO_2F_2)
-and different radiative efficiencies \citep[those of][]{hodnebrog_2020}.
-As a result, in 2022 IGCC's CFC12 equivalent is approximately 40~ppt higher than ours
-and IGCC's HFC-134a equivalent is approximately 120~ppt lower than ours (Figures \ref{fig:results-cfc12eq} and \ref{fig:results-hfc134aeq}).
-The CFC12 equivalent difference is driven mostly by the radiative efficiencies rather than by the extra gases.
-Recalculating IGCC's CFC12 equivalent from IGCC's concentrations of the individual gases
-shows that, of the 40~ppt difference in 2022,
-approximately 35~ppt comes from the different radiative efficiencies,
-approximately 6~ppt comes from the extra gases (half of which is CFC-13)
-and the remaining approximately 1~ppt of the opposite sign comes from differences in the concentrations of the gases included in both.
-The radiative efficiencies of \citet{hodnebrog_2020} and the Sixth Assessment Report are almost identical,
-except for CFC-11 and CFC12, whose Sixth Assessment Report radiative efficiencies are approximately 12\% higher
-[TODO check: because the Sixth Assessment Report includes tropospheric adjustments for these two gases].
-As CFC12 is the reference gas for the equivalence,
-its higher radiative efficiency reduces the weight given to every other gas except CFC-11 by approximately 11\%,
-which lowers our CFC12 equivalent relative to IGCC's.
-The largest single contribution is from HCFC-22 (approximately 18~ppt in 2022),
-followed by CFC-113 (approximately 7~ppt) and CCl_4 (approximately 4~ppt).
-We show them to make clear that equivalent species are only meaningful alongside their definition:
-users should not mix equivalent species from different sources.
+The dataset has changed from the CMIP6 dataset.
+Over the length of the dataset, the maximum deviation is 40~ppt from 1995 onwards (\textasciitilde{}0.015~W/m2).
+The changes from CMIP6 are driven by the use of updated radiative efficiencies.
+The CMIP6 dataset was calculated using radiative efficiencies from the IPCC's Fifth Assessment Report [TODO citation, AR5 WG1 Ch. 8 Appendix 8.A]
+whereas we use radiative efficiencies from AR6 (Section \ref{ssec:methods-equivalent-species}).
+If the CMIP6 CFC12-eq is recalculated using AR6 radiative efficiencies,
+the difference from our dataset reduces to below 8~ppt (\textasciitilde{}0.003~W/m2).
+[TODO notebook which shows this and includes assertion so we know if results somehow drift from the latex]
 
 \begin{figure}[tp]
 \includegraphics[width=12cm]{<cfc12eq-results-figure>}
 \caption{
-    CFC12 equivalent forcing dataset and comparison with other datasets.
+    CFC12-eq forcing dataset.
     a) Surface plot of the last ten years of the native resolution dataset.
     b), c) Hemispheric- and global- monthly-mean values from 2000 to 2020 and 2020 onwards respectively.
     d), e), f) Hemispheric- and global- annual-mean values from year 1 to 1750, 1750 to 2000 and 2000 onwards respectively.
-    Note that each panel has its own vertical scale so the features of interest can be seen
-    (but this also makes the differences in the pre-industrial period appear relatively bigger).
-    The equivalent species are calculated from our other outputs, so there is no input data to show for context.
+    Note that each panel has its own vertical scale so the features of interest can be seen.
     In panels d) to f), the IGCC values \citep{forster_indicators_2026,smith_forcing_timeseries_2026} are IGCC's own equivalent species.
     These are based on a different group of gases and different radiative efficiencies to our dataset,
-    so are not comparable to it (see Section \ref{ssec:results-equivalent-species}).
+    so are not directly comparable (see Section \ref{sssec:results-equivalence-datasets-cfc12eq}).
     g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
     The right-hand axis shows the approximate difference in radiative forcing (for details, see Section \ref{ssec:results-radiative-forcing-comparisons}).
 }
 \label{fig:results-cfc12eq}
 \end{figure}
 
+\subsubsection{HFC-134a-eq}
+\label{sssec:results-equivalence-datasets-hfc134aeq}
+
+HFC-134a-eq has continued to rise at an accelerating rate (Figure \ref{fig:results-hfc134aeq}).
+The latitudinal gradient is notable for this equivalence species while there is almost no seasonal cycle.
+Our dataset is around 150~ppt higher than the IGCC dataset (\textasciitilde{}0.04~W/m2).
+Like for CFC12-eq, this is driven by two factors: a) we use radiative efficiencies from the IPCC's Sixth Assessment Report (AR6) [TODO check if this AR6 is already defined and do ref]
+whereas IGCC uses radiative efficiencies from \citet{hodnebrog_2020} [TODO check]
+and b) the IGCC dataset excludes gases which we include.
+Of these two, the IGCC's exclusion of any gas which is not an HFC
+(e.g. PFCs, SF_6, NF_3) is the dominant one,
+contributing approximately [TODO update 80\%] of the difference.
+[TODO notebook which demonstrates this in case we need to explain it or show it to a reviewer,
+put an assertion in the notebook that the split is around [X\%] and fail with an assertion error if it isn't that says the latex needs to be updated]
+As for CFC12-eq, the key takeaway is that
+their definition and calculation methodology for this equivalent species matters
+and the IGCC products are not calculated in the same way as our CMIP forcing datasets.
+Nonetheless, in approximate radiative forcing terms the difference is less than 0.05~W/m2
+so the distinction may not always be a crucial one to recognise.
+
+The dataset has changed from the CMIP6 dataset.
+Over the length of the dataset, the maximum deviation is 2.5~ppt in 1980 (\textasciitilde{}0.0005~W/m2).
+This is driven by updates to the input data used to create the dataset.
+
 \begin{figure}[tp]
 \includegraphics[width=12cm]{<hfc134aeq-results-figure>}
 \caption{
-    HFC-134a equivalent forcing dataset and comparison with other datasets.
-    Panels as in Figure \ref{fig:results-cfc12eq}.
+    HFC-134a-eq equivalent forcing dataset.
+    a) Surface plot of the last ten years of the native resolution dataset.
+    b), c) Hemispheric- and global- monthly-mean values from 2000 to 2020 and 2020 onwards respectively.
+    d), e), f) Hemispheric- and global- annual-mean values from year 1 to 1750, 1750 to 2000 and 2000 onwards respectively.
+    Note that each panel has its own vertical scale so the features of interest can be seen.
+    In panels d) to f), the IGCC values \citep{forster_indicators_2026,smith_forcing_timeseries_2026} are IGCC's own equivalent species.
+    These are based on a different group of gases and different radiative efficiencies to our dataset,
+    so are not directly comparable (see Section \ref{sssec:results-equivalence-datasets-hfc134aeq}).
+    g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
+    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section \ref{ssec:results-radiative-forcing-comparisons}).
 }
 \label{fig:results-hfc134aeq}
 \end{figure}

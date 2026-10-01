@@ -823,6 +823,7 @@ def get_uci_ch4_comparison(deseasonalised: bool) -> ComparisonTimeseries:
     )
 
 
+# TODO: check IGCC processing
 IGCC_RELEASE = "v6.4.0"
 """Release of the Indicators of Global Climate Change (IGCC) forcing timeseries
 
