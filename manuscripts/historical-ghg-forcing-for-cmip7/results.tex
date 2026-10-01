@@ -66,6 +66,57 @@ and a \textasciitilde{}2~ppm spike in the CMIP6 dataset around 1970.
 \subsection{CH_4}
 \label{ssec:results-ch4}
 
+Over the last 10 years, atmospheric CH4 concentrations have also continued to trend upwards approximately linearly
+with a notable seasonal cycle in both hemispheres and a strong latitudinal gradient (Figure\ref{fig:results-ch4}).
+
+The output dataset is in line with NOAA's global-mean monthly and trend timeseries [TODO citation]
+but is generally approximately 15~ppb higher.
+The output dataset is also in line with UCI's global-mean quarterly timeseries [TODO citation, including note about where we retrieved this from]
+but is generally approximately 20~ppb higher.
+The difference from the UCI dataset is partly explained by the fact that the UCI dataset is not based on a global sampling,
+rather only atmospheric samples between [TODO lat bounds and check this sentence is correct].
+The difference from the NOAA dataset is not completely unexpected.
+While the NOAA dataset is not totally independent of our dataset (NOAA's network is used as an input),
+our dataset also includes the AGAGE [TODO citation] network data as an input
+and we would thus expect differences (and similar differences appear in the CMIP6 dataset too).
+Examining the differences from the UCI and NOAA data suggests
+that our (and the CMIP6 dataset's) seasonal cycle may be slightly too strong.
+This could be addressed by introducing a more sophisticated handling of CH4's seasonal cycle,
+rather than the simple relative seasonality approach we have used. [TODO discuss again in discussion]
+
+The output dataset is also in line with the ice core data from [TODO citation].
+The difference between our global-, annual-mean and the ice core data makes sense
+given methane's strong latitudinal gradient.
+The outlier here is data taken from the Summit [TODO check what this is] sampling site before 1750,
+which reports much higher concentrations than our dataset or the other ice core sites at a similar latitude.
+
+The dataset has changed relatively little from the CMIP6 dataset.
+Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 25~ppb, which is approximately 0.01~W/m2 in radiative forcing terms.
+Over the length of the dataset, the maximum deviation is 20~ppb in around year 100 (\textasciitilde{}0.008~ W/m2).
+The changes over the period where we use the observation network, i.e. from 1984 onwards, are approximately zero.
+
+The method for CH4 has not changed compared to CMIP6.
+Hence we suspect the driver of changes are because of small variations that have arisen as part of the re-implementation.
+how we extend the dataset back in time before the availability of the observation network.
+It could also be due to the use of updated input ice core data, relative to what was available when \citet{meinshausen_historical_2017} was produced.
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{<ch4-results-figure>}
+\caption{
+    CH_4 forcing dataset and comparison with other datasets.
+    a) Surface plot of the last ten years of the native resolution dataset.
+    b), c) Hemispheric- and global- monthly-mean values from 2000 to 2020 and 2020 onwards respectively.
+    d), e), f) Hemispheric- and global- annual-mean values from year 1 to 1750, 1750 to 2000 and 2000 onwards respectively.
+    Note that each panel has its own vertical scale so the features of interest can be seen
+    (but this also makes the differences in the pre-industrial period appear relatively bigger).
+    In panels b) to f), the observation network values used as input data (Figure \ref{fig:methods-ch4}a)
+    are shown for context using faded markers and coloured by latitude.
+    g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
+    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section \ref{ssec:results-radiative-forcing-comparisons}).
+}
+\label{fig:results-ch4}
+\end{figure}
+
 \subsection{N_2O}
 \label{ssec:results-n2o}
 
@@ -92,26 +143,6 @@ and a \textasciitilde{}2~ppm spike in the CMIP6 dataset around 1970.
 \end{figure}
 
 
-\begin{figure}[tp]
-\includegraphics[width=12cm]{<ch4-results-figure>}
-\caption{
-    The CH_4 datasets and their comparison with other datasets
-    (for how they are produced, see Section \ref{ssec:methods-ch4} and Figure \ref{fig:methods-ch4}).
-    a) Three-dimensional surface plot of the last ten years of the output dataset's native resolution.
-    b) Hemispheric- and global- monthly-mean values from 2000 onwards (solid lines)
-    alongside the CMIP6 hemispheric- and global- monthly-means \citep{meinshausen_historical_2017} (dashed lines) and the site records described in c).
-    c) Global-, annual-mean values for the entire output dataset timespan (thick solid line)
-    alongside the CMIP6 global-, annual-mean (dashed line) and ice core and station records compiled by [TODO ref https://www.nature.com/articles/s41586-026-10938-1] (large outlined markers, coloured by the latitude of each site).
-    Thin solid lines show the output dataset's annual-mean values in the latitudinal bins in which those sites lie.
-    Each piece of the time axis has its own vertical scale.
-    In b) and c), the observation network values (Figure \ref{fig:methods-ch4}a)
-    are shown for context (faded markers, coloured by latitude).
-    d) Difference between the output dataset's global-, annual-mean and the CMIP6 global-, annual-mean (CMIP7 - CMIP6).
-    The right-hand axis shows the difference in approximate radiative effect terms,
-    i.e. the concentration difference multiplied by the gas' radiative efficiency \citep{IPCC_2021_WGI_Ch_7_SM}.
-}
-\label{fig:results-ch4}
-\end{figure}
 
 \begin{figure}[tp]
 \includegraphics[width=12cm]{<cfc12-results-figure>}
