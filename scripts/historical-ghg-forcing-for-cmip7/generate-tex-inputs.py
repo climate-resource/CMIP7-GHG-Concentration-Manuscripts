@@ -271,12 +271,12 @@ def main(  # noqa: PLR0913
         parse_figure_file(value, C4F10_LIKE_GASES, "the gases processed like C4F10")
         for value in c4f10_like_methods_figure_file or []
     ]
-    # Every gas has a radiative efficiency, so this is the list of gases
-    # (the equivalent species aside, which we don't draw figures for).
+    # Every gas (and equivalent species) has a radiative efficiency,
+    # so this is the list of gases.
     results_figures = [
         parse_figure_file(
             value,
-            tuple(gas for gas in RADIATIVE_EFFICIENCIES if not gas.endswith("eq")),
+            tuple(RADIATIVE_EFFICIENCIES),
             "the gases we produce",
         )
         for value in results_figure_file or []

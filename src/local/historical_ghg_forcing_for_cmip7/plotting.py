@@ -482,6 +482,9 @@ GHG_LABELS = {
     "c6f14": "C$_6$F$_{14}$",
     "c7f16": "C$_7$F$_{16}$",
     "c8f18": "C$_8$F$_{18}$",
+    "cfc11eq": "CFC-11-eq",
+    "cfc12eq": "CFC-12-eq",
+    "hfc134aeq": "HFC-134a-eq",
 }
 """How each gas' name is written when it is shown to a reader
 

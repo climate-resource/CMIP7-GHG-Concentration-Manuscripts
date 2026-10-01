@@ -51,6 +51,7 @@ from local.historical_ghg_forcing_for_cmip7.co2_methods_figure import (
     get_co2_all_data_with_bins,
 )
 from local.historical_ghg_forcing_for_cmip7.comparison_data import (
+    IGCC_COLUMNS,
     LATITUDE_COLUMN,
     NOAA_TRENDS_UNITS,
     TIME_COLUMN,
@@ -58,6 +59,7 @@ from local.historical_ghg_forcing_for_cmip7.comparison_data import (
     ComparisonTimeseries,
     get_ch4_ice_core_comparisons,
     get_cmip6_comparisons,
+    get_igcc_comparison,
     get_noaa_comparisons,
     get_radiative_effect_per_unit,
     get_uci_ch4_comparison,
@@ -1676,6 +1678,10 @@ def get_comparisons(
         yearly_other.extend(get_noaa_comparisons(gas, deseasonalised=True))
         monthly_other.extend(get_noaa_comparisons(gas, deseasonalised=False))
 
+    if gas in IGCC_COLUMNS:
+        # Annual-means only, so not in the monthly panel
+        yearly_other.append(get_igcc_comparison(gas))
+
     if gas == "ch4":
         ice_cores = get_ch4_ice_core_comparisons()
         yearly_other.extend(ice_cores)
@@ -1751,7 +1757,9 @@ def get_context(
             "inputs_label": DROSTE_LABEL,
         }
 
-    # C8F18 is taken from CMIP6 whole, so there is nothing to draw behind it
+    # C8F18 is taken from CMIP6 whole
+    # and the equivalent species are calculated from our other outputs,
+    # so there is nothing to draw behind either
     return {}
 
 

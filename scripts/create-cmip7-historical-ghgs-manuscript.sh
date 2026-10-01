@@ -85,6 +85,9 @@ results_gases=(
     "${cfc12_like_gases[@]}"
     "${c4f10_like_gases[@]}"
     c8f18
+    # The equivalent species we compare with CMIP6 in the results.
+    # CFC-11-eq could be added too, it just isn't discussed (yet).
+    cfc12eq hfc134aeq
 )
 
 results_figure_files=()

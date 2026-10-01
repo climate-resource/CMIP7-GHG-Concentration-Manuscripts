@@ -821,3 +821,171 @@ def get_uci_ch4_comparison(deseasonalised: bool) -> ComparisonTimeseries:
         colour=OKABE_ITO["reddish purple"],
         notes=("Seasonal cycle removed by the GCP",) if deseasonalised else (),
     )
+
+
+IGCC_RELEASE = "v6.4.0"
+"""Release of the Indicators of Global Climate Change (IGCC) forcing timeseries
+
+The snapshot used in IGCC 2025 (Forster et al., 2026,
+https://doi.org/10.5194/essd-18-3889-2026), archived at
+https://doi.org/10.5281/zenodo.20498594.
+Later releases (up to v6.4.2 at the time of writing)
+add forcing categories but leave the concentrations unchanged.
+"""
+
+IGCC_CONCENTRATIONS_URL = (
+    "https://raw.githubusercontent.com/ClimateIndicator/forcing-timeseries/"
+    f"{IGCC_RELEASE}/output/ghg_concentrations.csv"
+)
+"""Where IGCC's global-, annual-mean concentrations live"""
+
+IGCC_CONCENTRATIONS_FILE = (
+    DATA_RAW_DIR / "comparison-data" / "igcc" / IGCC_RELEASE / "ghg_concentrations.csv"
+)
+"""Where we keep our copy of IGCC's concentrations
+
+Ignored by git: the release is pinned, so downloading it again
+gives the same numbers.
+"""
+
+IGCC_COLUMNS = {
+    "co2": "CO2",
+    "ch4": "CH4",
+    "n2o": "N2O",
+    "c2f6": "C2F6",
+    "c3f8": "C3F8",
+    "ccl4": "CCl4",
+    "cf4": "CF4",
+    "cfc11": "CFC-11",
+    "cfc113": "CFC-113",
+    "cfc114": "CFC-114",
+    "cfc115": "CFC-115",
+    "cfc12": "CFC-12",
+    "ch2cl2": "CH2Cl2",
+    "ch3br": "CH3Br",
+    "ch3ccl3": "CH3CCl3",
+    "ch3cl": "CH3Cl",
+    "chcl3": "CHCl3",
+    "halon1211": "Halon-1211",
+    "halon1301": "Halon-1301",
+    "halon2402": "Halon-2402",
+    "hcfc141b": "HCFC-141b",
+    "hcfc142b": "HCFC-142b",
+    "hcfc22": "HCFC-22",
+    "hfc125": "HFC-125",
+    "hfc134a": "HFC-134a",
+    "hfc143a": "HFC-143a",
+    "hfc152a": "HFC-152a",
+    "hfc227ea": "HFC-227ea",
+    "hfc23": "HFC-23",
+    "hfc236fa": "HFC-236fa",
+    "hfc245fa": "HFC-245fa",
+    "hfc32": "HFC-32",
+    "hfc365mfc": "HFC-365mfc",
+    "hfc4310mee": "HFC-43-10mee",
+    "nf3": "NF3",
+    "sf6": "SF6",
+    "so2f2": "SO2F2",
+    "cc4f8": "c-C4F8",
+    "c4f10": "n-C4F10",
+    "c5f12": "n-C5F12",
+    # IGCC split C6F14 into its isomers, we only have the one
+    "c6f14": "n-C6F14",
+    "c7f16": "C7F16",
+    "c8f18": "C8F18",
+    # These group different gases to our equivalent species, with different
+    # radiative efficiencies, so they are not like-for-like comparisons.
+    # They are shown anyway, to make clear that the two are not comparable.
+    "cfc12eq": "CFC[CFC-12-eq]",
+    "hfc134aeq": "HFC[HFC-134a-eq]",
+}
+"""Column of IGCC's concentrations file which holds each of our gases
+
+For the equivalent species, the column holds IGCC's equivalent,
+which is not the same thing as ours.
+IGCC's CFC-12 equivalent includes eight more gases than ours
+(CFC-13, CFC-112, CFC-112a, CFC-113a, CFC-114a, HCFC-133a, HCFC-31, HCFC-124),
+its HFC-134a equivalent includes only the HFCs
+(i.e. none of the PFCs, SF6, NF3 or SO2F2),
+and both are calculated with the radiative efficiencies of Hodnebrog et al. (2020)
+rather than those of AR6.
+See `notebooks/01_trace-gas-global-mean.py` in IGCC's repository.
+IGCC has no CFC-11 equivalent.
+"""
+
+
+def get_igcc_units(gas: str) -> str:
+    """
+    Get the units of a gas in IGCC's concentrations file
+
+    The file doesn't say, so this follows IGCC's convention.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    Returns
+    -------
+    :
+        Units of `gas` in IGCC's concentrations file
+    """
+    if gas == "co2":
+        return "ppm"
+
+    if gas in ("ch4", "n2o"):
+        return "ppb"
+
+    return "ppt"
+
+
+def get_igcc_comparison(gas: str) -> ComparisonTimeseries:
+    """
+    Get IGCC's global-, annual-mean record of a gas
+
+    Forster et al. (2026), Indicators of Global Climate Change 2025,
+    https://doi.org/10.5194/essd-18-3889-2026.
+    The record is compiled from NOAA and AGAGE data
+    (and, before those, the AR6 concentrations,
+    which are themselves partly based on the CMIP6 concentrations),
+    so it is not independent of our output or of CMIP6.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest, one of [IGCC_COLUMNS][]
+
+        For an equivalent species, this is IGCC's equivalent,
+        which is defined differently to ours (see [IGCC_COLUMNS][]).
+
+    Returns
+    -------
+    :
+        IGCC's record of `gas`
+    """
+    raw = pd.read_csv(
+        ensure_file_downloaded(IGCC_CONCENTRATIONS_URL, IGCC_CONCENTRATIONS_FILE),
+        index_col="YYYY",
+    )
+    # The file holds 1750, then jumps to 1850.
+    # 1750 is the AR6 pre-industrial reference value rather than part of the record,
+    # and drawn as part of the line it would be joined to 1850 by a straight line
+    # which isn't in the data.
+    first_year = 1850
+    values = raw.loc[raw.index >= first_year, IGCC_COLUMNS[gas]]
+
+    return ComparisonTimeseries(
+        label="IGCC global-mean",
+        data=pd.DataFrame(
+            {
+                # Annual-means, so placed at the middle of the year,
+                # the same way our own output is placed on the time axis
+                TIME_COLUMN: values.index.to_numpy(dtype=float) + 0.5,
+                VALUE_COLUMN: values.to_numpy(dtype=float),
+            }
+        ),
+        units=get_igcc_units(gas),
+        colour=OKABE_ITO["orange"],
+        linestyle="-.",
+        notes=("1750 value (AR6 pre-industrial reference) not shown",),
+    )
