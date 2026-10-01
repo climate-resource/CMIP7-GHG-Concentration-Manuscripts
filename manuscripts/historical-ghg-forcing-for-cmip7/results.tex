@@ -120,29 +120,44 @@ It could also be due to the use of updated input ice core data, relative to what
 \subsection{N_2O}
 \label{ssec:results-n2o}
 
+% ZNTODO: add IGCC timeseries wherever we can get them
+Atmospheric N_2O concentrations continue on their steady upward trend (Figure \ref{fig:results-n2o}).
+The output dataset matches NOAA's global-mean monthly and trend timeseries [TODO citation] to within approximately 0.5~ppb.
+While the NOAA dataset is not totally independent of our dataset (NOAA's network is used as an input)
+(our dataset also includes AGAGE [TODO cite] data),
+the close agreement a) provides confidence that the data processing and statistical modelling we have performed are not introducing artefacts in the outputs,
+b) suggests that the method we have used allows us to reproduce the key spatial and temporal features of atmospheric N_2O concentrations
+and c) that the resulting values are reasonable.
+
+The dataset has changed relatively little from the CMIP6 dataset.
+Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 3~ppb, which is approximately 0.005~W/m2 in radiative forcing terms.
+Over the length of the dataset, the maximum deviation is 10~ppb in around year 900 (\textasciitilde{}0.04~ W/m2).
+The changes over the period where we use the observation network, i.e. from 1989 onwards, are approximately zero.
+
+The changes from CMIP6 are driven by how we extend the dataset back in time before the availability of the observation network.
+Rather than relying on ice cores and performing our own smoothing, as was done in \citet{meinshausen_historical_2017},
+we instead used the smoothed ice core values from [TODO cite Menking et al 2025].
+These datasets produce different results, most notably removing a hump in the CMIP6 dataset between 1750 and 1850.
 
 \begin{figure}[tp]
 \includegraphics[width=12cm]{<n2o-results-figure>}
 \caption{
-    TODOZN: update caption
-    The N_2O datasets and their comparison with other datasets
-    (for how they are produced, see Section \ref{ssec:methods-n2o} and Figure \ref{fig:methods-n2o}).
-    a) Three-dimensional surface plot of the last ten years of the output dataset's native resolution.
-    b) Hemispheric- and global- monthly-mean values from 2000 onwards (solid lines)
-    alongside the CMIP6 hemispheric- and global- monthly-means \citep{meinshausen_historical_2017} (dashed lines).
-    c) Global-, annual-mean values for the entire output dataset timespan (thick solid line)
-    alongside the CMIP6 global-, annual-mean (dashed line).
-    Each piece of the time axis has its own vertical scale.
-    In b) and c), the observation network values (Figure \ref{fig:methods-n2o}a)
-    are shown for context (faded markers, coloured by latitude).
-    d) Difference between the output dataset's global-, annual-mean and the CMIP6 global-, annual-mean (CMIP7 - CMIP6).
-    The right-hand axis shows the difference in approximate radiative effect terms,
-    i.e. the concentration difference multiplied by the gas' radiative efficiency \citep{IPCC_2021_WGI_Ch_7_SM}.
+    N_2O forcing dataset and comparison with other datasets.
+    a) Surface plot of the last ten years of the native resolution dataset.
+    b), c) Hemispheric- and global- monthly-mean values from 2000 to 2020 and 2020 onwards respectively.
+    d), e), f) Hemispheric- and global- annual-mean values from year 1 to 1750, 1750 to 2000 and 2000 onwards respectively.
+    Note that each panel has its own vertical scale so the features of interest can be seen
+    (but this also makes the differences in the pre-industrial period appear relatively bigger).
+    In panels b) to f), the observation network values used as input data (Figure \ref{fig:methods-n2o}a)
+    are shown for context using faded markers and coloured by latitude.
+    g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
+    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section \ref{ssec:results-radiative-forcing-comparisons}).
 }
 \label{fig:results-n2o}
 \end{figure}
 
-
+\subsection{CFC-12 and similarly processed species}
+\label{ssec:results-cfc12-like}
 
 \begin{figure}[tp]
 \includegraphics[width=12cm]{<cfc12-results-figure>}
