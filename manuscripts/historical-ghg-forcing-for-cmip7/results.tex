@@ -1,0 +1,344 @@
+\section{Results}
+
+In this section we discuss the output datasets.
+Here we focus on the values and features of the dataset.
+For people who are interested in how to use the datasets,
+we refer to the dedicated user guide [TODO citation and ref. probably do this as a standalone zenodo doc to start, then can figure out other links/bundles as step 2].
+
+\subsection{Radiative forcing comparisons}
+\label{ssec:results-radiative-forcing-comparisons}
+
+Throughout this section, we provide comparisons between the output CMIP7 datasets and the CMIP6 datasets.
+We provide these comparisons both in units of concentration as well as in units of W/m2.
+It must be noted that the comparisons in units of W/m2 are an approximation.
+To approximately convert from atmospheric concentrations to radiative forcing
+we use linear radiative efficiencies from \citet{IPCC_2021_WGI_Ch_7_SM}.
+This allows us to provide this conversion for all concentrations over all time,
+rather than having to arbitrarily pick a particular point in time as the reference point
+(and therefore forcing radiative forcing differencs for that point in time to be zero).
+This approximation matches or overestimates the true (effective) radiative forcing,
+because true radiative forcing is reduced as each wavelength band saturates as greenhouse gas concentrations increase.
+As a result, the approximate radiative forcing differences shown here are the `worst case' differences i.e. the most conservative choice when considering differences.
+Users, particularly modelling teams, should note that they may see smaller effects than this
+when they use more accurate conversions from concentrations to (effective) radiative forcing
+or apply these concentrations in their own radiative balance calculations.
+
+\subsection{CO_2}
+\label{ssec:results-co2}
+
+Atmospheric CO2 concentrations continue to trend upwards approximately linearly
+with a strong seasonal cycle in the northern hemisphere (Figure \ref{fig:results-co2}).
+The output dataset matches NOAA's global-mean monthly and trend timeseries [TODO citation] to within approximately 1~ppm.
+The output dataset also reproduces the absolute values and seasonal cycle seen in NOAA's Mauna Loa timeseries [TODO citation]
+to within approximately 1~ppm once Maunoa Loa's latitude is taken into account.
+While these datasets are not totally independent of our dataset (NOAA's network is used as an input),
+this provides confidence that the data processing and statistical modelling we have performed are not introducing artefacts in the outputs
+and that the method we have used allows us to reproduce the key spatial and temporal features of the input datasets.
+
+The dataset has changed relatively little from the CMIP6 dataset, despite the completely new implementation of the methods.
+Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 2~ppm, which is approximately 0.02~W/m2 in radiative forcing terms.
+Over the length of the dataset, the maximum deviation is 4~ppm in around year 200 (\textasciitilde{}0.05~W/m2).
+The changes over the period where we use the observation network, i.e. from 1981 onwards, are approximately zero.
+
+The changes from CMIP6 are driven by how we extend the dataset back in time before the availability of the observation network.
+Rather than relying on ice cores and performing our own smoothing, as was done in \citet{meinshausen_historical_2017},
+we instead used the [TODO cite Mauna Loa merged record] and smoothed ice core values from [TODO cite Menking et al 2025].
+These datasets produce different results, most notably removing an \textasciitilde{}2~ppm dip in the CMIP6 dataset around 1940
+and a \textasciitilde{}2~ppm spike in the CMIP6 dataset around 1970.
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{<co2-results-figure>}
+\caption{
+    CO_2 forcing dataset and comparison with other datasets.
+    a) Surface plot of the last ten years of the native resolution dataset.
+    b), c) Hemispheric- and global- monthly-mean values from 2000 to 2020 and 2020 onwards respectively.
+    d), e), f) Hemispheric- and global- annual-mean values from year 1 to 1750, 1750 to 2000 and 2000 onwards respectively.
+    Note that each panel has its own vertical scale so the features of interest can be seen
+    (but this also makes the differences in the pre-industrial period appear relatively bigger).
+    In panels b) to f), the observation network values used as input data (Figure \ref{fig:methods-co2}a)
+    are shown for context using faded markers and coloured by latitude.
+    g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
+    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section \ref{ssec:results-radiative-forcing-comparisons}).
+}
+\label{fig:results-co2}
+\end{figure}
+
+\subsection{CH_4}
+\label{ssec:results-ch4}
+
+Over the last 10 years, atmospheric CH4 concentrations have also continued to trend upwards approximately linearly
+with a notable seasonal cycle in both hemispheres and a strong latitudinal gradient (Figure\ref{fig:results-ch4}).
+
+The output dataset is in line with NOAA's global-mean monthly and trend timeseries [TODO citation]
+but is generally approximately 15~ppb higher.
+The output dataset is also in line with UCI's global-mean quarterly timeseries [TODO citation, including note about where we retrieved this from]
+but is generally approximately 20~ppb higher.
+The difference from the UCI dataset is partly explained by the fact that the UCI dataset is not based on a global sampling,
+rather only atmospheric samples between [TODO lat bounds and check this sentence is correct].
+The difference from the NOAA dataset is not completely unexpected.
+While the NOAA dataset is not totally independent of our dataset (NOAA's network is used as an input),
+our dataset also includes the AGAGE [TODO citation] network data as an input
+and we would thus expect differences (and similar differences appear in the CMIP6 dataset too).
+Examining the differences from the UCI and NOAA data suggests
+that our (and the CMIP6 dataset's) seasonal cycle may be slightly too strong.
+This could be addressed by introducing a more sophisticated handling of CH4's seasonal cycle,
+rather than the simple relative seasonality approach we have used. [TODO discuss again in discussion]
+
+The output dataset is also in line with the ice core data from [TODO citation].
+The difference between our global-, annual-mean and the ice core data makes sense
+given methane's strong latitudinal gradient.
+The outlier here is data taken from the Summit [TODO check what this is] sampling site before 1750,
+which reports much higher concentrations than our dataset or the other ice core sites at a similar latitude.
+
+The dataset has changed relatively little from the CMIP6 dataset.
+Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 25~ppb, which is approximately 0.01~W/m2 in radiative forcing terms.
+Over the length of the dataset, the maximum deviation is 20~ppb in around year 100 (\textasciitilde{}0.008~ W/m2).
+The changes over the period where we use the observation network, i.e. from 1984 onwards, are approximately zero.
+
+The method for CH4 has not changed compared to CMIP6.
+Hence we suspect the driver of changes are because of small variations that have arisen as part of the re-implementation.
+how we extend the dataset back in time before the availability of the observation network.
+It could also be due to the use of updated input ice core data, relative to what was available when \citet{meinshausen_historical_2017} was produced.
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{<ch4-results-figure>}
+\caption{
+    CH_4 forcing dataset and comparison with other datasets.
+    a) Surface plot of the last ten years of the native resolution dataset.
+    b), c) Hemispheric- and global- monthly-mean values from 2000 to 2020 and 2020 onwards respectively.
+    d), e), f) Hemispheric- and global- annual-mean values from year 1 to 1750, 1750 to 2000 and 2000 onwards respectively.
+    Note that each panel has its own vertical scale so the features of interest can be seen
+    (but this also makes the differences in the pre-industrial period appear relatively bigger).
+    In panels b) to f), the observation network values used as input data (Figure \ref{fig:methods-ch4}a)
+    are shown for context using faded markers and coloured by latitude.
+    g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
+    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section \ref{ssec:results-radiative-forcing-comparisons}).
+}
+\label{fig:results-ch4}
+\end{figure}
+
+\subsection{N_2O}
+\label{ssec:results-n2o}
+
+% ZNTODO: add IGCC timeseries wherever we can get them
+Atmospheric N_2O concentrations continue on their steady upward trend (Figure \ref{fig:results-n2o}).
+The output dataset matches NOAA's global-mean monthly and trend timeseries [TODO citation] to within approximately 0.5~ppb.
+While the NOAA dataset is not totally independent of our dataset (NOAA's network is used as an input)
+(our dataset also includes AGAGE [TODO cite] data),
+the close agreement a) provides confidence that the data processing and statistical modelling we have performed are not introducing artefacts in the outputs,
+b) suggests that the method we have used allows us to reproduce the key spatial and temporal features of atmospheric N_2O concentrations
+and c) that the resulting values are reasonable.
+
+The dataset has changed relatively little from the CMIP6 dataset.
+Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 3~ppb, which is approximately 0.005~W/m2 in radiative forcing terms.
+Over the length of the dataset, the maximum deviation is 10~ppb in around year 900 (\textasciitilde{}0.04~ W/m2).
+The changes over the period where we use the observation network, i.e. from 1989 onwards, are approximately zero.
+
+The changes from CMIP6 are driven by how we extend the dataset back in time before the availability of the observation network.
+Rather than relying on ice cores and performing our own smoothing, as was done in \citet{meinshausen_historical_2017},
+we instead used the smoothed ice core values from [TODO cite Menking et al 2025].
+These datasets produce different results, most notably removing a hump in the CMIP6 dataset between 1750 and 1850.
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{<n2o-results-figure>}
+\caption{
+    N_2O forcing dataset and comparison with other datasets.
+    a) Surface plot of the last ten years of the native resolution dataset.
+    b), c) Hemispheric- and global- monthly-mean values from 2000 to 2020 and 2020 onwards respectively.
+    d), e), f) Hemispheric- and global- annual-mean values from year 1 to 1750, 1750 to 2000 and 2000 onwards respectively.
+    Note that each panel has its own vertical scale so the features of interest can be seen
+    (but this also makes the differences in the pre-industrial period appear relatively bigger).
+    In panels b) to f), the observation network values used as input data (Figure \ref{fig:methods-n2o}a)
+    are shown for context using faded markers and coloured by latitude.
+    g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
+    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section \ref{ssec:results-radiative-forcing-comparisons}).
+}
+\label{fig:results-n2o}
+\end{figure}
+
+\subsection{CFC-12 and similarly processed species}
+\label{ssec:results-cfc12-like}
+
+Atmospheric CFC12 concentrations continue to drop at an accelerating rate
+with a clear seasonal cycle (Figure \ref{fig:results-cfc12}).
+The output is a clear middle-ground between the NOAA [TODO citation] and AGAGE [TODO citation] networks,
+which disagree by about 5~ppt.
+The output dataset reproduces the seasonal cycle and latitudinal gradient seen in the input datasets,
+including the weakening, and perhaps even reversing, latitudinal gradient.
+As for CO_2, CH_4 and N_2O,
+these results provide confidence that the data processing and statistical modelling we have performed are not introducing artefacts in the outputs
+and that the method we have used allows us to reproduce the key spatial and temporal features of the input datasets.
+
+The dataset has changed little from the CMIP6 dataset.
+Over the length of the dataset, the maximum deviation is 5~ppt in around 1980 (\textasciitilde{}0.001~ W/m2).
+The changes from CMIP6 are driven by updates to the input datasets,
+which are based on an updated assessment by the World Meteorological Organisation [WMO, cite Daniel et al.].
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{<cfc12-results-figure>}
+\caption{
+    CFC12 forcing dataset and comparison with other datasets.
+    a) Surface plot of the last ten years of the native resolution dataset.
+    b), c) Hemispheric- and global- monthly-mean values from 2000 to 2020 and 2020 onwards respectively.
+    d), e), f) Hemispheric- and global- annual-mean values from year 1 to 1750, 1750 to 2000 and 2000 onwards respectively.
+    Note that each panel has its own vertical scale so the features of interest can be seen
+    (but this also makes the differences in the pre-industrial period appear relatively bigger).
+    In panels b) to f), the observation network values used as input data (Figure \ref{fig:results-cfc12}a)
+    are shown for context using faded markers and coloured by latitude.
+    g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
+    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section \ref{ssec:results-radiative-forcing-comparisons}).
+}
+\label{fig:results-cfc12}
+\end{figure}
+
+\subsection{Equivalence datasets}
+\label{ssec:results-equivalence-datasets}
+
+The last datasets we consider are the equivalence datasets, CFC12-eq and HFC134a-eq.
+As described in Section \ref{ssec:methods-equivalent-species},
+CFC12-eq approximates the equivalent effect of all ozone-depleting substances
+while HFC134a-eq approximates the equivalent effect of all other fluorinated gases.
+For species by species comparisons, please see [TODO ref to Appendix section].
+
+\subsubsection{CFC-12-eq}
+\label{sssec:results-equivalence-datasets-cfc12eq}
+
+CFC12-eq has continued to decline since 2015 at an accelerating rate (Figure \ref{fig:results-cfc12eq}).
+The seasonal cycle and latitudinal gradient is also clear for this equivalence species.
+Our dataset is around 30~ppt lower than the IGCC dataset (\textasciitilde{}0.01~W/m2).
+This is driven by two factors: a) we use radiative efficiencies from the IPCC's Sixth Assessment Report (AR6) [TODO check if this AR6 is already defined and do ref]
+whereas IGCC uses radiative efficiencies from \citet{hodnebrog_2020} [TODO check]
+and b) the IGCC dataset contains gases which we do not include.
+Of these two, the difference in radiative efficiencies is the dominant one,
+contributing approximately 80\% of the difference.
+[TODO notebook which demonstrates this in case we need to explain it or show it to a reviewer,
+put an assertion in the notebook that the split is around 80\% and fail with an assertion error if it isn't that says the latex needs to be updated]
+This is a key takeaway for users of these equivalent species:
+their definition and calculation methodology matters
+and the IGCC products are not calculated in the same way as our CMIP forcing datasets.
+Nonetheless, in approximate radiative forcing terms the difference is less than 0.01~W/m2
+so the distinction may not always be a crucial one to recognise.
+
+The dataset has changed from the CMIP6 dataset.
+Over the length of the dataset, the maximum deviation is 40~ppt from 1995 onwards (\textasciitilde{}0.015~W/m2).
+The changes from CMIP6 are driven by the use of updated radiative efficiencies.
+The CMIP6 dataset was calculated using radiative efficiencies from the IPCC's Fifth Assessment Report [TODO citation, AR5 WG1 Ch. 8 Appendix 8.A]
+whereas we use radiative efficiencies from AR6 (Section \ref{ssec:methods-equivalent-species}).
+If the CMIP6 CFC12-eq is recalculated using AR6 radiative efficiencies,
+the difference from our dataset reduces to below 8~ppt (\textasciitilde{}0.003~W/m2).
+[TODO notebook which shows this and includes assertion so we know if results somehow drift from the latex]
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{<cfc12eq-results-figure>}
+\caption{
+    CFC12-eq forcing dataset.
+    a) Surface plot of the last ten years of the native resolution dataset.
+    b), c) Hemispheric- and global- monthly-mean values from 2000 to 2020 and 2020 onwards respectively.
+    d), e), f) Hemispheric- and global- annual-mean values from year 1 to 1750, 1750 to 2000 and 2000 onwards respectively.
+    Note that each panel has its own vertical scale so the features of interest can be seen.
+    In panels d) to f), the IGCC values \citep{forster_indicators_2026,smith_forcing_timeseries_2026} are IGCC's own equivalent species.
+    These are based on a different group of gases and different radiative efficiencies to our dataset,
+    so are not directly comparable (see Section \ref{sssec:results-equivalence-datasets-cfc12eq}).
+    g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
+    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section \ref{ssec:results-radiative-forcing-comparisons}).
+}
+\label{fig:results-cfc12eq}
+\end{figure}
+
+\subsubsection{HFC-134a-eq}
+\label{sssec:results-equivalence-datasets-hfc134aeq}
+
+HFC-134a-eq has continued to rise at an accelerating rate (Figure \ref{fig:results-hfc134aeq}).
+The latitudinal gradient is notable for this equivalence species while there is almost no seasonal cycle.
+Our dataset is around 150~ppt higher than the IGCC dataset (\textasciitilde{}0.04~W/m2).
+Like for CFC12-eq, this is driven by two factors: a) we use radiative efficiencies from the IPCC's Sixth Assessment Report (AR6) [TODO check if this AR6 is already defined and do ref]
+whereas IGCC uses radiative efficiencies from \citet{hodnebrog_2020} [TODO check]
+and b) the IGCC dataset excludes gases which we include.
+Of these two, the IGCC's exclusion of any gas which is not an HFC
+(e.g. PFCs, SF_6, NF_3) is the dominant one,
+contributing approximately [TODO update 80\%] of the difference.
+[TODO notebook which demonstrates this in case we need to explain it or show it to a reviewer,
+put an assertion in the notebook that the split is around [X\%] and fail with an assertion error if it isn't that says the latex needs to be updated]
+As for CFC12-eq, the key takeaway is that
+their definition and calculation methodology for this equivalent species matters
+and the IGCC products are not calculated in the same way as our CMIP forcing datasets.
+Nonetheless, in approximate radiative forcing terms the difference is less than 0.05~W/m2
+so the distinction may not always be a crucial one to recognise.
+
+The dataset has changed from the CMIP6 dataset.
+Over the length of the dataset, the maximum deviation is 2.5~ppt in 1980 (\textasciitilde{}0.0005~W/m2).
+This is driven by updates to the input data used to create the dataset.
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{<hfc134aeq-results-figure>}
+\caption{
+    HFC-134a-eq equivalent forcing dataset.
+    a) Surface plot of the last ten years of the native resolution dataset.
+    b), c) Hemispheric- and global- monthly-mean values from 2000 to 2020 and 2020 onwards respectively.
+    d), e), f) Hemispheric- and global- annual-mean values from year 1 to 1750, 1750 to 2000 and 2000 onwards respectively.
+    Note that each panel has its own vertical scale so the features of interest can be seen.
+    In panels d) to f), the IGCC values \citep{forster_indicators_2026,smith_forcing_timeseries_2026} are IGCC's own equivalent species.
+    These are based on a different group of gases and different radiative efficiencies to our dataset,
+    so are not directly comparable (see Section \ref{sssec:results-equivalence-datasets-hfc134aeq}).
+    g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
+    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section \ref{ssec:results-radiative-forcing-comparisons}).
+}
+\label{fig:results-hfc134aeq}
+\end{figure}
+
+\clearpage
+
+Link to user guide (publish user guide on zenodo, link to actual dataset on zenodo) as reference for people who want details of how to use, not key results
+
+Note key trends over various groups of gases (single figure with trend over gases, split panels by key gases so comparison with CMIP6 and CMIP5 isn't crazy)
+- included above: Comparison with CMIP6 and CMIP5 datasets
+
+Compare to station data we started with (conclusion should be mostly that we are close in ERF terms, but there are clear areas for improvement or reconsideration)
+- this basically measures a) effect of averaging over networks and b) effect of dropping down to lat. grad. and seasonality then reconstructing
+    - this is a better assessment of our seasonality and lat. gradient than comparing these components to CMIP6
+    - let the CMIP6 comparison just be summarised with maximum deviations at various reporting resolutions, because all such deviations should be small in ERF terms
+- plots for key gases in main, rest in supplementary
+
+Compare to any independent networks we can think of/find
+- ~table like Malte's Table 7~ (don't do this unless asked by reviewers, doesn't make sense because the uncertainties reported by networks are too small (missing infilling uncertainty, which is likely the leading uncertainty given variation across the globe (but would need to check this if we need to make this argument)))
+- plots for key gases in main, rest in supplementary
+- CO2
+    - Mauna Loa (as we don't use that for most of our record)
+    - get co-authors to suggest others...
+- CH4
+    - https://www.nature.com/articles/s41586-026-10938-1 and networks therein
+        - data file link: https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41586-026-10938-1/MediaObjects/41586_2026_10938_MOESM2_ESM.xlsx
+        - has other timeseries in there too: decide ourselves whether we use them or retrieve from source
+    - ask Cape Grim people whether all the sources I've included already include all Cape Grim records, or whether the are independent measurements. For example, those that appeared in the global methane budget.
+    - UCI: Simpson, I. J., Sulbaek Andersen, M. P., Meinardi, S., Bruhwiler, L., Blake, N. J., Helmig, D., Rowland, F. S., and Blake, D. R.: Long-term decline of global atmospheric ethane concentrations and implications for methane, Nature, 488, 490-494, 10.1038/nature11342, 2012
+- N2O
+    - ask Cape Grim people whether all the sources I've included already include all Cape Grim records, or whether the are independent measurements
+- ODSs
+    - get co-authors to suggest...
+- others
+    - get co-authors to suggest...
+
+Add discussion section
+
+Note various issues identified in methods
+
+Note issues for minor gases and lack of new datasets compared to last time, suggest picking a smaller, more clearly supported, set of gases for future to simplify things
+
+Note that we still don't use satellite data: clear area for improvement
+
+Note that we also don't include uncertainties. Note that leading uncertainty is likely not measurement-level,
+rather methodological i.e. the various leaps/assumptions we have to make to go from a sparse observational network to a temporally extended, spatially complete dataset
+
+Note that we could just use AGAGE model-based reanalysis rather than our more crude statistical approach (not sure what the right tradeoff is here: modelling is more physical, but also more prone to going wild)
+
+Notes re extensions for later internal use:
+
+- ingest updated network data
+- calculate new global- annual-means
+- optimise existing latitudinal gradient (and seasonality change for CO_2) to get best fit with interpolated observational network values
+    - avoids the jump of using a different lat. gradient or seasonality over time
+    - also avoids extending PCs using crude regressions
+    - have to use relative seasonality calculation for gases other than CO_2, oh well just one less degree of freedom in the optimisation
+- calculate full grids
+- check no unexpected/spurious jumps
+- process, format etc. then publish

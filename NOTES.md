@@ -1,0 +1,4 @@
+- create the table of differences from the base case
+- fix all headers throughout methods
+- fix intro sections for each sub-section in methods so they're consistent and explain diffs/extra information compared to base case etc.
+- clean up each sub-section in methods so they don't repeat the base case more than is needed
