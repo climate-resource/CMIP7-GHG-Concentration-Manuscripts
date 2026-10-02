@@ -203,20 +203,22 @@ For species by species comparisons, please see [TODO ref to Appendix section].
 \subsubsection{CFC-12-eq}
 \label{sssec:results-equivalence-datasets-cfc12eq}
 
+ZNTODO: double check that we used the correct radiative efficiencies. A halving of radiative efficiency for some gases is suspicious
+
 CFC12-eq has continued to decline since 2015 at an accelerating rate (Figure \ref{fig:results-cfc12eq}).
 The seasonal cycle and latitudinal gradient is also clear for this equivalence species.
-Our dataset is around 30~ppt lower than the IGCC dataset (\textasciitilde{}0.01~W/m2).
+Our dataset is around 40~ppt lower than the IGCC dataset (\textasciitilde{}0.015~W/m2).
 This is driven by two factors: a) we use radiative efficiencies from the IPCC's Sixth Assessment Report (AR6) [TODO check if this AR6 is already defined and do ref]
 whereas IGCC uses radiative efficiencies from \citet{hodnebrog_2020} [TODO check]
 and b) the IGCC dataset contains gases which we do not include.
 Of these two, the difference in radiative efficiencies is the dominant one,
-contributing approximately 80\% of the difference.
+contributing approximately 90\% of the difference.
 [TODO notebook which demonstrates this in case we need to explain it or show it to a reviewer,
 put an assertion in the notebook that the split is around 80\% and fail with an assertion error if it isn't that says the latex needs to be updated]
 This is a key takeaway for users of these equivalent species:
 their definition and calculation methodology matters
 and the IGCC products are not calculated in the same way as our CMIP forcing datasets.
-Nonetheless, in approximate radiative forcing terms the difference is less than 0.01~W/m2
+Nonetheless, in approximate radiative forcing terms the difference is about 0.015~W/m2
 so the distinction may not always be a crucial one to recognise.
 
 The dataset has changed from the CMIP6 dataset.
@@ -250,13 +252,13 @@ the difference from our dataset reduces to below 8~ppt (\textasciitilde{}0.003~W
 
 HFC-134a-eq has continued to rise at an accelerating rate (Figure \ref{fig:results-hfc134aeq}).
 The latitudinal gradient is notable for this equivalence species while there is almost no seasonal cycle.
-Our dataset is around 150~ppt higher than the IGCC dataset (\textasciitilde{}0.04~W/m2).
+Our dataset is around 125~ppt higher than the IGCC dataset (\textasciitilde{}0.02~W/m2).
 Like for CFC12-eq, this is driven by two factors: a) we use radiative efficiencies from the IPCC's Sixth Assessment Report (AR6) [TODO check if this AR6 is already defined and do ref]
 whereas IGCC uses radiative efficiencies from \citet{hodnebrog_2020} [TODO check]
 and b) the IGCC dataset excludes gases which we include.
 Of these two, the IGCC's exclusion of any gas which is not an HFC
 (e.g. PFCs, SF_6, NF_3) is the dominant one,
-contributing approximately [TODO update 80\%] of the difference.
+contributing approximately 90\% of the difference.
 [TODO notebook which demonstrates this in case we need to explain it or show it to a reviewer,
 put an assertion in the notebook that the split is around [X\%] and fail with an assertion error if it isn't that says the latex needs to be updated]
 As for CFC12-eq, the key takeaway is that
@@ -267,7 +269,8 @@ so the distinction may not always be a crucial one to recognise.
 
 The dataset has changed from the CMIP6 dataset.
 Over the length of the dataset, the maximum deviation is 2.5~ppt in 1980 (\textasciitilde{}0.0005~W/m2).
-This is driven by updates to the input data used to create the dataset.
+This is driven by both updates to the input data used to create the dataset
+and the radiative efficiencies used in the calculation of the equivalent concentrations.
 
 \begin{figure}[tp]
 \includegraphics[width=12cm]{<hfc134aeq-results-figure>}
