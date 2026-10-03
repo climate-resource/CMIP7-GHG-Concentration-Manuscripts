@@ -92,17 +92,9 @@ class ValueCheckSpec:
     def bounds_str(self) -> str:
         """The bounds within which the statement holds, as a string"""
         if self.is_boolean:
-            return "must be True"
+            return "True (true/false check)"
 
         return f"[{self.lower:.4g}, {self.upper:.4g}] {self.unit}"
-
-    @property
-    def holds_if_str(self) -> str:
-        """When the statement holds, as a string"""
-        if self.is_boolean:
-            return "if True"
-
-        return f"if in {self.bounds_str}"
 
     @classmethod
     def from_raw(cls, raw: str, file: Path, line: int) -> ValueCheckSpec:
@@ -443,7 +435,7 @@ class ValueCheckReport:
             status = "PASS" if r.passed else "FAIL"
             lines.append(
                 f"- {status} {r.spec.location} {r.spec.tag}: "
-                f"{r.value_str} (holds {r.spec.holds_if_str})"
+                f"actual value {r.value_str}, parsed bounds {r.spec.bounds_str}"
                 + (f". {r.problem}" if r.problem else "")
             )
 
