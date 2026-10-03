@@ -34,13 +34,14 @@ with a strong seasonal cycle in the northern hemisphere (Figure \ref{fig:results
 The output dataset matches NOAA's [TODO cite] global-mean monthly and trend timeseries [TODO citation] to within approximately 1~ppm.
 The output dataset also reproduces the absolute values and seasonal cycle seen in NOAA's Mauna Loa timeseries [TODO citation]
 % value-check: {"tag": "co2-monthly-diff-from-maunoa-loa", "unit": "ppm", "upper": 2, "lower": -2}
-% ZNTODO: fix spelling, Maunoa is a typo
-to within approximately 1~ppm once Maunoa Loa's latitude is taken into account.
-% value-check: {"tag": "co2-diff-from-igcc", "unit": "ppm", "upper": 1, "lower": -1}
-The output dataset also matches IGCC's annual timeseries [TODO citation] to within 1~ppm,
-which is unsurprising given that the IGCC timeseries is also based on NOAA data [TODO check].
-% value-check: {"tag": "co2-monthly-diff-from-maunoa-loa", "unit": "ppm", "upper": 2, "lower": -2}
-to within approximately 1~ppm once Maunoa Loa's latitude is taken into account.
+% TODO: fix this because the difference is actually slightly bigger
+to within approximately 1~ppm once Mauna Loa's latitude is taken into account.
+% value-check: {"tag": "co2-diff-from-igcc", "unit": "ppm", "upper": 3, "lower": -3}
+The output dataset also matches IGCC's annual timeseries [TODO citation] to within 3~ppm,
+% ZNTODO: add check here.
+with the bigger differences coming over the period which the NOAA data does not cover.
+The agreement over the period that the NOAA data covers
+is unsurprising given that the IGCC timeseries is also based on NOAA data [TODO check].
 While these datasets are not totally independent of our dataset (NOAA's network is used as an input),
 this provides confidence that the data processing and statistical modelling we have performed are not introducing artefacts in the outputs
 and that the method we have used allows us to reproduce the key spatial and temporal features of the input datasets.
@@ -49,17 +50,18 @@ The dataset has changed relatively little from the CMIP6 dataset, despite the co
 % value-check: {"tag": "co2-diff-from-cmip6-1850-on", "unit": "ppm", "upper": 2, "lower": -2}
 % value-check: {"tag": "co2-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.025, "lower": 0.015}
 Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 2~ppm, which is approximately 0.02~W/m2 in radiative forcing terms.
-% value-check: {"tag": "co2-diff-from-cmip6-all", "unit": "ppm", "upper": 4, "lower": -4}
+% value-check: {"tag": "co2-diff-from-cmip6-all", "unit": "ppm", "upper": 4.4, "lower": -4.4}
 % value-check: {"tag": "co2-diff-from-cmip6-all-year", "unit": "yr", "upper": 250, "lower": 150}
 % value-check: {"tag": "co2-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.0625, "lower": 0.0375}
-Over the length of the dataset, the maximum deviation is 4~ppm in around year 200 (\textasciitilde{}0.05~W/m2).
+Over the length of the dataset, the maximum deviation is 4.4~ppm in around year 200 (\textasciitilde{}0.05~W/m2).
 % value-check: {"tag": "co2-obs-network-start", "unit": "yr", "upper": 1981, "lower": 1981}
-% value-check: {"tag": "co2-diff-from-cmip6-obs-network", "unit": "ppm", "upper": 0.1, "lower": -0.1}
-The changes over the period where we use the observation network, i.e. from 1981 onwards, are approximately zero.
+% value-check: {"tag": "co2-diff-from-cmip6-obs-network", "unit": "ppm", "upper": 0.5, "lower": -0.5}
+The changes over the period where we use the observation network, i.e. from 1981 onwards, are less than 0.5~ppm.
 
 The changes from CMIP6 are driven by how we extend the dataset back in time before the availability of the observation network.
 Rather than relying on ice cores and performing our own smoothing, as was done in \citet{meinshausen_historical_2017},
 we instead used the [TODO cite Mauna Loa merged record] and smoothed ice core values from [TODO cite Menking et al 2025].
+% ZNTODO: fix this check
 % value-check: {"tag": "co2-diff-from-cmip6-obs-network-1940-dip", "unit": "ppm", "upper": 3.0, "lower": 1.0}
 These datasets produce different results, most notably removing an \textasciitilde{}2~ppm dip in the CMIP6 dataset around 1940
 % value-check: {"tag": "co2-diff-from-cmip6-obs-network-1970-spike", "unit": "ppm", "upper": 3.0, "lower": 1.0}
@@ -92,14 +94,18 @@ Over the last 10 years, atmospheric CH4 concentrations have also continued to tr
 with a notable seasonal cycle in both hemispheres and a strong latitudinal gradient (Figure\ref{fig:results-ch4}).
 
 The output dataset is in line with NOAA's global-mean monthly and trend timeseries [TODO citation]
-% value-check: {"tag": "ch4-monthly-diff-from-noaa", "unit": "ppb", "upper": 25, "lower": 5}
-but is generally approximately 15~ppb higher.
+% value-check: {"tag": "ch4-monthly-diff-from-noaa", "unit": "ppb", "upper": 15, "lower": 5}
+but is generally approximately 10~ppb higher.
 % value-check: {"tag": "ch4-diff-from-igcc", "unit": "ppb", "upper": 25, "lower": 5}
+% ZNTODO: update to consider period not covered by NOAA data properly
 A similar difference is seen from the IGCC's annual timeseries [TODO citation],
-which is unsurprising given that the IGCC timeseries is also based on NOAA data [TODO check].
-% value-check: {"tag": "ch4-monthly-diff-from-uci", "unit": "ppb", "upper": 35, "lower": 10}
+% ZNTODO: add check here.
+with the bigger differences coming over the period which the NOAA data does not cover.
+The agreement over the period that the NOAA data covers
+is unsurprising given that the IGCC timeseries is also based on NOAA data [TODO check].
+% value-check: {"tag": "ch4-monthly-diff-from-uci", "unit": "ppb", "upper": 20, "lower": 10}
 The output dataset is also in line with UCI's global-mean quarterly timeseries [TODO citation, including note about where we retrieved this from]
-but is generally approximately 20~ppb higher.
+but is generally approximately 15~ppb higher.
 The difference from the UCI dataset is partly explained by the fact that the UCI dataset is not based on a global sampling,
 rather only atmospheric samples between [TODO lat bounds and check this sentence is correct].
 The difference from the NOAA (and therefore IGCC) dataset is not completely unexpected.
@@ -122,12 +128,12 @@ The dataset has changed relatively little from the CMIP6 dataset.
 % value-check: {"tag": "ch4-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.0125, "lower": 0.0075}
 Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 25~ppb, which is approximately 0.01~W/m2 in radiative forcing terms.
 % value-check: {"tag": "ch4-diff-from-cmip6-all", "unit": "ppb", "upper": 30, "lower": 10}
-% value-check: {"tag": "ch4-diff-from-cmip6-all-year", "unit": "yr", "upper": 150, "lower": 50}
+% value-check: {"tag": "ch4-diff-from-cmip6-all-year", "unit": "yr", "upper": 1925, "lower": 1915}
 % value-check: {"tag": "ch4-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.01, "lower": 0.006}
-Over the length of the dataset, the maximum deviation is 20~ppb in around year 100 (\textasciitilde{}0.008~ W/m2).
+Over the length of the dataset, the maximum deviation is 20~ppb around 1920 (\textasciitilde{}0.008~ W/m2).
 % value-check: {"tag": "ch4-obs-network-start", "unit": "yr", "upper": 1984, "lower": 1984}
-% value-check: {"tag": "ch4-diff-from-cmip6-obs-network", "unit": "ppb", "upper": 3, "lower": -3}
-The changes over the period where we use the observation network, i.e. from 1984 onwards, are approximately zero.
+% value-check: {"tag": "ch4-diff-from-cmip6-obs-network", "unit": "ppb", "upper": 5, "lower": -5}
+The changes over the period where we use the observation network, i.e. from 1984 onwards, are less than 5~ppb.
 
 The method for CH4 has not changed compared to CMIP6.
 Hence we suspect the driver of changes are because of small variations that have arisen as part of the re-implementation.
@@ -154,14 +160,17 @@ relative to what was available when \citet{meinshausen_historical_2017} was prod
 \subsection{N_2O}
 \label{ssec:results-n2o}
 
-% value-check: {"tag": "n2o-last-10-years-trend", "unit": "ppb/yr", "upper": 1.0, "lower": 0.5}
+% value-check: {"tag": "n2o-last-10-years-trend", "unit": "ppb/yr", "upper": 2.0, "lower": 1.0}
 % value-check: {"tag": "n2o-last-10-years-seasonal-cycle", "unit": "ppb", "upper": 1, "lower": 0}
 Atmospheric N_2O concentrations continue on their steady upward trend (Figure \ref{fig:results-n2o}).
 % value-check: {"tag": "n2o-monthly-diff-from-noaa", "unit": "ppb", "upper": 1, "lower": -1}
 The output dataset matches NOAA's global-mean monthly and trend timeseries [TODO citation] to within approximately 0.5~ppb.
 % value-check: {"tag": "n2o-diff-from-igcc", "unit": "ppb", "upper": 1, "lower": -1}
 A similar difference is seen from the IGCC's annual timeseries [TODO citation],
-which is unsurprising given that the IGCC timeseries is also based on NOAA data [TODO check].
+% ZNTODO: add check here.
+with the bigger differences coming over the period which the NOAA data does not cover.
+The agreement over the period that the NOAA data covers
+is unsurprising given that the IGCC timeseries is also based on NOAA data [TODO check].
 While the NOAA dataset is not totally independent of our dataset (NOAA's network is used as an input)
 (our dataset also includes AGAGE [TODO cite] data),
 the close agreement a) provides confidence that the data processing and statistical modelling we have performed are not introducing artefacts in the outputs,
@@ -206,7 +215,7 @@ These datasets produce different results, most notably removing a hump in the CM
 \subsection{CFC-12 and similarly processed species}
 \label{ssec:results-cfc12-like}
 
-% value-check: {"tag": "cfc12-last-10-years-second-derivative", "unit": "ppt/yr/yr", "upper": 0.2, "lower": 0.05}
+% value-check: {"tag": "cfc12-last-10-years-second-derivative", "unit": "ppt/yr/yr", "upper": -0.05, "lower": -0.20}
 Atmospheric CFC12 concentrations continue to drop at an accelerating rate
 % value-check: {"tag": "cfc12-last-10-years-seasonal-cycle", "unit": "ppt", "upper": 3, "lower": 1.0}
 with a clear seasonal cycle (Figure \ref{fig:results-cfc12}).
@@ -216,7 +225,7 @@ The output is a clear middle-ground between the NOAA [TODO citation] and AGAGE [
 which disagree by about 5~ppt.
 % value-check: {"tag": "daniel-et-al-is-cfc12-global-override"}
 This is driven by the use of [TODO cite Daniel et al. data] as the source of the global-, annual-mean.
-% value-check: {"tag": "cfc12-diff-from-igcc", "unit": "ppt", "upper": 1, "lower": -1}
+% value-check: {"tag": "cfc12-diff-from-igcc", "unit": "ppt", "upper": 1.5, "lower": -1.5}
 The same source is used by the IGCC [TODO check], which explains the close agreement between our dataset
 and IGCC's global-, annual-mean values.
 % value-check: {"tag": "cfc12-input-datasets-weakening-lat-gradient", "unit": "ppt/degree/yr", "upper": 0.005, "lower": 0.001}
@@ -229,8 +238,8 @@ and that the method we have used allows us to reproduce the key spatial and temp
 The dataset has changed little from the CMIP6 dataset.
 % value-check: {"tag": "cfc12-diff-from-cmip6-all", "unit": "ppt", "upper": 6.25, "lower": 3.75}
 % value-check: {"tag": "cfc12-diff-from-cmip6-all-year", "unit": "yr", "upper": 1985, "lower": 1975}
-% value-check: {"tag": "cfc12-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.00125, "lower": 0.00075}
-Over the length of the dataset, the maximum deviation is 5~ppt in around 1980 (\textasciitilde{}0.001~ W/m2).
+% value-check: {"tag": "cfc12-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.002, "lower": 0.001}
+Over the length of the dataset, the maximum deviation is 5~ppt in around 1980 (\textasciitilde{}0.0015~ W/m2).
 The changes from CMIP6 are driven by updates to the input datasets,
 which are based on an updated assessment by the World Meteorological Organisation [WMO, cite Daniel et al.].
 
