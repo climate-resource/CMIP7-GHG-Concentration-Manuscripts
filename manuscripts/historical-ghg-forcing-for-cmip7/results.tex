@@ -46,8 +46,11 @@ and that the method we have used allows us to reproduce the key spatial and temp
 
 The dataset has changed relatively little from the CMIP6 dataset, despite the completely new implementation of the methods.
 % value-check: {"tag": "co2-diff-from-cmip6-1850-on", "unit": "ppm", "upper": 2, "lower": -2}
+% value-check: {"tag": "co2-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.025, "lower": 0.015}
 Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 2~ppm, which is approximately 0.02~W/m2 in radiative forcing terms.
 % value-check: {"tag": "co2-diff-from-cmip6-all", "unit": "ppm", "upper": 4, "lower": -4}
+% value-check: {"tag": "co2-diff-from-cmip6-all-year", "unit": "yr", "upper": 250, "lower": 150}
+% value-check: {"tag": "co2-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.0625, "lower": 0.0375}
 Over the length of the dataset, the maximum deviation is 4~ppm in around year 200 (\textasciitilde{}0.05~W/m2).
 % value-check: {"tag": "co2-obs-network-start", "unit": "yr", "upper": 1981, "lower": 1981}
 % value-check: {"tag": "co2-diff-from-cmip6-obs-network", "unit": "ppm", "upper": 0.1, "lower": -0.1}
@@ -115,8 +118,11 @@ which reports much higher concentrations than our dataset or the other ice core 
 
 The dataset has changed relatively little from the CMIP6 dataset.
 % value-check: {"tag": "ch4-diff-from-cmip6-1850-on", "unit": "ppb", "upper": 35, "lower": 0}
+% value-check: {"tag": "ch4-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.0125, "lower": 0.0075}
 Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 25~ppb, which is approximately 0.01~W/m2 in radiative forcing terms.
 % value-check: {"tag": "ch4-diff-from-cmip6-all", "unit": "ppb", "upper": 30, "lower": 10}
+% value-check: {"tag": "ch4-diff-from-cmip6-all-year", "unit": "yr", "upper": 150, "lower": 50}
+% value-check: {"tag": "ch4-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.01, "lower": 0.006}
 Over the length of the dataset, the maximum deviation is 20~ppb in around year 100 (\textasciitilde{}0.008~ W/m2).
 % value-check: {"tag": "ch4-obs-network-start", "unit": "yr", "upper": 1984, "lower": 1984}
 % value-check: {"tag": "ch4-diff-from-cmip6-obs-network", "unit": "ppb", "upper": 3, "lower": -3}
@@ -162,13 +168,21 @@ b) suggests that the method we have used allows us to reproduce the key spatial 
 and c) that the resulting values are reasonable.
 
 The dataset has changed relatively little from the CMIP6 dataset.
+% value-check: {"tag": "n2o-diff-from-cmip6-1850-on", "unit": "ppb", "upper": 3.75, "lower": 2.25}
+% value-check: {"tag": "n2o-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.00625, "lower": 0.00375}
 Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 3~ppb, which is approximately 0.005~W/m2 in radiative forcing terms.
+% value-check: {"tag": "n2o-diff-from-cmip6-all", "unit": "ppb", "upper": 12.5, "lower": 7.5}
+% value-check: {"tag": "n2o-diff-from-cmip6-all-year", "unit": "yr", "upper": 950, "lower": 850}
+% value-check: {"tag": "n2o-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.05, "lower": 0.03}
 Over the length of the dataset, the maximum deviation is 10~ppb in around year 900 (\textasciitilde{}0.04~ W/m2).
+% value-check: {"tag": "n2o-obs-network-start", "unit": "yr", "upper": 1989, "lower": 1989}
+% value-check: {"tag": "n2o-diff-from-cmip6-obs-network", "unit": "ppb", "upper": 0.5, "lower": -0.5}
 The changes over the period where we use the observation network, i.e. from 1989 onwards, are approximately zero.
 
 The changes from CMIP6 are driven by how we extend the dataset back in time before the availability of the observation network.
 Rather than relying on ice cores and performing our own smoothing, as was done in \citet{meinshausen_historical_2017},
 we instead used the smoothed ice core values from [TODO cite Menking et al 2025].
+% value-check: {"tag": "n2o-diff-from-cmip6-1750-1850-hump", "unit": "ppb", "lower": 0.5}
 These datasets produce different results, most notably removing a hump in the CMIP6 dataset between 1750 and 1850.
 
 \begin{figure}[tp]
@@ -212,6 +226,9 @@ these results provide confidence that the data processing and statistical modell
 and that the method we have used allows us to reproduce the key spatial and temporal features of the input datasets.
 
 The dataset has changed little from the CMIP6 dataset.
+% value-check: {"tag": "cfc12-diff-from-cmip6-all", "unit": "ppt", "upper": 6.25, "lower": 3.75}
+% value-check: {"tag": "cfc12-diff-from-cmip6-all-year", "unit": "yr", "upper": 1985, "lower": 1975}
+% value-check: {"tag": "cfc12-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.00125, "lower": 0.00075}
 Over the length of the dataset, the maximum deviation is 5~ppt in around 1980 (\textasciitilde{}0.001~ W/m2).
 The changes from CMIP6 are driven by updates to the input datasets,
 which are based on an updated assessment by the World Meteorological Organisation [WMO, cite Daniel et al.].
@@ -247,30 +264,38 @@ For species by species comparisons, please see [TODO ref to Appendix section].
 
 ZNTODO: double check that we used the correct radiative efficiencies. A halving of radiative efficiency for some gases is suspicious
 
+% value-check: {"tag": "cfc12eq-last-10-years-trend", "unit": "ppt/yr", "upper": 0}
+% value-check: {"tag": "cfc12eq-last-10-years-second-derivative", "unit": "ppt/yr/yr", "upper": 0}
 CFC12-eq has continued to decline since 2015 at an accelerating rate (Figure \ref{fig:results-cfc12eq}).
 The seasonal cycle and latitudinal gradient is also clear for this equivalence species.
+% value-check: {"tag": "cfc12eq-diff-from-igcc-last-year", "unit": "ppt", "upper": -35, "lower": -45}
+% value-check: {"tag": "cfc12eq-diff-from-igcc-last-year-radiative-effect", "unit": "W/m^2", "upper": 0.02, "lower": 0.01}
 Our dataset is around 40~ppt lower than the IGCC dataset (\textasciitilde{}0.015~W/m2).
 This is driven by two factors: a) we use radiative efficiencies from the IPCC's Sixth Assessment Report (AR6) [TODO check if this AR6 is already defined and do ref]
 whereas IGCC uses radiative efficiencies from \citet{hodnebrog_2020} [TODO check]
 and b) the IGCC dataset contains gases which we do not include.
+% value-check: {"tag": "cfc12eq-diff-from-igcc-radiative-efficiency-share", "unit": "dimensionless", "upper": 0.95, "lower": 0.85}
 Of these two, the difference in radiative efficiencies is the dominant one,
 contributing approximately 90\% of the difference.
-[TODO notebook which demonstrates this in case we need to explain it or show it to a reviewer,
-put an assertion in the notebook that the split is around 80\% and fail with an assertion error if it isn't that says the latex needs to be updated]
 This is a key takeaway for users of these equivalent species:
 their definition and calculation methodology matters
 and the IGCC products are not calculated in the same way as our CMIP forcing datasets.
+% value-check: {"tag": "cfc12eq-diff-from-igcc-max-radiative-effect", "unit": "W/m^2", "upper": 0.02, "lower": 0.01}
 Nonetheless, in approximate radiative forcing terms the difference is about 0.015~W/m2
 so the distinction may not always be a crucial one to recognise.
 
 The dataset has changed from the CMIP6 dataset.
+% value-check: {"tag": "cfc12eq-diff-from-cmip6-1995-on", "unit": "ppt", "upper": 45, "lower": 35}
+% value-check: {"tag": "cfc12eq-diff-from-cmip6-1995-on-radiative-effect", "unit": "W/m^2", "upper": 0.0175, "lower": 0.0125}
 Over the length of the dataset, the maximum deviation is 40~ppt from 1995 onwards (\textasciitilde{}0.015~W/m2).
+% value-check: {"tag": "cfc12eq-diff-from-cmip6-radiative-efficiency-share", "unit": "dimensionless", "lower": 0.5}
 The changes from CMIP6 are driven by the use of updated radiative efficiencies.
 The CMIP6 dataset was calculated using radiative efficiencies from the IPCC's Fifth Assessment Report [TODO citation, AR5 WG1 Ch. 8 Appendix 8.A]
 whereas we use radiative efficiencies from AR6 (Section \ref{ssec:methods-equivalent-species}).
 If the CMIP6 CFC12-eq is recalculated using AR6 radiative efficiencies,
+% value-check: {"tag": "cfc12eq-diff-from-cmip6-recalculated", "unit": "ppt", "upper": 8}
+% value-check: {"tag": "cfc12eq-diff-from-cmip6-recalculated-radiative-effect", "unit": "W/m^2", "upper": 0.0035, "lower": 0.0025}
 the difference from our dataset reduces to below 8~ppt (\textasciitilde{}0.003~W/m2).
-[TODO notebook which shows this and includes assertion so we know if results somehow drift from the latex]
 
 \begin{figure}[tp]
 \includegraphics[width=12cm]{<cfc12eq-results-figure>}
@@ -292,25 +317,33 @@ the difference from our dataset reduces to below 8~ppt (\textasciitilde{}0.003~W
 \subsubsection{HFC-134a-eq}
 \label{sssec:results-equivalence-datasets-hfc134aeq}
 
+% value-check: {"tag": "hfc134aeq-last-10-years-trend", "unit": "ppt/yr", "lower": 0}
+% value-check: {"tag": "hfc134aeq-last-10-years-second-derivative", "unit": "ppt/yr/yr", "lower": 0}
 HFC-134a-eq has continued to rise at an accelerating rate (Figure \ref{fig:results-hfc134aeq}).
 The latitudinal gradient is notable for this equivalence species while there is almost no seasonal cycle.
+% value-check: {"tag": "hfc134aeq-diff-from-igcc-last-year", "unit": "ppt", "upper": 135, "lower": 115}
+% value-check: {"tag": "hfc134aeq-diff-from-igcc-last-year-radiative-effect", "unit": "W/m^2", "upper": 0.025, "lower": 0.015}
 Our dataset is around 125~ppt higher than the IGCC dataset (\textasciitilde{}0.02~W/m2).
 Like for CFC12-eq, this is driven by two factors: a) we use radiative efficiencies from the IPCC's Sixth Assessment Report (AR6) [TODO check if this AR6 is already defined and do ref]
 whereas IGCC uses radiative efficiencies from \citet{hodnebrog_2020} [TODO check]
 and b) the IGCC dataset excludes gases which we include.
+% value-check: {"tag": "hfc134aeq-diff-from-igcc-included-gases-share", "unit": "dimensionless", "upper": 0.95, "lower": 0.85}
 Of these two, the IGCC's exclusion of any gas which is not an HFC
 (e.g. PFCs, SF_6, NF_3) is the dominant one,
 contributing approximately 90\% of the difference.
-[TODO notebook which demonstrates this in case we need to explain it or show it to a reviewer,
-put an assertion in the notebook that the split is around [X\%] and fail with an assertion error if it isn't that says the latex needs to be updated]
 As for CFC12-eq, the key takeaway is that
 their definition and calculation methodology for this equivalent species matters
 and the IGCC products are not calculated in the same way as our CMIP forcing datasets.
+% value-check: {"tag": "hfc134aeq-diff-from-igcc-max-radiative-effect", "unit": "W/m^2", "upper": 0.05}
 Nonetheless, in approximate radiative forcing terms the difference is less than 0.05~W/m2
 so the distinction may not always be a crucial one to recognise.
 
 The dataset has changed from the CMIP6 dataset.
+% value-check: {"tag": "hfc134aeq-diff-from-cmip6-all", "unit": "ppt", "upper": 3, "lower": 2}
+% value-check: {"tag": "hfc134aeq-diff-from-cmip6-all-year", "unit": "yr", "upper": 1985, "lower": 1975}
+% value-check: {"tag": "hfc134aeq-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.0006, "lower": 0.0004}
 Over the length of the dataset, the maximum deviation is 2.5~ppt in 1980 (\textasciitilde{}0.0005~W/m2).
+% value-check: {"tag": "hfc134aeq-diff-from-cmip6-concentration-share", "unit": "dimensionless", "upper": 0.7, "lower": 0.3}
 This is driven by both updates to the input data used to create the dataset
 and the radiative efficiencies used in the calculation of the equivalent concentrations.
 

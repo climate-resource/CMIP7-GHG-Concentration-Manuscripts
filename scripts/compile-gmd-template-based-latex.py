@@ -17,6 +17,9 @@ from typing import Annotated, Any
 import typer
 import yaml
 
+from local.historical_ghg_forcing_for_cmip7.value_checks import VALUE_CHECKS
+from local.value_checks import ValueCheckCollector, run_value_checks
+
 REPO_ROOT = Path(__file__).parents[1]
 
 
@@ -112,11 +115,13 @@ def insert_author_list_and_affiliations(
     return res
 
 
-def insert_file_content_after_tag(in_text: str, filepath: Path, tag: str) -> str:
+def insert_file_content_after_tag(
+    in_text: str, filepath: Path, tag: str, collector: ValueCheckCollector
+) -> str:
     """
     Insert file content after a specific tag
     """
-    to_insert = f"{get_source_file_str(filepath)}\n{filepath.read_text()}"
+    to_insert = f"{get_source_file_str(filepath)}\n{collector.read_text(filepath)}"
 
     res = insert_after_tag(in_text, to_insert, tag=tag)
 
@@ -291,7 +296,9 @@ def check_no_unreplaced_figure_tags(text: str) -> None:
         raise AssertionError(msg)
 
 
-def inline_table_files(in_text: str, table_files: list[str]) -> str:
+def inline_table_files(
+    in_text: str, table_files: list[str], collector: ValueCheckCollector
+) -> str:
     """
     Inline table files in place of their tags
 
@@ -308,6 +315,9 @@ def inline_table_files(in_text: str, table_files: list[str]) -> str:
     table_files
         Values passed to `--table-file`, as `tag-to-replace=full-path`
 
+    collector
+        Collector of value check comments, used to read the files
+
     Returns
     -------
     :
@@ -321,7 +331,7 @@ def inline_table_files(in_text: str, table_files: list[str]) -> str:
             raise AssertionError(msg)
 
         res = res.replace(
-            tag, f"{get_source_file_str(full_path)}\n{full_path.read_text()}"
+            tag, f"{get_source_file_str(full_path)}\n{collector.read_text(full_path)}"
         )
 
     return res
@@ -545,10 +555,22 @@ def main(  # noqa: PLR0913, PLR0915
             file_okay=True,
         ),
     ] = None,
+    check_values: Annotated[
+        bool,
+        typer.Option(
+            help=(
+                "Check the values behind the `% value-check: {...}` comments "
+                "in the latex before compiling. "
+                "Fails if any statement no longer holds "
+                "or if any comment has no check."
+            )
+        ),
+    ] = True,
 ) -> None:
     """
     Compile the PDF
     """
+    collector = ValueCheckCollector(root=REPO_ROOT)
     if tex_inputs_manifest is not None:
         manifest_figure_files, manifest_table_files = load_tex_inputs_manifest(
             tex_inputs_manifest
@@ -572,15 +594,21 @@ def main(  # noqa: PLR0913, PLR0915
         res, metadata_values, metadata_file=metadata
     )
 
-    res = insert_file_content_after_tag(res, abstract, tag="<abstract-start>")
-    res = insert_file_content_after_tag(res, introduction, tag="<introduction-start>")
+    res = insert_file_content_after_tag(
+        res, abstract, tag="<abstract-start>", collector=collector
+    )
+    res = insert_file_content_after_tag(
+        res, introduction, tag="<introduction-start>", collector=collector
+    )
 
     body_text = "\n\n".join(
-        f"{get_source_file_str(sf)}\n{sf.read_text()}" for sf in section
+        f"{get_source_file_str(sf)}\n{collector.read_text(sf)}" for sf in section
     )
     res = insert_after_tag(res, body_text, tag="<body-start>")
 
-    res = insert_file_content_after_tag(res, conclusion, tag="<conclusions-start>")
+    res = insert_file_content_after_tag(
+        res, conclusion, tag="<conclusions-start>", collector=collector
+    )
 
     for start_code, source_file in (
         ("codedataavailability", code_and_data_availability),
@@ -588,7 +616,7 @@ def main(  # noqa: PLR0913, PLR0915
         ("competinginterests", competing_interests),
     ):
         to_replace = rf"\{start_code}{{TEXT}}"
-        source_text = source_file.read_text()
+        source_text = collector.read_text(source_file)
         replacement_text = f"{get_source_file_str(source_file)}\n{source_text}"
         replacement = to_replace.replace(
             "TEXT", f"\n{textwrap.indent(replacement_text, prefix=4 * ' ')}\n"
@@ -596,16 +624,18 @@ def main(  # noqa: PLR0913, PLR0915
         res = res.replace(to_replace, replacement)
 
     res = insert_file_content_after_tag(
-        res, acknowledgements, tag="<acknowledgements-start>"
+        res, acknowledgements, tag="<acknowledgements-start>", collector=collector
     )
 
     # Before any other replacements,
     # so the tables get the same replacements as the rest of the text.
     if table_file is not None:
-        res = inline_table_files(res, table_file)
+        res = inline_table_files(res, table_file, collector=collector)
 
     res = inline_table_files(
-        res, [v for v in manifest_table_files if tag_is_used(v, res)]
+        res,
+        [v for v in manifest_table_files if tag_is_used(v, res)],
+        collector=collector,
     )
 
     latex_dir = build_dir / "latex"
@@ -646,12 +676,19 @@ def main(  # noqa: PLR0913, PLR0915
     shutil.copy2(references_bib_file, latex_main.parent / references_bib_file.name)
 
     for extra_file in extra if extra is not None else []:
-        raw = extra_file.read_text()
+        raw = collector.read_text(extra_file)
         mapped = apply_replacements(raw, replacements_map)
         (latex_dir / extra_file.name).write_text(mapped)
 
     for auxiliary_file in auxiliary if auxiliary is not None else []:
         shutil.copy2(auxiliary_file, latex_main.parent / auxiliary_file.name)
+
+    # Last thing before building, so every file has been read
+    # (and its value check comments collected)
+    if check_values:
+        value_check_report = run_value_checks(collector.specs, VALUE_CHECKS)
+        print(value_check_report.to_str())
+        value_check_report.raise_if_not_ok()
 
     subprocess.run(
         ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", latex_main.name],
@@ -686,4 +723,7 @@ def main(  # noqa: PLR0913, PLR0915
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    # Without locals, so a failed value check's message isn't buried
+    app = typer.Typer(pretty_exceptions_show_locals=False)
+    app.command()(main)
+    app()
