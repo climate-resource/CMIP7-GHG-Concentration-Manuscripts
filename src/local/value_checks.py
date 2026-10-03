@@ -468,13 +468,16 @@ class ValueCheckReport:
                 "(update the latex, including the value check comment, "
                 "to match the data):"
             )
-            msg.extend(
-                f"- {r.spec.location} {r.spec.tag}: "
-                f"{r.check.description} is {r.value_str}, "
-                f"the statement holds {r.spec.holds_if_str}"
-                + (f". Problem: {r.problem}" if r.problem else "")
-                for r in self.failed
-            )
+            for r in self.failed:
+                msg.extend(
+                    [
+                        f"- {r.spec.location}",
+                        f"    % value-check: {r.spec.raw}",
+                        f"    holds {r.spec.holds_if_str}",
+                        f"    {r.check.description} is {r.value_str}"
+                        + (f". Problem: {r.problem}" if r.problem else ""),
+                    ]
+                )
 
         if self.unchecked:
             msg.append(
