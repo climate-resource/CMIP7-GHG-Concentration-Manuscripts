@@ -89,12 +89,20 @@ class ValueCheckSpec:
         return self.unit is None
 
     @property
+    def bounds_str(self) -> str:
+        """The bounds within which the statement holds, as a string"""
+        if self.is_boolean:
+            return "must be True"
+
+        return f"[{self.lower:.4g}, {self.upper:.4g}] {self.unit}"
+
+    @property
     def holds_if_str(self) -> str:
         """When the statement holds, as a string"""
         if self.is_boolean:
             return "if True"
 
-        return f"if in [{self.lower:.4g}, {self.upper:.4g}] {self.unit}"
+        return f"if in {self.bounds_str}"
 
     @classmethod
     def from_raw(cls, raw: str, file: Path, line: int) -> ValueCheckSpec:
@@ -473,7 +481,8 @@ class ValueCheckReport:
                     [
                         f"- {r.spec.location}",
                         f"    % value-check: {r.spec.raw}",
-                        f"    holds {r.spec.holds_if_str}",
+                        f"    Parsed bounds: {r.spec.bounds_str}",
+                        f"    Actual value: {r.value_str}",
                         f"    {r.check.description} is {r.value_str}"
                         + (f". Problem: {r.problem}" if r.problem else ""),
                     ]
