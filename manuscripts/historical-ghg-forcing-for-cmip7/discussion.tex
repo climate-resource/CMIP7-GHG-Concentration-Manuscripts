@@ -1,9 +1,57 @@
+\section{Discussion}
 
-Note issues for minor gases and lack of new datasets compared to last time, suggest picking a smaller, more clearly supported, set of gases for future to simplify things
+% ZNTODO: add discussion points from methods
 
-Note that we still don't use satellite data: clear area for improvement
+While the output dataset shows differences from its inputs, other observation networks and the CMIP6 dataset
+% ZNTODO: check values of claim here
+that are small in the context of earth system modelling (less than 0.03~W/m2),
+there are nonetheless a number of areas for potential improvement.
 
-Note that we also don't include uncertainties. Note that leading uncertainty is likely not measurement-level,
-rather methodological i.e. the various leaps/assumptions we have to make to go from a sparse observational network to a temporally extended, spatially complete dataset
+The first is a lack of new input datasets compared to CMIP6.
+This is particularly the case for a number of gases with small radiative forcings.
+We suggest picking a smaller, more clearly supported set of gases
+or aligning more closely with the gases inclued an exercise like IGCC,
+which has committed to annual updates.
 
-Note that we could just use AGAGE model-based reanalysis rather than our more crude statistical approach (not sure what the right tradeoff is here: modelling is more physical, but also more prone to going wild)
+The second is that we do not use satellite data as an input dataset.
+While satellite information is only available for a limited number of gases and a limited time period,
+it provides a completely different set of spatiotemporal characteristics than the ground-based network.
+The inclusion of information from satellite data could therefore enhance the available input dataset
+and improve the output data product,
+particularly by reducing the extent to which we have to rely on spatial interpolation that comes with high uncertainty.
+
+The third is that we do not report uncertainties in the output dataset.
+While we do not expect these uncertainties to be large in the context of earth system modelling,
+they would help contextualise the dataset in a quantified way that is currently lacking.
+For example, the inclusion of uncertainties would likely make clear that the leading uncertainty
+is not related to measurement error.
+Instead, it is methodological: the current method requires a number of modelling steps/assumptions
+to go from the sparse observation networks we have available to a spatially and temporally complete dataset
+over the entire earth's surface from year 1 to approximately present-day.
+This error will also vary strongly over time:
+far less modelling is required to make a spatially complete estimate in the period where we have observation networks to use
+than is required when our only estimates come from one or two ice core records.
+In our experience, this understanding is generally missing
+and quantified uncertainties would help a) inform users of the origin of uncertainty,
+b) encourage observation networks to engage more directly with the question of how to reduce the error that is introduced between raw observations and an estimate of spatially and temporally complete values
+and c) identify where effort should be directed to reduce uncertainty in greenhouse gas forcing datasets.
+
+The fourth is that we, rather than the observation networks, are producing the forcings.
+As we understand it, to date, the observation networks and earth system modelling communities have had relatively little direct contact.
+Instead, teams that produce forcings (like us) have acted as `bridges' between the two:
+translating observation products into the spatiotemporally complete datasets required for use as model inputs (i.e. forcings).
+While we are expert in acting as this bridge,
+we are not experts in either the observations or earth system modelling.
+There is scope for investigating whether better outcomes can be achieved if the observation and earth system modelling communities work more closely.
+As a readily available example, the AGAGE community already produces a model-based reanalysis
+that provides global coverage with spatial and temporal variation.
+Arguably, this makes our analysis redundant and the earth system modelling community should use this AGAGE product (or a variation thereof) directly.
+To date, no investigation has been done into the pros and cons of such a switch
+and the resources to do such an investigation have not been available,
+but our suspicion is that we would get a better result if the AGAGE team produced a product that matched ESM needs directly,
+rather than having us act as an intermediary.
+Such an investigation would have to consider a number of questions,
+for example whether modelling-based or statistical approaches to infilling are better for the intended use cases,
+given that modelling-based approaches are generally more grounded in physics, but are also more prone to producing extreme results.
+
+% ZNTODO: vertical resolution

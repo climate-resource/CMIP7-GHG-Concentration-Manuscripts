@@ -104,6 +104,7 @@ cfc12_like_per_gas_table_file="${repo_root}/tables/historical-ghg-forcing-for-cm
 
 # methods_subfile="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods-detail.tex"
 results_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/results.tex"
+discussion_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/discussion.tex"
 code_and_data_availability_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/code-and-data-availability.tex"
 author_contribution_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/author-contribution.tex"
 competing_interests_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/competing-interests.tex"
@@ -178,6 +179,7 @@ uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --section "${output_requirements_file}" \
     --section "${methods_file}" \
     --section "${results_file}" \
+    --section "${discussion_file}" \
     --tex-inputs-manifest "${tex_inputs_manifest_file}" \
     --conclusion "${conclusion_file}" \
     --code-and-data-availability "${code_and_data_availability_file}" \
