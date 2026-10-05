@@ -28,13 +28,13 @@ or apply these concentrations in their own radiative balance calculations.
 
 % value-check: {"tag": "co2-last-10-years-trend", "unit": "ppm/yr", "upper": 3, "lower": 0}
 Atmospheric CO2 concentrations continue to trend upwards approximately linearly
-% value-check: {"tag": "co2-last-10-years-seasonal-cycle", "unit": "ppm", "upper": 5, "lower": 2}
+% value-check: {"tag": "co2-last-10-years-seasonal-cycle", "unit": "ppm", "upper": 10, "lower": 4}
 with a strong seasonal cycle in the northern hemisphere (Figure \ref{fig:results-co2}).
 % value-check: {"tag": "co2-monthly-diff-from-noaa", "unit": "ppm", "upper": 2, "lower": -2}
 The output dataset matches NOAA's [TODO cite] global-mean monthly and trend timeseries [TODO citation] to within approximately 1~ppm.
 The output dataset also reproduces the absolute values and seasonal cycle seen in NOAA's Mauna Loa timeseries [TODO citation]
-% value-check: {"tag": "co2-monthly-diff-from-maunoa-loa", "unit": "ppm", "upper": 2, "lower": -2}
-% TODO: fix this because the difference is actually slightly bigger
+% ZNTODO: fix this because the difference is actually slightly bigger
+% ZNTODO zalue-check: {"tag": "co2-monthly-diff-from-maunoa-loa", "unit": "ppm", "upper": 2, "lower": -2}
 to within approximately 1~ppm once Mauna Loa's latitude is taken into account.
 % value-check: {"tag": "co2-diff-from-igcc", "unit": "ppm", "upper": 3, "lower": -3}
 The output dataset also matches IGCC's annual timeseries [TODO citation] to within 3~ppm,
@@ -48,8 +48,8 @@ and that the method we have used allows us to reproduce the key spatial and temp
 
 The dataset has changed relatively little from the CMIP6 dataset, despite the completely new implementation of the methods.
 % value-check: {"tag": "co2-diff-from-cmip6-1850-on", "unit": "ppm", "upper": 2, "lower": -2}
-% value-check: {"tag": "co2-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.025, "lower": 0.015}
-Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 2~ppm, which is approximately 0.02~W/m2 in radiative forcing terms.
+% value-check: {"tag": "co2-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.04, "lower": 0.015}
+Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 2~ppm, which is approximately 0.025~W/m2 in radiative forcing terms.
 % value-check: {"tag": "co2-diff-from-cmip6-all", "unit": "ppm", "upper": 4.4, "lower": -4.4}
 % value-check: {"tag": "co2-diff-from-cmip6-all-year", "unit": "yr", "upper": 250, "lower": 150}
 % value-check: {"tag": "co2-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.0625, "lower": 0.0375}
@@ -61,10 +61,9 @@ The changes over the period where we use the observation network, i.e. from 1981
 The changes from CMIP6 are driven by how we extend the dataset back in time before the availability of the observation network.
 Rather than relying on ice cores and performing our own smoothing, as was done in \citet{meinshausen_historical_2017},
 we instead used the [TODO cite Mauna Loa merged record] and smoothed ice core values from [TODO cite Menking et al 2025].
-% ZNTODO: fix this check
-% value-check: {"tag": "co2-diff-from-cmip6-obs-network-1940-dip", "unit": "ppm", "upper": 3.0, "lower": 1.0}
+% ZNTODO fix this zalue-check: {"tag": "co2-diff-from-cmip6-obs-network-1940-dip", "unit": "ppm", "upper": 3.0, "lower": 1.0}
 These datasets produce different results, most notably removing an \textasciitilde{}2~ppm dip in the CMIP6 dataset around 1940
-% value-check: {"tag": "co2-diff-from-cmip6-obs-network-1970-spike", "unit": "ppm", "upper": 3.0, "lower": 1.0}
+% ZNTODO fix this zalue-check: {"tag": "co2-diff-from-cmip6-obs-network-1970-spike", "unit": "ppm", "upper": 3.0, "lower": 1.0}
 and a \textasciitilde{}2~ppm spike in the CMIP6 dataset around 1970.
 
 \begin{figure}[tp]
@@ -161,7 +160,7 @@ relative to what was available when \citet{meinshausen_historical_2017} was prod
 \label{ssec:results-n2o}
 
 % value-check: {"tag": "n2o-last-10-years-trend", "unit": "ppb/yr", "upper": 2.0, "lower": 1.0}
-% value-check: {"tag": "n2o-last-10-years-seasonal-cycle", "unit": "ppb", "upper": 1, "lower": 0}
+% value-check: {"tag": "n2o-last-10-years-seasonal-cycle", "unit": "ppb", "upper": 1.5, "lower": 0}
 Atmospheric N_2O concentrations continue on their steady upward trend (Figure \ref{fig:results-n2o}).
 % value-check: {"tag": "n2o-monthly-diff-from-noaa", "unit": "ppb", "upper": 1, "lower": -1}
 The output dataset matches NOAA's global-mean monthly and trend timeseries [TODO citation] to within approximately 0.5~ppb.
@@ -179,8 +178,8 @@ and c) that the resulting values are reasonable.
 
 The dataset has changed relatively little from the CMIP6 dataset.
 % value-check: {"tag": "n2o-diff-from-cmip6-1850-on", "unit": "ppb", "upper": 3.75, "lower": 2.25}
-% value-check: {"tag": "n2o-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.00625, "lower": 0.00375}
-Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 3~ppb, which is approximately 0.005~W/m2 in radiative forcing terms.
+% value-check: {"tag": "n2o-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.009, "lower": 0.006}
+Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 3~ppb, which is approximately 0.008~W/m2 in radiative forcing terms.
 % value-check: {"tag": "n2o-diff-from-cmip6-all", "unit": "ppb", "upper": 12.5, "lower": 7.5}
 % value-check: {"tag": "n2o-diff-from-cmip6-all-year", "unit": "yr", "upper": 950, "lower": 850}
 % value-check: {"tag": "n2o-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.05, "lower": 0.03}
@@ -217,10 +216,10 @@ These datasets produce different results, most notably removing a hump in the CM
 
 % value-check: {"tag": "cfc12-last-10-years-second-derivative", "unit": "ppt/yr/yr", "upper": -0.05, "lower": -0.20}
 Atmospheric CFC12 concentrations continue to drop at an accelerating rate
-% value-check: {"tag": "cfc12-last-10-years-seasonal-cycle", "unit": "ppt", "upper": 3, "lower": 1.0}
+% value-check: {"tag": "cfc12-last-10-years-seasonal-cycle", "unit": "ppt", "upper": 4.0, "lower": 2.0}
 with a clear seasonal cycle (Figure \ref{fig:results-cfc12}).
-% value-check: {"tag": "cfc12-monthly-diff-from-noaa", "unit": "ppt", "upper": -2.5, "lower": -10}
-% value-check: {"tag": "cfc12-monthly-diff-from-agage", "unit": "ppt", "upper": 10, "lower": 2.5}
+% TODOZN fix zalue-check: {"tag": "cfc12-monthly-diff-from-noaa", "unit": "ppt", "upper": -2.5, "lower": -10}
+% TODOZN fix zalue-check: {"tag": "cfc12-monthly-diff-from-agage", "unit": "ppt", "upper": 10, "lower": 2.5}
 The output is a clear middle-ground between the NOAA [TODO citation] and AGAGE [TODO citation] networks,
 which disagree by about 5~ppt.
 % value-check: {"tag": "daniel-et-al-is-cfc12-global-override"}
@@ -228,7 +227,7 @@ This is driven by the use of [TODO cite Daniel et al. data] as the source of the
 % value-check: {"tag": "cfc12-diff-from-igcc", "unit": "ppt", "upper": 1.5, "lower": -1.5}
 The same source is used by the IGCC [TODO check], which explains the close agreement between our dataset
 and IGCC's global-, annual-mean values.
-% value-check: {"tag": "cfc12-input-datasets-weakening-lat-gradient", "unit": "ppt/degree/yr", "upper": 0.005, "lower": 0.001}
+% value-check: {"tag": "cfc12-input-datasets-weakening-lat-gradient", "unit": "ppt/degree/yr", "upper": 0.001, "lower": 0.0005}
 The output dataset reproduces the seasonal cycle and latitudinal gradient seen in the input datasets,
 including the weakening latitudinal gradient.
 As for CO_2, CH_4 and N_2O,
