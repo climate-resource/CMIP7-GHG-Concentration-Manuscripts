@@ -191,6 +191,7 @@ uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --clean-copernicus-template-filename "${clean_copernicus_template_filename}" \
     --build-dir "${build_dir}" \
     --output "${output_pdf}"
+# --no-check-values
 # --extra "${methods_subfile}" \
 
 echo "Output file is in ${output_pdf}"
