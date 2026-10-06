@@ -7,12 +7,13 @@ import json
 import re
 import shutil
 import subprocess
+import sys
 import textwrap
 import tomllib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Any
+from typing import IO, Annotated, Any
 
 import typer
 import yaml
@@ -166,6 +167,88 @@ def aux_file_has_citations(aux_file: Path) -> bool:
         line.startswith(r"\citation")
         for line in aux_file.read_text(encoding="utf-8").splitlines()
     )
+
+
+def run_pdflatex(latex_main: Path, output_sink: int | IO[Any] | None) -> None:
+    """
+    Run a single pdflatex pass over `latex_main`
+
+    Parameters
+    ----------
+    latex_main
+        Main latex file to compile
+
+    output_sink
+        Where to send pdflatex's output, see [compile_latex][]
+    """
+    subprocess.run(
+        ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", latex_main.name],
+        cwd=latex_main.parent,
+        check=True,
+        stdout=output_sink,
+    )
+
+
+def compile_latex(
+    latex_main: Path,
+    output_sink: int | IO[Any] | None,
+    n_passes_after_bibtex: int = 3,
+) -> Path:
+    """
+    Compile `latex_main` to PDF
+
+    Parameters
+    ----------
+    latex_main
+        Main latex file to compile
+
+    output_sink
+        Where to send the output of pdflatex and bibtex.
+
+        They write everything, errors and warnings included,
+        to stdout (as well as their log files).
+        Anything [subprocess.run][]'s `stdout` accepts can be used, e.g.
+        `sys.stderr` (so the output can be dropped with `2>/dev/null`
+        without losing the rest of the script's output),
+        `subprocess.DEVNULL` (to drop it)
+        or `None` (to leave it on stdout).
+
+    n_passes_after_bibtex
+        Number of pdflatex passes to do after running bibtex.
+        Two isn't enough for this manuscript:
+        cross-references still move on the second pass.
+
+    Returns
+    -------
+    :
+        Path to the compiled PDF
+    """
+    run_pdflatex(latex_main, output_sink=output_sink)
+
+    if aux_file_has_citations(latex_main.with_suffix(".aux")):
+        subprocess.run(
+            ["bibtex", latex_main.stem],
+            cwd=latex_main.parent,
+            check=True,
+            stdout=output_sink,
+        )
+
+    for _ in range(n_passes_after_bibtex):
+        run_pdflatex(latex_main, output_sink=output_sink)
+
+    log = latex_main.with_suffix(".log").read_text(encoding="utf-8", errors="replace")
+    if "Rerun to get cross-references right" in log:
+        print(
+            "WARNING: latex still wants another pass "
+            "to get the cross-references right. "
+            "Consider increasing `n_passes_after_bibtex`."
+        )
+
+    built_pdf = latex_main.with_suffix(".pdf")
+    if not built_pdf.exists():
+        raise FileNotFoundError(built_pdf)
+
+    return built_pdf
 
 
 @dataclass
@@ -690,33 +773,8 @@ def main(  # noqa: PLR0913, PLR0915
         print(value_check_report.to_str())
         value_check_report.raise_if_not_ok()
 
-    subprocess.run(
-        ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", latex_main.name],
-        cwd=latex_main.parent,
-        check=True,
-    )
-
-    if aux_file_has_citations(latex_main.with_suffix(".aux")):
-        subprocess.run(
-            ["bibtex", latex_main.stem],
-            cwd=latex_main.parent,
-            check=True,
-        )
-
-    subprocess.run(
-        ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", latex_main.name],
-        cwd=latex_main.parent,
-        check=True,
-    )
-    subprocess.run(
-        ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", latex_main.name],
-        cwd=latex_main.parent,
-        check=True,
-    )
-
-    built_pdf = latex_main.parent / f"{latex_main.stem}.pdf"
-    if not built_pdf.exists():
-        raise FileNotFoundError(built_pdf)
+    # stderr, so the latex output can be dropped with `2>/dev/null`
+    built_pdf = compile_latex(latex_main, output_sink=sys.stderr)
 
     output.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(built_pdf, output)

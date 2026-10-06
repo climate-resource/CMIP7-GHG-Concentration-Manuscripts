@@ -21,30 +21,26 @@ Everything else should use exactly these names:
 | 5 | Prepare the components to be combined |
 | 6 | Generate native resolution |
 
-- [ ] Fix all headers throughout methods (from `NOTES.md`). Specifically:
-    - [ ] the Step 5 name mismatch, label scheme, C_8F_18 structure and capitalisation items below
-    - [ ] stale commented sub-headings (`% \subsubsubsubsection{...}`) throughout the per-gas sections:
-          delete them, or turn them into real `\paragraph{}` headings if they help the reader
-- [ ] Step 5 name mismatch: the general approach and per-gas summary list say
-      "Prepare the components to be combined" (`methods.tex:108,188,226,258`)
-      but every per-gas subsubsection says "Process components"
-      (`methods.tex:449,690,887,1113,1238`). Pick one and use it everywhere.
-- [ ] Pick a single label scheme for per-gas step subsubsections, e.g. `sssec:methods-<gas>-step<N>`,
-      and apply it everywhere. Current state:
-    - N_2O: no Step 1 label; `-spatial-interpolation`, `-pca`, `-backward-extension`, `-process-components`, `-generate-native-resolution`
-    - CO_2: no Step 1 label; same slugs as N_2O (none of them are referenced anywhere)
-    - CH_4: no Step 1 or Step 2 label; `-pca-derived-components`, `-extending-components-in-time`, `-finalising-general-components`, `-generate-native-resolution`
-    - CFC-12-like: no Step 1 or Step 2 label; mixes `cfc12-` and `cfc12-like-` prefixes
-      (`sssec:methods-cfc12-pca-derived-components`, `sssec:methods-cfc12-like-finalising-general-components`, ...)
-    - C_4F_10-like: no step labels at all
-    - C_8F_18: no step subsections at all
-- [ ] C_8F_18 (`methods.tex:1251-1269`): either add short Step 1-6 subsections like the other gases
-      or say explicitly that the step structure does not apply.
-      The section also doesn't mention what the figure shows:
-      an assumed linear lat. gradient EOF with a PC from CMIP6's NH-SH difference
-      (see `src/local/historical_ghg_forcing_for_cmip7/c8f18_methods_figure.py:9-19`).
-- [ ] Capitalisation: "see step 3" (`methods.tex:117`) vs "Step 3"/"Step 6" elsewhere.
-      Same for "section \ref" vs "Section \ref" (e.g. `methods.tex:14,21,300,496,723,901,1136`).
+- [x] Fix all headers throughout methods (from `NOTES.md`). Done:
+    - [x] Step 5 subsubsections renamed from "Process components" to "Prepare the components to be combined",
+          matching the general approach and summary list
+    - [x] every per-gas step subsubsection labelled `sssec:methods-<gas>-<step>`,
+          with `<gas>` one of `n2o`, `co2`, `ch4`, `cfc12-like`, `c4f10-like`
+          and `<step>` one of `collect-observations`, `bin-and-interpolate`, `pca`, `extend`,
+          `prepare-components`, `generate-native-resolution`; all `\ref`s updated
+    - [x] per-gas subsection titles unified as "Generating concentrations for <gas(es)>"
+    - [x] C_8F_18 now says what it takes from CMIP6 (global- and hemispheric-, annual-means),
+          what it assumes (zero seasonality, linear lat. gradient) and that Steps 5 and 6 are as for N_2O
+          (checked against the original run's `1505_c8f18-like_create-pieces-for-gridding` notebook)
+    - [x] "see step 3" → "see Step 3", "section \ref" → "Section \ref"
+    - [x] stale commented sub-headings (`% \subsubsubsubsection{...}`) turned into bold run-in headings
+          (`\textbf{Zonal mean.}` etc.; `\paragraph` is `\subsubsection` in the Copernicus class, so isn't an option).
+          Rule: one run-in per component ("Global-, annual-mean.", "Seasonality.", "Latitudinal gradient.")
+          wherever a step treats the components separately, in the same order for every gas.
+          The order differs between steps because of dependencies
+          (in Step 4, the global-mean is calculated from the already-extended latitudinal gradient).
+          Where a component doesn't apply to a gas, its run-in is left in commented out,
+          with a `% Doesn't apply: <reason>` line above it.
 - [ ] Sub-steps clash with top-level steps.
       N_2O Step 3 uses "The first/second/third/fourth step" (`methods.tex:358,363,376,395`);
       CO_2 Step 3 jumps to "The fourth step" with no first-third (`methods.tex:580`)
@@ -59,9 +55,9 @@ Everything else should use exactly these names:
       and the Step 4 details (regression against RCMIP emissions, quartic gap fill, `methods.tex:1035-1105`).
     - C_4F_10-like summary Step 3 omits that the global-mean is derived here
       and the linear extrapolation from 2018 to 2022; Step 4 only covers concentrations, not the PC set to zero.
-    - C_8F_18: summary says "the 2015-2022 time period from the SSP2-4.5 scenario" (`methods.tex:269`),
-      section says "SSP2-4.5 values after 2015" (`methods.tex:1256`),
-      figure code says historical to 2014 and SSP2-4.5 after (`c8f18_methods_figure.py:53`). Reconcile.
+    - C_8F_18: summary says "We simply use CMIP6 data, taking the 2015-2022 time period from the SSP2-4.5 scenario" (`methods.tex:269`).
+      Update it to match the section (CMIP6 global- and hemispheric-means, assumed seasonality and lat. gradient).
+      The original run's notebook takes SSP2-4.5 for 2015-2023, not 2015-2022: check which years the output covers.
 - [ ] General Step 4 (`methods.tex:94-105`) says the lat. gradient PCs are extended either by emissions regression
       or by linear/constant extrapolation. It doesn't cover the CH_4 ice-core optimisation, the CO_2 seasonality change PC
       (temperature-CO_2 composite) or the C_4F_10-like zero assumption. Generalise or add "except where noted".
@@ -74,7 +70,7 @@ Everything else should use exactly these names:
     - [ ] Use the same opening pattern everywhere
           (currently "We begin with", "Next we consider", "Last is") and list which steps differ, matching the summary list.
 - [ ] C_4F_10-like Step 1 (`methods.tex:1150-1155`) talks about not doing interpolation or PCA (that belongs in Steps 2/3)
-      and has stale commented sub-headings. Clean up.
+      Move that text into Steps 2/3.
 - [ ] Clean up each per-gas sub-section so it doesn't repeat the base case more than needed (from `NOTES.md`).
       Candidates: CO_2 Step 3 re-describing zonal/global-mean and lat. gradient (`methods.tex:562-582`),
       CH_4 Step 4 smoothing detail vs "very similar to CO_2" (`methods.tex:843-861`),
@@ -138,8 +134,8 @@ The build doesn't support appendices yet, but most of the figures already exist.
 
 ## 3. Broken references and build issues
 
-- [ ] `\ref{ssec:methods-c8f18-like}` is undefined (`methods.tex:1262`). It should be `ssec:methods-c8f18`.
-- [ ] `\ref{sssec:methods-co2-pca-derived-components}` is undefined (`methods.tex:572,582`).
+- [x] `\ref{ssec:methods-c8f18-like}` is undefined (`methods.tex:1262`). It should be `ssec:methods-c8f18`.
+- [x] `\ref{sssec:methods-co2-pca-derived-components}` is undefined (`methods.tex:572,582`).
       These sentences mean "same as N_2O", so they should point to `sssec:methods-n2o-pca`.
 - [ ] CFC-12 results caption refers to `Figure \ref{fig:results-cfc12}a` (itself) for the obs. network (`results.tex:271`).
       It should be `fig:methods-cfc12`.
@@ -147,7 +143,10 @@ The build doesn't support appendices yet, but most of the figures already exist.
 - [ ] `caption` package "Unknown document class" warning (`main.log:2926`). Check that captions render as intended.
 - [ ] `results.tex:109` reads `Figure\ref` (missing `~`).
 - [ ] Results and methods sections have no `\label{sec:...}`. Add them if they'll be referenced.
-- [ ] Rebuild: the last build (2026-10-05 15:42) predates the latest source edits.
+- [x] Rebuild (done 2026-10-06 after the header fixes; no undefined references left).
+- [x] "Label(s) may have changed. Rerun" persisted after repeated builds.
+      Fixed by a third pdflatex pass after bibtex (`compile_latex` in `scripts/compile-gmd-template-based-latex.py`),
+      which now also warns if latex still wants a rerun. LaTeX output goes to stderr.
 
 ## 4. Methods: content and correctness
 
@@ -251,7 +250,7 @@ Already in `references/references.bib`, just need wiring in:
 - [ ] NOAA CO_2 / CH_4 → `lan_atmospheric_co2_2025`, `lan_atmospheric_ch4_2025` (`methods.tex:729`, `results.tex:47,111,182`)
 - [ ] AGAGE → `prinn_history_2000`, `prinn2018history` (`methods.tex:308,729,921`, `results.tex:128,190,239`)
 - [ ] NOAA HATS CFC-12 → `noaa_hats_cfc12` (`methods.tex:919`); uncomment the existing `\citep`s
-- [ ] SSP2-4.5 / M2020 → `meinshausen_shared_2020` (`methods.tex:1256`)
+- [x] SSP2-4.5 / M2020 → `meinshausen_shared_2020` (C_8F_18 section)
 - [ ] AR6 Ch7 SM → `IPCC_2021_WGI_Ch_7_SM` (`methods.tex:1326`, `results.tex:301,357`)
 - [ ] Daniel et al. / WMO 2022 → `wmo_2022_ozone_ch7`? Check (`results.tex:242,260`)
 
