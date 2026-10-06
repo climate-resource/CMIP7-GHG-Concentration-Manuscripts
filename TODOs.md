@@ -86,7 +86,7 @@ Everything else should use exactly these names:
           CO_2 intro now also mentions the merged Law Dome - Mauna Loa record (Step 4).
           C_4F_10 intro no longer mentions the zero-before-Droste assumption,
           as it's a special case of constant extension (i.e. Step 4 follows the general approach, matching the summary list).
-- [ ] C_4F_10-like Step 1 (`methods.tex:1150-1155`) talks about not doing interpolation or PCA (that belongs in Steps 2/3)
+- [x] C_4F_10-like Step 1 (`methods.tex:1150-1155`) talks about not doing interpolation or PCA (that belongs in Steps 2/3)
       Move that text into Steps 2/3.
 - [ ] Clean up each per-gas sub-section so it doesn't repeat the base case more than needed (from `NOTES.md`).
       Candidates: CO_2 Step 3 re-describing zonal/global-mean and lat. gradient (`methods.tex:562-582`),
