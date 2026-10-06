@@ -41,13 +41,17 @@ Everything else should use exactly these names:
           (in Step 4, the global-mean is calculated from the already-extended latitudinal gradient).
           Where a component doesn't apply to a gas, its run-in is left in commented out,
           with a `% Doesn't apply: <reason>` line above it.
-- [ ] Sub-steps clash with top-level steps.
-      N_2O Step 3 uses "The first/second/third/fourth step" (`methods.tex:358,363,376,395`);
-      CO_2 Step 3 jumps to "The fourth step" with no first-third (`methods.tex:580`)
-      and says "residuals from the previous step" (`methods.tex:585`);
-      Step 5 sections open with "The last step is to construct..." although Step 6 follows
-      (`methods.tex:452,693`), and CO_2 Step 5 also uses "The last step is..." for its final sub-part (`methods.tex:711`).
-      Reword (e.g. "First, ...", "Finally, ...").
+- [x] Sub-steps clash with top-level steps. Done:
+    - [x] N_2O Step 3: "The first/second/third/fourth step" → "sub-step"
+    - [x] CO_2 Step 3: "The fourth step" → "The last sub-step";
+          "residuals from the previous step" → "the residuals from which it was derived"
+    - [x] N_2O/CO_2 Step 5: "The last step is to construct..." → "In this step, we construct...";
+          CO_2 Step 5's final part → "Finally, we calculate..." (matching N_2O)
+    - [x] General Step 5: "The first step is to to put..." → "All components must first be put..."
+          (also fixes the "to to" typo)
+    - [x] CFC-12-like Step 4 global-mean: "two steps" / "the previous step" → "two sub-steps" / "the first sub-step"
+    - Left as is: "this and subsequent steps" (CO_2 Step 3), "processing steps" (CH_4 Step 4)
+      and "the next step is to then extend" (C_4F_10-like Step 4), which do refer to top-level steps.
 - [ ] Per-gas summary list (`methods.tex:161-272`) vs the per-gas sections:
     - CFC-12-like summary is missing the Step 2 delta
       (constant extrapolation into polar bands, long poleward extension, relaxed "data in both northern- and southern-most box" rule; also see ZNTODO at `methods.tex:49`),
@@ -277,7 +281,7 @@ Need adding to the bib:
       Same for HFC134a vs HFC-134a.
 - [ ] `replacements.yaml`: double check the mappings for minor species (`:1`);
       add the Halon (1202?) that is in the scenarios but not the historical data (`:28`).
-- [ ] Typos: "accomodate" (`methods.tex:500,904`), "to to" (`:112`), "that that" (`:460`), "for for" (`:773,1025`),
+- [ ] Typos: "accomodate" (`methods.tex:500,904`), "that that" (`:460`), "for for" (`:773,1025`),
       "PCA analysis" (`:773,1025,1154`), "to not source" (`:1072`), "it not all" (`:1299`), "Next we consider CH_4" missing full stop (`:722`),
       "differencs" (`results.tex:29`), "minorly" (`results.tex:371`), "radiative focing" (`conclusion.tex:16`), "foward" (`conclusion.tex:27`),
       "a key criteria" (`conclusion.tex:24`), "betwen" (`output-requirements.tex:53`), "than an another" (`output-requirements.tex:86`).

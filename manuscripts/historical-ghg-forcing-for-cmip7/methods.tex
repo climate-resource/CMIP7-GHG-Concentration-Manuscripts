@@ -109,7 +109,7 @@ be broken down as follows:
 
         The global-, annual-mean, seasonality and latitudinal gradient components must be prepared before they can be combined.
 
-        The first step is to to put all components on the same time axis.
+        All components must first be put on the same time axis.
         This introduces the first subtlety: while our approach is based on a timeseries of global-, annual-mean concentrations,
         this timeseries has to be interpolated to monthly timesteps
         in order to avoid the change from year to year resulting in step changes between December of one year and January of the next.
@@ -355,11 +355,11 @@ following the general approach described in Section \ref{ssec:methods-general-ap
 The specifics of this step are described in the rest of this Section (Section \ref{sssec:methods-n2o-pca}).
 
 \textbf{Zonal mean.}
-The first step is to calculate the longitudinal (zonal) mean.
+The first sub-step is to calculate the longitudinal (zonal) mean.
 This is done using an unweighted mean because each grid cell has the same area for a given latitude.
 
 \textbf{Global-, annual-mean.}
-The second step is to calculate the global-, annual-mean.
+The second sub-step is to calculate the global-, annual-mean.
 We do this by first calculating an area-weighted mean, then the annual-mean.
 We weight each month equally.
 Weighting the months by their length would make a minor difference,
@@ -371,7 +371,7 @@ that should not be taken to mean
 that the monthly values robustly represent the average over the entire month, given the month's length.
 
 \textbf{Latitudinal gradient.}
-The third step is to calculate our latitudinal gradient.
+The third sub-step is to calculate our latitudinal gradient.
 We do this by first calculating the residuals at each latitude,
 i.e. the difference between the annual-mean of the longitudinal mean and the global-, annual-mean.
 % ZNTODO: the residuals by definition have an area-weighted mean of zero, which might be why each EOF has an area-weighted mean of zero?
@@ -389,7 +389,7 @@ we only retain the first two EOFs as these are sufficient
 to explain almost all of the variance (Figure [ZNTODO figure panel ref]).
 
 \textbf{Seasonality.}
-The fourth step is to calculate our relative seasonality.
+The fourth sub-step is to calculate our relative seasonality.
 We do this by first calculating the residuals at each time and latitude.
 The first component in this calculation is our longitudinal mean (dimensions (year, month, lat)).
 The second component is the annual-mean at each latitude,
@@ -443,7 +443,7 @@ and these values have been temporally extended earlier in this step.
 \subsubsection{Step 5: Prepare the components to be combined}
 \label{sssec:methods-n2o-prepare-components}
 
-The last step is to construct the inputs needed for Equation \ref{eq:native-resolution-sum}
+In this step, we construct the inputs needed for Equation \ref{eq:native-resolution-sum}
 from the temporally extended components.
 
 \textbf{Global-, annual-mean.}
@@ -565,12 +565,12 @@ we only retain the first two EOFs as these are sufficient
 to explain almost all of the variance.
 
 \textbf{Seasonality.}
-The fourth step is to calculate our seasonality.
+The last sub-step is to calculate our seasonality.
 The calculation of the (absolute) seasonality is the same as for
 N_2O (Section \ref{sssec:methods-n2o-pca}).
 
 On top of this seasonality, we also calculate EOFs and PCs for the change in seasonality over time.
-These are calculated by taking the seasonality and residuals from the previous step.
+These are calculated by taking the seasonality and the residuals from which the seasonality was derived.
 We then calculate the difference between these two, which we call `seasonality anomalies'.
 We then perform singular value decomposition on these seasonality anomalies
 (this is done by stacking the data so it has one dimension which is year
@@ -676,7 +676,7 @@ Before 1850, we keep the PC value constant.
 \subsubsection{Step 5: Prepare the components to be combined}
 \label{sssec:methods-co2-prepare-components}
 
-The last step is to construct the inputs needed for Equation \ref{eq:native-resolution-sum}
+In this step, we construct the inputs needed for Equation \ref{eq:native-resolution-sum}
 from the temporally extended components.
 
 \textbf{Global-, annual-mean.}
@@ -691,7 +691,7 @@ by taking the product of the temporally extended PC and the EOF.
 This seasonality change is then added onto our `base seasonality' to give the full seasonality term.
 
 \textbf{Latitudinal gradient.}
-The last step is to calculate the latitudinal gradient term, $lg(y, m, l)$.
+Finally, we calculate the latitudinal gradient term, $lg(y, m, l)$.
 This is done in the same way as for N_2O (Section \ref{sssec:methods-n2o-prepare-components}).
 
 \subsubsection{Step 6: Generate native resolution}
@@ -1035,7 +1035,7 @@ the first year reported in the RCMIP v5.1.0 emissions dataset.
 Before 1750, we keep the PC constant.
 
 \textbf{Global-, annual-mean.}
-The global-, annual-mean is calculated in two steps.
+The global-, annual-mean is calculated in two sub-steps.
 First, we set the global-, annual-mean over the period covered by (potentially) multiple input data sources.
 For most gases, we use the global-, annual-mean from a specific source
 rather than the global-, annual-mean derived from the observational network
@@ -1058,7 +1058,7 @@ Second, for all gases, we extend the global-, annual-mean back in time
 % ZNTODO: check these sources are identified correctly and pull out references from M17
 based on information about the gas' pre-industrial value and when this pre-industrial value should be reached (Table \ref{tab:cfc12-like-per-gas}).
 We then fill the gap between the pre-industrial value (assumed constant for all time points before the pre-industrial fitting year)
-and the global-, annual-mean from the previous step following the equation:
+and the global-, annual-mean from the first sub-step following the equation:
 
 \begin{equation}
     \label{eq:cfc12-like-global-mean-gap-fill}
