@@ -68,8 +68,9 @@ Everything else should use exactly these names:
       or by linear/constant extrapolation. It doesn't cover the CH_4 ice-core optimisation (this is already noted in an exception),
       the CO_2 seasonality change PC (temperature-CO_2 composite, this is already noted in an exception)
       or the C_4F_10-like zero assumption (this is a special case of constant i.e. already covered). Generalise or add "except where noted".
-- [ ] General Step 2 says "The raw observations are binned" (`methods.tex:43`)
+- [x] General Step 2 says "The raw observations are binned" (`methods.tex:43`)
       but Step 1 says we use monthly aggregated data rather than raw data. Align terminology.
+      (These are two different things, the difference is deliberate)
 - [ ] Fix the intro section of each per-gas sub-section so they're consistent
       and explain the differences/extra information compared to the base case (from `NOTES.md`).
     - [ ] CO_2/CH_4/CFC-12/C_4F_10 call N_2O the "base case" but point to
