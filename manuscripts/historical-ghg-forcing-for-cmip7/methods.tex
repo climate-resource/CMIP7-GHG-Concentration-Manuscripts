@@ -301,11 +301,9 @@ while the specifics for each greenhouse gas are described in the following secti
 \subsection{Generating concentrations for N_2O}
 \label{ssec:methods-n2o}
 
-We begin with N_2O because it follows the general approach described in Section \ref{ssec:methods-general-approach}
-and can therefore be considered as the `base case'.
-
-We detail here the exact data sources used, method details and N_2O-specific details,
-following the process breakdown made in Section \ref{ssec:methods-general-approach}.
+N_2O follows the general approach (Section \ref{ssec:methods-general-approach}) without modification,
+so we treat it as the `base case' for the other gases.
+Here we give the exact data sources used and the N_2O-specific details of each step.
 
 \subsubsection{Step 1: Collect observations}
 \label{sssec:methods-n2o-collect-observations}
@@ -488,12 +486,10 @@ We calculate the native resolution from the derived components following the gen
 \subsection{Generating concentrations for CO_2}
 \label{ssec:methods-co2}
 
-Next we consider CO_2.
-This follows the `base case' (Section \ref{ssec:methods-general-approach}),
-with adjustments made to the principal component analysis,
-extension back in time
-and preparation of components to be used in Equation \ref{eq:native-resolution-sum}
-in order to accomodate the more sophisticated handling of seasonality.
+CO_2 follows the base case (N_2O, Section \ref{ssec:methods-n2o}),
+except in Step 3 (Principal component analysis), Step 4 (Extend) and Step 5 (Prepare the components to be combined).
+These differences allow for a more sophisticated handling of seasonality
+and make use of the merged Law Dome - Mauna Loa record when extending back in time.
 
 \subsubsection{Step 1: Collect observations}
 \label{sssec:methods-co2-collect-observations}
@@ -706,10 +702,9 @@ We calculate the native resolution from the derived components following the gen
 \subsection{Generating concentrations for CH_4}
 \label{ssec:methods-ch4}
 
-Next we consider CH_4
-This follows the `base case' (Section \ref{ssec:methods-general-approach}),
-with adjustments made to the extension back in time
-in order to make use of the fact that there are ice core observations available from ice cores in both hemispheres.
+CH_4 follows the base case (N_2O, Section \ref{ssec:methods-n2o}),
+except in Step 4 (Extend).
+This difference allows us to make use of ice core observations in both hemispheres.
 
 \subsubsection{Step 1: Collect observations}
 \label{sssec:methods-ch4-collect-observations}
@@ -883,12 +878,12 @@ We calculate the native resolution from the derived components in the same way a
 \subsection{Generating concentrations for CFC12 and similarly processed species}
 \label{ssec:methods-cfc12-like}
 
-Next we consider CFC12.
-This follows the `base case' (Section \ref{ssec:methods-general-approach}),
-with adjustments made to the extension back in time
-and preparation of components to be used in Equation \ref{eq:native-resolution-sum}
-in order to accomodate the fact that some specific data sources take priority over our observing network based method
-and to avoid spurious negative values in the output due to rounding.
+CFC12 follows the base case (N_2O, Section \ref{ssec:methods-n2o}),
+except in Step 2 (Bin and interpolate observations), Step 4 (Extend) and Step 5 (Prepare the components to be combined).
+These differences accommodate some gases' sparse observation networks,
+allow some specific data sources take priority over our observational network-based method,
+recognise the need to interpolate between observation network values and pre-industrial values from the literature,
+and avoid spurious negative values in the output due to rounding.
 
 The approach described in this section is also used for
 C_2F_6, C_3F_8, CCl_4, CF_4,
@@ -1117,15 +1112,14 @@ We calculate the native resolution from the derived components in the same way a
 \subsection{Generating concentrations for C_4F_10 and similarly processed species}
 \label{ssec:methods-c4f10-like}
 
-Next we consider C_4F_10.
-This adjusts the `base case' (Section \ref{ssec:methods-general-approach})
-due to a lack of a comprehensive observation network.
+C_4F_10 follows the base case (N_2O, Section \ref{ssec:methods-n2o}),
+except in Step 1 (Collect observations), Step 2 (Bin and interpolate observations),
+Step 3 (Principal component analysis) and Step 5 (Prepare the components to be combined).
+These differences are due to the lack of a comprehensive observational network.
 Instead, we only use data from a single source,
-assume the shape of the latitudinal gradient EOF,
-assume that seasonality is zero,
-assume that these gases' concentrations were zero before the data provided by our source
-and prepare components to be used in Equation \ref{eq:native-resolution-sum}
-to avoid spurious negative values in the output due to rounding.
+so there is nothing to bin and interpolate
+and we assume the shape of the latitudinal gradient EOF and that seasonality is zero, rather than performing PCA.
+As for CFC12-like gases, we also avoid spurious negative values in the output due to rounding.
 
 The approach described in this section is also used for
 cC_4F_8, C_5F_12, C_6F_14 and C_7F_16.
@@ -1238,8 +1232,8 @@ We calculate the native resolution from the derived components in the same way a
 \subsection{Generating concentrations for C_8F_18}
 \label{ssec:methods-c8f18}
 
-Last is C_8F_18.
-Due to a lack of data, we take the global- and hemispheric-, annual-means from the CMIP6 dataset
+C_8F_18 does not follow the base case (N_2O, Section \ref{ssec:methods-n2o}).
+Due to a lack of data, we instead take the global- and hemispheric-, annual-means from the CMIP6 dataset
 (historical data to 2014 from \citealp{meinshausen_historical_2017};
 SSP2-4.5 from 2015 from \citealp{meinshausen_shared_2020};
 see Figure \ref{fig:methods-c8f18}).

@@ -71,12 +71,21 @@ Everything else should use exactly these names:
 - [x] General Step 2 says "The raw observations are binned" (`methods.tex:43`)
       but Step 1 says we use monthly aggregated data rather than raw data. Align terminology.
       (These are two different things, the difference is deliberate)
-- [ ] Fix the intro section of each per-gas sub-section so they're consistent
-      and explain the differences/extra information compared to the base case (from `NOTES.md`).
-    - [ ] CO_2/CH_4/CFC-12/C_4F_10 call N_2O the "base case" but point to
+- [x] Fix the intro section of each per-gas sub-section so they're consistent
+      and explain the differences/extra information compared to the base case (from `NOTES.md`). Done:
+    - [x] CO_2/CH_4/CFC-12/C_4F_10 call N_2O the "base case" but point to
           `ssec:methods-general-approach` (`methods.tex:496,723,901,1136`); point to `ssec:methods-n2o` or reword.
-    - [ ] Use the same opening pattern everywhere
+          Now all "the base case (N_2O, Section \ref{ssec:methods-n2o})".
+    - [x] Use the same opening pattern everywhere
           (currently "We begin with", "Next we consider", "Last is") and list which steps differ, matching the summary list.
+          Pattern: "<gas> follows the base case (N_2O, ...), except in Step X (<name>), ...",
+          then one sentence on why, with each reason tagged by its step.
+          N_2O: "follows the general approach without modification, so we treat it as the base case";
+          C_8F_18: "does not follow the base case".
+          CFC12 intro now also mentions Step 2 (was missing) and the quartic gap fill in Step 4;
+          CO_2 intro now also mentions the merged Law Dome - Mauna Loa record (Step 4).
+          C_4F_10 intro no longer mentions the zero-before-Droste assumption,
+          as it's a special case of constant extension (i.e. Step 4 follows the general approach, matching the summary list).
 - [ ] C_4F_10-like Step 1 (`methods.tex:1150-1155`) talks about not doing interpolation or PCA (that belongs in Steps 2/3)
       Move that text into Steps 2/3.
 - [ ] Clean up each per-gas sub-section so it doesn't repeat the base case more than needed (from `NOTES.md`).
