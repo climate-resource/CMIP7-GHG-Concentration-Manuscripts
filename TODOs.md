@@ -2,7 +2,8 @@
 
 Compiled from `manuscripts/historical-ghg-forcing-for-cmip7/*`,
 `src/local/`, the last build (`build/historical-ghg-forcing-for-cmip7/latex/main.log`, 2026-10-05)
-and the historical part of `manuscript-planning.md` (moved here, see the end of this file).
+the historical part of `manuscript-planning.md` (moved here, see the end of this file)
+and the methods TODOs from `NOTES.md` (moved into section 1).
 Line numbers are as of commit `bdf36a4`.
 Paths are relative to `manuscripts/historical-ghg-forcing-for-cmip7/` unless stated otherwise.
 
@@ -20,6 +21,10 @@ Everything else should use exactly these names:
 | 5 | Prepare the components to be combined |
 | 6 | Generate native resolution |
 
+- [ ] Fix all headers throughout methods (from `NOTES.md`). Specifically:
+    - [ ] the Step 5 name mismatch, label scheme, C_8F_18 structure and capitalisation items below
+    - [ ] stale commented sub-headings (`% \subsubsubsubsection{...}`) throughout the per-gas sections:
+          delete them, or turn them into real `\paragraph{}` headings if they help the reader
 - [ ] Step 5 name mismatch: the general approach and per-gas summary list say
       "Prepare the components to be combined" (`methods.tex:108,188,226,258`)
       but every per-gas subsubsection says "Process components"
@@ -62,14 +67,23 @@ Everything else should use exactly these names:
       (temperature-CO_2 composite) or the C_4F_10-like zero assumption. Generalise or add "except where noted".
 - [ ] General Step 2 says "The raw observations are binned" (`methods.tex:43`)
       but Step 1 says we use monthly aggregated data rather than raw data. Align terminology.
-- [ ] Per-gas section intros: CO_2/CH_4/CFC-12/C_4F_10 call N_2O the "base case" but point to
-      `ssec:methods-general-approach` (`methods.tex:496,723,901,1136`); point to `ssec:methods-n2o` or reword.
-      Make the intro paragraphs consistent and say up front which steps differ (NOTES.md item).
+- [ ] Fix the intro section of each per-gas sub-section so they're consistent
+      and explain the differences/extra information compared to the base case (from `NOTES.md`).
+    - [ ] CO_2/CH_4/CFC-12/C_4F_10 call N_2O the "base case" but point to
+          `ssec:methods-general-approach` (`methods.tex:496,723,901,1136`); point to `ssec:methods-n2o` or reword.
+    - [ ] Use the same opening pattern everywhere
+          (currently "We begin with", "Next we consider", "Last is") and list which steps differ, matching the summary list.
 - [ ] C_4F_10-like Step 1 (`methods.tex:1150-1155`) talks about not doing interpolation or PCA (that belongs in Steps 2/3)
       and has stale commented sub-headings. Clean up.
-- [ ] Trim sub-sections so they don't repeat the base case more than needed (NOTES.md item).
-- [ ] Decide the fate of the commented-out differences table (`methods.tex:274-295`, `table:methods-differences`).
-      The ZNTODO says drop it but NOTES.md says "create the table of differences from the base case".
+- [ ] Clean up each per-gas sub-section so it doesn't repeat the base case more than needed (from `NOTES.md`).
+      Candidates: CO_2 Step 3 re-describing zonal/global-mean and lat. gradient (`methods.tex:562-582`),
+      CH_4 Step 4 smoothing detail vs "very similar to CO_2" (`methods.tex:843-861`),
+      Step 5/6 sections that only say "same as N_2O".
+- [ ] Create the table of differences from the base case (from `NOTES.md`).
+      A draft is commented out at `methods.tex:274-295` (`table:methods-differences`),
+      but its ZNTODO says that layout doesn't work (too much text per cell).
+      Redesign it (e.g. short ticks/keywords per step, details left to the text)
+      and decide whether it replaces or complements the per-gas summary list (`methods.tex:161-272`).
 - [ ] Unify language for "observational network" vs "observation network" and "ice core extension"
       (`methods.tex:347,1125`, both used throughout).
       Also hyphenation: "global-, annual-mean" vs "global- annual-mean".
@@ -218,7 +232,9 @@ The build doesn't support appendices yet, but most of the figures already exist.
     - fixing upstream processing to avoid small negative values (`methods.tex:1122`)
     - CH_4 seasonal cycle possibly too strong (`results.tex:132-134`)
     - C_8F_18 future iterations (`methods.tex:1257`)
-    - annual updates (`abstract.tex:26`) and REF for forcings (`output-requirements.tex:111-115`)
+    - annual updates (`abstract.tex:26`) and REF for forcings (`output-requirements.tex:111-115`);
+      the "How to do extensions" notes in `NOTES.md` sketch the approach
+      (optimise the existing lat. gradient/seasonality change against new network data rather than re-deriving or regressing PCs)
     - vertical resolution (`discussion.tex:60`)
 - [ ] Conclusion: user guide link (`conclusion.tex:3-4`); fill the maximum-difference numbers and years (`conclusion.tex:15-18`);
       QUICCA full name / C3S paragraph if confirmed (`conclusion.tex:28-31`).
