@@ -256,12 +256,6 @@ while the specifics for each greenhouse gas are described in the following secti
                 We assume that seasonality is zero.
             }
             \item {
-                \textbf{Step 4: Extend}
-                We assume that the concentration of these gases,
-                and therefore the latitudinal gradient PC,
-                is zero before the timeseries provided by [TODO Droste et al].
-            }
-            \item {
                 \textbf{Step 5: Prepare the components to be combined}
                 We reduce the latitudinal gradient
                 as required to avoid negative values in output
@@ -605,7 +599,7 @@ Following \cite{meinshausen_historical_2017},
 the first PC is extended by performing a linear regression against CO_2 emissions of a geological origin
 (as opposed to CO_2 emissions that originate in the active biosphere)
 based on the [TODO cite PRIMAP version] dataset.
-Using this regression, we then extend emissions back to the 1750,
+Using this regression, we then extend emissions back to 1750,
 the first year reported in the [TODO cite PRIMAP] dataset.
 Before 1750, we keep the first PC value constant.
 

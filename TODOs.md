@@ -64,9 +64,10 @@ Everything else should use exactly these names:
     - [x] C_8F_18: now matches the section (CMIP6 global- and hemispheric-means, zero seasonality, linear lat. gradient).
           Kept 2015-2022: the original notebook takes SSP2-4.5 for 2015-2023,
           but the published output ends in 2022 (`..._gm_1750-2022.nc`).
-- [ ] General Step 4 (`methods.tex:94-105`) says the lat. gradient PCs are extended either by emissions regression
-      or by linear/constant extrapolation. It doesn't cover the CH_4 ice-core optimisation, the CO_2 seasonality change PC
-      (temperature-CO_2 composite) or the C_4F_10-like zero assumption. Generalise or add "except where noted".
+- [x] General Step 4 (`methods.tex:94-105`) says the lat. gradient PCs are extended either by emissions regression
+      or by linear/constant extrapolation. It doesn't cover the CH_4 ice-core optimisation (this is already noted in an exception),
+      the CO_2 seasonality change PC (temperature-CO_2 composite, this is already noted in an exception)
+      or the C_4F_10-like zero assumption (this is a special case of constant i.e. already covered). Generalise or add "except where noted".
 - [ ] General Step 2 says "The raw observations are binned" (`methods.tex:43`)
       but Step 1 says we use monthly aggregated data rather than raw data. Align terminology.
 - [ ] Fix the intro section of each per-gas sub-section so they're consistent
