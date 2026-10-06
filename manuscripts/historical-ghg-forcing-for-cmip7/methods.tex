@@ -534,8 +534,7 @@ For CO_2, we use data from the NOAA observation network
 \subsubsection{Step 2: Bin and interpolate observations}
 \label{sssec:methods-co2-bin-and-interpolate}
 
-Binning and interpolation for CO_2
-follow the general approach described in Section \ref{ssec:methods-general-approach}.
+Binning and interpolation are the same as for N_2O (Section \ref{sssec:methods-n2o-bin-and-interpolate}).
 When we take the longest dataset that is continuous,
 % value-check: {"tag": "co2-obs-network-start", "unit": "yr", "upper": 1981, "lower": 1981}
 % value-check: {"tag": "co2-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
@@ -544,31 +543,20 @@ we end up with an observational network dataset that runs from 1981 to 2023 (bot
 \subsubsection{Step 3: Principal component analysis}
 \label{sssec:methods-co2-pca}
 
-As for N_2O (Section \ref{sssec:methods-n2o-pca}),
-we then take our spatially complete dataset
-and perform principal component analysis.
-However, atmospheric CO_2 concentrations are driven by the carbon cycle.
-So, following \citet{meinshausen_historical_2017}
+Atmospheric CO_2 concentrations are driven by the carbon cycle.
+So, following \citet{meinshausen_historical_2017},
 we include extra complexity in this and subsequent steps,
-with the aim of better representing the variations seen in the observational record.
+with the aim of better representing the variations in seasonality seen in the observational record.
 
 \textbf{Zonal and global-, annual-mean.}
-The calculation of the zonal- and global-, annual-mean is exactly the same as for
-N_2O (Section \ref{sssec:methods-n2o-pca}).
+As for N_2O (Section \ref{sssec:methods-n2o-pca}).
 
 \textbf{Latitudinal gradient.}
-The calculation of the latitudinal gradient is also exactly the same as for
-N_2O (Section \ref{sssec:methods-n2o-pca}).
-Following \citet{meinshausen_historical_2017}
-% ZNTODO: add check of this statement here
-we only retain the first two EOFs as these are sufficient
-to explain almost all of the variance.
+As for N_2O (Section \ref{sssec:methods-n2o-pca}), including retaining only the first two EOFs.
+% ZNTODO: add check that the first two EOFs explain almost all of the variance for CO_2 too
 
 \textbf{Seasonality.}
-The last sub-step is to calculate our seasonality.
-The calculation of the (absolute) seasonality is the same as for
-N_2O (Section \ref{sssec:methods-n2o-pca}).
-
+The (absolute) seasonality is calculated as for N_2O (Section \ref{sssec:methods-n2o-pca}).
 On top of this seasonality, we also calculate EOFs and PCs for the change in seasonality over time.
 These are calculated by taking the seasonality and the residuals from which the seasonality was derived.
 We then calculate the difference between these two, which we call `seasonality anomalies'.
@@ -676,28 +664,21 @@ Before 1850, we keep the PC value constant.
 \subsubsection{Step 5: Prepare the components to be combined}
 \label{sssec:methods-co2-prepare-components}
 
-In this step, we construct the inputs needed for Equation \ref{eq:native-resolution-sum}
-from the temporally extended components.
-
 \textbf{Global-, annual-mean.}
-As for N_2O (Section \ref{sssec:methods-n2o-prepare-components}),
-we do a mean-preserving interpolation of the global-, annual-mean
-onto monthly timesteps to get the term, $gm(y, m)$.
+As for N_2O (Section \ref{sssec:methods-n2o-prepare-components}).
 
 \textbf{Seasonality.}
-Next we calculate the seasonality term, $s(y, m, l)$.
-This requires first calculating the seasonality change over time
+Calculating the seasonality term, $s(y, m, l)$, requires first calculating the seasonality change over time
 by taking the product of the temporally extended PC and the EOF.
 This seasonality change is then added onto our `base seasonality' to give the full seasonality term.
 
 \textbf{Latitudinal gradient.}
-Finally, we calculate the latitudinal gradient term, $lg(y, m, l)$.
-This is done in the same way as for N_2O (Section \ref{sssec:methods-n2o-prepare-components}).
+As for N_2O (Section \ref{sssec:methods-n2o-prepare-components}).
 
 \subsubsection{Step 6: Generate native resolution}
 \label{sssec:methods-co2-generate-native-resolution}
 
-We calculate the native resolution from the derived components following the general approach (Section \ref{ssec:methods-general-approach}).
+This step is the same as for N_2O (Section \ref{sssec:methods-n2o-generate-native-resolution}).
 
 \subsection{Generating concentrations for CH_4}
 \label{ssec:methods-ch4}
@@ -744,8 +725,7 @@ For CH_4, we use data from the NOAA [TODO ref] and AGAGE [TODO ref] observation 
 \subsubsection{Step 2: Bin and interpolate observations}
 \label{sssec:methods-ch4-bin-and-interpolate}
 
-Binning and interpolation for CH_4
-follow the general approach described in Section \ref{ssec:methods-general-approach}.
+Binning and interpolation are the same as for N_2O (Section \ref{sssec:methods-n2o-bin-and-interpolate}).
 When we take the longest dataset that is continuous,
 % value-check: {"tag": "ch4-obs-network-start", "unit": "yr", "upper": 1984, "lower": 1984}
 % value-check: {"tag": "ch4-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
@@ -754,16 +734,15 @@ we end up with an observational network dataset that runs from 1984 to 2023 (bot
 \subsubsection{Step 3: Principal component analysis}
 \label{sssec:methods-ch4-pca}
 
-The PCA analysis is the same as is done for for N_2O (Section \ref{sssec:methods-n2o-pca}).
+This step is the same as for N_2O (Section \ref{sssec:methods-n2o-pca}).
 
 \subsubsection{Step 4: Extend}
 \label{sssec:methods-ch4-extend}
 
 \textbf{Latitudinal gradient.}
-Following \cite{meinshausen_historical_2017},
-the first PC is initially extended by performing a linear regression against CH_4 emissions of a geological origin
-(as opposed to CH_4 emissions that originate in the active biosphere)
-from the [TODO cite PRIMAP version] dataset.
+As for CO_2 (Section \ref{sssec:methods-co2-extend}),
+the first PC is initially extended by performing a linear regression against emissions of a geological origin,
+in this case CH_4 emissions from the [TODO cite PRIMAP version] dataset.
 Using this regression, we extend the first PC back to the latest year
 % ZNTODO zalue-check: {"tag": "ch4-first-year-both-ice-cores", "unit": "yr", "upper": 1948, "lower": 1948}
 in which we have observations from ice cores in both the northern and southern hemispheres, in our case 1948.
@@ -824,35 +803,22 @@ The second PC is simply kept constant before the start of the observational peri
 \textbf{Global-, annual-mean.}
 To extend the global- annual-mean back in time,
 we use the smoothed [TODO cite Law dome] data to extend back to the start of the [TODO cite Law Dome] data, year 154.
-This process is very similar to how the ice core data is used for CO_2.
+We use it in the same way as the [TODO cite Menking et al 2025] data is used for CO_2 (Section \ref{sssec:methods-co2-extend}),
+i.e. we harmonise it to the value implied by our observational network based global- annual-mean and latitudinal gradient
 % ZNTODO zalue-check: {"tag": "menking-ch4-offset", "unit": "ppb", "upper": 1.0, "lower": 0.0}
-There is a very small, less than 1~ppb, offset
-between the smoothed [TODO cite Law Dome] data
-and the value implied by our observational network based global- annual-mean and latitudinal gradient
-in the time period in which they overlap.
-Like for CO_2,
-to avoid introducing an artificial step in the output,
-we harmonise the smoothed [TODO cite Law Dome] data
-to the value implied by our observational network based global- annual-mean and latitudinal gradient
-(even though this harmonisation has a much smaller effect in this case, because of the smaller offset).
-We then calculate the temporally extended global- annual-mean such that,
-when it is combined with the (now temporally extended) latitudinal gradient,
-our output dataset matches the smoothed [TODO cite Law Dome] data
+(the offset is less than 1~ppb, so the harmonisation has a much smaller effect than for CO_2),
+then calculate the temporally extended global- annual-mean such that our output dataset matches the harmonised data
 % ZNTODO: zalue-check of this
-in the latitudinal bin in which the ice cores were taken exactly
-(this is the -67.5\textdegree~bin on our native grid).
+in the -67.5\textdegree~latitudinal bin, the bin in which the ice cores were taken.
 
 We then use data from [TODO cite EPICA] to extend back to year 1.
 % ZNTODO: zalue-check of this and that the first year of EPICA use is year 154
 We simply linearly interpolate the underlying EPICA data,
 rather than smoothing because the period from year 1 to year 154 is not the focus of this dataset.
 As for the smoothed [TODO cite Law Dome] data,
-we calculate the global- annual-mean such that,
-when it is combined with the latitudinal gradient,
-our output dataset matches the [TODO cite EPIC] data
+we calculate the global- annual-mean such that our output dataset matches the [TODO cite EPICA] data
 % ZNTODO: zalue-check of this
-in the latitudinal bin in which the ice cores were taken exactly
-(this is -82.5\textdegree~on our native grid).
+in the latitudinal bin in which the ice cores were taken (-82.5\textdegree).
 
 % ZNTODO: zalue-check of this
 As a final check, we verify that the values implied by our global- annual-mean and latitudinal gradient
@@ -861,19 +827,17 @@ This ensures that our processing has closely maintained the latitudinal gradient
 provided by the ice cores throughout the various processing steps.
 
 \textbf{Seasonality.}
-Like for N_2O (Section \ref{sssec:methods-n2o-extend}),
-no further processing of the seasonality
-is required to extend it in time.
+As for N_2O (Section \ref{sssec:methods-n2o-extend}).
 
 \subsubsection{Step 5: Prepare the components to be combined}
 \label{sssec:methods-ch4-prepare-components}
 
-The components are processed in the same way as is done for N_2O (Section \ref{sssec:methods-n2o-prepare-components}).
+This step is the same as for N_2O (Section \ref{sssec:methods-n2o-prepare-components}).
 
 \subsubsection{Step 6: Generate native resolution}
 \label{sssec:methods-ch4-generate-native-resolution}
 
-We calculate the native resolution from the derived components in the same way as is done for N_2O (Section \ref{sssec:methods-n2o-generate-native-resolution}).
+This step is the same as for N_2O (Section \ref{sssec:methods-n2o-generate-native-resolution}).
 
 \subsection{Generating concentrations for CFC12 and similarly processed species}
 \label{ssec:methods-cfc12-like}
@@ -954,12 +918,10 @@ The networks used are:
 \subsubsection{Step 2: Bin and interpolate observations}
 \label{sssec:methods-cfc12-like-bin-and-interpolate}
 
-Binning and interpolation for gases processed like CFC12
-follows the general approach described in Section \ref{ssec:methods-general-approach}.
-As for N_2O (Section \ref{sssec:methods-n2o-bin-and-interpolate}),
-we specify that at least five data points are required for us to do spatial interpolation.
-However, due to a lack of data,
-we allow for extrapolation to the most northern and most southern latitudinal boxes.
+Binning and interpolation are the same as for N_2O (Section \ref{sssec:methods-n2o-bin-and-interpolate}),
+except that, due to a lack of data,
+we do not require data in the most northern and most southern latitudinal boxes.
+Instead, we allow for extrapolation to these boxes.
 In order to avoid spurious effects due to extrapolation,
 we use constant extrapolation rather than linear or smoother extrapolations such as cubic
 [TODO note this as a clear weakness in discussion].
@@ -1005,7 +967,7 @@ we end up with an observational network dataset that runs from 1979 to 2023
 \subsubsection{Step 3: Principal component analysis}
 \label{sssec:methods-cfc12-like-pca}
 
-The PCA analysis is the same as is done for for N_2O (Section \ref{sssec:methods-n2o-pca}).
+This step is the same as for N_2O (Section \ref{sssec:methods-n2o-pca}).
 By using seasonality and latitudinal gradient based on the observational network in all cases,
 rather than assuming zero seasonality and/or latitudinal gradient for some gases,
 we depart slightly from the choices made in \citet{meinshausen_historical_2017}.
@@ -1050,7 +1012,7 @@ in the first year for which we have data from the observational network (Table \
 % ZNTODO: add check of this decline period here
 The harmonisation is done by adding an offset which declines linearly to zero over a 100 year period.
 For the time period only covered by the observation network data, we use the global-, annual-mean derived from the observation network.
-For the gases that to not source their global-, annual-mean from a specific source,
+For the gases that do not source their global-, annual-mean from a specific source,
 we use the global-, annual-mean derived from the observational network (Table \ref{tab:cfc12-like-per-gas}).
 
 Second, for all gases, we extend the global-, annual-mean back in time
@@ -1086,17 +1048,13 @@ Where this fit leads to values that are not within the range of values seen on e
 we instead interpolate through the same points with a quadratic and, failing that, a cubic spline.
 
 \textbf{Seasonality.}
-Like for N_2O (Section \ref{sssec:methods-n2o-extend}),
-no further processing of the seasonality
-is required to extend it in time.
+As for N_2O (Section \ref{sssec:methods-n2o-extend}).
 
 \subsubsection{Step 5: Prepare the components to be combined}
 \label{sssec:methods-cfc12-like-prepare-components}
 
-The components are processed in the same way as is done for N_2O (Section \ref{sssec:methods-n2o-prepare-components}).
-
-We do an extra check for gases that are processed like CFC12.
-The check is that no negative values will be generated when we apply Equation \ref{eq:native-resolution-sum}.
+This step is the same as for N_2O (Section \ref{sssec:methods-n2o-prepare-components}),
+except that we do an extra check: that no negative values will be generated when we apply Equation \ref{eq:native-resolution-sum}.
 Where negative values are identified, we reduce the seasonality and/or latitudinal gradient as required
 so that the negative values become zero.
 % ZNTODO: add discussion point around fixing upstream processing so you don't get small negative values in the output
@@ -1107,7 +1065,7 @@ so we view this as an acceptable fix given the intended application of the datas
 \subsubsection{Step 6: Generate native resolution}
 \label{sssec:methods-cfc12-like-generate-native-resolution}
 
-We calculate the native resolution from the derived components in the same way as is done for N_2O (Section \ref{sssec:methods-n2o-generate-native-resolution}).
+This step is the same as for N_2O (Section \ref{sssec:methods-n2o-generate-native-resolution}).
 
 \subsection{Generating concentrations for C_4F_10 and similarly processed species}
 \label{ssec:methods-c4f10-like}
@@ -1192,8 +1150,6 @@ As noted previously, seasonality is assumed to be zero for gases processed like 
 \subsubsection{Step 4: Extend}
 \label{sssec:methods-c4f10-like-extend}
 
-Like for other gases, the next step is to then extend these components back in time.
-
 \textbf{Latitudinal gradient.}
 We extend the PC value (as we retain only one) back in time by
 assuming that the PC value is constant at zero
@@ -1216,17 +1172,16 @@ we assume that concentrations remain at zero before the first year of data provi
 \subsubsection{Step 5: Prepare the components to be combined}
 \label{sssec:methods-c4f10-like-prepare-components}
 
-The components are processed in the same way as is done for N_2O (Section \ref{sssec:methods-n2o-prepare-components}).
-
-We apply the same negative value check as is done for CFC12-like gases
-(Section \ref{sssec:methods-cfc12-like-prepare-components}),
-except here we can only adjust the latitudinal gradient
+This step is the same as for N_2O (Section \ref{sssec:methods-n2o-prepare-components}),
+except that we apply the same negative value check as is done for CFC12-like gases
+(Section \ref{sssec:methods-cfc12-like-prepare-components}).
+Here we can only adjust the latitudinal gradient
 (the seasonality is already assumed to be zero).
 
 \subsubsection{Step 6: Generate native resolution}
 \label{sssec:methods-c4f10-like-generate-native-resolution}
 
-We calculate the native resolution from the derived components in the same way as is done for N_2O (Section \ref{sssec:methods-n2o-generate-native-resolution}).
+This step is the same as for N_2O (Section \ref{sssec:methods-n2o-generate-native-resolution}).
 
 \subsection{Generating concentrations for C_8F_18}
 \label{ssec:methods-c8f18}

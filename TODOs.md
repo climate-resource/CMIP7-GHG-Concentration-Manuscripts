@@ -88,10 +88,29 @@ Everything else should use exactly these names:
           as it's a special case of constant extension (i.e. Step 4 follows the general approach, matching the summary list).
 - [x] C_4F_10-like Step 1 (`methods.tex:1150-1155`) talks about not doing interpolation or PCA (that belongs in Steps 2/3)
       Move that text into Steps 2/3.
-- [ ] Clean up each per-gas sub-section so it doesn't repeat the base case more than needed (from `NOTES.md`).
+- [x] Clean up each per-gas sub-section so it doesn't repeat the base case more than needed (from `NOTES.md`).
       Candidates: CO_2 Step 3 re-describing zonal/global-mean and lat. gradient (`methods.tex:562-582`),
       CH_4 Step 4 smoothing detail vs "very similar to CO_2" (`methods.tex:843-861`),
-      Step 5/6 sections that only say "same as N_2O".
+      Step 5/6 sections that only say "same as N_2O". Done:
+    - Kept every per-gas step heading (and run-in heading) so the six-step structure and labels stay intact,
+      but cut the text under them.
+    - Whole step identical: "This step is the same as for N_2O (Section \ref{sssec:methods-n2o-<step>})."
+      Component identical: "As for N_2O (Section ...)." under the run-in.
+      Step 2 for CO_2/CH_4: "Binning and interpolation are the same as for N_2O (...)", then the obs. network years.
+      All of these now point to the N_2O step, not `ssec:methods-general-approach`
+      (CO_2/CH_4/CFC12 Step 2 and CO_2 Step 6 used to).
+    - CO_2 Step 3: dropped the restated "As for N_2O, we then take our spatially complete dataset..." opener
+      and the re-explanation of retaining two EOFs (a ZNTODO to check the variance explained for CO_2 is left in).
+      CO_2 Step 5: dropped the restated "In this step, we construct..." opener.
+    - CH_4 Step 4: lat. gradient regression now "As for CO_2"; the Law Dome global-mean paragraph
+      now says it's used the same way as Menking et al. for CO_2 and only gives the CH_4 specifics
+      (offset size, -67.5° bin), instead of re-describing harmonisation and matching. EPICA paragraph trimmed likewise.
+      The Law Dome smoothing detail is CH_4-specific, so left in
+      (could move to the appendix with the optional smoothing figure, see Section 2).
+    - CFC12 Step 2: now "the same as for N_2O, except that we do not require data in the most northern and southern boxes";
+      CFC12/C_4F_10 Step 5: "the same as for N_2O, except that..." for the negative-value check.
+    - C_4F_10 Step 4: dropped the "Like for other gases, the next step is to then extend..." filler.
+    - Typos: "for for", "PCA analysis", "that to not", "EPIC" → "EPICA".
 - [ ] Create the table of differences from the base case (from `NOTES.md`).
       A draft is commented out at `methods.tex:274-295` (`table:methods-differences`),
       but its ZNTODO says that layout doesn't work (too much text per cell).
