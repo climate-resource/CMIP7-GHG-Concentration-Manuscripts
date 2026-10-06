@@ -52,16 +52,18 @@ Everything else should use exactly these names:
     - [x] CFC-12-like Step 4 global-mean: "two steps" / "the previous step" → "two sub-steps" / "the first sub-step"
     - Left as is: "this and subsequent steps" (CO_2 Step 3), "processing steps" (CH_4 Step 4)
       and "the next step is to then extend" (C_4F_10-like Step 4), which do refer to top-level steps.
-- [ ] Per-gas summary list (`methods.tex:161-272`) vs the per-gas sections:
-    - CFC-12-like summary is missing the Step 2 delta
-      (constant extrapolation into polar bands, long poleward extension, relaxed "data in both northern- and southern-most box" rule; also see ZNTODO at `methods.tex:49`),
-      the Step 3 delta (obs-derived seasonality and lat. gradient for every gas, unlike M17, `methods.tex:1026-1028`)
-      and the Step 4 details (regression against RCMIP emissions, quartic gap fill, `methods.tex:1035-1105`).
-    - C_4F_10-like summary Step 3 omits that the global-mean is derived here
-      and the linear extrapolation from 2018 to 2022; Step 4 only covers concentrations, not the PC set to zero.
-    - C_8F_18: summary says "We simply use CMIP6 data, taking the 2015-2022 time period from the SSP2-4.5 scenario" (`methods.tex:269`).
-      Update it to match the section (CMIP6 global- and hemispheric-means, assumed seasonality and lat. gradient).
-      The original run's notebook takes SSP2-4.5 for 2015-2023, not 2015-2022: check which years the output covers.
+- [x] Per-gas summary list vs the per-gas sections. Done:
+    - [x] CFC-12-like: added the Step 2 delta (no data needed in the polar boxes, constant extrapolation into them,
+          over multiple boxes for some gases, pointing to the per-gas table; removed the ZNTODO in general Step 2),
+          the Step 3 delta (obs-derived seasonality and lat. gradient for every gas, unlike M17)
+          and the Step 4 details (regression against RCMIP emissions, quartic gap fill to pre-industrial values).
+          Checked against `1301_sf6-like_interpolate-observational-network`:
+          every CFC-12-like gas gets the one-box extension, `gases_long_poleward_extension` the multi-box one.
+    - [x] C_4F_10-like: Step 3 now says the global-mean is derived there and both are extrapolated from 2018 to 2022;
+          Step 4 now says the PC, as well as concentrations, is zero before the Droste data.
+    - [x] C_8F_18: now matches the section (CMIP6 global- and hemispheric-means, zero seasonality, linear lat. gradient).
+          Kept 2015-2022: the original notebook takes SSP2-4.5 for 2015-2023,
+          but the published output ends in 2022 (`..._gm_1750-2022.nc`).
 - [ ] General Step 4 (`methods.tex:94-105`) says the lat. gradient PCs are extended either by emissions regression
       or by linear/constant extrapolation. It doesn't cover the CH_4 ice-core optimisation, the CO_2 seasonality change PC
       (temperature-CO_2 composite) or the C_4F_10-like zero assumption. Generalise or add "except where noted".
@@ -154,6 +156,11 @@ The build doesn't support appendices yet, but most of the figures already exist.
 
 ## 4. Methods: content and correctness
 
+- [ ] General Step 2 and CFC-12-like Step 2 say "at least five data points are required" for spatial interpolation
+      (`methods.tex:49,980`), but the original run uses `MIN_POINTS_FOR_SPATIAL_INTERPOLATION = 4`
+      with `if n < 4: skip`, i.e. at least four
+      (`1001_n2o`, `1101_ch4`, `1201_co2`, `1301_sf6-like` `_interpolate-observational-network` notebooks).
+      Fix the text and consider a value-check.
 - [ ] N_2O Step 4: the harmonisation year is given as 1984, "the earliest year in our observational network derived global- annual-mean"
       (`methods.tex:437-438`), but the N_2O network runs from 1989 (`methods.tex:346,418`).
       This looks copied from CH_4. Fix it and add a value-check.

@@ -46,7 +46,6 @@ be broken down as follows:
          Then, since the surface observational network does not cover the entire globe,
          we interpolate the binned observations spatially to get complete global coverage.
 
-         % ZNTODO: check that we describe the delta for CFC12-like gases appropriately
          We specify that at least five data points are required for us to do spatial interpolation
          and we must have data points in both the most northern and most southern latitudinal box.
          This is clearly a relatively low data requirement,
@@ -213,14 +212,19 @@ while the specifics for each greenhouse gas are described in the following secti
 
         \begin{enumerate}
             \item {
+                \textbf{Step 2: Bin and interpolate observations}
+                We do not require data in the most northern and most southern latitudinal boxes.
+                Instead, where the interpolation cannot fill these boxes,
+                we fill them using constant extrapolation of the observations.
+                For gases with particularly sparse observational networks,
+                we allow the constant extrapolation to extend over multiple latitudinal boxes.
+            }
+            \item {
                 \textbf{Step 4: Extend}
                 In some cases, we use a specific source for the global- annual-mean
                 and extend this, rather than extending the global- annual-mean derived from the observational network.
-                % % Already mentioned above, don't need to repeat
-                % We extend the global- annual-mean back in time
-                % based on pre-industrial values from the literature
-                % and perform an interpolation between the pre-industrial value
-                % and the global- annual-mean values (as far back as they go in time).
+                We fill the gap between the global-, annual-mean and pre-industrial values from the literature
+                with a quartic fit.
             }
             \item {
                 \textbf{Step 5: Prepare the components to be combined}
@@ -247,12 +251,15 @@ while the specifics for each greenhouse gas are described in the following secti
                 \textbf{Step 3: Principal component analysis}
                 We don't perform PCA.
                 Instead, we assume that the (area-weighted) latitudinal gradient is linear,
-                then calculate the PCs based on the data from [TODO Droste et al].
+                then calculate the PC and the global-, annual-mean based on the data from [TODO Droste et al].
+                Both are linearly extrapolated from the end of the [TODO Droste et al] data (2018) to 2022.
                 We assume that seasonality is zero.
             }
             \item {
                 \textbf{Step 4: Extend}
-                We assume that the concentration of these gases remains constant at zero before the timeseries provided by [Droste et al.].
+                We assume that the concentration of these gases,
+                and therefore the latitudinal gradient PC,
+                is zero before the timeseries provided by [TODO Droste et al].
             }
             \item {
                 \textbf{Step 5: Prepare the components to be combined}
@@ -266,8 +273,11 @@ while the specifics for each greenhouse gas are described in the following secti
     \item {
         C_8F_18
 
-        We simply use CMIP6 data, taking the 2015-2022 time period from the SSP2-4.5 scenario
-        because of a lack of new input data since \citet{meinshausen_historical_2017}.
+        Because of a lack of new input data since \citet{meinshausen_historical_2017},
+        we use the global- and hemispheric-, annual-means from the CMIP6 dataset
+        (taking the 2015-2022 time period from the SSP2-4.5 scenario, \citealp{meinshausen_shared_2020}).
+        As in \citet{meinshausen_historical_2017}, we assume zero seasonality
+        and a linear latitudinal gradient, scaled to reproduce the CMIP6 hemispheric-means.
     }
 \end{enumerate}
 
