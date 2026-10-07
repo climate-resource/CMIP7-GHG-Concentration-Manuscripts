@@ -269,18 +269,18 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 
 ### References from the main text into the appendix
 
-- [ ] Review the test cross-refs, each marked with
+- [x] Review the test cross-refs, each marked with
       "% TODO: review this cross-ref, this is just here to test the linking between main and appendices e.g. numbering."
       They are: a sentence after each of the N_2O, CO_2, CH_4 and CFC-12 methods figures pointing to its appendix figure
       (the N_2O one also points to Appendix A), one after the CFC-12 one pointing to the SF_6 figures (now A67, A68),
       one at the end of the CFC-12 results section pointing to the SF_6 results (now B32)
       and one in the equivalence datasets intro pointing to CFC-11-eq (now B40, Appendix B).
       Replace them with the real references below (or keep them, reworded).
-- [ ] N_2O Step 3, "explain almost all of the variance (Figure [ZNTODO figure panel ref])" (`methods.tex:391`), pointing to the variance explained panel.
-- [ ] CO_2 Step 3 variance claims (`methods.tex:574-576,597-600`), pointing to the variance explained panels (c, f).
-- [ ] CO_2 Step 4 regressions (`methods.tex:607-612,667-688`), pointing to the CO_2 appendix panels e and h (ZNTODO at `methods.tex:688`).
-- [ ] CH_4 and CFC-12 Step 4 regressions, pointing to panel e of their appendix figures.
-- [ ] General Step 2 interpolation (`methods.tex:40-70`), pointing to panels a and b (best/worst-case interpolation).
+- [x] N_2O Step 3, "explain almost all of the variance (Figure [ZNTODO figure panel ref])" (`methods.tex:391`), pointing to the variance explained panel.
+- [x] CO_2 Step 3 variance claims (`methods.tex:574-576,597-600`), pointing to the variance explained panels (c, f).
+- [x] CO_2 Step 4 regressions (`methods.tex:607-612,667-688`), pointing to the CO_2 appendix panels e and h (ZNTODO at `methods.tex:688`).
+- [x] CH_4 and CFC-12 Step 4 regressions, pointing to panel e of their appendix figures.
+- [x] General Step 2 interpolation (`methods.tex:40-70`), pointing to panels a and b (best/worst-case interpolation).
 - [ ] A pass over the whole methods section looking for other places a figure reference would help (ZNTODO at `methods.tex:688`).
 - [ ] A pass over the whole methods section looking for places where we refer to a figure/value for justification for one gas but don't similarly for others (e.g. currently we don't explain why we keep two lat. grad. EOFs for CH4)
 

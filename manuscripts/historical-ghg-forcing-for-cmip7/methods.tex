@@ -374,15 +374,12 @@ When referring to `AGAGE' data, we also mean data from the predecessor GAGE [TOD
 \label{fig:methods-n2o}
 \end{figure}
 
-% TODO: review this cross-ref, this is just here to test the linking between main and appendices e.g. numbering.
-The working behind Figure \ref{fig:methods-n2o} is shown in Figure \ref{fig:methods-appendix-n2o}
-(the equivalent figures for the other gases are in Appendix \ref{app:methods-figures}).
-
 \subsubsection{Step 2: Bin and interpolate observations}
 \label{sssec:methods-n2o-bin-and-interpolate}
 
 Binning and interpolation for N_2O
-follow the general approach described in Section \ref{ssec:methods-general-approach}.
+follow the general approach described in Section \ref{ssec:methods-general-approach}
+(Figure \ref{fig:methods-appendix-n2o}a), b)).
 When we take the longest dataset that is continuous,
 % value-check: {"tag": "n2o-obs-network-start", "unit": "yr", "upper": 1989, "lower": 1989}
 % value-check: {"tag": "n2o-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
@@ -427,7 +424,8 @@ If all EOFs are retained, then the product of the EOFs and the PCs
 reproduces the residuals we started with exactly.
 However, following \citet{meinshausen_historical_2017}
 we only retain the first two EOFs as these are sufficient
-to explain almost all of the variance (Figure [ZNTODO figure panel ref]).
+% ZNTODO: add check of this claim
+to explain almost all of the variance (Figure \ref{fig:methods-appendix-n2o}c)).
 
 \textbf{Seasonality.}
 The fourth sub-step is to calculate our relative seasonality.
@@ -555,13 +553,11 @@ For CO_2, we use data from the NOAA observation network
 \label{fig:methods-co2}
 \end{figure}
 
-% TODO: review this cross-ref, this is just here to test the linking between main and appendices e.g. numbering.
-The working behind Figure \ref{fig:methods-co2} is shown in Figure \ref{fig:methods-appendix-co2}.
-
 \subsubsection{Step 2: Bin and interpolate observations}
 \label{sssec:methods-co2-bin-and-interpolate}
 
-Binning and interpolation are the same as for N_2O (Section \ref{sssec:methods-n2o-bin-and-interpolate}).
+Binning and interpolation are the same as for N_2O
+(Section \ref{sssec:methods-n2o-bin-and-interpolate}, Figure \ref{fig:methods-appendix-co2}a), b)).
 When we take the longest dataset that is continuous,
 % value-check: {"tag": "co2-obs-network-start", "unit": "yr", "upper": 1981, "lower": 1981}
 % value-check: {"tag": "co2-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
@@ -579,8 +575,9 @@ with the aim of better representing the variations in seasonality seen in the ob
 As for N_2O (Section \ref{sssec:methods-n2o-pca}).
 
 \textbf{Latitudinal gradient.}
-As for N_2O (Section \ref{sssec:methods-n2o-pca}), including retaining only the first two EOFs.
-% ZNTODO: add check that the first two EOFs explain almost all of the variance for CO_2 too
+As for N_2O (Section \ref{sssec:methods-n2o-pca}).
+% ZNTODO: add check of this claim
+As for N_2O, we only retain the first two EOFs because they explain almost all of the variance (Figure \ref{methods-appendix-co2}f)).
 
 \textbf{Seasonality.}
 The (absolute) seasonality is calculated as for N_2O (Section \ref{sssec:methods-n2o-pca}).
@@ -609,7 +606,7 @@ so an unworkably large number would be required to capture a large fraction of t
 Following \cite{meinshausen_historical_2017},
 the first PC is extended by performing a linear regression against CO_2 emissions of a geological origin
 (as opposed to CO_2 emissions that originate in the active biosphere)
-based on the [TODO cite PRIMAP version] dataset.
+based on the [TODO cite PRIMAP version] dataset (Figure \ref{fig:methods-appendix-co2}h)).
 Using this regression, we then extend emissions back to 1750,
 the first year reported in the [TODO cite PRIMAP] dataset.
 Before 1750, we keep the first PC value constant.
@@ -667,7 +664,7 @@ extend the seasonality change PC back in time.
 
 Following \cite{meinshausen_historical_2017},
 the PC is extended by performing a linear regression against a composite of global-mean surface air temperatures from [TODO cite HadCRUT]
-and our (now extended) global-, annual-mean CO_2 concentrations.
+and our (now extended) global-, annual-mean CO_2 concentrations (Figure \ref{fig:methods-appendix-co2}e)).
 The composite is described in Equation \ref{eq:co2-pc-composite-regressor}:
 
 \begin{align}
@@ -686,7 +683,6 @@ and $_n$ indicates that the quantity is a mean over the normalisation period (20
 Using this regression, we extend the PC back to 1850,
 the start of [TODO cite HadCRUT]'s dataset.
 Before 1850, we keep the PC value constant.
-% ZNTODO: add appendix figure ref and consider other such figure references throughout the methods section to point the reader to pictures that explain what is going on
 
 \subsubsection{Step 5: Prepare the components to be combined}
 \label{sssec:methods-co2-prepare-components}
@@ -737,13 +733,11 @@ For CH_4, we use data from the NOAA [TODO ref] and AGAGE [TODO ref] observation 
 \label{fig:methods-ch4}
 \end{figure}
 
-% TODO: review this cross-ref, this is just here to test the linking between main and appendices e.g. numbering.
-The working behind Figure \ref{fig:methods-ch4} is shown in Figure \ref{fig:methods-appendix-ch4}.
-
 \subsubsection{Step 2: Bin and interpolate observations}
 \label{sssec:methods-ch4-bin-and-interpolate}
 
-Binning and interpolation are the same as for N_2O (Section \ref{sssec:methods-n2o-bin-and-interpolate}).
+Binning and interpolation are the same as for N_2O
+(Section \ref{sssec:methods-n2o-bin-and-interpolate}, Figure \ref{fig:methods-appendix-ch4}a), b)).
 When we take the longest dataset that is continuous,
 % value-check: {"tag": "ch4-obs-network-start", "unit": "yr", "upper": 1984, "lower": 1984}
 % value-check: {"tag": "ch4-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
@@ -760,7 +754,7 @@ This step is the same as for N_2O (Section \ref{sssec:methods-n2o-pca}).
 \textbf{Latitudinal gradient.}
 As for CO_2 (Section \ref{sssec:methods-co2-extend}),
 the first PC is initially extended by performing a linear regression against emissions of a geological origin,
-in this case CH_4 emissions from the [TODO cite PRIMAP version] dataset.
+in this case CH_4 emissions from the [TODO cite PRIMAP version] dataset (Figure \ref{fig:methods-appendix-ch4}e)).
 Using this regression, we extend the first PC back to the latest year
 % ZNTODO zalue-check: {"tag": "ch4-first-year-both-ice-cores", "unit": "yr", "upper": 1948, "lower": 1948}
 in which we have observations from ice cores in both the northern and southern hemispheres, in our case 1948.
@@ -884,7 +878,9 @@ the [TODO cite NOAA HATS]
 % the NOAA HATS \citep{noaa_hats_cfc12}
 and [TODO cite AGAGE]
 % AGAGE \citep{prinn_history_2000,prinn2018history}
-observation networks (Figure \ref{fig:methods-cfc12}).
+observation networks
+(Figure \ref{fig:methods-cfc12},
+see Appendix \ref{app:methods-figures} for similar figures for all other gases processed like CFC12).
 % The NOAA HATS data is NOAA's combined CFC12 product,
 % which combines the measurements from NOAA's different halocarbon measurement programmes.
 % The AGAGE data comes from three types of instrument (GC-MD, GC-MS and GC-MS-Medusa).
@@ -921,16 +917,11 @@ The networks used are:
 \label{fig:methods-cfc12}
 \end{figure}
 
-% TODO: review this cross-ref, this is just here to test the linking between main and appendices e.g. numbering.
-The working behind Figure \ref{fig:methods-cfc12} is shown in Figure \ref{fig:methods-appendix-cfc12}.
-% TODO: review this cross-ref, this is just here to test the linking between main and appendices e.g. numbering.
-As an example of another gas processed like CFC12,
-the equivalent figures for SF_6 are shown in Figures \ref{fig:methods-sf6} and \ref{fig:methods-appendix-sf6}.
-
 \subsubsection{Step 2: Bin and interpolate observations}
 \label{sssec:methods-cfc12-like-bin-and-interpolate}
 
-Binning and interpolation are the same as for N_2O (Section \ref{sssec:methods-n2o-bin-and-interpolate}),
+Binning and interpolation are the same as for N_2O
+(Section \ref{sssec:methods-n2o-bin-and-interpolate}, Figure \ref{fig:methods-appendix-cfc12}a), b)),
 except that, due to a lack of data,
 we do not require data in the most northern and most southern latitudinal boxes.
 Instead, we allow for extrapolation to these boxes.
@@ -990,7 +981,7 @@ we depart slightly from the choices made in \citet{meinshausen_historical_2017}.
 \textbf{Latitudinal gradient.}
 We extend the latitudinal gradient PC (as we retain only one)
 back in time by using a regression against total emissions
-from the SSP2-4.5 scenario (which includes the historical period) in the RCMIP v5.1.0 emissions dataset \citep{nicholls_rcmip_2020}.
+from the SSP2-4.5 scenario (which includes the historical period) in the RCMIP v5.1.0 emissions dataset \citep{nicholls_rcmip_2020} (Figure \ref{fig:methods-appendix-cfc12}e)).
 % ZNTODO: include more discussion of this in discussion.
 % The point is that we need more rapidly updated historical emissions estimates
 % to feed this, or to create a new approach that doesn't require this regression.
