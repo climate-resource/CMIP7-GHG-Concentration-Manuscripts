@@ -32,9 +32,13 @@ import matplotlib.ticker
 import numpy as np
 import pandas as pd
 import xarray as xr
+import yaml
 from loguru import logger
 
-from local.cmip_ghg_generation import DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR
+from local.cmip_ghg_generation import (
+    BUNDLE_CONFIG_FILE,
+    DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
+)
 from local.historical_ghg_forcing_for_cmip7.c4f10_like_methods_figure import (
     C4F10_LIKE_GASES,
     DROSTE_LABEL,
@@ -1454,11 +1458,52 @@ def label_results_panels(
     return res
 
 
+def get_output_end_year(gas: str, bundle_dir: Path) -> int:
+    """
+    Get the last year of the output datasets we published for a gas
+
+    The original run's interim files run further than the published files
+    (for most gases, to 2023 rather than 2022),
+    so this is where we have to cut them off
+    if we want to show what we actually published.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory which holds the original run's bundle
+
+    Returns
+    -------
+    :
+        Last year of the published (input4MIPs) files for `gas`
+
+    Raises
+    ------
+    AssertionError
+        The bundle's config has no input4MIPs writing config for `gas`
+    """
+    with open(bundle_dir / BUNDLE_CONFIG_FILE) as fh:
+        config = yaml.safe_load(fh)
+
+    for step_config in config["write_input4mips"]:
+        if step_config["gas"] == gas:
+            return int(step_config["end_year"])
+
+    msg = f"No input4MIPs writing config for {gas=}"
+    raise AssertionError(msg)
+
+
 def load_output(
     gas: str, bundle_dir: Path
 ) -> tuple[xr.DataArray, xr.DataArray, xr.DataArray, xr.DataArray]:
     """
     Load our output for a gas
+
+    Only the years we published are loaded
+    (see [get_output_end_year][]).
 
     Parameters
     ----------
@@ -1476,19 +1521,17 @@ def load_output(
         (the latter with the regions' names as its `lat` values)
     """
     gas_dir = bundle_dir / "data" / "interim" / gas
+    published_years = slice(None, get_output_end_year(gas, bundle_dir))
 
-    native_resolution = get_only_data_variable(
-        xr.load_dataset(gas_dir / f"{gas}_fifteen-degree_monthly.nc")
-    )
-    gm_yearly = get_only_data_variable(
-        xr.load_dataset(gas_dir / f"{gas}_global-mean_annual-mean.nc")
-    )
-    gm_monthly = get_only_data_variable(
-        xr.load_dataset(gas_dir / f"{gas}_global-mean_monthly.nc")
-    )
-    hm_monthly = get_only_data_variable(
-        xr.load_dataset(gas_dir / f"{gas}_hemispheric-mean_monthly.nc")
-    )
+    def load(suffix: str) -> xr.DataArray:
+        return get_only_data_variable(
+            xr.load_dataset(gas_dir / f"{gas}_{suffix}.nc")
+        ).sel(year=published_years)
+
+    native_resolution = load("fifteen-degree_monthly")
+    gm_yearly = load("global-mean_annual-mean")
+    gm_monthly = load("global-mean_monthly")
+    hm_monthly = load("hemispheric-mean_monthly")
     sh_lat = -45.0
     hm_monthly = hm_monthly.assign_coords(
         lat=[

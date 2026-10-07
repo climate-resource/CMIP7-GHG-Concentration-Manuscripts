@@ -276,11 +276,18 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       one at the end of the CFC-12 results section pointing to the SF_6 results (now B32)
       and one in the equivalence datasets intro pointing to CFC-11-eq (now B40, Appendix B).
       Replace them with the real references below (or keep them, reworded).
+      Done: all removed. The CFC-12 methods intro points to Appendix A2 (other CFC-12-like gases)
+      and C_4F_10 Step 1 to Appendix A3 (other C_4F_10-like gases), so each group of appendix figures is pointed to.
+      The SF_6 sentences are gone (covered by these pointers and the "species by species" pointer to Appendix B).
+      The CFC-11-eq sentence says it covers the gases in CFC12-eq and HFC134a-eq except CFC12 (not their sum).
 - [x] N_2O Step 3, "explain almost all of the variance (Figure [ZNTODO figure panel ref])" (`methods.tex:391`), pointing to the variance explained panel.
 - [x] CO_2 Step 3 variance claims (`methods.tex:574-576,597-600`), pointing to the variance explained panels (c, f).
+      Both the latitudinal gradient (f) and seasonality change (c) claims point to their panel.
 - [x] CO_2 Step 4 regressions (`methods.tex:607-612,667-688`), pointing to the CO_2 appendix panels e and h (ZNTODO at `methods.tex:688`).
 - [x] CH_4 and CFC-12 Step 4 regressions, pointing to panel e of their appendix figures.
 - [x] General Step 2 interpolation (`methods.tex:40-70`), pointing to panels a and b (best/worst-case interpolation).
+      Done in each per-gas Step 2 (N_2O, CO_2, CH_4, CFC-12) rather than in the general approach,
+      which comes before any figure.
 - [ ] A pass over the whole methods section looking for other places a figure reference would help (ZNTODO at `methods.tex:688`).
 - [ ] A pass over the whole methods section looking for places where we refer to a figure/value for justification for one gas but don't similarly for others (e.g. currently we don't explain why we keep two lat. grad. EOFs for CH4)
 
