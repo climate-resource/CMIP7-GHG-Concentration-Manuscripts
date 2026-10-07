@@ -460,6 +460,17 @@ Need adding to the bib:
 
 ## 8. Nomenclature and typos
 
+- [ ] Check hyphens and dashes throughout (all `.tex` files, plus the generated captions/tables in `src/local/`).
+      We mix `-` and `--`: e.g. ranges are written both ways ("2015-2022" in the C_8F_18 summary vs "d)--f)" in methods),
+      and a spaced hyphen is used as a dash ("agree in 1984 - the earliest year", "1981 - their first overlap year")
+      and as a separator ("Law Dome - Mauna Loa record", "temperature - CO_2 concentration composite").
+      Apply the Copernicus guidance consistently.
+      It isn't in the template files in `copernicus-latex-package/`,
+      so check the Copernicus manuscript preparation / English guidelines pages
+      (https://publications.copernicus.org/for_authors/manuscript_preparation.html) for the rules.
+      Leave maths minus signs (equations) and hyphenated compounds (e.g. "global-, annual-mean") alone.
+      Consider whether `replacements.yaml` or a check in the build can enforce it.
+
 - [ ] Decide CFC12 vs CFC-12 in the source (abstract asks "[TODO check nomenclature]").
       `replacements.yaml` maps CFC12 → CFC-12 so the output is fine, but the source mixes both.
       Same for HFC134a vs HFC-134a.
