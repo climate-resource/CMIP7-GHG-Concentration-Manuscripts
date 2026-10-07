@@ -111,6 +111,20 @@ competing_interests_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cm
 acknowledgments_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/acknowledgements.tex"
 
 conclusion_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/conclusion.tex"
+
+# The body sections and the appendices, in the order they appear.
+# These are the files which include figures,
+# so the input generation reads them too
+# (a figure they already include is left out of the generated appendix figures).
+section_files=(
+    "${output_requirements_file}"
+    "${methods_file}"
+    "${results_file}"
+    "${discussion_file}"
+)
+appendix_files=(
+    "${appendices_file}"
+)
 latex_metadata_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/metadata.toml"
 replacements_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/replacements.yaml"
 references_bib="${repo_root}/references/references.bib"
@@ -123,6 +137,9 @@ build_dir="${repo_root}/build/historical-ghg-forcing-for-cmip7"
 # It says which tag in the latex each figure and table replaces,
 # so the paths above don't have to be repeated for the compilation.
 tex_inputs_manifest_file="${build_dir}/tex-inputs.json"
+# The latex of the groups of appendix figures (e.g. all the CFC-12-like gases' figures).
+# Written by the input generation, inlined by the compilation (like the tables).
+appendix_figures_dir="${build_dir}/appendix-figures"
 
 output_pdf_dir="${repo_root}/compiled-manuscripts"
 output_pdf="${output_pdf_dir}/historical-ghg-forcing-for-cmip7.pdf"
@@ -153,6 +170,19 @@ for results_figure_file in ${results_figure_files[@]+"${results_figure_files[@]}
     results_args+=(--results-figure-file "${results_figure_file}")
 done
 
+section_args=()
+manuscript_file_args=()
+for section_file in "${section_files[@]}"; do
+    section_args+=(--section "${section_file}")
+    manuscript_file_args+=(--manuscript-file "${section_file}")
+done
+
+appendix_args=()
+for appendix_file in "${appendix_files[@]}"; do
+    appendix_args+=(--appendix "${appendix_file}")
+    manuscript_file_args+=(--manuscript-file "${appendix_file}")
+done
+
 uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-inputs.py" \
     --co2-methods-figure-file "${co2_methods_figure_file}" \
     --ch4-methods-figure-file "${ch4_methods_figure_file}" \
@@ -166,6 +196,8 @@ uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-input
     ${cfc12_like_args[@]+"${cfc12_like_args[@]}"} \
     ${c4f10_like_args[@]+"${c4f10_like_args[@]}"} \
     ${results_args[@]+"${results_args[@]}"} \
+    "${manuscript_file_args[@]}" \
+    --appendix-figures-dir "${appendix_figures_dir}" \
     --tex-inputs-manifest-file "${tex_inputs_manifest_file}" \
     --bundle-dir "${zenodo_bundle_dir}" \
     --original-run-notebooks-dir "${original_run_notebooks_dir}"
@@ -176,13 +208,10 @@ uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-input
 uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --abstract "${abstract_file}" \
     --introduction "${introduction_file}" \
-    --section "${output_requirements_file}" \
-    --section "${methods_file}" \
-    --section "${results_file}" \
-    --section "${discussion_file}" \
+    "${section_args[@]}" \
     --tex-inputs-manifest "${tex_inputs_manifest_file}" \
     --conclusion "${conclusion_file}" \
-    --appendix "${appendices_file}" \
+    "${appendix_args[@]}" \
     --code-and-data-availability "${code_and_data_availability_file}" \
     --author-contribution "${author_contribution_file}" \
     --competing-interests "${competing_interests_file}" \

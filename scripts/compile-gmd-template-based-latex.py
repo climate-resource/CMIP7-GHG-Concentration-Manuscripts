@@ -105,13 +105,13 @@ def insert_author_list_and_affiliations(
 
         author_entries.append(author_text)
 
-    res = insert_after_tag(start, author_entries, "<author-start>")
+    res = insert_after_tag(start, author_entries, "@author-start@")
 
     affiliations_entries = [
         get_source_file_str(metadata_file),
         *(rf"\affil[{i}]{{{address}}}" for address, i in affiliations.values()),
     ]
-    res = insert_after_tag(res, affiliations_entries, "<affiliation-start>")
+    res = insert_after_tag(res, affiliations_entries, "@affiliation-start@")
 
     return res
 
@@ -297,54 +297,125 @@ def split_tag_and_path(value: str, option: str) -> tuple[str, Path]:
     return tag, Path(full_path)
 
 
-def pass_figure_specs(raw: list[str]) -> tuple[FigureSpec, ...]:
+def pass_figure_specs(
+    tags_and_paths: list[tuple[str, Path]],
+) -> tuple[FigureSpec, ...]:
     """
-    Pass CLI figure information into `FigureSpec`s
+    Pass tags and figure paths into `FigureSpec`s
     """
-    res_l = []
-    for v in raw:
-        tag, full_path = split_tag_and_path(v, option="--figure-file")
-        fs = FigureSpec(tag_to_replace=tag, full_path=full_path)
-        res_l.append(fs)
-
-    res = tuple(res_l)
-
-    return res
+    return tuple(
+        FigureSpec(tag_to_replace=tag, full_path=full_path)
+        for tag, full_path in tags_and_paths
+    )
 
 
-def load_tex_inputs_manifest(manifest_file: Path) -> tuple[list[str], list[str]]:
+def load_tex_inputs_manifest(
+    manifest_file: Path,
+) -> tuple[list[tuple[str, Path]], list[tuple[str, Path]]]:
     """
-    Load a manifest of figure and table files
+    Load a manifest of figure files and files to inline
 
     Parameters
     ----------
     manifest_file
-        JSON file with a `figures` and a `tables` entry,
+        JSON file with a `figures` and an `inline` entry,
         each of which maps a tag to replace to a full path
 
     Returns
     -------
     :
-        The figures and tables, formatted as for `--figure-file` and `--table-file`
+        The figures and the files to inline, as (tag, path) pairs
     """
     manifest = json.loads(manifest_file.read_text())
 
-    figure_files = [f"{tag}={path}" for tag, path in manifest["figures"].items()]
-    table_files = [f"{tag}={path}" for tag, path in manifest["tables"].items()]
+    figure_files = [(tag, Path(path)) for tag, path in manifest["figures"].items()]
+    inline_files = [(tag, Path(path)) for tag, path in manifest["inline"].items()]
 
-    return figure_files, table_files
+    return figure_files, inline_files
 
 
-def tag_is_used(value: str, text: str) -> bool:
+COMMENT_START = re.compile(r"(?<!\\)%")
+"""
+The start of a latex comment (a `%`, unless it is escaped)
+"""
+
+
+def split_comment(line: str) -> tuple[str, str]:
     """
-    Check whether the tag in a `tag-to-replace=full-path` value appears in the text
+    Split a line of latex into the part before its comment and its comment
+
+    Parameters
+    ----------
+    line
+        Line to split
+
+    Returns
+    -------
+    :
+        The part of `line` before its comment
+        and its comment (empty if it has none),
+        so that joining them gives back `line`
     """
-    tag, _, _ = value.partition("=")
+    match = COMMENT_START.search(line)
+    if match is None:
+        return line, ""
 
-    return tag in text
+    return line[: match.start()], line[match.start() :]
 
 
-UNREPLACED_FIGURE_TAG = re.compile(r"\\includegraphics(\[[^\]]*\])?\{(<[^}]*>)\}")
+def tag_in_text(tag: str, text: str) -> bool:
+    """
+    Check whether a tag appears in the text, outside of comments
+
+    Parameters
+    ----------
+    tag
+        Tag to look for
+
+    text
+        Text to look in
+
+    Returns
+    -------
+    :
+        Whether `tag` appears in `text` outside of comments
+    """
+    return any(tag in split_comment(line)[0] for line in text.splitlines())
+
+
+def replace_tag(text: str, tag: str, replacement: str) -> str:
+    """
+    Replace a tag in the text, except where it appears in comments
+
+    Comments can then mention tags
+    (e.g. to explain where something comes from)
+    without the tag being replaced there.
+
+    Parameters
+    ----------
+    text
+        Text in which to replace the tag
+
+    tag
+        Tag to replace
+
+    replacement
+        What to replace `tag` with
+
+    Returns
+    -------
+    :
+        `text`, with `tag` replaced by `replacement` outside of comments
+    """
+    res_l = []
+    for line in text.splitlines():
+        before_comment, comment = split_comment(line)
+        res_l.append(f"{before_comment.replace(tag, replacement)}{comment}")
+
+    return "\n".join(res_l)
+
+
+UNREPLACED_FIGURE_TAG = re.compile(r"\\includegraphics(\[[^\]]*\])?\{(@[^}@]*@)\}")
 """
 A figure which is still a tag, i.e. one we were never given a file for
 """
@@ -367,8 +438,7 @@ def check_no_unreplaced_figure_tags(text: str) -> None:
     unreplaced = [
         match.group(2)
         for line in text.splitlines()
-        if not line.lstrip().startswith("%")
-        for match in UNREPLACED_FIGURE_TAG.finditer(line)
+        for match in UNREPLACED_FIGURE_TAG.finditer(split_comment(line)[0])
     ]
     if unreplaced:
         msg = (
@@ -379,24 +449,64 @@ def check_no_unreplaced_figure_tags(text: str) -> None:
         raise AssertionError(msg)
 
 
-def inline_table_files(
-    in_text: str, table_files: list[str], collector: ValueCheckCollector
+UNREPLACED_TAG = re.compile(r"@[a-z0-9][a-z0-9-]*@")
+"""
+Any tag, i.e. something we should have replaced
+"""
+
+
+def check_no_unreplaced_tags(text: str) -> None:
+    """
+    Check that every tag in the text has been replaced
+
+    Without this, a tag we were never given anything for
+    ends up in the PDF as text.
+
+    Parameters
+    ----------
+    text
+        Text to check
+
+    Raises
+    ------
+    AssertionError
+        `text` (outside comments) still contains tags
+    """
+    unreplaced = sorted(
+        {
+            match.group(0)
+            for line in text.splitlines()
+            for match in UNREPLACED_TAG.finditer(split_comment(line)[0])
+        }
+    )
+    if unreplaced:
+        msg = (
+            "Nothing was given to replace these tags: "
+            f"{', '.join(unreplaced)}. "
+            "Pass them with `--figure-file`, `--inline-file` "
+            "or `--tex-inputs-manifest`."
+        )
+        raise AssertionError(msg)
+
+
+def inline_files(
+    in_text: str, files: list[tuple[str, Path]], collector: ValueCheckCollector
 ) -> str:
     """
-    Inline table files in place of their tags
+    Inline files in place of their tags
 
     The files' content is put straight into the text,
     rather than being left for latex to pull in with an input command,
     so the output stays a single file (which is what Copernicus wants)
-    and our replacements are applied to the tables too.
+    and our replacements are applied to the files' content too.
 
     Parameters
     ----------
     in_text
-        Text in which to inline the tables
+        Text in which to inline the files
 
-    table_files
-        Values passed to `--table-file`, as `tag-to-replace=full-path`
+    files
+        Tag to replace and the file to replace it with, for each file
 
     collector
         Collector of value check comments, used to read the files
@@ -407,14 +517,15 @@ def inline_table_files(
         `in_text`, with each tag replaced by its file's content
     """
     res = in_text
-    for v in table_files:
-        tag, full_path = split_tag_and_path(v, option="--table-file")
-        if tag not in res:
-            msg = f"Did not find {tag=} in the text"
+    for tag, full_path in files:
+        if not tag_in_text(tag, res):
+            msg = f"Did not find {tag=} in the text (outside of comments)"
             raise AssertionError(msg)
 
-        res = res.replace(
-            tag, f"{get_source_file_str(full_path)}\n{collector.read_text(full_path)}"
+        res = replace_tag(
+            res,
+            tag,
+            f"{get_source_file_str(full_path)}\n{collector.read_text(full_path)}",
         )
 
     return res
@@ -622,19 +733,19 @@ def main(  # noqa: PLR0913, PLR0915
             help=(
                 "Figure file to add. "
                 "Should be passed as `tag-to-replace-in-latex=path-to-figure`, "
-                "e.g. `--figure-file=<n2o-methods-figure>=/path/to/figure.pdf`"
+                "e.g. `--figure-file=@n2o-methods-figure@=/path/to/figure.pdf`"
             )
         ),
     ] = None,
-    table_file: Annotated[
+    inline_file: Annotated[
         list[str] | None,
         typer.Option(
             help=(
-                "Table file to inline. "
-                "Should be passed as `tag-to-replace-in-latex=path-to-table`, "
-                "e.g. `--table-file=<per-gas-table>=/path/to/table.tex`. "
-                "The tag is replaced by the file's content "
-                "(so it can hold any latex, not only a table)."
+                "File whose text to put in place of a tag, "
+                "e.g. a generated table. "
+                "Should be passed as `tag-to-replace=path-to-file`, "
+                "e.g. `--inline-file=@per-gas-table@=/path/to/table.tex`. "
+                "Tags in comments are left as they are."
             )
         ),
     ] = None,
@@ -642,11 +753,12 @@ def main(  # noqa: PLR0913, PLR0915
         Path | None,
         typer.Option(
             help=(
-                "JSON file of figure and table files to add. "
-                "It should have a `figures` and a `tables` entry, "
+                "JSON file of figure files and files to inline. "
+                "It should have a `figures` and an `inline` entry, "
                 "each of which maps a tag to replace in the latex "
                 "to the path of the file, "
-                "i.e. the same information as `--figure-file` and `--table-file`. "
+                "i.e. the same information as "
+                "`--figure-file` and `--inline-file`. "
                 "Unlike those options, entries whose tag is not in the text "
                 "are skipped, so the manifest can list more than is used."
             ),
@@ -670,14 +782,23 @@ def main(  # noqa: PLR0913, PLR0915
     Compile the PDF
     """
     collector = ValueCheckCollector(root=REPO_ROOT)
+    # The manifest gives (tag, path) pairs straight away,
+    # only the CLI values need splitting
     if tex_inputs_manifest is not None:
-        manifest_figure_files, manifest_table_files = load_tex_inputs_manifest(
+        manifest_figure_files, manifest_inline_files = load_tex_inputs_manifest(
             tex_inputs_manifest
         )
     else:
-        manifest_figure_files, manifest_table_files = [], []
+        manifest_figure_files, manifest_inline_files = [], []
 
-    figure_specs = pass_figure_specs([*(figure_file or []), *manifest_figure_files])
+    cli_figure_files = [
+        split_tag_and_path(v, option="--figure-file") for v in figure_file or []
+    ]
+    cli_inline_files = [
+        split_tag_and_path(v, option="--inline-file") for v in inline_file or []
+    ]
+
+    figure_specs = pass_figure_specs([*cli_figure_files, *manifest_figure_files])
 
     with open(metadata, "rb") as fh:
         metadata_values = tomllib.load(fh)
@@ -694,19 +815,19 @@ def main(  # noqa: PLR0913, PLR0915
     )
 
     res = insert_file_content_after_tag(
-        res, abstract, tag="<abstract-start>", collector=collector
+        res, abstract, tag="@abstract-start@", collector=collector
     )
     res = insert_file_content_after_tag(
-        res, introduction, tag="<introduction-start>", collector=collector
+        res, introduction, tag="@introduction-start@", collector=collector
     )
 
     body_text = "\n\n".join(
         f"{get_source_file_str(sf)}\n{collector.read_text(sf)}" for sf in section
     )
-    res = insert_after_tag(res, body_text, tag="<body-start>")
+    res = insert_after_tag(res, body_text, tag="@body-start@")
 
     res = insert_file_content_after_tag(
-        res, conclusion, tag="<conclusions-start>", collector=collector
+        res, conclusion, tag="@conclusions-start@", collector=collector
     )
 
     for start_code, source_file in (
@@ -735,32 +856,34 @@ def main(  # noqa: PLR0913, PLR0915
                 r"\noappendix",
             ]
         )
-        res = insert_after_tag(res, appendix_text, tag="<appendix-start>")
+        res = insert_after_tag(res, appendix_text, tag="@appendix-start@")
 
     res = insert_file_content_after_tag(
-        res, acknowledgements, tag="<acknowledgements-start>", collector=collector
+        res, acknowledgements, tag="@acknowledgements-start@", collector=collector
     )
 
     # Before any other replacements,
-    # so the tables get the same replacements as the rest of the text.
-    if table_file is not None:
-        res = inline_table_files(res, table_file, collector=collector)
-
-    res = inline_table_files(
+    # so the inlined files get the same replacements as the rest of the text
+    # (including the figure replacements, as they can include figures).
+    res = inline_files(res, cli_inline_files, collector=collector)
+    res = inline_files(
         res,
-        [v for v in manifest_table_files if tag_is_used(v, res)],
+        [
+            (tag, full_path)
+            for tag, full_path in manifest_inline_files
+            if tag_in_text(tag, res)
+        ],
         collector=collector,
     )
 
     latex_dir = build_dir / "latex"
     latex_dir.mkdir(exist_ok=True, parents=True)
 
-    figure_replacements = {}
     seen = set()
     for fs in figure_specs:
         # Otherwise every figure we are given ends up in the build,
         # whether the text uses it or not.
-        if fs.tag_to_replace not in res:
+        if not tag_in_text(fs.tag_to_replace, res):
             continue
 
         dest = latex_dir / fs.full_path.name
@@ -771,11 +894,11 @@ def main(  # noqa: PLR0913, PLR0915
 
         shutil.copy2(fs.full_path, dest)
         seen.add(dest)
-        figure_replacements[fs.tag_to_replace] = str(dest.relative_to(latex_dir))
+        res = replace_tag(res, fs.tag_to_replace, str(dest.relative_to(latex_dir)))
 
-    res = apply_replacements(res, figure_replacements)
-
+    # The figure check first, as its message is more specific
     check_no_unreplaced_figure_tags(res)
+    check_no_unreplaced_tags(res)
 
     replacements_map = yaml.safe_load(replacements.read_text())
     res = apply_replacements(res, replacements_map)

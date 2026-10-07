@@ -15,6 +15,7 @@ from local.cmip_ghg_generation import (
 from local.historical_ghg_forcing_for_cmip7 import (
     C4F10_LIKE_GASES,
     CFC12_LIKE_GASES,
+    generate_appendix_figures,
     generate_c4f10_like_methods_figure,
     generate_c8f18_methods_figure,
     generate_cfc12_like_methods_figure,
@@ -24,6 +25,7 @@ from local.historical_ghg_forcing_for_cmip7 import (
     generate_co2_methods_figure,
     generate_n2o_methods_figure,
     generate_results_figure_for_gas,
+    get_figure_tags_in_text,
 )
 from local.historical_ghg_forcing_for_cmip7.comparison_data import (
     RADIATIVE_EFFICIENCIES,
@@ -158,13 +160,39 @@ def main(  # noqa: PLR0913
             file_okay=True,
         ),
     ],
+    manuscript_file: Annotated[
+        list[Path],
+        typer.Option(
+            help=(
+                "Manuscript latex file which might include figures. "
+                "Repeat the option for each file. "
+                "A figure which one of these files already includes "
+                "is left out of the generated groups of appendix figures, "
+                "so it isn't in the manuscript twice."
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
+    appendix_figures_dir: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Directory in which to write the latex "
+                "of the groups of appendix figures "
+                "(e.g. the figures of all the gases processed like CFC-12)."
+            ),
+            dir_okay=True,
+            file_okay=False,
+        ),
+    ],
     tex_inputs_manifest_file: Annotated[
         Path,
         typer.Option(
             help=(
                 "Path in which to write the manifest of what was generated. "
-                "It maps the tag each figure and table replaces in the latex "
-                "to the file it was written in, "
+                "It maps the tag each figure and each piece of generated latex "
+                "(e.g. tables) replaces in the latex to the file it was written in, "
                 "and is passed straight on to the compilation script."
             ),
             dir_okay=False,
@@ -286,7 +314,9 @@ def main(  # noqa: PLR0913
     # The tags follow one convention, set here,
     # so the build script only has to say where to write each file.
     figures: dict[str, Path] = {}
-    tables: dict[str, Path] = {}
+    # Files whose text the compilation puts in place of their tag
+    # (the tables and the groups of appendix figures)
+    inline: dict[str, Path] = {}
 
     generate_co2_methods_figure(
         co2_methods_figure_file,
@@ -295,8 +325,8 @@ def main(  # noqa: PLR0913
         original_run_notebooks_dir=original_run_notebooks_dir,
         force_rerun=force_rerun,
     )
-    figures["<co2-methods-figure>"] = co2_methods_figure_file
-    figures["<co2-methods-appendix-figure>"] = co2_methods_appendix_figure_file
+    figures["@co2-methods-figure@"] = co2_methods_figure_file
+    figures["@co2-methods-appendix-figure@"] = co2_methods_appendix_figure_file
 
     generate_ch4_methods_figure(
         ch4_methods_figure_file,
@@ -305,8 +335,8 @@ def main(  # noqa: PLR0913
         original_run_notebooks_dir=original_run_notebooks_dir,
         force_rerun=force_rerun,
     )
-    figures["<ch4-methods-figure>"] = ch4_methods_figure_file
-    figures["<ch4-methods-appendix-figure>"] = ch4_methods_appendix_figure_file
+    figures["@ch4-methods-figure@"] = ch4_methods_figure_file
+    figures["@ch4-methods-appendix-figure@"] = ch4_methods_appendix_figure_file
 
     generate_n2o_methods_figure(
         n2o_methods_figure_file,
@@ -315,8 +345,8 @@ def main(  # noqa: PLR0913
         original_run_notebooks_dir=original_run_notebooks_dir,
         force_rerun=force_rerun,
     )
-    figures["<n2o-methods-figure>"] = n2o_methods_figure_file
-    figures["<n2o-methods-appendix-figure>"] = n2o_methods_appendix_figure_file
+    figures["@n2o-methods-figure@"] = n2o_methods_figure_file
+    figures["@n2o-methods-appendix-figure@"] = n2o_methods_appendix_figure_file
 
     # One figure per gas asked for: the gases processed like CFC-12
     # all share a figure, but there are thirty-four of them,
@@ -330,8 +360,8 @@ def main(  # noqa: PLR0913
             original_run_notebooks_dir=original_run_notebooks_dir,
             force_rerun=force_rerun,
         )
-        figures[f"<{gas}-methods-figure>"] = figure_file
-        figures[f"<{gas}-methods-appendix-figure>"] = cfc12_like_appendix_figures[gas]
+        figures[f"@{gas}-methods-figure@"] = figure_file
+        figures[f"@{gas}-methods-appendix-figure@"] = cfc12_like_appendix_figures[gas]
 
     # The C4F10-like gases and C8F18 are built entirely from data
     # the original run left in the bundle,
@@ -343,14 +373,14 @@ def main(  # noqa: PLR0913
             bundle_dir=bundle_dir,
             force_rerun=force_rerun,
         )
-        figures[f"<{gas}-methods-figure>"] = figure_file
+        figures[f"@{gas}-methods-figure@"] = figure_file
 
     generate_c8f18_methods_figure(
         c8f18_methods_figure_file,
         bundle_dir=bundle_dir,
         force_rerun=force_rerun,
     )
-    figures["<c8f18-methods-figure>"] = c8f18_methods_figure_file
+    figures["@c8f18-methods-figure@"] = c8f18_methods_figure_file
 
     for gas, figure_file in results_figures:
         generate_results_figure_for_gas(
@@ -360,7 +390,7 @@ def main(  # noqa: PLR0913
             original_run_notebooks_dir=original_run_notebooks_dir,
             force_rerun=force_rerun,
         )
-        figures[f"<{gas}-results-figure>"] = figure_file
+        figures[f"@{gas}-results-figure@"] = figure_file
 
     # These summarise every gas processed like CFC-12,
     # so unlike the figures, they don't depend on which gases were asked for.
@@ -369,7 +399,7 @@ def main(  # noqa: PLR0913
         bundle_dir=bundle_dir,
         force_rerun=force_rerun,
     )
-    tables["<cfc12-like-obs-network-sources-list>"] = (
+    inline["@cfc12-like-obs-network-sources-list@"] = (
         cfc12_like_obs_network_sources_list_file
     )
 
@@ -378,7 +408,35 @@ def main(  # noqa: PLR0913
         bundle_dir=bundle_dir,
         force_rerun=force_rerun,
     )
-    tables["<cfc12-like-per-gas-table>"] = cfc12_like_per_gas_table_file
+    inline["@cfc12-like-per-gas-table@"] = cfc12_like_per_gas_table_file
+
+    # The figures of each group of gases which share a figure layout,
+    # for the appendices.
+    # Only the gases we were asked to draw figures for are included,
+    # as there are no files for the others,
+    # and the figures the manuscript already includes are left out.
+    figure_tags_in_text = get_figure_tags_in_text(
+        fp.read_text() for fp in manuscript_file
+    )
+    results_gases = [gas for gas, _ in results_figures]
+    for group, gases in (
+        ("cfc12-like-methods", [gas for gas, _ in cfc12_like_figures]),
+        ("c4f10-like-methods", [gas for gas, _ in c4f10_like_figures]),
+        (
+            "cfc12-like-results",
+            [gas for gas in results_gases if gas in CFC12_LIKE_GASES],
+        ),
+        (
+            "c4f10-like-results",
+            [gas for gas in results_gases if gas in C4F10_LIKE_GASES],
+        ),
+    ):
+        inline[f"@{group}-appendix-figures@"] = generate_appendix_figures(
+            appendix_figures_dir / f"{group}-appendix-figures.tex",
+            group=group,
+            gases=gases,
+            figure_tags_in_text=figure_tags_in_text,
+        )
 
     # Absolute paths, so the manifest doesn't depend on
     # the directory the compilation script is run from.
@@ -387,7 +445,7 @@ def main(  # noqa: PLR0913
         json.dumps(
             {
                 "figures": {tag: str(fp.resolve()) for tag, fp in figures.items()},
-                "tables": {tag: str(fp.resolve()) for tag, fp in tables.items()},
+                "inline": {tag: str(fp.resolve()) for tag, fp in inline.items()},
             },
             indent=2,
         )

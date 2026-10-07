@@ -2,6 +2,7 @@
 Functionality related to generating the historical GHG manuscript
 """
 
+from .appendix_figures import generate_appendix_figures, get_figure_tags_in_text
 from .c4f10_like_methods_figure import (
     C4F10_LIKE_GASES,
     generate_c4f10_like_methods_figure,
@@ -23,6 +24,7 @@ from .results_figure import generate_results_figure_for_gas
 __all__ = [
     "C4F10_LIKE_GASES",
     "CFC12_LIKE_GASES",
+    "generate_appendix_figures",
     "generate_c4f10_like_methods_figure",
     "generate_c8f18_methods_figure",
     "generate_cfc12_like_methods_figure",
@@ -32,4 +34,5 @@ __all__ = [
     "generate_co2_methods_figure",
     "generate_n2o_methods_figure",
     "generate_results_figure_for_gas",
+    "get_figure_tags_in_text",
 ]

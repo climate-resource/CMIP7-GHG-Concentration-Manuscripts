@@ -155,7 +155,7 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       (the Copernicus template has a commented `\appendix ... \noappendix` block
       after `\codedataavailability`, `copernicus-latex-package/template_clean.tex:97-115`).
       Done: `--appendix` (can be given more than once, like `--section`).
-      The files are inserted at a new `% <appendix-start>` tag in `template_clean.tex`
+      The files are inserted at a new `% @appendix-start@` tag in `template_clean.tex`
       (after `\codedataavailability`, before `\authorcontribution`, where the template's commented block is),
       wrapped in `\appendix ... \noappendix` by the script, so the appendix files only hold `\section`s and content.
 - [x] Create `manuscripts/historical-ghg-forcing-for-cmip7/appendices.tex`
@@ -189,35 +189,81 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 
 ### Methods appendix figures (already generated)
 
-- [ ] Put a note as a comment in the latex that we use appendices based on copernicus's
+- [x] Put a note as a comment in the latex that we use appendices based on copernicus's
       distinction between appendices ("all material required to understand the essential aspects of the paper")
       and supplementary (not required for understanding the paper i.e. surplus to requirements and "Supplementary material is reserved for items that cannot reasonably be included in the main text or as appendices")
       so that other authors know why we've done this.
       Link to https://publications.copernicus.org/for_authors/manuscript_preparation.html
+      Done: at the top of `appendices.tex`, quoting the page (checked 2026-10-07).
+      Note: on that page, "All material required to understand the essential aspects of the paper"
+      is what should go in the main text, not the appendices.
+      Appendices are for "Additional figures, tables, ... which are not critical to support the conclusion of the paper,
+      but which provide extra detail and/or support useful for experts in the field
+      and whose inclusion in the main text would disrupt the flow", so the comment quotes that instead.
 - [x] N_2O, CO_2, CH_4, CFC-12: move the draft captions from `methods.tex` into the appendix
-      (`methods.tex:327-336,526-539,749-759,960-970`), use the `<gas-methods-appendix-figure>` tags,
+      (`methods.tex:327-336,526-539,749-759,960-970`), use the `@gas-methods-appendix-figure@` tags,
       and remove the "update this when we get to appendix figures" ZNTODOs.
       Done: Figures A1-A4 (`fig:methods-appendix-<gas>`), captions start "Working behind Figure \ref{fig:methods-<gas>}".
       Where the draft captions were, `methods.tex` now has a test cross-ref to the appendix figure
       (see "References from the main text into the appendix").
-- [ ] The other 33 CFC-12-like gases: `<gas>-methods-figure` and `<gas>-methods-appendix-figure`
+- [x] The other 33 CFC-12-like gases: `<gas>-methods-figure` and `<gas>-methods-appendix-figure`
       are generated and in the manifest but not used anywhere in the text.
-      SF_6 done (Figures A5, A6: `fig:methods-sf6`, `fig:methods-appendix-sf6`, captions copied from CFC-12's),
-      the other 32 still to go.
-- [ ] The other C_4F_10-like gases (C_5F_12, C_6F_14, C_7F_16, cC_4F_8): `<gas>-methods-figure` is generated but not used.
-- [ ] Check the CFC-12 appendix draft caption, "e) Regression between the first latitudinal gradient PC and CFC12 emissions",
+      Done: Appendix A2 "Other gases processed like CFC-12" (Figures A5-A70, `fig:methods-<gas>`, `fig:methods-appendix-<gas>`).
+      These (and the other groups of per-gas appendix figures, see below) are generated,
+      rather than written out by hand for each gas:
+      `src/local/historical_ghg_forcing_for_cmip7/appendix_figures.py` makes the figures,
+      whose captions are just "Like Figure \ref{<the CFC-12/C_4F_10 figure of the same kind>}, except for <gas>.".
+      `generate-tex-inputs.py` writes one file per group to `build/historical-ghg-forcing-for-cmip7/appendix-figures/`
+      and lists them under the manifest's `inline` entry.
+      The compilation puts each file's text in place of its `@...-appendix-figures@` tag in `appendices.tex`
+      (`--inline-file tag=path`, or the manifest's `inline` entry: "replace this tag with the text of this file").
+      The generated tables use the same mechanism (`--table-file` and the manifest's `tables` entry are gone),
+      and tags in comments are left alone, both when inlining files and when replacing figure tags,
+      so comments can mention tags.
+      Tags are written `@tag@` (e.g. `@cfc12-like-per-gas-table@`, `% @body-start@` in the template), not `<tag>`:
+      `<`/`>` are redirections in the shell, so `<tag>` had to be quoted on the command line,
+      whereas `@` means nothing to bash, zsh or latex (and is the autoconf/CMake substitution convention).
+      The manifest's `{tag: path}` entries are passed through as pairs; only CLI values are split on `=`.
+      The compilation fails if any `@tag@` is left (outside comments) after the figures and files are put in,
+      rather than the tag ending up in the PDF as text.
+      Which gases go in each group follows from the gases the build script draws figures for,
+      minus any figure whose tag the manuscript files (`--manuscript-file`, the body sections and appendices)
+      already include outside a comment, e.g. CFC-12's and C_4F_10's.
+      The build script now keeps the body sections and appendices in arrays,
+      so the input generation and the compilation are given the same files.
+      Each gas starts on a new page: without the `\clearpage`s latex fails with "Too many unprocessed floats"
+      (and we can't add packages like `morefloats` for Copernicus).
+      Appendix A is now split into subsections: A1 "N_2O, CO_2, CH_4 and CFC-12" (hand-written, Figures A1-A4),
+      A2 (CFC-12-like) and A3 (C_4F_10-like).
+      Appendix headings write "CFC-12", not "CFC12":
+      the replacement's `\nobreakdash` breaks the build in an appendix heading.
+- [x] The other C_4F_10-like gases (C_5F_12, C_6F_14, C_7F_16, cC_4F_8): `<gas>-methods-figure` is generated but not used.
+      Done: Appendix A3 "Other gases processed like C_4F_10" (Figures A71-A74), generated as above.
+- [x] Check the CFC-12 appendix draft caption, "e) Regression between the first latitudinal gradient PC and CFC12 emissions",
       against the method (regression against total SSP2-4.5 emissions from RCMIP, `methods.tex:1035-1037`).
       The caption is now in `appendices.tex` (with a ZNTODO), and the SF_6 appendix caption copies it, so check that too.
+      Done: the figure's emissions are the original run's `historical_emissions.csv`,
+      which `notebooks/010y_compile-historical-emissions/0109_compile-complete-dataset.py` in the original run
+      builds from the RCMIP v5.1.0 SSP2-4.5 World emissions, so it matches the method.
+      Panel e) now says "Regression between the first latitudinal gradient PC and total CFC12 emissions."
+      (the text has the detail). The generated captions point to the CFC-12 one, so don't repeat it.
 - [ ] Optional: CH_4 Law Dome smoothing figure (noise, windows, regression; `methods.tex:821-823`, "if requested by reviewers").
 
 ### Results appendix figures (already generated)
 
-- [ ] Results figures exist for all 43 gases plus the equivalent species,
+- [x] Results figures exist for all 43 gases plus the equivalent species,
       but only CO_2, CH_4, N_2O, CFC-12, CFC-12-eq and HFC-134a-eq are in the text.
       Add the rest to an appendix (`results.tex:9`) and fill in "[TODO Appendix section and refs]" (`results.tex:286`).
-      SF_6 done (Figure B1, `fig:results-sf6`), the other gases still to go.
+      Done: Appendix B is split into B1 "Gases processed like CFC-12" (Figures B1-B33, generated),
+      B2 "Gases processed like C_4F_10" (B34-B38: C_4F_10 hand-written, as its results aren't in the main text
+      and its caption has to say the input data are Droste's, the others generated and pointing to it)
+      and B3 "C_8F_18 and CFC-11-eq" (B39, B40, hand-written: their captions are one-offs,
+      neither has input data to show and IGCC has no CFC-11-eq).
+      The ZNTODO at `results.tex:9` is removed and the placeholder now reads "please see Appendix \ref{app:results-figures}".
+      The C_4F_10 results caption says "[TODO cite Droste et al] values" like the methods (see the citations section).
+      The results text doesn't discuss any of these gases (yet).
 - [x] Possibly add CFC-11-eq (`scripts/create-cmip7-historical-ghgs-manuscript.sh` notes it isn't discussed yet).
-      Done: added to the results gases in the build script, figure generated, in Appendix B (Figure B2, `fig:results-cfc11eq`).
+      Done: added to the results gases in the build script, figure generated, in Appendix B (Figure B40, `fig:results-cfc11eq`).
       Its caption notes that IGCC has no CFC-11-eq.
       The results text only points to it (no discussion of it yet).
 
@@ -226,9 +272,9 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 - [ ] Review the test cross-refs, each marked with
       "% TODO: review this cross-ref, this is just here to test the linking between main and appendices e.g. numbering."
       They are: a sentence after each of the N_2O, CO_2, CH_4 and CFC-12 methods figures pointing to its appendix figure
-      (the N_2O one also points to Appendix A), one after the CFC-12 one pointing to the SF_6 figures (A5, A6),
-      one at the end of the CFC-12 results section pointing to the SF_6 results (B1)
-      and one in the equivalence datasets intro pointing to CFC-11-eq (B2, Appendix B).
+      (the N_2O one also points to Appendix A), one after the CFC-12 one pointing to the SF_6 figures (now A67, A68),
+      one at the end of the CFC-12 results section pointing to the SF_6 results (now B32)
+      and one in the equivalence datasets intro pointing to CFC-11-eq (now B40, Appendix B).
       Replace them with the real references below (or keep them, reworded).
 - [ ] N_2O Step 3, "explain almost all of the variance (Figure [ZNTODO figure panel ref])" (`methods.tex:391`), pointing to the variance explained panel.
 - [ ] CO_2 Step 3 variance claims (`methods.tex:574-576,597-600`), pointing to the variance explained panels (c, f).
