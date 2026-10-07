@@ -288,8 +288,28 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 - [x] General Step 2 interpolation (`methods.tex:40-70`), pointing to panels a and b (best/worst-case interpolation).
       Done in each per-gas Step 2 (N_2O, CO_2, CH_4, CFC-12) rather than in the general approach,
       which comes before any figure.
-- [ ] A pass over the whole methods section looking for other places a figure reference would help (ZNTODO at `methods.tex:688`).
-- [ ] A pass over the whole methods section looking for places where we refer to a figure/value for justification for one gas but don't similarly for others (e.g. currently we don't explain why we keep two lat. grad. EOFs for CH4)
+- [x] A pass over the whole methods section looking for other places a figure reference would help (ZNTODO at `methods.tex:688`).
+      Done: every panel of every main-text methods figure (and the PC panels of the appendix figures)
+      is now pointed to from the text that describes it:
+      Step 2 binning → obs. counts (panel b), Step 3 → global-mean, seasonality, lat. gradient EOF and PC panels,
+      Step 4 → extended global-mean and extended PC panels (N_2O, CO_2, CH_4, CFC-12, C_4F_10, C_8F_18).
+      The CFC-12 appendix caption now says "PC", not "PCs" (CFC-12-like gases keep only one).
+- [x] A pass over the whole methods section looking for places where we refer to a figure/value for justification for one gas but don't similarly for others (e.g. currently we don't explain why we keep two lat. grad. EOFs for CH4)
+      Done:
+    - CH_4 Step 3: now says it keeps two lat. gradient EOFs because they explain almost all of the variance (Figure A3c).
+    - CFC-12-like Step 3 said "the same as for N_2O", but these gases keep one lat. gradient EOF, not two
+      (`lat_gradient_n_eofs_to_use: 1` in the original run's config for all 34).
+      Step 3 now says so and justifies it (Figure A4c, and the other gases' panels in Appendix A2):
+      the first EOF explains more than 90% of the variance for every gas except HFC-236fa (82%),
+      from `data/raw/cmip-ghg-concentration-generation/v1.0.0/manuscript-outputs/*_lat-gradient-variance-explained.csv`.
+      The CFC-12 intro and the per-gas summary list now include Step 3 as a difference from the base case.
+    - CH_4 Step 4: the second PC being kept constant now points to N_2O (where M17 is the justification).
+    - Each new variance claim has a `% ZNTODO: add check of this claim` (like N_2O's and CO_2's, see section 4).
+    - Checked and fine: interpolation panels and regression panels are pointed to for every gas that has them;
+      CO_2 doesn't need N_2O's year 5 → year 1 extrapolation note (Menking et al. CO_2 starts in year 1);
+      harmonisation offsets are given for N_2O, CO_2 and CH_4 (the CFC-12-like Trudinger ones are per gas, so not given).
+    - Not resolved: CO_2 Step 4 gives no reason for taking the second lat. gradient PC linearly to zero in 1850
+      (N_2O and CH_4 keep it constant). Find the reason (M17?) and add it.
 
 ## 3. Broken references and build issues
 

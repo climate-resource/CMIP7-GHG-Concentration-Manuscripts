@@ -379,7 +379,7 @@ When referring to `AGAGE' data, we also mean data from the predecessor GAGE [TOD
 
 Binning and interpolation for N_2O
 follow the general approach described in Section \ref{ssec:methods-general-approach}
-(Figure \ref{fig:methods-appendix-n2o}a), b)).
+(Figures \ref{fig:methods-n2o}b) and \ref{fig:methods-appendix-n2o}a), b)).
 When we take the longest dataset that is continuous,
 % value-check: {"tag": "n2o-obs-network-start", "unit": "yr", "upper": 1989, "lower": 1989}
 % value-check: {"tag": "n2o-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
@@ -397,7 +397,7 @@ The first sub-step is to calculate the longitudinal (zonal) mean.
 This is done using an unweighted mean because each grid cell has the same area for a given latitude.
 
 \textbf{Global-, annual-mean.}
-The second sub-step is to calculate the global-, annual-mean.
+The second sub-step is to calculate the global-, annual-mean (Figure \ref{fig:methods-n2o}d)).
 We do this by first calculating an area-weighted mean, then the annual-mean.
 We weight each month equally.
 Weighting the months by their length would make a minor difference,
@@ -426,9 +426,10 @@ However, following \citet{meinshausen_historical_2017}
 we only retain the first two EOFs as these are sufficient
 % ZNTODO: add check of this claim
 to explain almost all of the variance (Figure \ref{fig:methods-appendix-n2o}c)).
+The retained EOFs and PCs are shown in Figures \ref{fig:methods-n2o}f) and \ref{fig:methods-appendix-n2o}d) respectively.
 
 \textbf{Seasonality.}
-The fourth sub-step is to calculate our relative seasonality.
+The fourth sub-step is to calculate our relative seasonality (Figure \ref{fig:methods-n2o}e)).
 We do this by first calculating the residuals at each time and latitude.
 The first component in this calculation is our longitudinal mean (dimensions (year, month, lat)).
 The second component is the annual-mean at each latitude,
@@ -450,10 +451,11 @@ Relative seasonality is seasonality divided by the average global-, annual-mean 
 
 \textbf{Latitudinal gradient.}
 Following \cite{meinshausen_historical_2017},
-we simply keep the PC values constant in the period before the interpolated observation network period (pre-1989).
+we simply keep the PC values constant in the period before the interpolated observation network period (pre-1989, Figure \ref{fig:methods-n2o}h)).
 
 \textbf{Global-, annual-mean.}
-We rely on the ice core data from [TODO cite Menking et al 2025] to extend the global-, annual-mean back in time.
+We rely on the ice core data from [TODO cite Menking et al 2025] to extend the global-, annual-mean back in time
+(Figure \ref{fig:methods-n2o}g)).
 We extrapolate the [TODO cite Menking et al 2025] data from year 5 back to year 1 using linear extrapolation,
 which is imperfect but acceptable given the focus and intended use case of this dataset (Section \ref{sec:output-dataset-requirements}).
 
@@ -557,7 +559,7 @@ For CO_2, we use data from the NOAA observation network
 \label{sssec:methods-co2-bin-and-interpolate}
 
 Binning and interpolation are the same as for N_2O
-(Section \ref{sssec:methods-n2o-bin-and-interpolate}, Figure \ref{fig:methods-appendix-co2}a), b)).
+(Section \ref{sssec:methods-n2o-bin-and-interpolate}, Figures \ref{fig:methods-co2}b) and \ref{fig:methods-appendix-co2}a), b)).
 When we take the longest dataset that is continuous,
 % value-check: {"tag": "co2-obs-network-start", "unit": "yr", "upper": 1981, "lower": 1981}
 % value-check: {"tag": "co2-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
@@ -572,16 +574,17 @@ we include extra complexity in this and subsequent steps,
 with the aim of better representing the variations in seasonality seen in the observational record.
 
 \textbf{Zonal and global-, annual-mean.}
-As for N_2O (Section \ref{sssec:methods-n2o-pca}).
+As for N_2O (Section \ref{sssec:methods-n2o-pca}, Figure \ref{fig:methods-co2}d)).
 
 \textbf{Latitudinal gradient.}
 As for N_2O (Section \ref{sssec:methods-n2o-pca}),
 including retaining only the first two EOFs,
 % ZNTODO: add check of this claim
 as they explain almost all of the variance (Figure \ref{fig:methods-appendix-co2}f)).
+The retained EOFs and PCs are shown in Figures \ref{fig:methods-co2}f) and \ref{fig:methods-appendix-co2}g) respectively.
 
 \textbf{Seasonality.}
-The (absolute) seasonality is calculated as for N_2O (Section \ref{sssec:methods-n2o-pca}).
+The (absolute) seasonality is calculated as for N_2O (Section \ref{sssec:methods-n2o-pca}, Figure \ref{fig:methods-co2}e)).
 On top of this seasonality, we also calculate EOFs and PCs for the change in seasonality over time.
 These are calculated by taking the seasonality and the residuals from which the seasonality was derived.
 We then calculate the difference between these two, which we call `seasonality anomalies'.
@@ -600,6 +603,7 @@ This captures around half of the variance in the seasonality change,
 with a single EOF being a pragmatic choice given that subsequent EOFs only explain 10\% or less of the variance
 so an unworkably large number would be required to capture a large fraction of the variance
 (Figure \ref{fig:methods-appendix-co2}c)).
+The retained EOF and PC are shown in Figures \ref{fig:methods-co2}g) and \ref{fig:methods-appendix-co2}d) respectively.
 
 \subsubsection{Step 4: Extend}
 \label{sssec:methods-co2-extend}
@@ -611,17 +615,18 @@ the first PC is extended by performing a linear regression against CO_2 emission
 based on the [TODO cite PRIMAP version] dataset (Figure \ref{fig:methods-appendix-co2}h)).
 Using this regression, we then extend emissions back to 1750,
 the first year reported in the [TODO cite PRIMAP] dataset.
-Before 1750, we keep the first PC value constant.
+Before 1750, we keep the first PC value constant (Figure \ref{fig:methods-co2}j)).
 
 The second PC is much simpler.
 It is simply linearly interpolated between its value at the start of
 % value-check: {"tag": "co2-obs-network-start", "unit": "yr", "upper": 1981, "lower": 1981}
 the interpolated observation network period, in our case 1981, and zero in 1850.
-It is kept constant at zero before 1850.
+It is kept constant at zero before 1850 (Figure \ref{fig:methods-co2}j)).
 
 \textbf{Global-, annual-mean.}
 To extend the global-, annual-mean back in time, we rely on the
-[TODO cite Mauna Loa merged record] and ice core values from [TODO cite Menking et al 2025].
+[TODO cite Mauna Loa merged record] and ice core values from [TODO cite Menking et al 2025]
+(Figure \ref{fig:methods-co2}i)).
 
 We start with the [TODO cite Mauna Loa merged record].
 We use all data from [TODO cite Mauna Loa merged record] which is not already covered by the interpolated observation network dataset.
@@ -684,7 +689,7 @@ and $_n$ indicates that the quantity is a mean over the normalisation period (20
 
 Using this regression, we extend the PC back to 1850,
 the start of [TODO cite HadCRUT]'s dataset.
-Before 1850, we keep the PC value constant.
+Before 1850, we keep the PC value constant (Figure \ref{fig:methods-co2}h)).
 
 \subsubsection{Step 5: Prepare the components to be combined}
 \label{sssec:methods-co2-prepare-components}
@@ -739,7 +744,7 @@ For CH_4, we use data from the NOAA [TODO ref] and AGAGE [TODO ref] observation 
 \label{sssec:methods-ch4-bin-and-interpolate}
 
 Binning and interpolation are the same as for N_2O
-(Section \ref{sssec:methods-n2o-bin-and-interpolate}, Figure \ref{fig:methods-appendix-ch4}a), b)).
+(Section \ref{sssec:methods-n2o-bin-and-interpolate}, Figures \ref{fig:methods-ch4}b) and \ref{fig:methods-appendix-ch4}a), b)).
 When we take the longest dataset that is continuous,
 % value-check: {"tag": "ch4-obs-network-start", "unit": "yr", "upper": 1984, "lower": 1984}
 % value-check: {"tag": "ch4-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
@@ -748,7 +753,10 @@ we end up with an interpolated observation network dataset that runs from 1984 t
 \subsubsection{Step 3: Principal component analysis}
 \label{sssec:methods-ch4-pca}
 
-This step is the same as for N_2O (Section \ref{sssec:methods-n2o-pca}).
+This step is the same as for N_2O (Section \ref{sssec:methods-n2o-pca}, Figure \ref{fig:methods-ch4}d)--f)),
+including retaining only the first two latitudinal gradient EOFs,
+% ZNTODO: add check of this claim
+as they explain almost all of the variance (Figure \ref{fig:methods-appendix-ch4}c)).
 
 \subsubsection{Step 4: Extend}
 \label{sssec:methods-ch4-extend}
@@ -810,12 +818,13 @@ b) based on the regression with CH_4 emissions of a geological origin,
 c) the optimisation against ice cores
 % ZNTODO: zalue-check of year 287
 and d) assuming that the first PC is constant before the first year in which we have ice core observations in both hemispheres (year 287),
-we end up with first PC values for the entire timespan from year 1 to 2023.
+we end up with first PC values for the entire timespan from year 1 to 2023 (Figure \ref{fig:methods-ch4}h)).
 
-The second PC is simply kept constant before the start of the interpolated observation network period.
+The second PC is simply kept constant before the start of the interpolated observation network period (Figure \ref{fig:methods-ch4}h)),
+as for N_2O (Section \ref{sssec:methods-n2o-extend}).
 
 \textbf{Global-, annual-mean.}
-To extend the global-, annual-mean back in time,
+To extend the global-, annual-mean back in time (Figure \ref{fig:methods-ch4}g)),
 we use the smoothed [TODO cite Law dome] data to extend back to the start of the [TODO cite Law Dome] data, year 154.
 We use it in the same way as the [TODO cite Menking et al 2025] data is used for CO_2 (Section \ref{sssec:methods-co2-extend}),
 i.e. we harmonise it to the value implied by our observation network-based global-, annual-mean and latitudinal gradient
@@ -923,7 +932,7 @@ The networks used are:
 \label{sssec:methods-cfc12-like-bin-and-interpolate}
 
 Binning and interpolation are the same as for N_2O
-(Section \ref{sssec:methods-n2o-bin-and-interpolate}, Figure \ref{fig:methods-appendix-cfc12}a), b)),
+(Section \ref{sssec:methods-n2o-bin-and-interpolate}, Figures \ref{fig:methods-cfc12}b) and \ref{fig:methods-appendix-cfc12}a), b)),
 except that, due to a lack of data,
 we do not require data in the most northern and most southern latitudinal boxes.
 Instead, we allow for extrapolation to these boxes.
@@ -972,7 +981,14 @@ we end up with an interpolated observation network dataset that runs from 1979 t
 \subsubsection{Step 3: Principal component analysis}
 \label{sssec:methods-cfc12-like-pca}
 
-This step is the same as for N_2O (Section \ref{sssec:methods-n2o-pca}).
+This step is the same as for N_2O (Section \ref{sssec:methods-n2o-pca}, Figure \ref{fig:methods-cfc12}d)--f)),
+except that we retain only the first latitudinal gradient EOF.
+% ZNTODO: add check of this claim
+For CFC12, this explains almost all of the variance (Figure \ref{fig:methods-appendix-cfc12}c)).
+% ZNTODO: add check of these claims
+For the other gases processed like CFC12, it explains more than 90\% of the variance,
+except for HFC-236fa, for which it explains around 80\%
+(see the equivalent panels in Appendix \ref{app:methods-figures-cfc12-like}).
 By using seasonality and latitudinal gradient based on the observation network in all cases,
 rather than assuming zero seasonality and/or latitudinal gradient for some gases,
 we depart slightly from the choices made in \citet{meinshausen_historical_2017}.
@@ -981,7 +997,7 @@ we depart slightly from the choices made in \citet{meinshausen_historical_2017}.
 \label{sssec:methods-cfc12-like-extend}
 
 \textbf{Latitudinal gradient.}
-We extend the latitudinal gradient PC (as we retain only one)
+We extend the latitudinal gradient PC (as we retain only one, see Step 3)
 back in time by using a regression against total emissions
 from the SSP2-4.5 scenario (which includes the historical period) in the RCMIP v5.1.0 emissions dataset \citep{nicholls_rcmip_2020} (Figure \ref{fig:methods-appendix-cfc12}e)).
 % ZNTODO: include more discussion of this in discussion.
@@ -998,10 +1014,10 @@ Using a scenario for the period from 2015 to 2023, rather than a historical base
 however it is an acceptable imperfection because historical emissions have approximately followed SSP2-4.5 for these gases.
 Using this regression, we then extend the PC back to 1750,
 the first year reported in the RCMIP v5.1.0 emissions dataset.
-Before 1750, we keep the PC constant.
+Before 1750, we keep the PC constant (Figure \ref{fig:methods-cfc12}h)).
 
 \textbf{Global-, annual-mean.}
-The global-, annual-mean is calculated in two sub-steps.
+The global-, annual-mean is calculated in two sub-steps (Figure \ref{fig:methods-cfc12}g)).
 First, we set the global-, annual-mean over the period covered by (potentially) multiple input data sources.
 For most gases, we use the global-, annual-mean from a specific source
 rather than the global-, annual-mean derived from the observation network
@@ -1128,12 +1144,12 @@ Principal component analysis cannot be performed due to lack of observations.
 % \textbf{Zonal mean.}
 
 \textbf{Latitudinal gradient.}
-Instead, we assume a single linear EOF for the latitudinal gradient
+Instead, we assume a single linear EOF for the latitudinal gradient (Figure \ref{fig:methods-c4f10}b))
 (note that this linearity is present when considering the area of each latitudinal box,
 the EOF (and therefore the latitudinal gradient) does not appear linear if the differing area of each latitudinal box is not considered).
 We then set the PCs such that change in value between the
 Cape Grim and Tacolneston observations in each year
-is matched by our latitudinal gradient (i.e. the product of the EOF and the PC).
+is matched by our latitudinal gradient (i.e. the product of the EOF and the PC, Figure \ref{fig:methods-c4f10}c)).
 % ZNTODO: add check of last year of Droste data
 As the [TODO cite Droste] data only extends to 2018,
 we use a basic linear extrapolation to extend the PCs to 2022.
@@ -1144,7 +1160,8 @@ the sensitivity of climate simulations to this choice is negligible.
 \textbf{Global-, annual-mean.}
 We calculate the global-, annual-mean such that the values in the
 Cape Grim and Tacolneston latitudinal boxes are matched
-when the global-, annual-mean is combined with the latitudinal gradient we just derived.
+when the global-, annual-mean is combined with the latitudinal gradient we just derived
+(Figure \ref{fig:methods-c4f10}d)).
 % ZNTODO: add check of last year of Droste data
 As the [TODO cite Droste] data only extends to 2018,
 we also use a basic linear extrapolation to extend the global-, annual-mean to 2022.
@@ -1164,13 +1181,14 @@ before the first year of [TODO cite Droste] data [TODO Droste first year].
 We make this assumption based on the fact that the [TODO Droste data]
 % ZNTODO: add check of this
 is zero before this year, hence the latitudinal gradient must also be zero
-because negative concentrations are not possible.
+because negative concentrations are not possible (Figure \ref{fig:methods-c4f10}f)).
 
 \textbf{Global-, annual-mean.}
 In line with the [TODO cite Droste] data,
 % ZNTODO: add check of first year of Droste data
 % ZNTODO: add check that Droste data is always zero in its first year
-we assume that concentrations remain at zero before the first year of data provided in [TODO cite Droste], [TODO first Droste year].
+we assume that concentrations remain at zero before the first year of data provided in [TODO cite Droste], [TODO first Droste year]
+(Figure \ref{fig:methods-c4f10}e)).
 
 % Doesn't apply: seasonality is assumed to be zero (Step 3), so there is nothing to extend.
 % \textbf{Seasonality.}
@@ -1196,9 +1214,10 @@ C_8F_18 does not follow the base case (N_2O, Section \ref{ssec:methods-n2o}).
 Due to a lack of data, we instead take the global- and hemispheric-, annual-means from the CMIP6 dataset
 (historical data to 2014 from \citealp{meinshausen_historical_2017};
 SSP2-4.5 from 2015 from \citealp{meinshausen_shared_2020};
-see Figure \ref{fig:methods-c8f18}).
+see Figure \ref{fig:methods-c8f18}a)).
 In line with \citet{meinshausen_historical_2017},
-we assume zero seasonality and a linear latitudinal gradient that we scale to reproduce the CMIP6 hemispheric means,
+we assume zero seasonality and a linear latitudinal gradient (Figure \ref{fig:methods-c8f18}c))
+that we scale to reproduce the CMIP6 hemispheric means (Figure \ref{fig:methods-c8f18}b)),
 then prepare and combine the components as is done for N_2O
 (Sections \ref{sssec:methods-n2o-prepare-components} and \ref{sssec:methods-n2o-generate-native-resolution}).
 This is clearly imperfect and should be considered for future iterations (Section \ref{sec:discussion}).
