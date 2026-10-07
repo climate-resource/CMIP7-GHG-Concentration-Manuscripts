@@ -316,15 +316,22 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 - [x] `\ref{ssec:methods-c8f18-like}` is undefined (`methods.tex:1262`). It should be `ssec:methods-c8f18`.
 - [x] `\ref{sssec:methods-co2-pca-derived-components}` is undefined (`methods.tex:572,582`).
       These sentences mean "same as N_2O", so they should point to `sssec:methods-n2o-pca`.
-- [ ] CFC-12 results caption refers to `Figure \ref{fig:results-cfc12}a` (itself) for the obs. network (`results.tex:271`).
+- [x] CFC-12 results caption refers to `Figure \ref{fig:results-cfc12}a` (itself) for the obs. network (`results.tex:271`).
       It should be `fig:methods-cfc12`.
 - [ ] "Float too large for page by 10pt": this is the CFC-12-like per-gas `table*` (`methods.tex:995-1020`).
       Being too tall is why it was pushed to the end of the document.
       A `\clearpage` at the end of `methods.tex` now flushes it there instead (and one around each appendix section
       keeps the appendix figures in their own appendix), but the warning remains.
-- [ ] `caption` package "Unknown document class" warning (`main.log:2926`). Check that captions render as intended.
-- [ ] `results.tex:109` reads `Figure\ref` (missing `~`).
-- [ ] Results and methods sections have no `\label{sec:...}`. Add them if they'll be referenced.
+      Leaving the warning for now: check with the editor whether they want this long table
+      or for us to split it over multiple pages (ZNTODO next to the table in `methods.tex`).
+- [x] `caption` package "Unknown document class" warning (`main.log:2926`). Check that captions render as intended.
+      Harmless: `copernicus.cls` loads `caption` itself, then immediately restores its own `\@makecaption`.
+      Checked in the PDF (2026-10-07): captions render in the Copernicus style ("**Figure 7.** ...").
+- [x] `results.tex:109` reads `Figure\ref` (missing `~`).
+      Now `Figure~\ref`. All `Figure(s)`/`Table`/`Section(s)`/`Equation`/`Appendix`/`and` `\ref`s
+      in the manuscript (and the generated appendix captions) now use `~` too.
+- [x] Results and methods sections have no `\label{sec:...}`. Add them if they'll be referenced.
+      Added `sec:methods` and `sec:results` (not referenced yet).
 - [x] Rebuild (done 2026-10-06 after the header fixes; no undefined references left).
 - [x] "Label(s) may have changed. Rerun" persisted after repeated builds.
       Fixed by a third pdflatex pass after bibtex (`compile_latex` in `scripts/compile-gmd-template-based-latex.py`),

@@ -120,7 +120,7 @@ def get_like_caption(reference_label: str, gas: str) -> str:
         The caption
     """
     return (
-        rf"Like Figure \ref{{{reference_label}}}, "
+        rf"Like Figure~\ref{{{reference_label}}}, "
         f"except for {MANUSCRIPT_GAS_NAMES[gas]}."
     )
 
