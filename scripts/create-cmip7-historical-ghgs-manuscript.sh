@@ -86,8 +86,7 @@ results_gases=(
     "${c4f10_like_gases[@]}"
     c8f18
     # The equivalent species we compare with CMIP6 in the results.
-    # CFC-11-eq could be added too, it just isn't discussed (yet).
-    cfc12eq hfc134aeq
+    cfc11eq cfc12eq hfc134aeq
 )
 
 results_figure_files=()
@@ -105,6 +104,7 @@ cfc12_like_per_gas_table_file="${repo_root}/tables/historical-ghg-forcing-for-cm
 # methods_subfile="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods-detail.tex"
 results_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/results.tex"
 discussion_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/discussion.tex"
+appendices_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/appendices.tex"
 code_and_data_availability_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/code-and-data-availability.tex"
 author_contribution_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/author-contribution.tex"
 competing_interests_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/competing-interests.tex"
@@ -182,6 +182,7 @@ uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --section "${discussion_file}" \
     --tex-inputs-manifest "${tex_inputs_manifest_file}" \
     --conclusion "${conclusion_file}" \
+    --appendix "${appendices_file}" \
     --code-and-data-availability "${code_and_data_availability_file}" \
     --author-contribution "${author_contribution_file}" \
     --competing-interests "${competing_interests_file}" \

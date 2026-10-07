@@ -374,16 +374,9 @@ When referring to `AGAGE' data, we also mean data from the predecessor GAGE [TOD
 \label{fig:methods-n2o}
 \end{figure}
 
-% ZNTODO: update this when we get to appendix figures
-% Draft caption for the appendix figure which holds the working behind Figure \ref{fig:methods-n2o}.
-% The figure is written to figures/historical-ghg-forcing-for-cmip7/n2o_methods_appendix.pdf
-% (tag <n2o-methods-appendix-figure>), ready to be put in an appendix.
-% \caption{
-%     a), b) Demonstration of interpolation in the case where we have the most/least available values from the observation networks
-%     (but still pass our minimum data for interpolation requirement).
-%     c) Variance explained by each latitudinal gradient empirical orthogonal function (EOF).
-%     d) Latitudinal gradient principal components (PCs) derived from the observation network values.
-% }
+% TODO: review this cross-ref, this is just here to test the linking between main and appendices e.g. numbering.
+The working behind Figure \ref{fig:methods-n2o} is shown in Figure \ref{fig:methods-appendix-n2o}
+(the equivalent figures for the other gases are in Appendix \ref{app:methods-figures}).
 
 \subsubsection{Step 2: Bin and interpolate observations}
 \label{sssec:methods-n2o-bin-and-interpolate}
@@ -562,20 +555,8 @@ For CO_2, we use data from the NOAA observation network
 \label{fig:methods-co2}
 \end{figure}
 
-% ZNTODO: update this when we get to appendix figures
-% Draft caption for the appendix figure which holds the working behind Figure \ref{fig:methods-co2}.
-% The figure is written to figures/historical-ghg-forcing-for-cmip7/co2_methods_appendix.pdf
-% (tag <co2-methods-appendix-figure>), ready to be put in an appendix.
-% \caption{
-%     a), b) Demonstration of interpolation in the case where we have the most/least available values from the observation networks
-%     (but still pass our minimum data for interpolation requirement).
-%     c) Variance explained by each seasonality change empirical orthogonal function (EOF).
-%     d) Seasonality change principal component (PC) derived from the observation network values.
-%     e) Regression between the seasonality change PC and the temperature - CO_2 concentration composite.
-%     f) Variance explained by each latitudinal gradient EOF.
-%     g) Latitudinal gradient PCs derived from the observation network values.
-%     h) Regression between the first latitudinal gradient PC and CO_2 emissions of geological origin.
-% }
+% TODO: review this cross-ref, this is just here to test the linking between main and appendices e.g. numbering.
+The working behind Figure \ref{fig:methods-co2} is shown in Figure \ref{fig:methods-appendix-co2}.
 
 \subsubsection{Step 2: Bin and interpolate observations}
 \label{sssec:methods-co2-bin-and-interpolate}
@@ -756,17 +737,8 @@ For CH_4, we use data from the NOAA [TODO ref] and AGAGE [TODO ref] observation 
 \label{fig:methods-ch4}
 \end{figure}
 
-% ZNTODO: update this when we get to appendix figures
-% Draft caption for the appendix figure which holds the working behind Figure \ref{fig:methods-ch4}.
-% The figure is written to figures/historical-ghg-forcing-for-cmip7/ch4_methods_appendix.pdf
-% (tag <ch4-methods-appendix-figure>), ready to be put in an appendix.
-% \caption{
-%     a), b) Demonstration of interpolation in the case where we have the most/least available values from the observation networks
-%     (but still pass our minimum data for interpolation requirement).
-%     c) Variance explained by each latitudinal gradient empirical orthogonal function (EOF).
-%     d) Latitudinal gradient principal components (PCs) derived from the observation network values.
-%     e) Regression between the first latitudinal gradient PC and CH_4 emissions of geological origin.
-% }
+% TODO: review this cross-ref, this is just here to test the linking between main and appendices e.g. numbering.
+The working behind Figure \ref{fig:methods-ch4} is shown in Figure \ref{fig:methods-appendix-ch4}.
 
 \subsubsection{Step 2: Bin and interpolate observations}
 \label{sssec:methods-ch4-bin-and-interpolate}
@@ -949,17 +921,11 @@ The networks used are:
 \label{fig:methods-cfc12}
 \end{figure}
 
-% ZNTODO: update this when we get to appendix figures
-% Draft caption for the appendix figure which holds the working behind Figure \ref{fig:methods-cfc12}.
-% The figure is written to figures/historical-ghg-forcing-for-cmip7/cfc12_methods_appendix.pdf
-% (tag <cfc12-methods-appendix-figure>), ready to be put in an appendix.
-% \caption{
-%     a), b) Demonstration of interpolation in the case where we have the most/least available values from the observation networks
-%     (but still pass our minimum data for interpolation requirement).
-%     c) Variance explained by each latitudinal gradient empirical orthogonal function (EOF).
-%     d) Latitudinal gradient principal components (PCs) derived from the observation network values.
-%     e) Regression between the first latitudinal gradient PC and CFC12 emissions.
-% }
+% TODO: review this cross-ref, this is just here to test the linking between main and appendices e.g. numbering.
+The working behind Figure \ref{fig:methods-cfc12} is shown in Figure \ref{fig:methods-appendix-cfc12}.
+% TODO: review this cross-ref, this is just here to test the linking between main and appendices e.g. numbering.
+As an example of another gas processed like CFC12,
+the equivalent figures for SF_6 are shown in Figures \ref{fig:methods-sf6} and \ref{fig:methods-appendix-sf6}.
 
 \subsubsection{Step 2: Bin and interpolate observations}
 \label{sssec:methods-cfc12-like-bin-and-interpolate}
@@ -1345,3 +1311,8 @@ see [TODO ref input4MIPs CVs page and user guide].
 For any modelling team which requires suggestions for handling the vertical dimension,
 [ZNTODO: short summary of the suggested vertical approach].
 For full details, refer to [ZNTODO section] of \citet{meinshausen_historical_2017}.
+
+% Flush the methods figures and tables before the results start.
+% Otherwise the CFC-12-like per-gas table (which is slightly too tall for a page)
+% gets pushed to the end of the document.
+\clearpage

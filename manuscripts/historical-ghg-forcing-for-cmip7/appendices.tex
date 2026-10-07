@@ -1,0 +1,145 @@
+% Each \section is a new appendix (A, B, ...).
+% Figures and tables are numbered within their appendix (A1, A2, ..., B1, ...),
+% so put them in the appendix section they belong to.
+% Put a \clearpage before each \section and at the end of the file,
+% so each appendix's figures are flushed before the next appendix starts
+% (otherwise they can float into the next appendix).
+% \appendix and \noappendix are added by the build, don't add them here.
+%
+% Despite what the Copernicus template says, we don't use \appendixfigures or \appendixtables:
+% they break the numbering.
+% The template only asks for them if all figures and tables are put after the reference list
+% (its "Option 2"). We put figures and tables in the sections they belong to (its "Option 1"),
+% for which \appendix already numbers them per appendix (A1, A2, ..., B1, ...).
+% \appendixfigures also steps the section counter, on top of the step from \section,
+% so using it as well (tested 2026-10-07, one after each appendix \section)
+% numbered the figures in Appendix B as C1, C2, ...
+
+\clearpage
+\section{Detailed methods figures}
+\label{app:methods-figures}
+
+\begin{figure}[hbt!]  % get latex to keep this figure after the section header, or at the bottom of this page or at the top of the next
+\includegraphics[width=12cm]{<n2o-methods-appendix-figure>}
+\caption{
+    Working behind Figure \ref{fig:methods-n2o}.
+    a), b) Demonstration of interpolation in the case where we have the most/least available values from the observation networks
+    (but still pass our minimum data for interpolation requirement).
+    c) Variance explained by each latitudinal gradient empirical orthogonal function (EOF).
+    d) Latitudinal gradient principal components (PCs) derived from the observation network values.
+}
+\label{fig:methods-appendix-n2o}
+\end{figure}
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{<co2-methods-appendix-figure>}
+\caption{
+    Working behind Figure \ref{fig:methods-co2}.
+    a), b) Demonstration of interpolation in the case where we have the most/least available values from the observation networks
+    (but still pass our minimum data for interpolation requirement).
+    c) Variance explained by each seasonality change empirical orthogonal function (EOF).
+    d) Seasonality change principal component (PC) derived from the observation network values.
+    e) Regression between the seasonality change PC and the temperature - CO_2 concentration composite.
+    f) Variance explained by each latitudinal gradient EOF.
+    g) Latitudinal gradient PCs derived from the observation network values.
+    h) Regression between the first latitudinal gradient PC and CO_2 emissions of geological origin.
+}
+\label{fig:methods-appendix-co2}
+\end{figure}
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{<ch4-methods-appendix-figure>}
+\caption{
+    Working behind Figure \ref{fig:methods-ch4}.
+    a), b) Demonstration of interpolation in the case where we have the most/least available values from the observation networks
+    (but still pass our minimum data for interpolation requirement).
+    c) Variance explained by each latitudinal gradient empirical orthogonal function (EOF).
+    d) Latitudinal gradient principal components (PCs) derived from the observation network values.
+    e) Regression between the first latitudinal gradient PC and CH_4 emissions of geological origin.
+}
+\label{fig:methods-appendix-ch4}
+\end{figure}
+
+% ZNTODO: check panel e) against the method
+% (regression against total SSP2-4.5 emissions from RCMIP, see TODOs.md section 2)
+\begin{figure}[tp]
+\includegraphics[width=12cm]{<cfc12-methods-appendix-figure>}
+\caption{
+    Working behind Figure \ref{fig:methods-cfc12}.
+    a), b) Demonstration of interpolation in the case where we have the most/least available values from the observation networks
+    (but still pass our minimum data for interpolation requirement).
+    c) Variance explained by each latitudinal gradient empirical orthogonal function (EOF).
+    d) Latitudinal gradient principal components (PCs) derived from the observation network values.
+    e) Regression between the first latitudinal gradient PC and CFC12 emissions.
+}
+\label{fig:methods-appendix-cfc12}
+\end{figure}
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{<sf6-methods-figure>}
+\caption{
+    Production of the SF_6 datasets (for full details, see Section \ref{ssec:methods-cfc12-like}).
+    a) Raw observation network data.
+    b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
+    c) Location of each sampling site in the observation networks.
+    d) Global-, annual-mean derived from the observation network values.
+    e) Seasonality derived from the observation network values.
+    f) Latitudinal gradient empirical orthogonal functions (EOFs) derived from the observation network values.
+    g) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
+    h) Latitudinal gradient principal components (PCs) for the entire output dataset timespan.
+}
+\label{fig:methods-sf6}
+\end{figure}
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{<sf6-methods-appendix-figure>}
+\caption{
+    Working behind Figure \ref{fig:methods-sf6}.
+    a), b) Demonstration of interpolation in the case where we have the most/least available values from the observation networks
+    (but still pass our minimum data for interpolation requirement).
+    c) Variance explained by each latitudinal gradient empirical orthogonal function (EOF).
+    d) Latitudinal gradient principal components (PCs) derived from the observation network values.
+    e) Regression between the first latitudinal gradient PC and SF_6 emissions.
+}
+\label{fig:methods-appendix-sf6}
+\end{figure}
+
+\clearpage
+\section{Detailed results figures}
+\label{app:results-figures}
+
+% ZNTODO: the results figures for the other gases not shown in the main text (see TODOs.md, section 2)
+
+\begin{figure}[hbt!]  % get latex to keep this figure after the section header, or at the bottom of this page or at the top of the next
+\includegraphics[width=12cm]{<sf6-results-figure>}
+\caption{
+    SF_6 forcing dataset and comparison with other datasets.
+    a) Surface plot of the last ten years of the native resolution dataset.
+    b), c) Hemispheric- and global- monthly-mean values from 2000 to 2020 and 2020 onwards respectively.
+    d), e), f) Hemispheric- and global-, annual-mean values from year 1 to 1750, 1750 to 2000 and 2000 onwards respectively.
+    Note that each panel has its own vertical scale so the features of interest can be seen
+    (but this also makes the differences in the pre-industrial period appear relatively bigger).
+    In panels b) to f), the observation network values used as input data (Figure \ref{fig:methods-sf6}a)
+    are shown for context, and coloured by latitude.
+    g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
+    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section \ref{ssec:results-radiative-forcing-comparisons-note}).
+}
+\label{fig:results-sf6}
+\end{figure}
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{<cfc11eq-results-figure>}
+\caption{
+    CFC-11-eq forcing dataset.
+    a) Surface plot of the last ten years of the native resolution dataset.
+    b), c) Hemispheric- and global- monthly-mean values from 2000 to 2020 and 2020 onwards respectively.
+    d), e), f) Hemispheric- and global-, annual-mean values from year 1 to 1750, 1750 to 2000 and 2000 onwards respectively.
+    Note that each panel has its own vertical scale so the features of interest can be seen.
+    IGCC has no CFC-11-eq, so there is no IGCC comparison.
+    g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
+    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section \ref{ssec:results-radiative-forcing-comparisons-note}).
+}
+\label{fig:results-cfc11eq}
+\end{figure}
+
+\clearpage

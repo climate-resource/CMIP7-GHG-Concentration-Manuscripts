@@ -576,6 +576,22 @@ def main(  # noqa: PLR0913, PLR0915
             file_okay=True,
         ),
     ],
+    appendix: Annotated[
+        list[Path] | None,
+        typer.Option(
+            help=(
+                "Path to use for the appendices. "
+                "This can be supplied multiple times. "
+                "The files are used in the order they are provided to the CLI. "
+                "As for `--section`, the files should contain headers as needed "
+                r"(each `\section` is a new appendix: A, B, ...). "
+                r"The `\appendix` and `\noappendix` commands come from this script, "
+                "so the files must not contain them."
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ] = None,
     extra: Annotated[
         list[Path] | None,
         typer.Option(
@@ -705,6 +721,21 @@ def main(  # noqa: PLR0913, PLR0915
             "TEXT", f"\n{textwrap.indent(replacement_text, prefix=4 * ' ')}\n"
         )
         res = res.replace(to_replace, replacement)
+
+    if appendix:
+        appendix_text = "\n\n".join(
+            [
+                r"\appendix",
+                *(
+                    f"{get_source_file_str(af)}\n{collector.read_text(af)}"
+                    for af in appendix
+                ),
+                # Otherwise the sections and figures after the appendices
+                # keep the appendix numbering
+                r"\noappendix",
+            ]
+        )
+        res = insert_after_tag(res, appendix_text, tag="<appendix-start>")
 
     res = insert_file_content_after_tag(
         res, acknowledgements, tag="<acknowledgements-start>", collector=collector

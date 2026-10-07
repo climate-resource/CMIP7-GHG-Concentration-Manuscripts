@@ -147,17 +147,45 @@ Everything else should use exactly these names:
 
 ## 2. Appendices
 
-The build doesn't support appendices yet, but most of the figures already exist.
+The build supports appendices (see Infrastructure), and most of the figures already exist.
 
 ### Infrastructure
 
-- [ ] Add an appendix option to `scripts/compile-gmd-template-based-latex.py`
+- [x] Add an appendix option to `scripts/compile-gmd-template-based-latex.py`
       (the Copernicus template has a commented `\appendix ... \noappendix` block
       after `\codedataavailability`, `copernicus-latex-package/template_clean.tex:97-115`).
-- [ ] Create `manuscripts/historical-ghg-forcing-for-cmip7/appendices.tex`
+      Done: `--appendix` (can be given more than once, like `--section`).
+      The files are inserted at a new `% <appendix-start>` tag in `template_clean.tex`
+      (after `\codedataavailability`, before `\authorcontribution`, where the template's commented block is),
+      wrapped in `\appendix ... \noappendix` by the script, so the appendix files only hold `\section`s and content.
+- [x] Create `manuscripts/historical-ghg-forcing-for-cmip7/appendices.tex`
       and pass it from `scripts/create-cmip7-historical-ghgs-manuscript.sh`.
-- [ ] Check appendix figures/tables get numbered A1, A2, ... (`\appendixfigures`/`\appendixtables`, `\noappendix`).
-- [ ] Decide what goes in the appendix and what goes in a supplement (roughly 80 extra figures, see below).
+      Done: "Appendix A: Detailed methods figures" (`app:methods-figures`)
+      and "Appendix B: Detailed results figures" (`app:results-figures`).
+      The first figures are in (see below): Appendix A has the N_2O, CO_2, CH_4, CFC-12 methods appendix figures
+      and the SF_6 methods and methods appendix figures (A1-A6),
+      Appendix B the SF_6 and CFC-11-eq results figures (B1, B2).
+- [x] Check appendix figures/tables get numbered A1, A2, ... (`\appendixfigures`/`\appendixtables`, `\noappendix`).
+      Done: with the `manuscript` class option `\appendix` resets the figure and table counters per appendix section,
+      so figures/tables put inside an appendix `\section` are numbered automatically
+      (the template's "Option 1").
+      We don't use `\appendixfigures`/`\appendixtables`, despite the template mentioning them:
+      the template only asks for them if all floats are put after the reference list ("Option 2"),
+      and they break the numbering with Option 1.
+      Tested with `\appendixfigures` after each appendix `\section`:
+      the Appendix B figures came out as C1, C2 (it steps the section counter on top of `\section`'s step).
+      This is explained in a comment at the top of `appendices.tex`.
+      Checked with a throwaway build with two extra appendices holding figures and tables:
+      captions and `\ref`s came out as Figure C1, C2, D1 and Table C1, D1,
+      the headings as "Appendix C: ...", and the main-text figures stayed 1-12.
+      Note: the manuscript class option floats tables to the end of the document, appendix tables included.
+- [x] Decide what goes in the appendix and what goes in a supplement (roughly 80 extra figures, see below).
+      Decision: everything goes in appendices, no supplement.
+      Copernicus reserves the supplement for "items that cannot reasonably be included in the main text or as appendices"
+      (https://publications.copernicus.org/for_authors/manuscript_preparation.html),
+      and figures can reasonably be included as appendices
+      (this is the reasoning to put in the latex comment, see the first item under "Methods appendix figures").
+      Revisit if the per-gas figures make the PDF unwieldy, e.g. if the editor asks us to move them.
 
 ### Methods appendix figures (already generated)
 
@@ -166,14 +194,20 @@ The build doesn't support appendices yet, but most of the figures already exist.
       and supplementary (not required for understanding the paper i.e. surplus to requirements and "Supplementary material is reserved for items that cannot reasonably be included in the main text or as appendices")
       so that other authors know why we've done this.
       Link to https://publications.copernicus.org/for_authors/manuscript_preparation.html
-- [ ] N_2O, CO_2, CH_4, CFC-12: move the draft captions from `methods.tex` into the appendix
+- [x] N_2O, CO_2, CH_4, CFC-12: move the draft captions from `methods.tex` into the appendix
       (`methods.tex:327-336,526-539,749-759,960-970`), use the `<gas-methods-appendix-figure>` tags,
       and remove the "update this when we get to appendix figures" ZNTODOs.
+      Done: Figures A1-A4 (`fig:methods-appendix-<gas>`), captions start "Working behind Figure \ref{fig:methods-<gas>}".
+      Where the draft captions were, `methods.tex` now has a test cross-ref to the appendix figure
+      (see "References from the main text into the appendix").
 - [ ] The other 33 CFC-12-like gases: `<gas>-methods-figure` and `<gas>-methods-appendix-figure`
       are generated and in the manifest but not used anywhere in the text.
+      SF_6 done (Figures A5, A6: `fig:methods-sf6`, `fig:methods-appendix-sf6`, captions copied from CFC-12's),
+      the other 32 still to go.
 - [ ] The other C_4F_10-like gases (C_5F_12, C_6F_14, C_7F_16, cC_4F_8): `<gas>-methods-figure` is generated but not used.
 - [ ] Check the CFC-12 appendix draft caption, "e) Regression between the first latitudinal gradient PC and CFC12 emissions",
       against the method (regression against total SSP2-4.5 emissions from RCMIP, `methods.tex:1035-1037`).
+      The caption is now in `appendices.tex` (with a ZNTODO), and the SF_6 appendix caption copies it, so check that too.
 - [ ] Optional: CH_4 Law Dome smoothing figure (noise, windows, regression; `methods.tex:821-823`, "if requested by reviewers").
 
 ### Results appendix figures (already generated)
@@ -181,10 +215,21 @@ The build doesn't support appendices yet, but most of the figures already exist.
 - [ ] Results figures exist for all 43 gases plus the equivalent species,
       but only CO_2, CH_4, N_2O, CFC-12, CFC-12-eq and HFC-134a-eq are in the text.
       Add the rest to an appendix (`results.tex:9`) and fill in "[TODO Appendix section and refs]" (`results.tex:286`).
-- [ ] Possibly add CFC-11-eq (`scripts/create-cmip7-historical-ghgs-manuscript.sh` notes it isn't discussed yet).
+      SF_6 done (Figure B1, `fig:results-sf6`), the other gases still to go.
+- [x] Possibly add CFC-11-eq (`scripts/create-cmip7-historical-ghgs-manuscript.sh` notes it isn't discussed yet).
+      Done: added to the results gases in the build script, figure generated, in Appendix B (Figure B2, `fig:results-cfc11eq`).
+      Its caption notes that IGCC has no CFC-11-eq.
+      The results text only points to it (no discussion of it yet).
 
 ### References from the main text into the appendix
 
+- [ ] Review the test cross-refs, each marked with
+      "% TODO: review this cross-ref, this is just here to test the linking between main and appendices e.g. numbering."
+      They are: a sentence after each of the N_2O, CO_2, CH_4 and CFC-12 methods figures pointing to its appendix figure
+      (the N_2O one also points to Appendix A), one after the CFC-12 one pointing to the SF_6 figures (A5, A6),
+      one at the end of the CFC-12 results section pointing to the SF_6 results (B1)
+      and one in the equivalence datasets intro pointing to CFC-11-eq (B2, Appendix B).
+      Replace them with the real references below (or keep them, reworded).
 - [ ] N_2O Step 3, "explain almost all of the variance (Figure [ZNTODO figure panel ref])" (`methods.tex:391`), pointing to the variance explained panel.
 - [ ] CO_2 Step 3 variance claims (`methods.tex:574-576,597-600`), pointing to the variance explained panels (c, f).
 - [ ] CO_2 Step 4 regressions (`methods.tex:607-612,667-688`), pointing to the CO_2 appendix panels e and h (ZNTODO at `methods.tex:688`).
@@ -201,6 +246,9 @@ The build doesn't support appendices yet, but most of the figures already exist.
 - [ ] CFC-12 results caption refers to `Figure \ref{fig:results-cfc12}a` (itself) for the obs. network (`results.tex:271`).
       It should be `fig:methods-cfc12`.
 - [ ] "Float too large for page by 10pt": this is the CFC-12-like per-gas `table*` (`methods.tex:995-1020`).
+      Being too tall is why it was pushed to the end of the document.
+      A `\clearpage` at the end of `methods.tex` now flushes it there instead (and one around each appendix section
+      keeps the appendix figures in their own appendix), but the warning remains.
 - [ ] `caption` package "Unknown document class" warning (`main.log:2926`). Check that captions render as intended.
 - [ ] `results.tex:109` reads `Figure\ref` (missing `~`).
 - [ ] Results and methods sections have no `\label{sec:...}`. Add them if they'll be referenced.
