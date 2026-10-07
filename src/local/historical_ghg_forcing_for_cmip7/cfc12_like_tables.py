@@ -78,10 +78,10 @@ which is where they are turned into tex.
 NETWORK_LABELS = {
     "AGAGE": "AGAGE",
 }
-"""How each observational network is written in the manuscript
+"""How each observation network is written in the manuscript
 
 Keyed by the network's name in the `network` column
-of the original run's binned observational network data.
+of the original run's binned observation network data.
 NOAA is not here because its label depends on which of its HATS products
 was used, see [`NOAA_HATS_PRODUCT_LABELS`][].
 """
@@ -122,7 +122,7 @@ def get_noaa_hats_product(gas: str, bundle_dir: Path) -> str:
     """
     Get which NOAA HATS product the original run used for a gas
 
-    The binned observational network data doesn't say,
+    The binned observation network data doesn't say,
     so we take it from the URLs the original run downloaded the data from.
 
     Parameters
@@ -168,7 +168,7 @@ def get_noaa_hats_product(gas: str, bundle_dir: Path) -> str:
 
 def get_networks(gas: str, bundle_dir: Path) -> tuple[str, ...]:
     """
-    Get the observational networks which observe a gas
+    Get the observation networks which observe a gas
 
     Parameters
     ----------

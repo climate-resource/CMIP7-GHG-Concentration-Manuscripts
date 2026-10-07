@@ -140,7 +140,7 @@ ROWS = (
 The rows follow the steps of the method,
 so the panels are labelled in reading order.
 
-- The observational network: what was measured and when,
+- The observation network: what was measured and when,
   across the whole width of the figure, because it is the figure's starting point
   and has the most in it.
 - How many observations go into each bin, and where they were taken.
@@ -197,7 +197,7 @@ def get_n2o_all_data_with_bins(
     force_rerun: bool = False,
 ) -> pd.DataFrame:
     """
-    Get the N2O observational network data, as it went into the binning
+    Get the N2O observation network data, as it went into the binning
 
     This re-runs the original run's binning notebook if it needs to.
     That is slow the first time (the original run's environment has to be
@@ -218,7 +218,7 @@ def get_n2o_all_data_with_bins(
 
     Returns
     -------
-        The observational network data, with the latitudinal and longitudinal
+        The observation network data, with the latitudinal and longitudinal
         bin of each observation added
     """
     out_file = bundle_dir / ALL_DATA_WITH_BINS_FILE
@@ -253,7 +253,7 @@ def get_n2o_all_data_with_bins(
     save_cell = f"""
 # Added for the CMIP7 GHG manuscript.
 # The original run never saved `all_data_with_bins` out,
-# but we need it to show the observational network in the manuscript.
+# but we need it to show the observation network in the manuscript.
 from pathlib import Path
 
 manuscript_out_file = Path("{ALL_DATA_WITH_BINS_FILE.as_posix()}")

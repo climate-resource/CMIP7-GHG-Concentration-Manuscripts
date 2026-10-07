@@ -199,7 +199,7 @@ GLOBAL_MEAN_SUPPLEMENT_SOURCES = {
         ("cf4", "c2f6", "c3f8"),
     ),
 }
-"""Global-mean source used in place of the observational network, by file
+"""Global-mean source used in place of the observation network, by file
 
 Each entry is the source's label and the gases it is used for,
 keyed by the source's file relative to the bundle's `data/interim` directory.
@@ -210,7 +210,7 @@ so the figure's legends say the same as the text and tables.
 This mirrors `get_global_mean_supplement_config`
 in the original run's `local/global_mean_extension.py`.
 The gases which appear in none of these entries
-take their global-mean from the observational network alone.
+take their global-mean from the observation network alone.
 """
 
 SOURCE_BIBKEYS = {
@@ -373,7 +373,7 @@ def interim_dir(gas: str, bundle_dir: Path) -> Path:
 
 def get_cfc12_like_all_data_with_bins(gas: str, bundle_dir: Path) -> pd.DataFrame:
     """
-    Get a gas' observational network data, as it went into the binning
+    Get a gas' observation network data, as it went into the binning
 
     Unlike CO2, CH4 and N2O, the original run saved this out for these gases,
     so there is no notebook to re-run here.
@@ -388,7 +388,7 @@ def get_cfc12_like_all_data_with_bins(gas: str, bundle_dir: Path) -> pd.DataFram
 
     Returns
     -------
-        The observational network data, with the latitudinal and longitudinal
+        The observation network data, with the latitudinal and longitudinal
         bin of each observation added
     """
     return pd.read_csv(
@@ -501,13 +501,13 @@ def supplement_replaces_obs_network(
     supplement: pd.DataFrame, max_year_extended: int
 ) -> bool:
     """
-    Get whether a global-mean source replaces the observational network's outright
+    Get whether a global-mean source replaces the observation network's outright
 
     This is the rule the original run used
     (`1304_sf6-like_create-global-annual-mean`):
     a source which reaches the end of the dataset is used as-is,
     while one which stops short of it is harmonised
-    to the observational network's global-mean
+    to the observation network's global-mean
     and the network's global-mean is used from there on.
 
     Parameters
@@ -521,7 +521,7 @@ def supplement_replaces_obs_network(
     Returns
     -------
     :
-        `True` if the source replaces the observational network's global-mean,
+        `True` if the source replaces the observation network's global-mean,
         `False` if it is harmonised to it
     """
     return bool(supplement["year"].max() >= max_year_extended)
@@ -531,7 +531,7 @@ def get_global_mean_supplement(
     gas: str, bundle_dir: Path
 ) -> tuple[str, pd.DataFrame] | None:
     """
-    Get the reference global-mean used in place of the observational network's
+    Get the reference global-mean used in place of the observation network's
 
     Parameters
     ----------
@@ -545,7 +545,7 @@ def get_global_mean_supplement(
     -------
     :
         The source's label and its data, or `None` if this gas' global-mean
-        comes from the observational network alone
+        comes from the observation network alone
     """
     for source_file, (label, gases) in GLOBAL_MEAN_SUPPLEMENT_SOURCES.items():
         if gas not in gases:
@@ -808,7 +808,7 @@ def generate_cfc12_like_methods_figure(  # noqa: PLR0913, PLR0915
     max_year_extended = int(global_mean_extended["year"].max())
 
     # Only what actually went into the extension:
-    # where a source replaces the observational network's global-mean outright,
+    # where a source replaces the observation network's global-mean outright,
     # the network's global-mean is not used, so it is not shown.
     input_sources = {}
     obs_network_used = True
@@ -862,7 +862,7 @@ def generate_cfc12_like_methods_figure(  # noqa: PLR0913, PLR0915
         raise AssertionError(emissions_unit_l)
     emissions_unit = emissions_unit_l[0]
 
-    # The regression only ever saw the years the observational network covers
+    # The regression only ever saw the years the observation network covers
     obs_based_years = lat_gradient_from_obs_network["year"].values
     regression_years = np.intersect1d(
         obs_based_years, historical_emissions["year"].values

@@ -9,7 +9,7 @@ and how it compares to what else is out there:
 - our yearly global-mean
 - the difference between our yearly global-mean and CMIP6's
 
-The observational network (or, for gases without one, the inputs)
+The observation network (or, for gases without one, the inputs)
 is drawn behind everything else, faded, as context:
 the methods figures already show it properly.
 The comparison datasets (see
@@ -112,7 +112,7 @@ An end of `None` means the end of our data.
 Each piece gets its own vertical scale.
 The record barely moves for most of its first 1750 years,
 then rises through the industrial era,
-then keeps rising in the years the observational network covers,
+then keeps rising in the years the observation network covers,
 and on one scale the first of those is a flat line
 while the last is a steep one.
 """
@@ -144,14 +144,14 @@ CMIP7_LABEL = "CMIP7"
 """What we call our own output in the legend"""
 
 CONTEXT_ALPHA = 0.2
-"""How see-through to draw the observational network
+"""How see-through to draw the observation network
 
 It is context, not the subject, so it is drawn faint enough
 that anything drawn over it stands out.
 """
 
 RECENT_MONTHLY_CONTEXT_ALPHA = 0.6
-"""How see-through to draw the observational network in the last monthly piece
+"""How see-through to draw the observation network in the last monthly piece
 
 That piece covers only a few years, so the individual measurements
 are far enough apart to be read, which is worth drawing them solidly enough for.
@@ -175,12 +175,12 @@ but with more than a couple of sites the lines are too hard to read
 """
 
 CONTEXT_MARKER_SIZE = 1.5
-"""Marker size to draw the observational network with"""
+"""Marker size to draw the observation network with"""
 
 COMPARISON_MARKER_SIZE = 8.0
 """Marker size to draw spatial comparison datasets with
 
-Much bigger than the observational network's markers, and outlined,
+Much bigger than the observation network's markers, and outlined,
 so they stand out from it even where they are the same colour.
 """
 
@@ -604,7 +604,7 @@ def plot_obs_network_context(
     alphas: Sequence[float] | None = None,
 ) -> None:
     """
-    Plot the observational network, faded, as context
+    Plot the observation network, faded, as context
 
     This is the same view of it as the methods figures' first panel,
     i.e. coloured by latitude with a marker per network,
@@ -613,7 +613,7 @@ def plot_obs_network_context(
     Parameters
     ----------
     obs_network
-        Observational network data
+        Observation network data
 
     axes
         Axes of each piece of the time axis
@@ -677,7 +677,7 @@ def plot_input_timeseries_context(  # noqa: PLR0913
     alphas: Sequence[float] | None = None,
 ) -> None:
     """
-    Plot the inputs of a gas without an observational network, faded, as context
+    Plot the inputs of a gas without an observation network, faded, as context
 
     Parameters
     ----------
@@ -783,9 +783,9 @@ def plot_comparisons(
     Plot comparison datasets
 
     Datasets with spatial information are drawn as large, outlined markers,
-    coloured by latitude like the observational network behind them.
+    coloured by latitude like the observation network behind them.
     Global-mean datasets are drawn as lines.
-    Both are drawn over the top of the observational network,
+    Both are drawn over the top of the observation network,
     so they stand out from it.
 
     Parameters
@@ -829,7 +829,7 @@ def plot_comparisons(
                     linewidth=OTHER_LINE_WIDTH,
                     zorder=ZORDERS["spatial-comparison"],
                     # Outlined, like the spatial comparisons' markers,
-                    # so it stands out from the observational network
+                    # so it stands out from the observation network
                     # even where it is the same colour
                     path_effects=[
                         matplotlib.patheffects.Stroke(
@@ -1007,7 +1007,7 @@ def set_segment_y_limits(  # noqa: PLR0913
         each with a [TIME_COLUMN][] and a [VALUE_COLUMN][]
 
     context
-        Observational network data drawn behind everything else
+        Observation network data drawn behind everything else
 
         Its bulk is kept on scale, its outliers are not:
         it is context, so it should not set the scale.
@@ -1224,10 +1224,10 @@ def plot_yearly(  # noqa: PLR0913
         Collector for the figure's legend
 
     obs_network
-        Observational network data, to draw as context
+        Observation network data, to draw as context
 
     inputs
-        Inputs of a gas without an observational network, to draw as context
+        Inputs of a gas without an observation network, to draw as context
 
     inputs_label
         Label for `inputs` in the legend
@@ -1303,10 +1303,10 @@ def plot_monthly(  # noqa: PLR0913
         Collector for the figure's legend
 
     obs_network
-        Observational network data, to draw as context
+        Observation network data, to draw as context
 
     inputs
-        Inputs of a gas without an observational network, to draw as context
+        Inputs of a gas without an observation network, to draw as context
 
     inputs_label
         Label for `inputs` in the legend
@@ -1537,10 +1537,10 @@ def generate_results_figure(  # noqa: PLR0913
         CMIP6's yearly global-mean, which the difference panel is taken against
 
     obs_network
-        Observational network data, drawn as context
+        Observation network data, drawn as context
 
     inputs
-        Inputs of a gas without an observational network, drawn as context
+        Inputs of a gas without an observation network, drawn as context
 
     inputs_label
         Label for `inputs` in the legend
@@ -1612,7 +1612,7 @@ def generate_results_figure(  # noqa: PLR0913
         or inputs is not None
         or any(c.is_spatial for c in (*yearly_comparisons, *monthly_comparisons))
     )
-    # Not for e.g. C8F18, which has neither an observational network nor inputs
+    # Not for e.g. C8F18, which has neither an observation network nor inputs
     if anything_coloured_by_latitude:
         add_latitude_entries(legend)
 
@@ -1716,10 +1716,10 @@ def get_context(
     original_run_notebooks_dir
         The original run's `notebooks-executed` directory
 
-        Only used if the observational network data has to be re-generated.
+        Only used if the observation network data has to be re-generated.
 
     force_rerun
-        Re-generate the observational network data,
+        Re-generate the observation network data,
         even if it is already there
 
     Returns

@@ -27,7 +27,7 @@ be broken down as follows:
     \item {
         \textbf{Step 1: Collect observations}
 
-        The first step is collecting surface observations from available observing networks.
+        The first step is collecting surface observations from available observation networks.
         These networks provide surface concentrations at different locations and times around the world.
 
         Where we have a choice, we use data that has already been aggregated to a monthly temporal resolution, rather than raw data.
@@ -43,7 +43,7 @@ be broken down as follows:
          The raw observations are binned spatially,
          into a coarse 15\textdegree~latitudinal and 60\textdegree~longitudinal grid,
          and temporally, into monthly bins.
-         Then, since the surface observational network does not cover the entire globe,
+         Then, since the surface observation network does not cover the entire globe,
          we interpolate the binned observations spatially to get complete global coverage.
 
          We specify that at least five data points are required for us to do spatial interpolation
@@ -66,12 +66,14 @@ be broken down as follows:
          over which there are no data gaps
          (gaps can appear if a time point in the middle of the record failed the minimum requirement for spatial interpolation,
          which is why we cannot simply use the timespan of the observational record itself).
+         We refer to the result as the `interpolated observation network dataset'
+         and to the time period it covers as the `interpolated observation network period'.
     }
 
     \item {
         \textbf{Step 3: Principal component analysis}
 
-        We decompose the interpolated observational network dataset into three components:
+        We decompose the interpolated observation network dataset into three components:
 
         \begin{enumerate}
             \item Global-, annual-mean concentrations
@@ -86,8 +88,8 @@ be broken down as follows:
         The key to this decomposition is that the latitudinal gradient term
         has a spatial (area-weighted) mean of zero
         and that the seasonality term has an annual-mean of zero
-        so that they can be added to the global- annual-mean term (see Step 6)
-        without affecting the corresponding global- annual-mean values.
+        so that they can be added to the global-, annual-mean term (see Step 6)
+        without affecting the corresponding global-, annual-mean values.
     }
 
     \item {
@@ -147,7 +149,7 @@ be broken down as follows:
         and $s$ has a temporal mean of zero
         % ZNTODO: check and explain why our method gives lat. grad. EOFs that all have a mean of zero (rather than only their sum having a mean of zero)
         so that $\int \int gn(y, m, l) dm dl = \int gm(y, m) dm$
-        i.e. the sum does not change the global- annual-mean value we started with.
+        i.e. the sum does not change the global-, annual-mean value we started with.
     }
 
 \end{itemize}
@@ -203,7 +205,7 @@ while the specifics for each greenhouse gas are described in the following secti
                 rather than based on a single ice core timeseries alone.
                 We check that we maintain agreement with available ice core data in both the Northern and Southern hemispheres
                 (based on the already extended latitudinal gradient)
-                to within 0.5\% when extending the global- annual-mean.
+                to within 0.5\% when extending the global-, annual-mean.
             }
         \end{enumerate}
     }
@@ -216,13 +218,13 @@ while the specifics for each greenhouse gas are described in the following secti
                 We do not require data in the most northern and most southern latitudinal boxes.
                 Instead, where the interpolation cannot fill these boxes,
                 we fill them using constant extrapolation of the observations.
-                For gases with particularly sparse observational networks,
+                For gases with particularly sparse observation networks,
                 we allow the constant extrapolation to extend over multiple latitudinal boxes.
             }
             \item {
                 \textbf{Step 4: Extend}
-                In some cases, we use a specific source for the global- annual-mean
-                and extend this, rather than extending the global- annual-mean derived from the observational network.
+                In some cases, we use a specific source for the global-, annual-mean
+                and extend this, rather than extending the global-, annual-mean derived from the observation network.
                 We fill the gap between the global-, annual-mean and pre-industrial values from the literature
                 with a quartic fit.
             }
@@ -275,28 +277,73 @@ while the specifics for each greenhouse gas are described in the following secti
     }
 \end{enumerate}
 
-% \clearpage
-% ZNTODO: I think this table looks terrible and can't work. I'd suggest just sticking with the dot points above instead.
-% ZNTODO: underline header row
-% \begin{table}
-% \centering
-% \begin{tabular}{l|c|c|c|c|c|c}
-%
-%    Gas(es) & 1: Observations & 2: Bin and interpolate & 3: PCA & 4: Extend & 5: Prepare & 6: Generate \\
-%    N_2O & & & & & &  \\
-%    CO_2 & & & An absolute seasonality and seasonality change EOF plus PC is derived, rather than relative seasonality alone & Use merged Law Dome - Mauna Loa record to extend the global-, annual-mean back in time where available (rather than ice core data alone). Extend the seasonality change PC back in time using a composite of global-, annual-mean CO_2 concentrations and global-mean surface air temperature where available & Seasonality calculated by adding seasonality change based on EOF analysis to the base seasonality &  \\
-%    CH_4 & & & & Latitudinal gradient PC is extended back in time by doing an optimisation against ice core data from both the Southern and Northern Hemispheres, rather than based on a single ice core timeseries alone. Check that we maintain agreement with available ice core data in both the Northern and Southern hemispheres to within 0.5\% when extending the global- annual-mean & &  \\
-%    CFC12 and similar & In some cases, use specific source for global- annual-mean rather than deriving from observational network & Allow poleward extension & & Extend global- annual-mean back in time based on pre-industrial values from the literature and performing an interpolation between this pre-industrial value and the available global- annual-mean values & Reduce seasonality and latitudinal gradient as required to avoid negative values in output &  \\
-%    C_4F_10 and similar & Droste et al only & NA & Assume latitudinal gradient, then calculate PCs based on Droste et al. & & As above &  \\
-%    C_8F_18 & CMIP6 only because of a lack of new input data since M17 & & & & &  \\  % TODO make this row all one
-%
-% \end{tabular}
+% Table summarising the per-gas differences from the base case.
+% We're not including this now because we think it is too terse to be useful to the reader,
+% so we stick with the dot points above instead.
+% It is left here in case others want to see how it looks and consider making a different decision.
+% It compiles if uncommented (checked 2026-10-07).
+% \begin{table*}[t]
 % \caption{
-% ALTODO: this might be a useful table for an overview on variations
-% Differencesfrom the base case (N_2O) per gas, broken down by step}
-% \label{table:methods-differences}
-% \end{table}
-% \clearpage
+%     Differences from the base case (N_2O, Section \ref{ssec:methods-n2o}) for each gas or group of gases,
+%     broken down by step (see Section \ref{ssec:methods-general-approach}).
+%     --: as for N_2O.
+%     Step 6 (Generate native resolution) is the same for all gases, so is not shown.
+%     Full details are given in each gas' section.
+% }
+% \label{tab:methods-differences}
+% \small
+% \begin{tabularx}{\textwidth}{
+%     >{\raggedright\arraybackslash}p{2cm}
+%     *{5}{>{\raggedright\arraybackslash}X}
+% }
+% \tophline
+% Gas(es)
+% & 1: Collect observations
+% & 2: Bin and interpolate observations
+% & 3: Principal component analysis
+% & 4: Extend
+% & 5: Prepare the components to be combined \\
+% \middlehline
+% N_2O (Section \ref{ssec:methods-n2o})
+% & --
+% & --
+% & --
+% & --
+% & -- \\
+% CO_2 (Section \ref{ssec:methods-co2})
+% & --
+% & --
+% & Absolute seasonality plus seasonality change EOF and PC
+% & Merged Law Dome - Mauna Loa record for global-, annual-mean;
+%     seasonality change PC from temperature - CO_2 composite
+% & Add seasonality change to base seasonality \\
+% CH_4 (Section \ref{ssec:methods-ch4})
+% & --
+% & --
+% & --
+% & Latitudinal gradient PC optimised against ice cores from both hemispheres
+% & -- \\
+% CFC12 and similar (Section \ref{ssec:methods-cfc12-like})
+% & --
+% & Constant extrapolation into polar boxes
+% & --
+% & Specific global-, annual-mean sources;
+%     gap filled to pre-industrial value
+% & Remove negative values \\
+% C_4F_10 and similar (Section \ref{ssec:methods-c4f10-like})
+% & Two sites from a single source
+% & Not performed
+% & Assumed linear latitudinal gradient EOF; zero seasonality
+% & --
+% & Remove negative values \\
+% C_8F_18 (Section \ref{ssec:methods-c8f18})
+% & \multicolumn{5}{>{\raggedright\arraybackslash}p{\dimexpr\textwidth-2cm-4\tabcolsep\relax}}{
+%     CMIP6 global- and hemispheric-, annual-means;
+%     zero seasonality and a linear latitudinal gradient
+% } \\
+% \bottomhline
+% \end{tabularx}
+% \end{table*}
 
 \subsection{Generating concentrations for N_2O}
 \label{ssec:methods-n2o}
@@ -346,8 +393,7 @@ follow the general approach described in Section \ref{ssec:methods-general-appro
 When we take the longest dataset that is continuous,
 % value-check: {"tag": "n2o-obs-network-start", "unit": "yr", "upper": 1989, "lower": 1989}
 % value-check: {"tag": "n2o-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
-we end up with an observational network dataset that runs from 1989 to 2023 (both inclusive).
-% [ZNTODO unify language re meaning of observational network, ice core extension etc.]
+we end up with an interpolated observation network dataset that runs from 1989 to 2023 (both inclusive).
 
 \subsubsection{Step 3: Principal component analysis}
 \label{sssec:methods-n2o-pca}
@@ -404,7 +450,7 @@ We then calculate the residuals by subtracting the monthly-interpolated
 annual-mean at each latitude from the longitudinal mean.
 The seasonality is the average of these residuals over all available years
 and thus has dimensions (month, lat).
-Relative seasonality is seasonality divided by the average global-mean over all available years.
+Relative seasonality is seasonality divided by the average global-, annual-mean over all available years.
 % ZNTODO: think whether there is a bug in processing or not. I think calculating average(seasonality) / average(global-mean) is the same as average(seasonality / global-mean)
 % because the denominator is the same in each case (number of years) and therefore cancels, but we should convince ourselves of this or write a note about this bug.
 
@@ -413,10 +459,10 @@ Relative seasonality is seasonality divided by the average global-mean over all 
 
 \textbf{Latitudinal gradient.}
 Following \cite{meinshausen_historical_2017},
-we simply keep the PC values constant in the period before the observational network (pre-1989).
+we simply keep the PC values constant in the period before the interpolated observation network period (pre-1989).
 
 \textbf{Global-, annual-mean.}
-We rely on the ice core data from [TODO cite Menking et al 2025] to extend the global- annual-mean back in time.
+We rely on the ice core data from [TODO cite Menking et al 2025] to extend the global-, annual-mean back in time.
 We extrapolate the [TODO cite Menking et al 2025] data from year 5 back to year 1 using linear extrapolation,
 which is imperfect but acceptable given the focus and intended use case of this dataset (Section \ref{sec:output-dataset-requirements}).
 
@@ -425,14 +471,14 @@ removing the need for us to make our own spline interpolation choices
 (unlike \citet{meinshausen_historical_2017}, which used a much more involved interpolation method).
 % ZNTODO: add check of this number
 There is a small offset of around 2.0~ppb between the [TODO cite Menking et al 2025] data
-and our global- annual-mean.
+and our global-, annual-mean.
 To avoid introducing an artificial step in the output,
-we harmonise the [TODO cite Menking et al 2025] data to the observational network
+we harmonise the [TODO cite Menking et al 2025] data to the observation network
 % ZNTODO: add check of decline years
 i.e. add a declining offset (with the decline set to reach zero over 100 years)
-to ensure that the [TODO cite Menking et al 2025] data and the observational network
+to ensure that the [TODO cite Menking et al 2025] data and the observation network-derived
 % ZNTODO: add check 1984 is correct
-derived global- annual-mean agree in 1984 - the earliest year in our observational network derived global- annual-mean.
+global-, annual-mean agree in 1984 - the earliest year in our observation network-derived global-, annual-mean.
 % ZNTODO: add discussion of harmonisation into discussion
 This is crude and a clear area for further investigation in future work ([TODO forward ref discussion]).
 
@@ -453,7 +499,7 @@ We start with the global-, annual-mean term, $gm(y, m)$.
 This must be derived by interpolating the global-, annual-mean onto monthly timesteps.
 This interpolation must be mean-preserving,
 i.e. the mean of the interpolated values must match the mean of the input values (over the same time bounds),
-so that that the interpolated timeseries stays consistent with the global- annual-mean values.
+so that that the interpolated timeseries stays consistent with the global-, annual-mean values.
 We do this using the Lai-Kaplan algorithm \citep{lai-kaplan}.
 We additionally use the Rymes-Meyers algorithm \citep{rymes-meyers}
 when we need to ensure that interpolated values remain within specified bounds
@@ -538,7 +584,7 @@ Binning and interpolation are the same as for N_2O (Section \ref{sssec:methods-n
 When we take the longest dataset that is continuous,
 % value-check: {"tag": "co2-obs-network-start", "unit": "yr", "upper": 1981, "lower": 1981}
 % value-check: {"tag": "co2-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
-we end up with an observational network dataset that runs from 1981 to 2023 (both inclusive).
+we end up with an interpolated observation network dataset that runs from 1981 to 2023 (both inclusive).
 
 \subsubsection{Step 3: Principal component analysis}
 \label{sssec:methods-co2-pca}
@@ -590,27 +636,27 @@ Before 1750, we keep the first PC value constant.
 The second PC is much simpler.
 It is simply linearly interpolated between its value at the start of
 % value-check: {"tag": "co2-obs-network-start", "unit": "yr", "upper": 1981, "lower": 1981}
-the observational period, in our case 1981, and zero in 1850.
+the interpolated observation network period, in our case 1981, and zero in 1850.
 It is kept constant at zero before 1850.
 
 \textbf{Global-, annual-mean.}
-To extend the global- annual-mean back in time, we rely on the
+To extend the global-, annual-mean back in time, we rely on the
 [TODO cite Mauna Loa merged record] and ice core values from [TODO cite Menking et al 2025].
 
 We start with the [TODO cite Mauna Loa merged record].
-We use all data from [TODO cite Mauna Loa merged record] which is not already covered in the observational record.
+We use all data from [TODO cite Mauna Loa merged record] which is not already covered by the interpolated observation network dataset.
 % value-check: {"tag": "co2-obs-network-start", "unit": "yr", "upper": 1981, "lower": 1981}
 % ZNTODO zalue-check: {"tag": "mauna-loa-start", "unit": "yr", "upper": 1959, "lower": 1959}
 In practice this means that we use [TODO cite Mauna Loa merged record] from 1959 to 1980.
 % ZNTODO zalue-check: {"tag": "mauna-loa-obs-record-offset", "unit": "ppm", "upper": 1.5, "lower": 0.5}
 There is an offset of around 1~ppm between the [TODO cite Mauna Loa merged record]
-and the global-, annual-mean we derive from the observational network in 1981.
+and the global-, annual-mean we derive from the observation network in 1981.
 To avoid introducing an artificial step in the output,
-we harmonise the [TODO cite Mauna Loa merged record] data to the observational network
+we harmonise the [TODO cite Mauna Loa merged record] data to the observation network
 % ZNTODO zalue-check: {"tag": "mauna-loa-harmonisation-horizon", "unit": "yr", "upper": 100, "lower": 100}
 i.e. add a declining offset (with the decline set to reach zero over 100 years)
-to ensure that the [TODO cite Mauna Loa merged record] data and the observational network
-derived global- annual-mean agree in 1981 - their first overlap year.
+to ensure that the [TODO cite Mauna Loa merged record] data and the observation network-derived
+global-, annual-mean agree in 1981 - their first overlap year.
 % ZNTODO: ensure that there is a discussion of harmonisation in the discussion
 This is crude and a clear area for further investigation in future work ([TODO forward ref discussion]).
 
@@ -621,12 +667,12 @@ As for the [TODO cite Mauna Loa merged record] data,
 % ZNTODO zalue-check: {"tag": "menking-co2-offset", "unit": "ppm", "upper": 0.5, "lower": 0.0}
 there is a small offset, albeit of only around 0.5~ppm in this case,
 between the [TODO cite Menking et al 2025]
-and the value implied by our global- annual-mean and latitudinal gradient
+and the value implied by our global-, annual-mean and latitudinal gradient
 in the time period in which they overlap.
 Like for the [TODO cite Mauna Loa merged record] data,
 to avoid introducing an artificial step in the output,
 we harmonise the [TODO cite Menking et al 2025] data.
-We then calculate the temporally extended global- annual-mean such that,
+We then calculate the temporally extended global-, annual-mean such that,
 when it is combined with the (now temporally extended) latitudinal gradient,
 our output dataset matches the harmonised [TODO cite Menking et al 2025]
 % ZNTODO zalue-check: {"tag": "menking-output-match", "unit": "ppm", "upper": 0.5, "lower": 0.0}
@@ -640,7 +686,7 @@ extend the seasonality change PC back in time.
 
 Following \cite{meinshausen_historical_2017},
 the PC is extended by performing a linear regression against a composite of global-mean surface air temperatures from [TODO cite HadCRUT]
-and our (now extended) global- annual-mean CO_2 concentrations.
+and our (now extended) global-, annual-mean CO_2 concentrations.
 The composite is described in Equation \ref{eq:co2-pc-composite-regressor}:
 
 \begin{align}
@@ -650,9 +696,9 @@ The composite is described in Equation \ref{eq:co2-pc-composite-regressor}:
     c'(y) &= \frac{c(y) - c_r}{c_n - c_r}  \\
 \end{align}
 where $r(y)$ is the composite timeseries against which we regress,
-$t(y)$ is global- annual-mean temperature after applying a 15-year centred smoothing
+$t(y)$ is global-, annual-mean temperature after applying a 15-year centred smoothing
 (with the values inside the window used at the edges, so values at the 1850 edge are based on fewer values than values in the centre of the smoothing),
-$c(y)$ is global- annual-mean CO_2 concentrations,
+$c(y)$ is global-, annual-mean CO_2 concentrations,
 $_r$ indicates that the quantity is a mean over the reference period (1850-1880 in this study, following \citet{meinshausen_historical_2017}),
 and $_n$ indicates that the quantity is a mean over the normalisation period (2000-2010 in this study, following \citet{meinshausen_historical_2017}).
 
@@ -729,7 +775,7 @@ Binning and interpolation are the same as for N_2O (Section \ref{sssec:methods-n
 When we take the longest dataset that is continuous,
 % value-check: {"tag": "ch4-obs-network-start", "unit": "yr", "upper": 1984, "lower": 1984}
 % value-check: {"tag": "ch4-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
-we end up with an observational network dataset that runs from 1984 to 2023 (both inclusive).
+we end up with an interpolated observation network dataset that runs from 1984 to 2023 (both inclusive).
 
 \subsubsection{Step 3: Principal component analysis}
 \label{sssec:methods-ch4-pca}
@@ -788,26 +834,26 @@ The value of the first PC is optimised such that,
 in all years where we have observations from [TODO cite Neem],
 our output dataset matches the ice core values in the respective ice core's latitudinal bin
 (-67.5\textdegree~for [TODO cite Law Dome] and 82.5\textdegree~for [TODO cite Neem]).
-As part of this optimisation, the global-mean concentration is included as a free parameter
+As part of this optimisation, the global-, annual-mean concentration is included as a free parameter
 and we consider the value of the second PC and EOF too (see next paragraph).
 The first PC is then linearly interpolated between the years in which we have observations for both ice cores.
 By combining the first PC values from a) the observation network,
 b) based on the regression with CH_4 emissions of a geological origin,
-c) the ice core extension
+c) the optimisation against ice cores
 % ZNTODO: zalue-check of year 287
 and d) assuming that the first PC is constant before the first year in which we have ice core observations in both hemispheres (year 287),
 we end up with first PC values for the entire timespan from year 1 to 2023.
 
-The second PC is simply kept constant before the start of the observational period.
+The second PC is simply kept constant before the start of the interpolated observation network period.
 
 \textbf{Global-, annual-mean.}
-To extend the global- annual-mean back in time,
+To extend the global-, annual-mean back in time,
 we use the smoothed [TODO cite Law dome] data to extend back to the start of the [TODO cite Law Dome] data, year 154.
 We use it in the same way as the [TODO cite Menking et al 2025] data is used for CO_2 (Section \ref{sssec:methods-co2-extend}),
-i.e. we harmonise it to the value implied by our observational network based global- annual-mean and latitudinal gradient
+i.e. we harmonise it to the value implied by our observation network-based global-, annual-mean and latitudinal gradient
 % ZNTODO zalue-check: {"tag": "menking-ch4-offset", "unit": "ppb", "upper": 1.0, "lower": 0.0}
 (the offset is less than 1~ppb, so the harmonisation has a much smaller effect than for CO_2),
-then calculate the temporally extended global- annual-mean such that our output dataset matches the harmonised data
+then calculate the temporally extended global-, annual-mean such that our output dataset matches the harmonised data
 % ZNTODO: zalue-check of this
 in the -67.5\textdegree~latitudinal bin, the bin in which the ice cores were taken.
 
@@ -816,12 +862,12 @@ We then use data from [TODO cite EPICA] to extend back to year 1.
 We simply linearly interpolate the underlying EPICA data,
 rather than smoothing because the period from year 1 to year 154 is not the focus of this dataset.
 As for the smoothed [TODO cite Law Dome] data,
-we calculate the global- annual-mean such that our output dataset matches the [TODO cite EPICA] data
+we calculate the global-, annual-mean such that our output dataset matches the [TODO cite EPICA] data
 % ZNTODO: zalue-check of this
 in the latitudinal bin in which the ice cores were taken (-82.5\textdegree).
 
 % ZNTODO: zalue-check of this
-As a final check, we verify that the values implied by our global- annual-mean and latitudinal gradient
+As a final check, we verify that the values implied by our global-, annual-mean and latitudinal gradient
 match the values from the [TODO NEEM] data to within 0.5\%.
 This ensures that our processing has closely maintained the latitudinal gradient information
 provided by the ice cores throughout the various processing steps.
@@ -845,7 +891,7 @@ This step is the same as for N_2O (Section \ref{sssec:methods-n2o-generate-nativ
 CFC12 follows the base case (N_2O, Section \ref{ssec:methods-n2o}),
 except in Step 2 (Bin and interpolate observations), Step 4 (Extend) and Step 5 (Prepare the components to be combined).
 These differences accommodate some gases' sparse observation networks,
-allow some specific data sources take priority over our observational network-based method,
+allow some specific data sources take priority over our observation network-based method,
 recognise the need to interpolate between observation network values and pre-industrial values from the literature,
 and avoid spurious negative values in the output due to rounding.
 
@@ -925,7 +971,7 @@ Instead, we allow for extrapolation to these boxes.
 In order to avoid spurious effects due to extrapolation,
 we use constant extrapolation rather than linear or smoother extrapolations such as cubic
 [TODO note this as a clear weakness in discussion].
-For some gases (Table \ref{tab:cfc12-like-per-gas}), the observational network is so sparse
+For some gases (Table \ref{tab:cfc12-like-per-gas}), the observation network is so sparse
 that, even with this extrapolation, latitudinal bins near the poles cannot be filled in some months.
 For these gases, we permit even further extension:
 allowing the constant extrapolation to be applied over multiple latitudinal bands
@@ -934,16 +980,16 @@ allowing the constant extrapolation to be applied over multiple latitudinal band
 rather than the default, which only allows the extension to happen over a single latitudinal band.
 When we take the longest dataset that is continuous for CFC12,
 % ZNTODO: zalue-check that lat grid bands are 15 degrees
-we end up with an observational network dataset that runs from 1979 to 2023
+we end up with an interpolated observation network dataset that runs from 1979 to 2023
 (both inclusive, see Table \ref{tab:cfc12-like-per-gas} for the extents for other gases processed like CFC12).
 
 \begin{table*}[t]
 \caption{
     Per-gas inputs and choices for the gases processed like CFC12
     (Section \ref{ssec:methods-cfc12-like}).
-    Long poleward extension: whether we allow the observational network values to be extended
+    Long poleward extension: whether we allow the observation network values to be extended
     to the poles over multiple latitudinal bands.
-    Obs. network years: years covered by the observational network.
+    Obs. network years: the interpolated observation network period.
     Global-mean source: source from which the global-, annual-mean is derived.
     Pre-industrial: source and values used for pre-industrial concentrations.
 }
@@ -956,9 +1002,9 @@ we end up with an observational network dataset that runs from 1979 to 2023
     % ZNTODO: check velders citation
     the other \citet{velders_2022} pre-industrial years
     so that the interpolation algorithm is stable.
-    \textsuperscript{b} Used to extend the observational timeseries back in time.
-    Harmonised to the observational network
-    in the first year of the observational network
+    \textsuperscript{b} Used to extend the observation network-derived global-, annual-mean back in time.
+    Harmonised to the observation network
+    in the first year of the interpolated observation network period
     % ZNTODO: check convergence time
     (with a 100-year harmonisation convergence time).
 }
@@ -968,7 +1014,7 @@ we end up with an observational network dataset that runs from 1979 to 2023
 \label{sssec:methods-cfc12-like-pca}
 
 This step is the same as for N_2O (Section \ref{sssec:methods-n2o-pca}).
-By using seasonality and latitudinal gradient based on the observational network in all cases,
+By using seasonality and latitudinal gradient based on the observation network in all cases,
 rather than assuming zero seasonality and/or latitudinal gradient for some gases,
 we depart slightly from the choices made in \citet{meinshausen_historical_2017}.
 
@@ -999,21 +1045,21 @@ Before 1750, we keep the PC constant.
 The global-, annual-mean is calculated in two sub-steps.
 First, we set the global-, annual-mean over the period covered by (potentially) multiple input data sources.
 For most gases, we use the global-, annual-mean from a specific source
-rather than the global-, annual-mean derived from the observational network
+rather than the global-, annual-mean derived from the observation network
 (Table \ref{tab:cfc12-like-per-gas}).
 For CF_4, C_2F_6 and C_3F_8, we use the global-, annual-mean from \citet{trudinger_2016}.
-However, this does not extend as close to the present-day as our observation network dataset does,
+However, this does not extend as close to the present-day as our interpolated observation network dataset does,
 so we create a composite.
 % ZNTODO: figure out what this time period is and add a check here
-For the time period covered by \citet{trudinger_2016}, but not by our observation network global-mean,
+For the time period covered by \citet{trudinger_2016}, but not by our observation network-derived global-, annual-mean,
 we use harmonised \citet{trudinger_2016} data.
-We harmonise the \citet{trudinger_2016} data to the global-, annual-mean derived from the observational network
-in the first year for which we have data from the observational network (Table \ref{tab:cfc12-like-per-gas}).
+We harmonise the \citet{trudinger_2016} data to the global-, annual-mean derived from the observation network
+in the first year of the interpolated observation network period (Table \ref{tab:cfc12-like-per-gas}).
 % ZNTODO: add check of this decline period here
 The harmonisation is done by adding an offset which declines linearly to zero over a 100 year period.
 For the time period only covered by the observation network data, we use the global-, annual-mean derived from the observation network.
 For the gases that do not source their global-, annual-mean from a specific source,
-we use the global-, annual-mean derived from the observational network (Table \ref{tab:cfc12-like-per-gas}).
+we use the global-, annual-mean derived from the observation network (Table \ref{tab:cfc12-like-per-gas}).
 
 Second, for all gases, we extend the global-, annual-mean back in time
 % ZNTODO: check these sources are identified correctly and pull out references from M17
@@ -1060,7 +1106,6 @@ so that the negative values become zero.
 % ZNTODO: add discussion point around fixing upstream processing so you don't get small negative values in the output
 This is a crude method, but these negative values are only introduced because of rounding errors
 so we view this as an acceptable fix given the intended application of the dataset.
-[TODO unify language re meaning of observational network, ice core extension etc.]
 
 \subsubsection{Step 6: Generate native resolution}
 \label{sssec:methods-cfc12-like-generate-native-resolution}
@@ -1073,7 +1118,7 @@ This step is the same as for N_2O (Section \ref{sssec:methods-n2o-generate-nativ
 C_4F_10 follows the base case (N_2O, Section \ref{ssec:methods-n2o}),
 except in Step 1 (Collect observations), Step 2 (Bin and interpolate observations),
 Step 3 (Principal component analysis) and Step 5 (Prepare the components to be combined).
-These differences are due to the lack of a comprehensive observational network.
+These differences are due to the lack of a comprehensive observation network.
 Instead, we only use data from a single source,
 so there is nothing to bin and interpolate
 and we assume the shape of the latitudinal gradient EOF and that seasonality is zero, rather than performing PCA.
@@ -1085,7 +1130,7 @@ cC_4F_8, C_5F_12, C_6F_14 and C_7F_16.
 \subsubsection{Step 1: Collect observations}
 \label{sssec:methods-c4f10-like-collect-observations}
 
-For these species, there is no significant observational network to use.
+For these species, there is no significant observation network to use.
 Instead, we use the data provided in [TODO cite Droste et al].
 % \cite{acp-20-4787-2020}.
 This provides observations of these gases at two observational sites:
@@ -1118,7 +1163,7 @@ Due to the lack of an observation network, we do not perform spatial interpolati
 
 Principal component analysis cannot be performed due to lack of observations.
 
-% Doesn't apply: there is no gridded observational network to take a zonal mean of.
+% Doesn't apply: there is no gridded observation network to take a zonal mean of.
 % \textbf{Zonal mean.}
 
 \textbf{Latitudinal gradient.}

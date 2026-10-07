@@ -438,7 +438,7 @@ def get_cmip6_feature_size(
 @cache
 def get_obs_network_years(gas: str) -> tuple[int, int]:
     """
-    Get the years covered by the observational network
+    Get the years covered by the observation network
 
     Parameters
     ----------
@@ -448,7 +448,7 @@ def get_obs_network_years(gas: str) -> tuple[int, int]:
     Returns
     -------
     :
-        First and last year of the observational network's global-, annual-mean
+        First and last year of the observation network's global-, annual-mean
     """
     years = xr.load_dataset(
         DEFAULT_BUNDLE_DIR
@@ -463,7 +463,7 @@ def get_obs_network_years(gas: str) -> tuple[int, int]:
 
 def get_max_abs_diff_from_cmip6_obs_network(gas: str) -> pint.Quantity:
     """
-    Get the maximum absolute difference from CMIP6 over the observational network era
+    Get the maximum absolute difference from CMIP6 over the observation network era
 
     Parameters
     ----------
@@ -474,7 +474,7 @@ def get_max_abs_diff_from_cmip6_obs_network(gas: str) -> pint.Quantity:
     -------
     :
         Maximum absolute difference from CMIP6
-        from the first year of the observational network onwards
+        from the first year of the observation network onwards
     """
     return get_max_abs_diff_from_cmip6(gas, start=get_obs_network_years(gas)[0])
 
@@ -713,7 +713,7 @@ def is_global_mean_from_source(gas: str, source: str) -> bool:
     Returns
     -------
     :
-        Whether `source` replaces the observational network's global-, annual-mean
+        Whether `source` replaces the observation network's global-, annual-mean
     """
     supplement = get_global_mean_supplement(gas, DEFAULT_BUNDLE_DIR)
     if supplement is None:
@@ -1029,18 +1029,18 @@ def get_value_checks() -> tuple[ValueCheck, ...]:
         add(
             f"{gas}-obs-network-start",
             lambda gas=gas: Q(get_obs_network_years(gas)[0], "yr"),
-            "first year of the observational network's global-, annual-mean",
+            "first year of the observation network's global-, annual-mean",
         )
         add(
             f"{gas}-obs-network-end",
             lambda gas=gas: Q(get_obs_network_years(gas)[1], "yr"),
-            "last year of the observational network's global-, annual-mean",
+            "last year of the observation network's global-, annual-mean",
         )
         add(
             f"{gas}-diff-from-cmip6-obs-network",
             partial(get_max_abs_diff_from_cmip6_obs_network, gas),
             "max abs difference from CMIP6 global-, annual-mean, "
-            "from the start of the observational network",
+            "from the start of the observation network",
         )
 
     for gas in ("co2", "n2o"):
@@ -1112,7 +1112,7 @@ def get_value_checks() -> tuple[ValueCheck, ...]:
     add(
         "daniel-et-al-is-cfc12-global-override",
         partial(is_global_mean_from_source, "cfc12", "Daniel et al. (2022)"),
-        "whether Daniel et al. (2022) replaces the observational network's "
+        "whether Daniel et al. (2022) replaces the observation network's "
         "CFC-12 global-, annual-mean",
     )
     add(

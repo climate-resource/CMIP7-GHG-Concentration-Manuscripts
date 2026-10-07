@@ -7,7 +7,7 @@ Two kinds of comparison data go into those figures.
   or a network of them. Each value has a latitude,
   so it can be read against our output at the same latitude,
   and it is drawn coloured by that latitude,
-  as the observational network is.
+  as the observation network is.
 - Datasets which are 'just' global-means, e.g. the CMIP6 concentrations.
   These have no latitude, so they are read against our global-mean.
 

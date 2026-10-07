@@ -11,7 +11,7 @@ the panels it has and how they are laid out.
 #   There have been no new measurements of C8F18 since Ivy et al. (2012),
 #   so the original run simply took the CMIP6 values,
 #   historical up to 2014 and SSP2-4.5 after it.
-#   That leaves nothing to say about an observational network,
+#   That leaves nothing to say about an observation network,
 #   a decomposition or an extension: the components are what CMIP6 had.
 # - seasonality is zero everywhere, so it has no panel.
 # - the latitudinal gradient EOF is assumed, as it is for the C4F10-like gases,
@@ -98,7 +98,7 @@ ROWS = (
 """Layout of the figure's panels, top to bottom
 
 One row is all this gas needs: the components it is built from.
-There is no observational network row and no extension row,
+There is no observation network row and no extension row,
 because the components are taken from CMIP6 whole.
 The outputs they make are in the results figure,
 see [local.historical_ghg_forcing_for_cmip7.results_figure][].

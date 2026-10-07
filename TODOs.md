@@ -111,14 +111,39 @@ Everything else should use exactly these names:
       CFC12/C_4F_10 Step 5: "the same as for N_2O, except that..." for the negative-value check.
     - C_4F_10 Step 4: dropped the "Like for other gases, the next step is to then extend..." filler.
     - Typos: "for for", "PCA analysis", "that to not", "EPIC" → "EPICA".
-- [ ] Create the table of differences from the base case (from `NOTES.md`).
+- [x] Skipped: we're not going to include a table (too terse to be useful to the reader, so we stick with the dot points).
+      A redesigned version (keywords per step) replaces the old draft, still commented out, in case others want to reconsider.
+      Create the table of differences from the base case (from `NOTES.md`).
       A draft is commented out at `methods.tex:274-295` (`table:methods-differences`),
       but its ZNTODO says that layout doesn't work (too much text per cell).
       Redesign it (e.g. short ticks/keywords per step, details left to the text)
       and decide whether it replaces or complements the per-gas summary list (`methods.tex:161-272`).
-- [ ] Unify language for "observational network" vs "observation network" and "ice core extension"
+- [x] Unify language for "observational network" vs "observation network" and "ice core extension"
       (`methods.tex:347,1125`, both used throughout).
-      Also hyphenation: "global-, annual-mean" vs "global- annual-mean".
+      Also hyphenation: "global-, annual-mean" vs "global- annual-mean". Done (methods, results; discussion already consistent):
+    - "observation network" everywhere (was the majority, and what results/discussion use);
+      "observational network(s)" and "observing networks" replaced.
+      Compounds hyphenated: "observation network-based", "observation network-derived".
+    - General Step 2 now defines the `interpolated observation network dataset' (the gap-free result of Step 2)
+      and the `interpolated observation network period' (the time it covers,
+      which is not the same as the period the observation network itself covers).
+      "observational period" → "interpolated observation network period" (CO_2, CH_4 Step 4),
+      "before the observation network (pre-1989)" → "before the interpolated observation network period",
+      CFC12 table caption/footnote ("Obs. network years", footnote b) use these terms too.
+      "observational record" kept where it means the observations in general (general Step 2, CO_2 Step 3),
+      but "not already covered in the observational record" (CO_2 Step 4) → "by the interpolated observation network dataset".
+    - "ice core extension" was only used once (CH_4 Step 4 PC list), now "the optimisation against ice cores".
+    - "global-, annual-mean" everywhere ("global- annual-mean" replaced).
+      Checked each "global-mean" on its own: kept where it really is a global-mean
+      (global-mean surface air temperature, the derived global-mean monthly/yearly grids, NOAA products in results,
+      the "Global-mean source" column header in the CFC12 table),
+      changed to "global-, annual-mean" for the relative seasonality denominator (N_2O Step 3),
+      the CH_4 ice-core optimisation free parameter (per year, `global_annual_mean_optimised` in `1103_ch4_extend-pcs.py`)
+      and the Trudinger composite (CFC12 Step 4).
+      UCI's timeseries in the results no longer called "global-mean" (see the UCI TODO in section 5).
+    - Removed the two "unify language" TODOs from `methods.tex`.
+    - Docstrings, comments and value-check descriptions in `src/local/` and `scripts/` updated to "observation network" too
+      (identifiers and file names such as `observational_network_global_annual_mean_file` untouched).
 
 ## 2. Appendices
 
@@ -238,7 +263,8 @@ The build doesn't support appendices yet, but most of the figures already exist.
 - [ ] Add the missing checks: CO_2/CH_4/N_2O vs IGCC over the NOAA period (`results.tex:54,117,185`),
       the HFC-134a-eq lat. gradient (`results.tex:350`), the radiative efficiency source (`results.tex:25`).
 - [ ] CH_4: update the IGCC comparison to treat the non-NOAA period properly (`results.tex:115`);
-      UCI latitude bounds and where the data was retrieved from (`results.tex:122-125`);
+      UCI: check what the UCI timeseries is exactly (spatial region, averaging; it's probably not a global-mean)
+      and make sure it's described correctly, its latitude bounds and where the data was retrieved from (`results.tex:122-126`);
       "Summit" ice core outlier: what is it, and does the paper explain it (`results.tex:139-141`, `comparison_data.py:486`).
 - [ ] Check "IGCC is also based on NOAA data" (`results.tex:60,120,188`) and "the same source is used by IGCC" (`results.tex:244`).
 - [ ] Check IGCC citations and processing (`results.tex:388`, `src/local/historical_ghg_forcing_for_cmip7/comparison_data.py:826`).

@@ -140,7 +140,7 @@ def main(  # noqa: PLR0913
         Path,
         typer.Option(
             help=(
-                "Path in which to write the list of which observational networks "
+                "Path in which to write the list of which observation networks "
                 "observe which of the gases processed like CFC-12."
             ),
             dir_okay=False,

@@ -11,7 +11,7 @@ because the method is the same for all of them
 (see the C4F10-like section of the manuscript's methods).
 """
 # Differences from ch4
-# - there is no observational network, only two sites' worth of data
+# - there is no observation network, only two sites' worth of data
 #   from Droste et al. (2020), so the panel which says what went in
 #   is those two timeseries and nothing else, and the binning,
 #   the maps and the interpolation panels all go with it
@@ -158,7 +158,7 @@ def get_droste_data(gas: str, bundle_dir: Path) -> pd.DataFrame:
     """
     Get a gas' input data
 
-    Unlike the gases with an observational network,
+    Unlike the gases with an observation network,
     everything these gases are built from is a single source
     which the original run wrote into the bundle,
     so there is no notebook to re-run here.

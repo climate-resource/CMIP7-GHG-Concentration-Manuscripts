@@ -123,7 +123,7 @@ EOF_COLOURS = (
 """Colour of each EOF, in order
 
 These are from the Okabe-Ito palette, i.e. they are colour-blind safe,
-as the observational network's colours are.
+as the observation network's colours are.
 
 They are the entries that palette has left once the networks have taken
 theirs: an EOF and a network can share a panel's figure, so a colour has to
@@ -181,7 +181,7 @@ REGION_COLOURS = {
 """Colour to use for each region of a spatial mean
 
 The hemispheres roughly follow the latitude colour map (north red, south blue),
-so they read the same way as the observational network drawn behind them.
+so they read the same way as the observation network drawn behind them.
 The global-mean is black: it sits between the two hemispheres,
 and black is the one colour which contrasts with both of them
 and with every latitude in the colour map, whatever the reader's colour vision.
@@ -249,7 +249,7 @@ NETWORK_GROUP_COLOURS = {
     "NOAA (moving)": "#3a3b3a",
     "AGAGE": OKABE_ITO["vermillion"],
 }
-"""Colour to use for each group of observational networks
+"""Colour to use for each group of observation networks
 
 These are from the Okabe-Ito palette, i.e. they are colour-blind safe.
 The exception is the moving group, which is drawn in grey:
@@ -266,7 +266,7 @@ NETWORK_GROUP_MARKERS = {
     "NOAA (moving)": ".",
     "AGAGE": "^",
 }
-"""Marker to use for each group of observational networks
+"""Marker to use for each group of observation networks
 
 Groups are distinguished by marker as well as colour
 so the figure still works in greyscale.
@@ -277,7 +277,7 @@ NETWORK_GROUP_MARKER_SIZES = {
     "NOAA (moving)": 3.0,
     "AGAGE": 7.0,
 }
-"""Marker size to use for each group of observational networks on the map
+"""Marker size to use for each group of observation networks on the map
 
 Several sites host both groups, so the markers are drawn
 as concentric outlines, largest first, to keep both visible.
@@ -1110,7 +1110,7 @@ def plot_input_timeseries(
     value_column: str = "value",
 ) -> matplotlib.axes.Axes:
     """
-    Plot the input timeseries of a gas which has no observational network
+    Plot the input timeseries of a gas which has no observation network
 
     There are only a handful of latitudes here, one line each,
     rather than the thousands of scattered points a network gives,
@@ -1180,7 +1180,7 @@ def plot_station_timeseries(  # noqa: PLR0913
     Parameters
     ----------
     indf
-        Observational network data
+        Observation network data
 
     ax
         Axes on which to plot
@@ -1358,7 +1358,7 @@ def y_limits_to_clear_inset(  # noqa: PLR0913
     Parameters
     ----------
     indf
-        Observational network data drawn on the panel
+        Observation network data drawn on the panel
 
     y_limits
         Vertical limits the panel has
@@ -1451,7 +1451,7 @@ def choose_inset_corner(  # noqa: PLR0913
     Parameters
     ----------
     indf
-        Observational network data which will be drawn on the panel
+        Observation network data which will be drawn on the panel
 
     y_limits
         Vertical limits the panel would have if the inset needed nothing
@@ -1555,12 +1555,12 @@ def plot_station_locations(
     ax: matplotlib.axes.Axes,
 ) -> None:
     """
-    Plot the location of each station in the observational network
+    Plot the location of each station in the observation network
 
     Parameters
     ----------
     indf
-        Observational network data
+        Observation network data
 
     ax
         Axes on which to plot
@@ -1654,7 +1654,7 @@ def plot_observation_counts(
     Parameters
     ----------
     indf
-        Observational network data
+        Observation network data
 
     ax
         Axes on which to plot
@@ -1832,7 +1832,7 @@ def get_ticks_with_ends(
 
 def plot_global_mean_from_obs_network(gm: xr.Dataset, ax: matplotlib.axes.Axes) -> None:
     """
-    Plot global-mean derived from the observational network
+    Plot global-mean derived from the observation network
 
     The first year is labelled, because when the observations start
     is the thing about this panel which differs most from gas to gas.
@@ -1865,7 +1865,7 @@ def plot_seasonality_from_obs_network(
     # assumed_ghg: str,
 ) -> matplotlib.axes.Axes:
     """
-    Plot seasonality derived from the observational network
+    Plot seasonality derived from the observation network
 
     There is one series here for each of the twelve latitudinal bins.
     Latitude is shown with the same colour map, over the same range,
@@ -1896,7 +1896,7 @@ def plot_seasonality_from_obs_network(
 
 def linear_latitudinal_gradient_eof(units: str) -> xr.DataArray:
     """
-    Get the latitudinal gradient EOF assumed for gases with no observational network
+    Get the latitudinal gradient EOF assumed for gases with no observation network
 
     The original run assumes a single EOF for these gases,
     linear in latitude before the area-weight of each latitudinal box
@@ -1977,7 +1977,7 @@ def plot_lat_gradient_pieces_from_obs_network(
     eofs_name: str = "eofs",
 ) -> dict[str, matplotlib.axes.Axes]:
     """
-    Plot seasonality derived from the observational network
+    Plot seasonality derived from the observation network
     """
     da_pcs = lat_gradient_info[pcs_name]
     pdf_pcs = da_pcs.to_pandas().stack().rename("value").to_frame().reset_index()
@@ -2379,7 +2379,7 @@ def plot_global_mean_extension(  # noqa: PLR0913
     fit_period: tuple[int, int] | None = None,
 ) -> None:
     """
-    Plot global-mean derived from the observational network
+    Plot global-mean derived from the observation network
 
     Parameters
     ----------
