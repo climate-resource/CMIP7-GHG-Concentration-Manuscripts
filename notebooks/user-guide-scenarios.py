@@ -3,7 +3,7 @@
 #   authors:
 #   - name: Zebedee Nicholls
 #   - name: Florence Bockting
-#   - name: Mika Pfl{\"u}ger
+#   - name: Mika Pflüger
 #   jupytext:
 #     notebook_metadata_filter: title,authors
 #     text_representation:

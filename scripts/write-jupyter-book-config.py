@@ -10,13 +10,14 @@ import shutil
 from pathlib import Path
 from typing import Annotated
 
+import jupytext
 import typer
 import yaml
 
 REPO_ROOT = Path(__file__).parents[1]
 
 
-def main(
+def main(  # noqa: D103, PLR0913
     base: Annotated[
         Path,
         typer.Option(
@@ -76,6 +77,11 @@ def main(
     res["repository"]["path_to_book"] = str(
         source_file_raw.absolute().relative_to(REPO_ROOT)
     )
+    # Use different author list if different people
+    notebook_authors = jupytext.read(source_file_raw).metadata.get("authors")
+    if notebook_authors:
+        res["author"] = ", ".join(a["name"] for a in notebook_authors)
+
     # Avoid Sphinx's default fallback of "Project name not set", which
     # generates projectnamenotset.tex for LaTeX builds.
     res.setdefault("sphinx", {}).setdefault("config", {})["project"] = title
