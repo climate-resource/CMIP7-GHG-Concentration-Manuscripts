@@ -47,6 +47,7 @@ from local.historical_ghg_forcing_for_cmip7.equivalent_species import (
     load_igcc,
 )
 from local.historical_ghg_forcing_for_cmip7.results_figure import load_output
+from local.paths import DATA_RAW_DIR
 from local.value_checks import CheckValue, ValueCheck
 
 Q = openscm_units.unit_registry.Quantity
@@ -952,6 +953,45 @@ def radiative_effect_of(
     return get_radiative_effect(gas, calculate())
 
 
+ZENODO_MISSING_DIR = (
+    DATA_RAW_DIR / "historical-ghg-forcing-for-cmip7" / "zenodo-missing"
+)
+"""Where we keep the original run's intermediate files which aren't on Zenodo"""
+
+ICE_CORE_FILES = {
+    "epica": "epica_with_location.csv",
+    "law-dome": "law-dome_ch4_smoothed_median.csv",
+}
+"""File which holds each ice core's CH4 data (with its location)"""
+
+
+def get_ice_core_lat_bin(source: str) -> pint.Quantity:
+    """
+    Get the native latitudinal bin which an ice core's data is matched in
+
+    Mirrors the original run (`1104_ch4_extend-global-annual-mean`),
+    which takes the bin whose centre is nearest the ice core's latitude.
+
+    Parameters
+    ----------
+    source
+        Ice core of interest (a key of [ICE_CORE_FILES][])
+
+    Returns
+    -------
+    :
+        Centre of the latitudinal bin
+    """
+    lat = pd.read_csv(ZENODO_MISSING_DIR / ICE_CORE_FILES[source])["latitude"].unique()
+    if len(lat) > 1:
+        msg = f"Expected a single latitude for {source}, found {lat}"
+        raise AssertionError(msg)
+
+    native = get_output("ch4")[0]
+
+    return Q(float(native["lat"].sel(lat=lat[0], method="nearest")), "degree")
+
+
 def get_value_checks() -> tuple[ValueCheck, ...]:
     """
     Get the value checks for the historical manuscript
@@ -1041,6 +1081,14 @@ def get_value_checks() -> tuple[ValueCheck, ...]:
             partial(get_max_abs_diff_from_cmip6_obs_network, gas),
             "max abs difference from CMIP6 global-, annual-mean, "
             "from the start of the observation network",
+        )
+
+    for source in ICE_CORE_FILES:
+        add(
+            f"ch4-{source}-lat-bin",
+            partial(get_ice_core_lat_bin, source),
+            "centre of the native latitudinal bin "
+            f"in which the {source} data is matched",
         )
 
     for gas in ("co2", "n2o"):

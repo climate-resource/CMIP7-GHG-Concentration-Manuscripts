@@ -811,6 +811,7 @@ The smoothed dataset is then the median over these 250 repeats.
 The value of the first PC is optimised such that,
 in all years where we have observations from [TODO cite Neem],
 our output dataset matches the ice core values in the respective ice core's latitudinal bin
+% value-check: {"tag": "ch4-law-dome-lat-bin", "unit": "degree", "lower": -67.5, "upper": -67.5}
 (-67.5\textdegree~for [TODO cite Law Dome] and 82.5\textdegree~for [TODO cite Neem]).
 As part of this optimisation, the global-, annual-mean concentration is included as a free parameter
 and we consider the value of the second PC and EOF too (see next paragraph).
@@ -834,6 +835,7 @@ i.e. we harmonise it to the value implied by our observation network-based globa
 (the offset is less than 1~ppb, so the harmonisation has a much smaller effect than for CO_2),
 then calculate the temporally extended global-, annual-mean such that our output dataset matches the harmonised data
 % ZNTODO: zalue-check of this
+% value-check: {"tag": "ch4-law-dome-lat-bin", "unit": "degree", "lower": -67.5, "upper": -67.5}
 in the -67.5\textdegree~latitudinal bin, the bin in which the ice cores were taken.
 
 We then use data from [TODO cite EPICA] to extend back to year 1.
@@ -842,8 +844,12 @@ We simply linearly interpolate the underlying EPICA data,
 rather than smoothing because the period from year 1 to year 154 is not the focus of this dataset.
 As for the smoothed [TODO cite Law Dome] data,
 we calculate the global-, annual-mean such that our output dataset matches the [TODO cite EPICA] data
-% ZNTODO: zalue-check of this
-in the latitudinal bin in which the ice cores were taken (-82.5\textdegree).
+% value-check: {"tag": "ch4-epica-lat", "unit": "degree", "lower": -75.0025, "upper": 75.0025}
+% value-check: {"tag": "ch4-epica-lat-bin", "unit": "degree", "lower": -82.5, "upper": -82.5}
+in the latitudinal bin in which the ice cores were taken
+(-82.5\textdegree: EPICA Dome C, at 75.0025\textdegree S,
+lies on the boundary between our -82.5\textdegree~and -67.5\textdegree~bins
+but we nonetheless use the bin whose centre is nearest, -82.5\textdegree).
 
 % ZNTODO: zalue-check of this
 As a final check, we verify that the values implied by our global-, annual-mean and latitudinal gradient
