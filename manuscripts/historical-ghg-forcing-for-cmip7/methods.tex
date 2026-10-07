@@ -15,10 +15,10 @@ observational networks.
 
 In line with \citet{meinshausen_historical_2017}, we provide a series of data products
  containing complete values of concentrations for all forcing gasses,
-with a temporal and latitudinal dependency. No dependency on longitute is provided. For a brief
+with a temporal and latitudinal dependency. No dependency on longitude is provided. For a brief
 discussion on extension in the vertical dimension, see section \ref{ssec:methods-vertical}
 
-The first dataset that is generate has monthly temporal resolution and
+The first dataset that is generated has monthly temporal resolution and
 15\textdegree~latitudinal spatial resolution.
 We refer to this grid as our `native resolution', and therefore to the dataset
 as our 'native resolution dataset'.
@@ -72,7 +72,7 @@ be broken down as follows:
 
     }
 
-    \item { \textbf{Principal component analysis}. Decompose the interpolated observational network based into three components:
+    \item { \textbf{Principal component analysis}. Decompose the interpolated observational network based data into three components:
 
         \begin{enumerate}
             \item Global-, annual-mean concentrations
@@ -86,9 +86,9 @@ be broken down as follows:
         depending on the gas. More information on this step
         is provided in the different gas-specific sections.
 
-        The seasonality is most often derived by calculating a fixed climatological cycle
+        The seasonality is usually derived by calculating a fixed climatological cycle
         by averaging the available data. For CO2, however, since the seasonality depends on
-        the gas concentration itself, a further PCA step, where the EOF components descrive
+        the gas concentration itself, a further PCA step is added, where the EOF components describe
         the seasonal gradient.
 
         The global-, annual-mean concentration is derived by performing a simple mean on
@@ -127,7 +127,7 @@ be broken down as follows:
             \item The relative seasonality is converted into an absolute seasonality over all time by multiplying it by the extended global-, annual-mean
             \item The latitudinal gradient is recovered by taking the product of the EOFs and the extended PCs
         \end{enumerate}
-        This step depends heavily on the outcome of steps 3 and 4.
+        This step depends heavily on the outcome of steps 3 and 4 [TODO: steps aren't numbered; also, of course step 5 depends on the output of previous steps, no?].
         More information on this step
         is provided in the different gas-specific sections.
 
@@ -153,8 +153,8 @@ be broken down as follows:
             has an annual-mean of zero
             so that they can be added to the global- annual-mean term, $gm$,
             without affecting the corresponding global- annual-mean values.
-            The dataset is then formatted in a consistent way (we do not use the term
-             `standard' way here, because no standards are robustly defined for forcings data)
+            In lieu of a defined standard format for forcings data, we at least
+            format the data in a consistent format.
 
     }
 \end{itemize}

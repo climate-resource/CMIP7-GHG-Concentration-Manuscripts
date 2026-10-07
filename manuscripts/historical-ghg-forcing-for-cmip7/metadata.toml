@@ -35,7 +35,7 @@ email = "tbd@invalid.com"
 affiliations = ["crs"]
 
 [affiliations]
-crs = "Climate Resource S, Berlin, Germany"
+crs = "Climate Resource S GmbH, Berlin, Germany"
 cr =  "Climate Resource, Melbourne, Australia"
 uom-sgeas = "School of Geography, Earth and Atmospheric Sciences, the University of Melbourne, Melbourne, Victoria, Australia"
 iiasa-ece = "Energy, Climate and Environment Program, International Institute for Applied Systems Analysis (IIASA), 2361 Laxenburg, Austria"
