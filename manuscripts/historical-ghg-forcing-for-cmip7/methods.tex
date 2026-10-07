@@ -47,7 +47,8 @@ be broken down as follows:
          Then, since the surface observation network does not cover the entire globe,
          we interpolate the binned observations spatially to get complete global coverage.
 
-         We specify that at least five data points are required for us to do spatial interpolation
+         % ZNTODO: check of this claim
+         We specify that at least four data points are required for us to do spatial interpolation
          and we must have data points in both the most northern and most southern latitudinal box.
          This is clearly a relatively low data requirement,
          but higher thresholds result in a significant amount of the observational record being discarded.
@@ -149,7 +150,7 @@ be broken down as follows:
         As stated in Step 3, the key to this sum is that $lg$ has an area-weighted spatial mean of zero
         and $s$ has a temporal mean of zero
         % ZNTODO: check and explain why our method gives lat. grad. EOFs that all have a mean of zero (rather than only their sum having a mean of zero)
-        so that $\int \int gn(y, m, l) dm dl = \int gm(y, m) dm$
+        so that $\int \int gn(y, m, l) dm a(l) dl = \int gm(y, m) dm$, where $a(l)$ is the area-weighting for latitude $l$
         i.e. the sum does not change the global-, annual-mean value we started with.
     }
 
@@ -415,11 +416,11 @@ We do this by first calculating the residuals at each latitude,
 i.e. the difference between the annual-mean of the longitudinal mean and the global-, annual-mean.
 % ZNTODO: the residuals by definition have an area-weighted mean of zero, which might be why each EOF has an area-weighted mean of zero?
 On these residuals, we then perform principal component analysis.
-We do this by using numpy's [TODO ref] singular value decomposition function (numpy.linalg.svd [TODO figure out monospace font]).
+We do this by using numpy's [TODO ref] singular value decomposition function (\texttt{numpy.linalg.svd}).
 We translate the singular value decomposition output into two parts.
-The first is our empirical orthogonal functions (EOFs) ([TODO check name in M17] referred to as principal components in M17).
+The first is our empirical orthogonal functions (EOFs) (also referred to as EOFs in \citealp{meinshausen_historical_2017}).
 These quantify the spatial, in this case latitudinal, variation in the dataset and are a function of latitude only.
-The second is our principal components (PCs) ([TODO check name in M17] referred to as principal component scores in M17).
+The second is our principal components (PCs) (referred to as scores, EOF scores or PCs in \citealp{meinshausen_historical_2017}).
 These quantify the temporal variation in the dataset and are a function of year only.
 If all EOFs are retained, then the product of the EOFs and the PCs
 reproduces the residuals we started with exactly.
@@ -471,8 +472,8 @@ we harmonise the [TODO cite Menking et al 2025] data to the observation network
 % ZNTODO: add check of decline years
 i.e. add a declining offset (with the decline set to reach zero over 100 years)
 to ensure that the [TODO cite Menking et al 2025] data and the observation network-derived
-% ZNTODO: add check 1984 is correct
-global-, annual-mean agree in 1984 - the earliest year in our observation network-derived global-, annual-mean.
+% ZNTODO: add check 1989 is correct
+global-, annual-mean agree in 1989 - the earliest year in our observation network-derived global-, annual-mean.
 % ZNTODO: add discussion of harmonisation into discussion
 This is crude and a clear area for further investigation in future work ([TODO forward ref discussion]).
 
@@ -614,7 +615,7 @@ Following \cite{meinshausen_historical_2017},
 the first PC is extended by performing a linear regression against CO_2 emissions of a geological origin
 (as opposed to CO_2 emissions that originate in the active biosphere)
 based on the [TODO cite PRIMAP version] dataset (Figure~\ref{fig:methods-appendix-co2}h)).
-Using this regression, we then extend emissions back to 1750,
+Using this regression and [TODO cite PRIMAP] emissions, we then extend the first PC back to 1750,
 the first year reported in the [TODO cite PRIMAP] dataset.
 Before 1750, we keep the first PC value constant (Figure~\ref{fig:methods-co2}j)).
 
@@ -679,7 +680,7 @@ The composite is described in Equation~\ref{eq:co2-pc-composite-regressor}:
     \label{eq:co2-pc-composite-regressor}
     r(y) &= \frac{t'(y) + c'(y)}{4} + \frac{t'(y) \cdot c'(y)}{2} \\
     t'(y) &= \frac{t(y) - t_r}{t_n - t_r}  \\
-    c'(y) &= \frac{c(y) - c_r}{c_n - c_r}  \\
+    c'(y) &= \frac{c(y) - c_r}{c_n - c_r}
 \end{align}
 where $r(y)$ is the composite timeseries against which we regress,
 $t(y)$ is global-, annual-mean temperature after applying a 15-year centred smoothing
@@ -948,7 +949,8 @@ allowing the constant extrapolation to be applied over multiple latitudinal band
 (each of which is 15\textdegree~on our native grid)
 rather than the default, which only allows the extension to happen over a single latitudinal band.
 When we take the longest dataset that is continuous for CFC12,
-% ZNTODO: zalue-check that lat grid bands are 15 degrees
+% ZNTODO zalue-check: {"tag": "cfc12-obs-network-start", "unit": "yr", "upper": 1979, "lower": 1979}
+% ZNTODO zalue-check: {"tag": "cfc12-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
 we end up with an interpolated observation network dataset that runs from 1979 to 2023
 (both inclusive, see Table~\ref{tab:cfc12-like-per-gas} for the extents for other gases processed like CFC12).
 
@@ -1279,13 +1281,13 @@ These equivalent species allow modelling teams to pick one of three options when
     }
     \item {
         \textbf{Use CO_2, CH_4, N_2O, CFC12 and CFC-11 equivalent}
-        CFC-11 captures the equivalent effect of all GHGs other than CO_2, CH_4, N_2O and CFC12.
+        CFC-11-eq captures the equivalent effect of all GHGs other than CO_2, CH_4, N_2O and CFC12.
     }
     \item {
         \textbf{Use CO_2, CH_4, N_2O, CFC12 equivalent and HFC134a equivalent}
-        CFC12 captures the equivalent effect of all ozone-depleting substances
+        CFC12-eq captures the equivalent effect of all ozone-depleting substances
         (namely CFC-11, CFC12, CFC-113, CFC-114, CFC-115, CCl_4, CH_2Cl_2, CH_3Br, CH_3CCl_3, CH_3Cl, CHCl_3, Halon-1211, Halon-1301, Halon-2402, HCFC-141b, HCFC-142b, HCFC-22)
-        while all other fluorinated gases are included in HFC134a
+        while HFC134-eq captures the equivalent effect of all other fluorinated gases
         (namely CF_4, C_2F_6, C_3F_8, cC_4F_8, C_4F_10, C_5F_12, C_6F_14, C_7F_16, C_8F_18, HFC-23, HFC-32, HFC-125, HFC134a, HFC-143a, HFC-152a, HFC-227ea, HFC-236fa, HFC-245fa, HFC-365mfc, HFC-4310mee, NF_3, SF_6, SO_2F_2).
     }
 \end{enumerate}
@@ -1312,9 +1314,24 @@ in line with the formats and metadata that have been used previously (specifical
 We format the data according to the input4MIPs data reference syntax (DRS).
 We do not go into the full details of this here ([ZNTODO point to what to see for full details]).
 The key details for users are related to the frequency and grid label attributes.
-% ZNTODO: explain our key details i.e. frequencies and grids.
+We provide data at two different frequencies:
+monthly-means (\texttt{frequency} attribute in the directory path, filename and file attributes set to `mon')
+and annual-means (`yr').
+We provide data at three different spatial resolutions:
+15\textdegree~latitudinal grid i.e. our native resolution (\texttt{grid_label} attribute in the directory path, filename and file attributes set to `gnz'),
+hemispheric-means (`gr1z')
+and global-mean (`gm').
+
 % Leave reviewers to poke on anything else they want explained in full detail,
 % it's hard to predict what they might want repeated rather than being ok with references to other sources.
+We provide the following five combinations of these options:
+\begin{enumerate}
+    \item mon-gnz: Our native dataset (monthly-means on our native 15\textdegree~latitudinal grid)
+    \item mon-gr1z: Monthly-mean hemispheric-means
+    \item mon-gm: Monthly-mean global-mean
+    \item yr-gr1z: Annual-mean hemispheric-means
+    \item yr-gm: Annual-mean global-mean
+\end{enumerate}
 
 Consistency across forcings dataset formatting is emerging,
 partially aided by [TODO cite input4mips-validation],
@@ -1326,9 +1343,15 @@ see [TODO ref input4MIPs CVs page and user guide].
 \subsection{Vertical dimension}
 \label{ssec:methods-vertical}
 
-For any modelling team which requires suggestions for handling the vertical dimension,
-[ZNTODO: short summary of the suggested vertical approach].
-For full details, refer to [ZNTODO section] of \citet{meinshausen_historical_2017}.
+For any modelling team which do not have their own tracer transport and therefore require a vertical gradient,
+we suggest using the simplified parameterisations provided in \citet{meinshausen_historical_2017}.
+These simple parameterisations vary the vertical gradient as a function of surface concentrations at earlier points in time and latitude
+in an attempt to represent the effect of vertical and horizontal mixing.
+The parameter values used vary by gas in an attempt to represent the gas-specific features of the vertical gradient.
+These simple parameterisations allow users of our dataset to go from our surface concentrations
+to full vertical profiles for any pressure level with simple composite functions.
+The functions are composite because they typically use different forms in the lower and upper atmosphere.
+For full details, refer to Section~4, (Equations 9–13 and Table 11) of \citet{meinshausen_historical_2017}.
 
 % Flush the methods figures and tables before the results start.
 % Otherwise the CFC-12-like per-gas table (which is slightly too tall for a page)

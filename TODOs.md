@@ -339,20 +339,21 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 
 ## 4. Methods: content and correctness
 
-- [ ] General Step 2 and CFC-12-like Step 2 say "at least five data points are required" for spatial interpolation
+- [x] General Step 2 and CFC-12-like Step 2 say "at least five data points are required" for spatial interpolation
       (`methods.tex:49,980`), but the original run uses `MIN_POINTS_FOR_SPATIAL_INTERPOLATION = 4`
       with `if n < 4: skip`, i.e. at least four
       (`1001_n2o`, `1101_ch4`, `1201_co2`, `1301_sf6-like` `_interpolate-observational-network` notebooks).
       Fix the text and consider a value-check.
-- [ ] N_2O Step 4: the harmonisation year is given as 1984, "the earliest year in our observational network derived global- annual-mean"
+- [x] N_2O Step 4: the harmonisation year is given as 1984, "the earliest year in our observational network derived global- annual-mean"
       (`methods.tex:437-438`), but the N_2O network runs from 1989 (`methods.tex:346,418`).
       This looks copied from CH_4. Fix it and add a value-check.
 - [ ] CH_4 Step 4: EPICA is said to be in the -82.5° bin (`methods.tex:873`) and Law Dome in -67.5°.
       EPICA Dome C is about 75.1°S, on the bin edge. Check which bin the code used.
 - [ ] CH_4 Step 4: "[TODO cite EPIC]" typo (`methods.tex:870`); check the first year of EPICA use is 154 (`methods.tex:864`).
-- [ ] CO_2 Step 4: "we then extend emissions back to the 1750" (`methods.tex:610`) should be "extend the first PC back to 1750".
-- [ ] CO_2 composite equation (`methods.tex:672-677`): the trailing `\\` before `\end{align}` adds an empty numbered line,
+- [x] CO_2 Step 4: "we then extend emissions back to the 1750" (`methods.tex:610`) should be "extend the first PC back to 1750".
+- [x] CO_2 composite equation (`methods.tex:672-677`): the trailing `\\` before `\end{align}` adds an empty numbered line,
       and the `t'` and `c'` lines get their own numbers. Use `\nonumber` or `aligned`.
+      The template says to use align, so we assume this is journal standard.
 - [ ] Equation \ref{eq:native-resolution-sum} discussion: explain why each lat. gradient EOF (not just their sum) has zero area-weighted mean
       (`methods.tex:149,379`). The integral as written also doesn't show the area weighting.
 - [ ] Relative seasonality: is average(seasonality)/average(global-mean) equal to average(seasonality/global-mean)?
@@ -375,9 +376,9 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       double check the AR6 Table 7.SM.6 radiative efficiencies (`methods.tex:1325`; also see the "halving" worry at `results.tex:291-292`).
 - [ ] ESGF section (`methods.tex:1333-1354`): explain the frequencies and grid labels; say where full DRS details are;
       cite input4mips-validation and the input4MIPs CVs page/user guide.
-- [ ] Vertical dimension section (`methods.tex:1356-1361`) is a stub: summarise the suggested approach and give the M17 section number.
+- [x] Vertical dimension section (`methods.tex:1356-1361`) is a stub: summarise the suggested approach and give the M17 section number.
 - [ ] Format `numpy.linalg.svd` (and other code names) as `\texttt{}` (`methods.tex:381`).
-- [ ] Check M17's names for EOFs and PCs (`methods.tex:383,385`).
+- [x] Check M17's names for EOFs and PCs (`methods.tex:383,385`).
 - [ ] Convert all remaining `ZNTODO zalue-check` / "add check" comments into real `value-check`s
       (`methods.tex:183,429,434,437,574,598,628,630,635,646,657,785,788,802,804,809,818,835,846,859,864,871,875,987,991,1064,1069`).
 
