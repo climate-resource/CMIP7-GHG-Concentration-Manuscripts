@@ -23,8 +23,10 @@ import xarray as xr
 
 from local.cmip_ghg_generation import DEFAULT_BUNDLE_DIR
 from local.historical_ghg_forcing_for_cmip7.cfc12_like_methods_figure import (
+    CFC12_LIKE_GASES,
     get_cfc12_like_all_data_with_bins,
     get_global_mean_supplement,
+    get_step_config,
     interim_dir,
     supplement_replaces_obs_network,
 )
@@ -1039,6 +1041,189 @@ def is_global_mean_from_source(gas: str, source: str, *, bundle_dir: Path) -> bo
     )
 
 
+TRUDINGER_GASES = ("cf4", "c2f6", "c3f8")
+"""Gases whose global-, annual-mean includes Trudinger et al. (2016) data"""
+
+
+TRUDINGER_HARMONISATION_TRANSITION_YEARS = 100
+"""
+Years over which the offset added to Trudinger et al. (2016) declines to zero
+
+Mirrors `n_transition_years=100` in the original run's
+`1304_sf6-like_create-global-annual-mean` notebook
+(the same in the executed notebooks for CF4, C2F6 and C3F8).
+"""
+
+
+def get_pre_industrial_years(source: str, *, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the pre-industrial year(s) of the gases processed like CFC-12 with a source
+
+    Parameters
+    ----------
+    source
+        Pre-industrial source, as the original run's config names it
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Pre-industrial year of every gas with this source
+
+    Raises
+    ------
+    AssertionError
+        No gas has this source
+    """
+    years = [
+        step_config["pre_industrial"]["year"]
+        for step_config in (
+            get_step_config(gas, bundle_dir) for gas in CFC12_LIKE_GASES
+        )
+        if step_config["pre_industrial"]["source"] == source
+    ]
+    if not years:
+        msg = f"No gas has pre-industrial {source=}"
+        raise AssertionError(msg)
+
+    return Q(np.array(years), "yr")
+
+
+def get_trudinger_years(*, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the first and last year of the Trudinger et al. (2016) data we use
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        First and last year
+
+    Raises
+    ------
+    AssertionError
+        The years differ between [TRUDINGER_GASES][]
+    """
+    res = set()
+    for gas in TRUDINGER_GASES:
+        supplement = get_global_mean_supplement(gas, bundle_dir)
+        if supplement is None:
+            msg = f"No global-mean source for {gas=}"
+            raise AssertionError(msg)
+
+        years = supplement[1]["year"]
+        res.add((int(years.min()), int(years.max())))
+
+    if len(res) != 1:
+        msg = f"Trudinger et al. (2016)'s years differ between gases: {res=}"
+        raise AssertionError(msg)
+
+    return Q(np.array(res.pop()), "yr")
+
+
+def has_expected_non_zero_pre_industrial_gases(*, bundle_dir: Path) -> bool:
+    """
+    Get whether exactly the gases with natural sources have a non-zero pre-industrial
+
+    Of the gases processed like CFC-12, these are CF4, CH2Cl2, CH3Br, CH3Cl and CHCl3
+    (following M17).
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Whether exactly these gases have a non-zero pre-industrial value
+    """
+    non_zero = {
+        gas
+        for gas in CFC12_LIKE_GASES
+        if get_step_config(gas, bundle_dir)["pre_industrial"]["value"][0] > 0.0
+    }
+
+    return non_zero == {"cf4", "ch2cl2", "ch3br", "ch3cl", "chcl3"}
+
+
+VELDERS_SOURCE = "Velders et al., 2022"
+"""Velders et al. (2022) pre-industrial source, as the original run's config names it"""
+
+
+def get_velders_first_year_values(*, bundle_dir: Path) -> pd.Series[float]:
+    """
+    Get Velders et al. (2022)'s values in their first year
+
+    For the gases which take their pre-industrial value from Velders et al. (2022)
+    (without adjustment).
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Value for each gas in Velders et al. (2022)'s first year (in ppt),
+        named by the first year
+    """
+    gases = [
+        gas
+        for gas in CFC12_LIKE_GASES
+        if get_step_config(gas, bundle_dir)["pre_industrial"]["source"]
+        == VELDERS_SOURCE
+    ]
+    velders = pd.read_csv(
+        bundle_dir
+        / "data"
+        / "interim"
+        / "velders-et-al-2022"
+        / "velders_et_al_2022.csv"
+    )
+    (unit,) = velders["unit"].unique()
+    if unit != "ppt":
+        raise NotImplementedError(unit)
+
+    first_year = int(velders["year"].min())
+    res = velders[(velders["year"] == first_year) & velders["gas"].isin(gases)]
+    if set(res["gas"]) != set(gases):
+        msg = f"Velders et al. (2022) is missing some of {gases=}"
+        raise AssertionError(msg)
+
+    return res.set_index("gas")["value"].rename(first_year)
+
+
+def is_velders_first_year_zero_except(exception: str, *, bundle_dir: Path) -> bool:
+    """
+    Get whether Velders et al. (2022)'s first-year value is zero for all but one gas
+
+    Parameters
+    ----------
+    exception
+        Gas whose value isn't zero
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Whether the value is zero for every gas except `exception`
+        (and non-zero for `exception`)
+    """
+    values = get_velders_first_year_values(bundle_dir=bundle_dir)
+
+    return bool((values.drop(exception) == 0.0).all() and values[exception] > 0.0)
+
+
 def get_input_lat_gradient_weakening(gas: str, *, bundle_dir: Path) -> pint.Quantity:
     """
     Get how fast the latitudinal gradient in the input data is weakening
@@ -1363,7 +1548,7 @@ def get_ch4_ice_core_lat_bin(
     )
 
 
-def get_value_checks(
+def get_value_checks(  # noqa: PLR0915
     bundle_dir: Path = DEFAULT_BUNDLE_DIR, data_raw_dir: Path = DATA_RAW_DIR
 ) -> tuple[ValueCheck, ...]:
     """
@@ -1487,6 +1672,59 @@ def get_value_checks(
         "both averaged over the observation network period "
         "(relative to the observed seasonality's magnitude)",
     )
+    for i, (tag, description) in enumerate(
+        (
+            ("trudinger-start-year", "first"),
+            ("trudinger-end-year", "last"),
+        )
+    ):
+        add(
+            tag,
+            lambda i=i: Q(get_trudinger_years(bundle_dir=bundle_dir).m[i], "yr"),
+            f"{description} year of the Trudinger et al. (2016) data",
+        )
+    add(
+        "cfc12-like-non-zero-pre-industrial-gases",
+        partial(has_expected_non_zero_pre_industrial_gases, bundle_dir=bundle_dir),
+        "whether exactly CF4, CH2Cl2, CH3Br, CH3Cl and CHCl3 "
+        "have a non-zero pre-industrial value",
+    )
+    add(
+        "velders-first-year",
+        lambda: Q(get_velders_first_year_values(bundle_dir=bundle_dir).name, "yr"),
+        "first year of the Velders et al. (2022) data",
+    )
+    add(
+        "velders-first-year-zero-except-hfc143a",
+        partial(is_velders_first_year_zero_except, "hfc143a", bundle_dir=bundle_dir),
+        "whether Velders et al. (2022)'s first-year value is zero "
+        "for every HFC with a 1980 pre-industrial year except HFC-143a",
+    )
+    add(
+        "velders-first-year-hfc143a",
+        lambda: Q(
+            float(get_velders_first_year_values(bundle_dir=bundle_dir)["hfc143a"]),
+            "ppt",
+        ),
+        "Velders et al. (2022)'s first-year HFC-143a value",
+    )
+    add(
+        "trudinger-harmonisation-transition-years",
+        lambda: Q(TRUDINGER_HARMONISATION_TRANSITION_YEARS, "yr"),
+        "number of years over which the Trudinger et al. (2016) offset declines",
+    )
+    for tag, source in (
+        ("velders-pre-industrial-year", VELDERS_SOURCE),
+        (
+            "velders-adjusted-pre-industrial-year",
+            "Velders et al., 2022 (with adjustments to support interpolation)",
+        ),
+    ):
+        add(
+            tag,
+            partial(get_pre_industrial_years, source, bundle_dir=bundle_dir),
+            f"pre-industrial year of the gases whose source is {source!r}",
+        )
     add(
         "binning-grid-lon-band-width",
         partial(get_binning_grid_lon_band_width, bundle_dir=bundle_dir),

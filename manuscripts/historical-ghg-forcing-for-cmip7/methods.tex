@@ -1009,7 +1009,9 @@ we end up with an interpolated observation network dataset that runs from 1979 t
     to the poles over multiple latitudinal bands.
     Obs. network years: the interpolated observation network period.
     Global-mean source: source from which the global-, annual-mean is derived.
-    Pre-industrial: source and values used for pre-industrial concentrations.
+    Pre-industrial: year up to which the pre-industrial value applies, the pre-industrial value
+    and the source of the value
+    (the years may not match the original source exactly, see Section~\ref{sssec:methods-cfc12-like-extend}).
 }
 \label{tab:cfc12-like-per-gas}
 % Thirty-four rows only (nearly) fit on a page at this size.
@@ -1019,14 +1021,15 @@ we end up with an interpolated observation network dataset that runs from 1979 t
 \footnotesize
 @cfc12-like-per-gas-table@
 \belowtable{
+    % value-check: {"tag": "velders-adjusted-pre-industrial-year", "unit": "yr", "lower": 1988, "upper": 1988}
+    % value-check: {"tag": "velders-pre-industrial-year", "unit": "yr", "lower": 1980, "upper": 1980}
     \textsuperscript{a} 1988 rather than the 1980 used for
-    % ZNTODO: check velders citation
     the other \citet{velders_2022} pre-industrial years
     so that the interpolation algorithm is stable.
     \textsuperscript{b} Used to extend the observation network-derived global-, annual-mean back in time.
     Harmonised to the observation network
     in the first year of the interpolated observation network period
-    % ZNTODO: check convergence time
+    % value-check: {"tag": "trudinger-harmonisation-transition-years", "unit": "yr", "lower": 100, "upper": 100}
     (with a 100-year harmonisation convergence time).
 }
 \end{table*}
@@ -1076,23 +1079,53 @@ For most gases, we use the global-, annual-mean from a specific source
 rather than the global-, annual-mean derived from the observation network
 (Table~\ref{tab:cfc12-like-per-gas}).
 For CF_4, C_2F_6 and C_3F_8, we use the global-, annual-mean from \citet{trudinger_2016}.
-However, this does not extend as close to the present-day as our interpolated observation network dataset does,
+% value-check: {"tag": "trudinger-end-year", "unit": "yr", "lower": 2014, "upper": 2014}
+However, this does not extend as close to the present-day as our interpolated observation network dataset does
+(\citet{trudinger_2016} ends in 2014),
 so we create a composite.
-% ZNTODO: figure out what this time period is and add a check here
-For the time period covered by \citet{trudinger_2016}, but not by our observation network-derived global-, annual-mean,
+% value-check: {"tag": "trudinger-start-year", "unit": "yr", "lower": 1901, "upper": 1901}
+From the start of the \citet{trudinger_2016} data in 1901
+up to the year before the interpolated observation network period starts (Table~\ref{tab:cfc12-like-per-gas}),
 we use harmonised \citet{trudinger_2016} data.
 We harmonise the \citet{trudinger_2016} data to the global-, annual-mean derived from the observation network
 in the first year of the interpolated observation network period (Table~\ref{tab:cfc12-like-per-gas}).
-% ZNTODO: add check of this decline period here
-The harmonisation is done by adding an offset which declines linearly to zero over a 100 year period.
-For the time period only covered by the observation network data, we use the global-, annual-mean derived from the observation network.
+The harmonisation is done by adding an offset
+which equals the difference between the two datasets in this harmonisation year
+% value-check: {"tag": "trudinger-harmonisation-transition-years", "unit": "yr", "lower": 100, "upper": 100}
+and declines linearly to zero over 100 years.
+From the first year of the interpolated observation network period onwards,
+we use the global-, annual-mean derived from the observation network.
 For the gases that do not source their global-, annual-mean from a specific source,
 we use the global-, annual-mean derived from the observation network (Table~\ref{tab:cfc12-like-per-gas}).
 
 Second, for all gases, we extend the global-, annual-mean back in time
-% ZNTODO: check these sources are identified correctly and pull out references from M17
-based on information about the gas' pre-industrial value and when this pre-industrial value should be reached (Table~\ref{tab:cfc12-like-per-gas}).
-We then fill the gap between the pre-industrial value (assumed constant for all time points before the pre-industrial fitting year)
+based on information about the gas' pre-industrial value
+and when this pre-industrial value should be reached (Table~\ref{tab:cfc12-like-per-gas}).
+% value-check: {"tag": "cfc12-like-non-zero-pre-industrial-gases"}
+Following \citet{meinshausen_historical_2017}, the pre-industrial value is zero
+except for gases with natural sources.
+% Leave the text. Move the references into Table 1 - let's cite the original source rather than M17 there
+% I have left your old text as a comment below so you can refer to it.
+% These are CH_3Cl, CH_3Br, CHCl_3 and CH_2Cl_2
+% (see Section~3.4 of \citet{meinshausen_historical_2017}, which builds on
+% [TODO cite Velders and Daniel 2014], [TODO cite Worton et al. 2006], [TODO cite Aucott et al. 1999] and [TODO cite Trudinger et al. 2004])
+% and CF_4 (see Section~3.5 of \citet{meinshausen_historical_2017}, \citet{trudinger_2016} and [TODO cite Muhle et al. 2010]).
+% For CCl_4, we use zero, in line with [TODO cite Walker et al. 2000],
+% rather than the near-zero 0.025~ppt in \citet{meinshausen_historical_2017}.
+The pre-industrial years (i.e. the years up to which we assume the pre-industrial value applies)
+are close to the years implied by the original sources,
+but a lack of review time that some do not match the published sources exactly.
+The impact of this error on our results is minimal,
+because it only affects the early part of each gas' history,
+when concentrations are close to their pre-industrial values.
+% value-check: {"tag": "velders-pre-industrial-year", "unit": "yr", "lower": 1980, "upper": 1980}
+For the HFCs whose pre-industrial value comes from \citet{velders_2022},
+we use a pre-industrial year of 1980 (1988 for HFC-134a, see Table~\ref{tab:cfc12-like-per-gas}).
+This is a pragmatic choice that allows our gap-filling fit (see below) to work
+% value-check: {"tag": "velders-first-year", "unit": "yr", "lower": 1990, "upper": 1990}
+and does no harm, because the \citet{velders_2022} data start in 1990.
+
+We fill the gap between the pre-industrial value (assumed constant for all time points before the pre-industrial fitting year)
 and the global-, annual-mean from the first sub-step following the equation:
 
 \begin{equation}

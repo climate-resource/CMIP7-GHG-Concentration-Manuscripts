@@ -392,10 +392,34 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           (also checks the bands are uniform and cover the globe).
           Every other "15\textdegree" mention in the manuscript (all in `methods.tex`, incl. the four figure captions
           and the Step 2 binning grid, which has the same latitude bands) now has the same tag
-- [ ] CFC-12 Step 4: figure out the Trudinger composite period and add a check (`methods.tex:1064`);
+- [x] CFC-12 Step 4: figure out the Trudinger composite period and add a check (`methods.tex:1064`);
       check the harmonisation decline period (`methods.tex:1069`);
       check pre-industrial sources and pull references from M17 (`methods.tex:1076`);
       check the Velders citation and the 100-year convergence time in the table notes (`methods.tex:1011,1017`).
+    - [x] Trudinger composite period: harmonised Trudinger from 1901 to the year before the network starts
+          (1901-2007 for CF_4 and C_2F_6, 1901-2005 for C_3F_8), network from then on
+          (also in 2008-2014, which Trudinger covers too; the old text implied otherwise).
+          Value-checks `trudinger-start-year` and `trudinger-end-year`
+    - [x] decline period: 100 years, from `n_transition_years=100` in `1304_sf6-like_create-global-annual-mean` (`trudinger-harmonisation-transition-years`),
+          also tagged in table note b. Text now says the offset declines over the 100 years *before* the harmonisation year
+    - [x] pre-industrial values: all match M17 (Sects. 3.4 and 3.5) except CCl_4 (0 vs M17's 0.025 ppt,
+          in line with Walker et al. 2000 per M17). Text now says which gases are non-zero and why
+          (value-check `cfc12-like-non-zero-pre-industrial-gases`), with M17's underlying references as `[TODO cite ...]`:
+          Velders and Daniel 2014, Worton et al. 2006, Aucott et al. 1999, Trudinger et al. 2004, Muhle et al. 2010, Walker et al. 2000
+    - [x] pre-industrial *years* aren't given in M17.
+          They are close to, but not the same as, the year M17's (CMIP6) concentrations start to rise
+          (e.g. CHCl_3 1940 vs ~1925, HFC-23 1950 vs ~1929, HCFC-141b 1950 vs ~1989).
+          Decide how to describe where they come from (the table's "Pre-industrial: source" reads as if M17 gives them).
+          Done: text says they don't come from M17, are close to the original sources but some don't match exactly
+          (time pressure), with minimal impact; the caption says the source is for the value and the years are ours
+    - [x] Velders citation: `velders_2022` is the right paper (it goes with the Zenodo dataset the run used).
+          Table note a's 1988 and 1980 now have value-checks
+    - [x] Velders' data start in 1990 (raw and processed; several HFCs are zero in 1990),
+          so the 1980 pre-industrial year is our choice, consistent with Velders, rather than a value Velders gives.
+          Decide whether the table / note should say so.
+          Done in the Step 4 text: 1980 is a pragmatic choice to make the fit work, which does no harm
+          because Velders is zero in 1990 for all of these HFCs except HFC-143a (0.5 ppt).
+          Value-checks `velders-first-year`, `velders-first-year-zero-except-hfc143a`, `velders-first-year-hfc143a`
 - [ ] CFC-12 Step 1: introduce the distinction between NOAA's combined HATS product and HATS flask data in the source lists (`methods.tex:938-941`).
 - [ ] CO_2/CH_4 Step 1: check in-situ vs flask, and the implications for assuming the same scales (`methods.tex:505,730`).
 - [ ] C_4F_10-like: add checks for the Droste first/last years and that Droste is zero in its first year

@@ -183,3 +183,7 @@ dmypy.json
 data/raw/comparison-data/*
 !data/raw/comparison-data/noaa-trends/
 !data/raw/comparison-data/gcp-ch4-2024/
+
+# Temporary (lock) files Office creates while a file is open
+# (last, so the re-includes above don't bring them back)
+~$*
