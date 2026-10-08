@@ -523,6 +523,50 @@ def get_obs_network_years(gas: str, *, bundle_dir: Path) -> tuple[int, int]:
     return int(years.min()), int(years.max())
 
 
+def get_max_lat_gradient_eof_area_weighted_mean(*, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the largest area-weighted mean of any gas' latitudinal gradient EOFs
+
+    Uses the EOFs our output is built from,
+    i.e. the ones the original run kept, for every gas.
+    The weights are cos(latitude), as in the original run's global-mean.
+    On our grid of equal-width latitudinal bands,
+    these are exactly proportional to each band's area
+    (sin(c + h) - sin(c - h) = 2 cos(c) sin(h)).
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Largest absolute area-weighted mean of any EOF,
+        relative to the largest absolute value of that gas' EOFs
+
+    Raises
+    ------
+    FileNotFoundError
+        No EOF files were found in `bundle_dir`
+    """
+    files = sorted(
+        (bundle_dir / "data" / "interim").glob("*/*_allyears-lat-gradient-eofs-pcs.nc")
+    )
+    if not files:
+        msg = f"No latitudinal gradient EOF files found in {bundle_dir}"
+        raise FileNotFoundError(msg)
+
+    res = 0.0
+    for file in files:
+        eofs = xr.load_dataset(file)["eofs"]
+        weights = np.cos(np.deg2rad(eofs["lat"]))
+        weighted_mean = (eofs * weights).sum("lat") / weights.sum()
+        res = max(res, float(np.abs(weighted_mean).max() / np.abs(eofs).max()))
+
+    return Q(res, "dimensionless")
+
+
 def get_max_abs_diff_from_cmip6_obs_network(
     gas: str, *, bundle_dir: Path
 ) -> pint.Quantity:
@@ -1278,6 +1322,13 @@ def get_value_checks(
             "max abs difference from CMIP6 global-, annual-mean, "
             "from the start of the observation network",
         )
+
+    add(
+        "lat-gradient-eofs-area-weighted-mean",
+        partial(get_max_lat_gradient_eof_area_weighted_mean, bundle_dir=bundle_dir),
+        "largest area-weighted mean of any gas' latitudinal gradient EOFs "
+        "(relative to the EOF's magnitude)",
+    )
 
     for source in CH4_ICE_CORE_FILES:
         add(

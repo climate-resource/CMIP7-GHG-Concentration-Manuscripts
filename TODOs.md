@@ -347,15 +347,28 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 - [x] N_2O Step 4: the harmonisation year is given as 1984, "the earliest year in our observational network derived global- annual-mean"
       (`methods.tex:437-438`), but the N_2O network runs from 1989 (`methods.tex:346,418`).
       This looks copied from CH_4. Fix it and add a value-check.
-- [ ] CH_4 Step 4: EPICA is said to be in the -82.5° bin (`methods.tex:873`) and Law Dome in -67.5°.
+- [x] CH_4 Step 4: EPICA is said to be in the -82.5° bin (`methods.tex:873`) and Law Dome in -67.5°.
       EPICA Dome C is about 75.1°S, on the bin edge. Check which bin the code used.
+    - [x] the code (`1104_ch4_extend-global-annual-mean`) uses the nearest bin centre.
+          EPICA is at -75.0025°, 0.0025° south of the bin edge, so -82.5° is right.
+          The text now says so
+    - [x] value-checks `ch4-epica-lat`, `ch4-epica-lat-bin` and `ch4-law-dome-lat-bin`
+          (data loaded via `zenodo_missing.py`)
 - [ ] CH_4 Step 4: "[TODO cite EPIC]" typo (`methods.tex:870`); check the first year of EPICA use is 154 (`methods.tex:864`).
+    - [x] typo fixed
+    - [ ] check the first year of EPICA use is 154
 - [x] CO_2 Step 4: "we then extend emissions back to the 1750" (`methods.tex:610`) should be "extend the first PC back to 1750".
 - [x] CO_2 composite equation (`methods.tex:672-677`): the trailing `\\` before `\end{align}` adds an empty numbered line,
       and the `t'` and `c'` lines get their own numbers. Use `\nonumber` or `aligned`.
       The template says to use align, so we assume this is journal standard.
-- [ ] Equation \ref{eq:native-resolution-sum} discussion: explain why each lat. gradient EOF (not just their sum) has zero area-weighted mean
+- [x] Equation \ref{eq:native-resolution-sum} discussion: explain why each lat. gradient EOF (not just their sum) has zero area-weighted mean
       (`methods.tex:149,379`). The integral as written also doesn't show the area weighting.
+    - [x] explained in N_2O Step 3: each year's residuals have zero area-weighted mean
+          and each EOF with a non-zero singular value is a linear combination of them;
+          Step 6 points there
+    - [x] integral shows the area weighting, now normalised ($\int a(l) dl = 1$)
+    - [x] value-check `lat-gradient-eofs-area-weighted-mean` over all 42 gases' `allyears` EOFs
+          (actual value about 6e-14, relative to the EOF's magnitude)
 - [ ] Relative seasonality: is average(seasonality)/average(global-mean) equal to average(seasonality/global-mean)?
       Convince ourselves, or note the bug (`methods.tex:409-410`).
 - [ ] CFC-12 Step 2: the "lat grid bands are 15 degrees" zalue-check at `methods.tex:991` sits next to the 1979-2023 statement.
@@ -374,10 +387,20 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 - [ ] Equivalent species (`methods.tex:1296-1331`): "it not all" should be "if not all";
       "CFC-11 captures" / "CFC12 captures" should be "CFC-11-eq" / "CFC-12-eq";
       double check the AR6 Table 7.SM.6 radiative efficiencies (`methods.tex:1325`; also see the "halving" worry at `results.tex:291-292`).
+    - [ ] "it not all" is still there
+    - [x] "CFC-11 captures" → "CFC-11-eq captures"
+    - [ ] "CFC12-eq captures": decide CFC12-eq vs CFC-12-eq (see Section 8)
+    - [ ] "HFC134-eq captures" should be "HFC134a-eq" (or "HFC-134a-eq", see Section 8)
+    - [ ] double check the AR6 radiative efficiencies
 - [ ] ESGF section (`methods.tex:1333-1354`): explain the frequencies and grid labels; say where full DRS details are;
       cite input4mips-validation and the input4MIPs CVs page/user guide.
+    - [x] frequencies and grid labels explained, with the five combinations we provide
+    - [ ] say where full DRS details are ("[ZNTODO point to what to see for full details]")
+    - [ ] cite input4mips-validation and the input4MIPs CVs page/user guide
 - [x] Vertical dimension section (`methods.tex:1356-1361`) is a stub: summarise the suggested approach and give the M17 section number.
 - [ ] Format `numpy.linalg.svd` (and other code names) as `\texttt{}` (`methods.tex:381`).
+    - [x] `numpy.linalg.svd`
+    - [ ] "scipy's griddata function" in general Step 2 (e.g. `\texttt{scipy.interpolate.griddata}`)
 - [x] Check M17's names for EOFs and PCs (`methods.tex:383,385`).
 - [ ] Convert all remaining `ZNTODO zalue-check` / "add check" comments into real `value-check`s
       (`methods.tex:183,429,434,437,574,598,628,630,635,646,657,785,788,802,804,809,818,835,846,859,864,871,875,987,991,1064,1069`).
@@ -442,6 +465,7 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 
 Already in `references/references.bib`, just need wiring in:
 
+- [ ] Check all of these against the citations in the output files: those are the citations I am most confident of and the ones we should make sure we match
 - [ ] Droste et al. → `acp-20-4787-2020` (`methods.tex:240,250,255,1158,1169,1194,1206,1222,1230,1233`)
 - [ ] NOAA CO_2 / CH_4 → `lan_atmospheric_co2_2025`, `lan_atmospheric_ch4_2025` (`methods.tex:729`, `results.tex:47,111,182`)
 - [ ] AGAGE → `prinn_history_2000`, `prinn2018history` (`methods.tex:308,729,921`, `results.tex:128,190,239`)
@@ -478,6 +502,17 @@ Need adding to the bib:
       (https://publications.copernicus.org/for_authors/manuscript_preparation.html) for the rules.
       Leave maths minus signs (equations) and hyphenated compounds (e.g. "global-, annual-mean") alone.
       Consider whether `replacements.yaml` or a check in the build can enforce it.
+
+- [ ] Check that references to equations follow the Copernicus style ("Equation" vs "Eq." vs "Eqn",
+      and whether the number goes in parentheses).
+      The template files in `copernicus-latex-package/` only have equation examples, not the referencing rule,
+      so check the manuscript preparation / English guidelines pages (link in the item above).
+      Our understanding (to verify) is "Eq. (1)" / "Eqs. (1) and (2)" in running text
+      and "Equation (1)" at the start of a sentence.
+      All six of ours are currently `Equation~\ref{...}` mid-sentence, without parentheses
+      (`methods.tex:430,506,694,1083,1107,1268`).
+      If the rule is confirmed, check whether the same applies to "Figure"/"Fig." and "Section"/"Sect."
+      and consider enforcing it in the build (e.g. a macro or a check).
 
 - [ ] Decide CFC12 vs CFC-12 in the source (abstract asks "[TODO check nomenclature]").
       `replacements.yaml` maps CFC12 → CFC-12 so the output is fine, but the source mixes both.

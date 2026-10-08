@@ -149,8 +149,8 @@ be broken down as follows:
         and $s$ is the seasonality.
         As stated in Step 3, the key to this sum is that $lg$ has an area-weighted spatial mean of zero
         and $s$ has a temporal mean of zero
-        % ZNTODO: check and explain why our method gives lat. grad. EOFs that all have a mean of zero (rather than only their sum having a mean of zero)
-        so that $\int \int gn(y, m, l) dm a(l) dl = \int gm(y, m) dm$, where $a(l)$ is the area-weighting for latitude $l$
+        so that $\int \int gn(y, m, l) dm a(l) dl = \int gm(y, m) dm$,
+        where $a(l)$ is the area-weighting for latitude $l$ (normalised such that $\int a(l) dl = 1$)
         i.e. the sum does not change the global-, annual-mean value we started with.
     }
 
@@ -414,13 +414,30 @@ that the monthly values robustly represent the average over the entire month, gi
 The third sub-step is to calculate our latitudinal gradient.
 We do this by first calculating the residuals at each latitude,
 i.e. the difference between the annual-mean of the longitudinal mean and the global-, annual-mean.
-% ZNTODO: the residuals by definition have an area-weighted mean of zero, which might be why each EOF has an area-weighted mean of zero?
+By construction, these residuals have an area-weighted mean of zero.
+% Because the global-, annual-mean is the area-weighted mean of the longitudinal mean,
+% the residuals in each year have an area-weighted mean of zero.
 On these residuals, we then perform principal component analysis.
 We do this by using numpy's [TODO ref] singular value decomposition function (\texttt{numpy.linalg.svd}).
 We translate the singular value decomposition output into two parts.
-The first is our empirical orthogonal functions (EOFs) (also referred to as EOFs in \citealp{meinshausen_historical_2017}).
+The first part is our empirical orthogonal functions (EOFs) (also referred to as EOFs in \citealp{meinshausen_historical_2017}).
 These quantify the spatial, in this case latitudinal, variation in the dataset and are a function of latitude only.
-The second is our principal components (PCs) (referred to as scores, EOF scores or PCs in \citealp{meinshausen_historical_2017}).
+These
+% value-check: {"tag": "lat-gradient-eofs-area-weighted-mean", "unit": "dimensionless", "lower": 0.0, "upper": 1e-10}
+Each EOF with a non-zero singular value
+is a linear combination of the residuals
+and therefore has an area-weighted mean of zero
+which ensures that we can use these EOFs for the $lg$ term in Equation~\ref{eq:native-resolution-sum}.
+% % More detailed explanation of why the EOFs have an area-weighted of zero if needed.
+% Each EOF with a non-zero singular value
+% is a linear combination of the residuals in each year
+% (this follows directly from the definition of the singular value decomposition).
+% As a result, each such EOF inherits the residuals' area-weighted mean of zero.
+% This holds for each EOF individually, not only for their sum.
+% Hence the latitudinal gradient has an area-weighted mean of zero
+% whatever values the PCs take,
+% including after we extend the PCs (Section~\ref{sssec:methods-n2o-extend}).
+The second part is our principal components (PCs) (referred to as scores, EOF scores or PCs in \citealp{meinshausen_historical_2017}).
 These quantify the temporal variation in the dataset and are a function of year only.
 If all EOFs are retained, then the product of the EOFs and the PCs
 reproduces the residuals we started with exactly.
