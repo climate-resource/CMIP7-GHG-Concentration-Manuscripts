@@ -1668,12 +1668,14 @@ Mirrors `MIN_POINTS_FOR_SPATIAL_INTERPOLATION` in the original run's
 `*_interpolate-observational-network` notebooks (N2O, CH4, CO2 and SF6-like).
 """
 
+
 CO2_MAUNA_LOA_START = 1959
 """
 First year of the Mauna Loa - Law Dome merged record we use
 
 Mirrors `mauna_loa_start` in the original run's `1204_co2_extend-global-annual-mean`
 (the first full year of Mauna Loa data).
+The Mauna Loa record isn't saved on its own, so this can't be read from the data.
 """
 
 
@@ -1844,9 +1846,7 @@ def get_co2_mauna_loa_offset(*, bundle_dir: Path) -> pint.Quantity:
     :
         Observation network-derived global-, annual-mean minus the merged record
     """
-    merged = pd.read_csv(
-        bundle_dir / "data" / "interim" / "mauna_loa" / "merged_ice_core.csv"
-    ).set_index("time")["value"]
+    merged = load_co2_mauna_loa_merged(bundle_dir=bundle_dir)
     harmonisation_year = get_obs_network_years("co2", bundle_dir=bundle_dir)[0]
     obs_network = xr.load_dataarray(
         interim_dir("co2", bundle_dir)
@@ -1858,6 +1858,25 @@ def get_co2_mauna_loa_offset(*, bundle_dir: Path) -> pint.Quantity:
         - merged.loc[harmonisation_year + 0.5],
         get_units("co2", bundle_dir=bundle_dir),
     )
+
+
+def load_co2_mauna_loa_merged(*, bundle_dir: Path) -> pd.Series[float]:
+    """
+    Load the Mauna Loa - Law Dome merged record, as the original run processed it
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Values, indexed by (decimal) time
+    """
+    return pd.read_csv(
+        bundle_dir / "data" / "interim" / "mauna_loa" / "merged_ice_core.csv"
+    ).set_index("time")["value"]
 
 
 def get_co2_menking_offset_and_match(
