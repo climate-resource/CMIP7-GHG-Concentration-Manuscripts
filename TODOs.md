@@ -420,7 +420,10 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           Done in the Step 4 text: 1980 is a pragmatic choice to make the fit work, which does no harm
           because Velders is zero in 1990 for all of these HFCs except HFC-143a (0.5 ppt).
           Value-checks `velders-first-year`, `velders-first-year-zero-except-hfc143a`, `velders-first-year-hfc143a`
-- [ ] CFC-12 Step 1: introduce the distinction between NOAA's combined HATS product and HATS flask data in the source lists (`methods.tex:938-941`).
+- [x] CFC-12 Step 1: introduce the distinction between NOAA's combined HATS product and HATS flask data in the source lists (`methods.tex:938-941`).
+    - [x] the generated list already labels them `NOAA HATS combined` (CCl_4, CFC-11, CFC-113, CFC12, SF_6) and `NOAA HATS flask`.
+          Added prose before the list (from the draft comment) explaining the two and that these are the labels;
+          it doesn't repeat the gas names, so no value-check needed
 - [ ] CO_2/CH_4 Step 1: check in-situ vs flask, and the implications for assuming the same scales (`methods.tex:505,730`).
 - [ ] C_4F_10-like: add checks for the Droste first/last years and that Droste is zero in its first year
       (`methods.tex:1193,1205,1221-1233`); fill in "[TODO Droste first year]";
@@ -513,6 +516,9 @@ Already in `references/references.bib`, just need wiring in:
 - [ ] NOAA CO_2 / CH_4 → `lan_atmospheric_co2_2025`, `lan_atmospheric_ch4_2025` (`methods.tex:729`, `results.tex:47,111,182`)
 - [ ] AGAGE → `prinn_history_2000`, `prinn2018history` (`methods.tex:308,729,921`, `results.tex:128,190,239`)
 - [ ] NOAA HATS CFC-12 → `noaa_hats_cfc12` (`methods.tex:919`); uncomment the existing `\citep`s
+- [ ] NOAA HATS combined products → `noaa_hats_cfc12`, `noaa_hats_cfc11`, `noaa_hats_cfc113`, `noaa_hats_ccl4`, `noaa_hats_sf6`;
+      NOAA HATS flask → `montzka_1999`
+      (CFC-12 Step 1, `[TODO cite NOAA HATS combined products]` / `[TODO cite NOAA HATS flask]`, keys in comments beside them)
 - [x] SSP2-4.5 / M2020 → `meinshausen_shared_2020` (C_8F_18 section)
 - [ ] AR6 Ch7 SM → `IPCC_2021_WGI_Ch_7_SM` (`methods.tex:1326`, `results.tex:301,357`)
 - [ ] Daniel et al. / WMO 2022 → `wmo_2022_ozone_ch7`? Check (`results.tex:242,260`)
@@ -531,6 +537,23 @@ Need adding to the bib:
 - [ ] IGCC citations (`results.tex:53,116,184`; `forster_indicators_2026` exists, check it's the right one)
 - [ ] AR5 WG1 Ch. 8 Appendix 8.A (`results.tex:320`)
 - [ ] input4mips-validation, input4MIPs CVs (`methods.tex:1350,1354`)
+- [ ] M17's sources for the non-zero pre-industrial values (M17 Sects. 3.4 and 3.5),
+      to cite in the CFC12-like per-gas table (`tab:cfc12-like-per-gas`) instead of M17
+      (and in the commented-out sentences in CFC-12 Step 4, `methods.tex:1116,1118`):
+    - [ ] CH_3Cl (457 ppt) and CH_3Br (5.3 ppt): Velders and Daniel (2014)
+          (budget with lifetimes from AR5 WG1 Table 8.A.1, see the AR5 item above)
+    - [ ] CHCl_3 (6 ppt): Worton et al. (2006), Aucott et al. (1999)
+    - [ ] CH_2Cl_2 (6.9 ppt): Trudinger et al. (2004) (firn; not the same as `trudinger_2016`)
+    - [ ] CF_4 (34.05 ppt): Mühle et al. (2010) (plus `trudinger_2016`, already in the bib)
+    - [ ] CCl_4 (0 ppt): Walker et al. (2000) (M17 also mentions Butler et al. 1999 and Liang et al. 2016 for firn evidence)
+    - [ ] the gases with zero pre-industrial values: check what M17 refers to for each.
+          If M17 cites an original source for the zero (e.g. a firn or archive record),
+          cite that source in the table too.
+          If M17 just assumes zero (no natural sources), leave M17 as the source
+          (or `velders_2022` for the HFCs whose pre-industrial value comes from there)
+    - [ ] the table's citations come from `PRE_INDUSTRIAL_SOURCE_CITATIONS` in `src/local/historical_ghg_forcing_for_cmip7/cfc12_like_tables.py`,
+          keyed by the original run's config source ("M17"),
+          so it will need a per-gas override for these gases
 - [ ] Funke et al. solar, scenario in-prep paper, Vaishali's paper, intro forcing papers (section 6)
 
 ## 8. Nomenclature and typos

@@ -947,6 +947,14 @@ For other gases processed like CFC12, we use different data sources based on dat
 In all cases, we use the data from the observation network(s) as reported,
 i.e. we do not convert between the networks' calibration scales
 [TODO note this in discussion].
+For NOAA, there are two kinds of data.
+Where it is available (as it is for CFC12), we use NOAA's combined HATS product
+[TODO cite NOAA HATS combined products],
+% CFC12, \citealp{noaa_hats_cfc12}; CFC-11, \citealp{noaa_hats_cfc11}; CFC-113, \citealp{noaa_hats_cfc113};
+% CCl_4, \citealp{noaa_hats_ccl4}; SF_6, \citealp{noaa_hats_sf6}
+which is a composite of measurements from NOAA's different halocarbon measurement programmes.
+For the other gases, we use NOAA's HATS raw flask data [TODO cite NOAA HATS flask].
+% \citep{montzka_1999}
 The networks used are:
 
 \begin{itemize}
@@ -954,10 +962,6 @@ The networks used are:
 % so a justified line has too few places to stretch
 \raggedright
 @cfc12-like-obs-network-sources-list@
-% TODOZN: introduce distinction betwen NOAA's combined HATS product and HATS flask data in the lists
-% As for CFC12, we use NOAA's combined HATS products where they are available
-% (CFC-11, \citealp{noaa_hats_cfc11}; CFC-113, \citealp{noaa_hats_cfc113}; CCl_4, \citealp{noaa_hats_ccl4}; SF_6, \citealp{noaa_hats_sf6}).
-% For the other gases, we use NOAA's HATS flask data \citep{montzka_1999}.
 \end{itemize}
 
 \begin{figure}[tp]
