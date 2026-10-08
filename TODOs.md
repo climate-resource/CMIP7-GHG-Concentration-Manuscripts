@@ -432,8 +432,10 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           (N_2O compatible; CO_2 all NOAA; CH_4 x1.0003; halocarbons quote from M17, other factors 0.99-1.2)
     - [x] general approach, Step 1: not converting / not exploring scales is a limitation, but fine for our purposes (cites M17 Sect. 6.4)
     - [x] discussion: new "fifth" limitation paragraph on calibration scales
-- [ ] CO_2 Step 1: check more carefully that NOAA's CO_2 surface flask and in-situ data are on the same calibration scale
+- [x] CO_2 Step 1: check more carefully that NOAA's CO_2 surface flask and in-situ data are on the same calibration scale
       (we think so, see the comment in CO_2 Step 1).
+    - [x] both are on WMO X2019: the in-situ files' headers say `scale : CO2_X2019`,
+          the flask files don't say but NOAA's flask README (section 6) does. Comment in CO_2 Step 1 updated
 - [x] C_4F_10-like: add checks for the Droste first/last years and that Droste is zero in its first year
       (`methods.tex:1193,1205,1221-1233`); fill in "[TODO Droste first year]";
       calculate the ERF share of these gases (`methods.tex:1196-1197`); check the site coordinates (`methods.tex:1161`).
@@ -448,25 +450,44 @@ The build supports appendices (see Infrastructure), and most of the figures alre
     - [x] site latitudes from the data: Cape Grim -40.6833, Tacolneston 52.5127.
           Text had 41S, 52N (52.5 rounds to 53), now 40.7S, 52.5N with value-checks.
           Longitudes (145E, 1E) aren't in the processed data (from the Droste paper, comment in the tex), so unchecked
-- [ ] CO_2 Step 4: check the 1850 value for the seasonality change PC extension (`methods.tex:183`).
-- [ ] CFC-12-like/C_4F_10-like Step 5: consider a check that the negative-value reduction only removes rounding errors (`methods.tex:229,261`).
-- [ ] Equivalent species (`methods.tex:1296-1331`): "it not all" should be "if not all";
+- [x] CO_2 Step 4: check the 1850 value for the seasonality change PC extension (`methods.tex:183`).
+    - [x] the PC is constant up to and including 1850 and varies from 1851
+          (`1205_co2_extend-seasonality-change-pcs` holds the composite constant before HadCRUT starts).
+          Value-check `co2-seasonality-change-regression-start-year`, in the general approach and CO_2 Step 4
+- [x] CFC-12-like/C_4F_10-like Step 5: consider a check that the negative-value reduction only removes rounding errors (`methods.tex:229,261`).
+    - [x] it doesn't only remove rounding errors (`1305_sf6-like_...` / `1405_c4f10-like_create-pieces-for-gridding`).
+          The latitudinal gradient is scaled so its most negative value is half the global-mean (zero where that is zero)
+          in months where the two would give negative values, and the seasonality is capped at 35% of the global-mean.
+          Affects nearly every CFC12-like gas in the years after its pre-industrial year (at most 44 years after, except HFC-152a),
+          HFC-152a's latitudinal gradient in some months 1991-2023, HFC-236fa's seasonality every year 1996-2023,
+          and the C_4F_10-like gases' latitudinal gradient 1934-2001.
+          Global-, annual-means are unchanged (one factor per month / per year).
+    - [x] text in the general approach, the section intros and both Step 5s rewritten to say this.
+          Value-checks detect the scaled-down months/years from the output files (match the executed notebooks exactly)
+          and copy the 0.5 and 35% constants from the notebooks
+- [x] Equivalent species (`methods.tex:1296-1331`): "it not all" should be "if not all";
       "CFC-11 captures" / "CFC12 captures" should be "CFC-11-eq" / "CFC-12-eq";
       double check the AR6 Table 7.SM.6 radiative efficiencies (`methods.tex:1325`; also see the "halving" worry at `results.tex:291-292`).
-    - [ ] "it not all" is still there
+    - [x] "it not all" → "if not all"
     - [x] "CFC-11 captures" → "CFC-11-eq captures"
-    - [ ] "CFC12-eq captures": decide CFC12-eq vs CFC-12-eq (see Section 8)
-    - [ ] "HFC134-eq captures" should be "HFC134a-eq" (or "HFC-134a-eq", see Section 8)
-    - [ ] double check the AR6 radiative efficiencies
-- [ ] ESGF section (`methods.tex:1333-1354`): explain the frequencies and grid labels; say where full DRS details are;
+    - [x] "CFC12-eq captures": `replacements.yaml` renders it as CFC-12-eq; the source spelling is the Section 8 decision
+    - [x] "HFC134-eq captures" → "HFC134a-eq"
+    - [x] AR6 radiative efficiencies: all 44 we use match AR6 WG1 Ch. 7 SM Table **7.SM.7** (checked against the PDF).
+          Table 7.SM.6 is the carbon cycle response function, so the text (and the original notebook's comment) cited the wrong table;
+          the text now says 7.SM.7
+    - [x] the "halving" in `results.tex` is real: CH_3Cl is 0.01 W/m^2/ppb in AR5 (CMIP6) and 0.005 in AR6.
+          The visible `[ZNTODO ...]` there is now a comment saying so
+- [x] ESGF section (`methods.tex:1333-1354`): explain the frequencies and grid labels; say where full DRS details are;
       cite input4mips-validation and the input4MIPs CVs page/user guide.
     - [x] frequencies and grid labels explained, with the five combinations we provide
-    - [ ] say where full DRS details are ("[ZNTODO point to what to see for full details]")
-    - [ ] cite input4mips-validation and the input4MIPs CVs page/user guide
+    - [x] say where full DRS details are: now points to the input4MIPs CVs page and user guide
+          (citation placeholder, see Section 7). Checked the five frequency/grid-label combinations
+          against `4010_write-input4mips-files`
+    - [x] citations are in Section 7 (input4mips-validation, input4MIPs CVs)
 - [x] Vertical dimension section (`methods.tex:1356-1361`) is a stub: summarise the suggested approach and give the M17 section number.
-- [ ] Format `numpy.linalg.svd` (and other code names) as `\texttt{}` (`methods.tex:381`).
+- [x] Format `numpy.linalg.svd` (and other code names) as `\texttt{}` (`methods.tex:381`).
     - [x] `numpy.linalg.svd`
-    - [ ] "scipy's griddata function" in general Step 2 (e.g. `\texttt{scipy.interpolate.griddata}`)
+    - [x] "scipy's griddata function" in general Step 2 → `\texttt{scipy.interpolate.griddata}` (checked it's what the code uses)
 - [x] Check M17's names for EOFs and PCs (`methods.tex:383,385`).
 - [ ] Convert all remaining `ZNTODO zalue-check` / "add check" comments into real `value-check`s
       (`methods.tex:183,429,434,437,574,598,628,630,635,646,657,785,788,802,804,809,818,835,846,859,864,871,875,987,991,1064,1069`).
@@ -494,6 +515,9 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 
 ## 6. Abstract, introduction, output requirements, discussion, conclusion, statements
 
+- [ ] Discussion: add the inconsistencies behind the negative-value reductions in CFC12-like/C_4F_10-like Step 5
+      (pre-industrial values vs. the emissions-driven latitudinal gradient; HFC-152a's latitudinal gradient scaled down 1991-2023;
+      HFC-236fa's seasonality capped every year 1996-2023; see the `ZNTODO` in CFC12-like Step 5 and the Section 4 notes)
 - [ ] Abstract: fill all [TODO X/Y/Z] numbers from `results.tex` (`abstract.tex:6-20`).
       Most already exist in results (e.g. CO_2 4.4 ppm around year 200, 2 ppm since 1850, <0.5 ppm since 1981).
       Ideally drive them from the same value-checks.
@@ -604,8 +628,17 @@ Need adding to the bib:
 - [ ] Decide CFC12 vs CFC-12 in the source (abstract asks "[TODO check nomenclature]").
       `replacements.yaml` maps CFC12 → CFC-12 so the output is fine, but the source mixes both.
       Same for HFC134a vs HFC-134a.
-- [ ] `replacements.yaml`: double check the mappings for minor species (`:1`);
-      add the Halon (1202?) that is in the scenarios but not the historical data (`:28`).
+- [x] `replacements.yaml` is applied in file order (`apply_replacements` in `scripts/compile-gmd-template-based-latex.py`),
+      so a key that starts with an earlier key never matches:
+      e.g. `HFC134a` is replaced before `HFC134a-eq`, `CFC12` before `CFC12-eq`, `CFC-11` before `CFC-11-eq`,
+      so the `-eq` names come out with an ordinary (breakable) hyphen.
+      Apply longest keys first, or reorder the file.
+      Done: reordered (also `CFC-113/114/115` before `CFC-11` and `HFC-236fa` before `HFC-23`,
+      which happened to render the same anyway), with a comment at the top of the file.
+      The only change to the rendered text is that the `-eq` names now use `\nobreakdash`
+      (The `HFC134a-eq`/`HFC134aeq` entries also had `-\nobreakdash-`, i.e. an en dash; fixed.)
+- [ ] `replacements.yaml`: double check the mappings for minor species (`:4`);
+      add the Halon (1202?) that is in the scenarios but not the historical data (`:31`).
 - [ ] Typos: "accomodate" (`methods.tex:500,904`), "that that" (`:460`), "for for" (`:773,1025`),
       "PCA analysis" (`:773,1025,1154`), "to not source" (`:1072`), "it not all" (`:1299`), "Next we consider CH_4" missing full stop (`:722`),
       "differencs" (`results.tex:29`), "minorly" (`results.tex:371`), "radiative focing" (`conclusion.tex:16`), "foward" (`conclusion.tex:27`),

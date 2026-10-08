@@ -1406,6 +1406,254 @@ def get_c4f10_like_erf(year: int, *, bundle_dir: Path) -> pint.Quantity:
     return res
 
 
+MAX_LAT_GRADIENT_FRACTION = 0.5
+"""
+Largest magnitude of the latitudinal gradient's most negative value
+
+As a fraction of the global-mean.
+
+Mirrors the `0.5 * month_da` in the original run's
+`1305_sf6-like_create-pieces-for-gridding`
+and `1405_c4f10-like_create-pieces-for-gridding` notebooks.
+"""
+
+MAX_SEASONALITY_FRACTION = 0.35
+"""
+Largest the seasonality can be, as a fraction of the global-mean
+
+Mirrors `max_reasonable_seasonality_frac = 0.35`
+in the original run's `1305_sf6-like_create-pieces-for-gridding` notebook.
+"""
+
+
+def load_monthly_pieces(
+    gas: str, *, bundle_dir: Path
+) -> tuple[xr.DataArray, xr.DataArray, xr.DataArray]:
+    """
+    Load the monthly pieces our native resolution output is built from
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Global-, annual-mean (interpolated to monthly steps),
+        latitudinal gradient and seasonality,
+        over the years they all cover
+    """
+    gas_dir = interim_dir(gas, bundle_dir)
+
+    return xr.align(  # type: ignore[return-value]
+        xr.load_dataarray(gas_dir / f"{gas}_global-annual-mean_allyears-monthly.nc"),
+        xr.load_dataarray(
+            gas_dir / f"{gas}_latitudinal-gradient_fifteen-degree_allyears-monthly.nc"
+        ),
+        xr.load_dataarray(
+            gas_dir / f"{gas}_seasonality_fifteen-degree_allyears-monthly.nc"
+        ),
+        join="inner",
+    )
+
+
+def get_lat_gradient_capped_years(gas: str, *, bundle_dir: Path) -> np.ndarray:
+    """
+    Get the years in which the latitudinal gradient was scaled down
+
+    In these months, the latitudinal gradient's most negative value
+    is exactly [MAX_LAT_GRADIENT_FRACTION][] of the global-mean.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Years with at least one month in which the latitudinal gradient was scaled down
+    """
+    global_mean, lat_gradient, _ = load_monthly_pieces(gas, bundle_dir=bundle_dir)
+    capped = (global_mean > 0.0) & (
+        np.abs(lat_gradient.min("lat") + MAX_LAT_GRADIENT_FRACTION * global_mean)
+        <= 1e-6 * np.abs(global_mean)
+    )
+
+    return capped["year"].to_numpy()[capped.any("month").to_numpy()]
+
+
+def get_seasonality_capped_years(gas: str, *, bundle_dir: Path) -> np.ndarray:
+    """
+    Get the years in which the seasonality was scaled down
+
+    In these years, the seasonality's largest magnitude
+    is exactly [MAX_SEASONALITY_FRACTION][] of the global-mean.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Years in which the seasonality was scaled down
+    """
+    global_mean, _, seasonality = load_monthly_pieces(gas, bundle_dir=bundle_dir)
+    fraction = (np.abs(seasonality) / global_mean.where(global_mean > 0.0)).max(
+        ["lat", "month"]
+    )
+
+    return fraction["year"].to_numpy()[
+        np.isclose(fraction.to_numpy(), MAX_SEASONALITY_FRACTION, rtol=1e-6, atol=0.0)
+    ]
+
+
+def get_capped_years_extent(
+    years_getter: Callable[..., np.ndarray],
+    gases: tuple[str, ...],
+    *,
+    bundle_dir: Path,
+) -> pint.Quantity:
+    """
+    Get the first and last year in which any of a group of gases was scaled down
+
+    Parameters
+    ----------
+    years_getter
+        Gets the scaled-down years for a gas
+        (e.g. [get_lat_gradient_capped_years][])
+
+    gases
+        Gases of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        First and last year
+
+    Raises
+    ------
+    AssertionError
+        None of the gases was scaled down in any year
+    """
+    years = np.concatenate([years_getter(gas, bundle_dir=bundle_dir) for gas in gases])
+    if years.size == 0:
+        msg = f"None of {gases=} was scaled down"
+        raise AssertionError(msg)
+
+    return Q(np.array([int(years.min()), int(years.max())]), "yr")
+
+
+def get_max_lat_gradient_capped_years_after_pre_industrial(
+    exclude: tuple[str, ...], *, bundle_dir: Path
+) -> pint.Quantity:
+    """
+    Get how long after the pre-industrial year the latitudinal gradient is scaled down
+
+    Over the gases processed like CFC-12, excluding some.
+
+    Parameters
+    ----------
+    exclude
+        Gases to exclude
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Largest number of years between a gas' pre-industrial year
+        and the last year in which its latitudinal gradient was scaled down
+    """
+    res = 0
+    for gas in CFC12_LIKE_GASES:
+        if gas in exclude:
+            continue
+
+        years = get_lat_gradient_capped_years(gas, bundle_dir=bundle_dir)
+        if years.size == 0:
+            continue
+
+        pre_industrial_year = get_step_config(gas, bundle_dir)["pre_industrial"]["year"]
+        res = max(res, int(years.max()) - pre_industrial_year)
+
+    return Q(res, "yr")
+
+
+def get_seasonality_capped_single_year_gases(*, bundle_dir: Path) -> bool:
+    """
+    Get whether the seasonality is scaled down in the gases and years the methods say
+
+    I.e. in every year from its first for HFC-236fa,
+    in a single year for HFC-32, HFC-152a and HFC-365mfc
+    and never for any other gas processed like CFC-12.
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Whether this is the case
+    """
+    n_years = {
+        gas: get_seasonality_capped_years(gas, bundle_dir=bundle_dir).size
+        for gas in CFC12_LIKE_GASES
+    }
+    single = {gas for gas, n in n_years.items() if n == 1}
+    many = {gas for gas, n in n_years.items() if n > 1}
+
+    return single == {"hfc32", "hfc152a", "hfc365mfc"} and many == {"hfc236fa"}
+
+
+def get_co2_seasonality_change_regression_start_year(
+    *, bundle_dir: Path
+) -> pint.Quantity:
+    """
+    Get the first year in which the CO2 seasonality change PC comes from the regression
+
+    Before this year, the original run
+    (`1205_co2_extend-seasonality-change-pcs`)
+    keeps the regression's composite, and hence the PC, constant.
+    So this is the last year in which the PC still has its year-1 value.
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        First year of the regression
+    """
+    pc = xr.load_dataset(
+        interim_dir("co2", bundle_dir) / "co2_allyears-seasonality-change-eofs-pcs.nc"
+    )["principal-components"].sel(eof=0)
+    values = pc.to_numpy()
+    first_change = np.argmax(~np.isclose(values, values[0], rtol=0.0, atol=1e-12))
+
+    return Q(int(pc["year"][first_change - 1]), "yr")
+
+
 def get_input_lat_gradient_weakening(gas: str, *, bundle_dir: Path) -> pint.Quantity:
     """
     Get how fast the latitudinal gradient in the input data is weakening
@@ -1730,7 +1978,7 @@ def get_ch4_ice_core_lat_bin(
     )
 
 
-def get_value_checks(  # noqa: PLR0915
+def get_value_checks(  # noqa: PLR0912, PLR0915
     bundle_dir: Path = DEFAULT_BUNDLE_DIR, data_raw_dir: Path = DATA_RAW_DIR
 ) -> tuple[ValueCheck, ...]:
     """
@@ -1918,6 +2166,69 @@ def get_value_checks(  # noqa: PLR0915
         "c4f10-like-erf-2022",
         partial(get_c4f10_like_erf, 2022, bundle_dir=bundle_dir),
         "approx. ERF of the gases processed like C4F10 in 2022",
+    )
+    add(
+        "max-lat-gradient-fraction",
+        lambda: Q(MAX_LAT_GRADIENT_FRACTION, "dimensionless"),
+        "largest the latitudinal gradient's most negative value can be "
+        "as a fraction of the global-mean",
+    )
+    add(
+        "max-seasonality-fraction",
+        lambda: Q(MAX_SEASONALITY_FRACTION, "dimensionless"),
+        "largest the seasonality can be as a fraction of the global-mean",
+    )
+    for tag, getter, gases, description in (
+        (
+            "hfc152a-lat-gradient-capped-years",
+            get_lat_gradient_capped_years,
+            ("hfc152a",),
+            "HFC-152a latitudinal gradient",
+        ),
+        (
+            "hfc236fa-seasonality-capped-years",
+            get_seasonality_capped_years,
+            ("hfc236fa",),
+            "HFC-236fa seasonality",
+        ),
+        (
+            "c4f10-like-lat-gradient-capped-years",
+            get_lat_gradient_capped_years,
+            C4F10_LIKE_GASES,
+            "latitudinal gradient of the gases processed like C4F10",
+        ),
+    ):
+        for i, which in enumerate(("first", "last")):
+            add(
+                f"{tag}-{which}",
+                lambda getter=getter, gases=gases, i=i: Q(
+                    get_capped_years_extent(getter, gases, bundle_dir=bundle_dir).m[i],
+                    "yr",
+                ),
+                f"{which} year in which the {description} was scaled down",
+            )
+    add(
+        "cfc12-like-lat-gradient-capped-years-after-pre-industrial",
+        partial(
+            get_max_lat_gradient_capped_years_after_pre_industrial,
+            ("hfc152a",),
+            bundle_dir=bundle_dir,
+        ),
+        "largest number of years after the pre-industrial year in which "
+        "the latitudinal gradient is scaled down (CFC12-like gases except HFC-152a)",
+    )
+    add(
+        "cfc12-like-seasonality-capped-gases",
+        partial(get_seasonality_capped_single_year_gases, bundle_dir=bundle_dir),
+        "whether the seasonality is scaled down in every year for HFC-236fa, "
+        "in one year for HFC-32, HFC-152a and HFC-365mfc and never for other gases",
+    )
+    add(
+        "co2-seasonality-change-regression-start-year",
+        partial(
+            get_co2_seasonality_change_regression_start_year, bundle_dir=bundle_dir
+        ),
+        "first year in which the CO2 seasonality change PC comes from the regression",
     )
     add(
         "trudinger-harmonisation-transition-years",

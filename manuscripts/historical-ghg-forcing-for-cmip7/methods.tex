@@ -67,7 +67,7 @@ be broken down as follows:
          More robust interpolation methods are an area for future work [TODO: forward ref].
 
          We use 2D interpolation, specifically linear barycentric interpolation,
-         as implemented in scipy's griddata function [TODO ref scipy].
+         as implemented in scipy's \texttt{scipy.interpolate.griddata} function [TODO ref scipy].
          Before interpolating, we put the data on a grid that is `wrapped around' to avoid edge effects.
          In practice, this means that we duplicate the data three times
          and place these three copies next to each other in the longitudinal direction.
@@ -194,7 +194,7 @@ while the specifics for each greenhouse gas are described in the following secti
                 We use the merged Law Dome - Mauna Loa record [TODO cite]
                 to extend the global-, annual-mean back in time where available
                 (rather than ice core data alone).
-                % ZNTODO: add check of 1850 value
+                % value-check: {"tag": "co2-seasonality-change-regression-start-year", "unit": "yr", "lower": 1850, "upper": 1850}
                 We extend the seasonality change PC back to 1850
                 using a composite of global-, annual-mean CO_2 concentrations and global-mean surface air temperature.
             }
@@ -243,10 +243,8 @@ while the specifics for each greenhouse gas are described in the following secti
             }
             \item {
                 \textbf{Step 5: Prepare the components to be combined}
-                We reduce the relative seasonality and latitudinal gradient
-                as required to avoid negative values in output
-                % ZNTODO: consider a check here, although it could be very difficult
-                (such reductions are only required to remove rounding errors).
+                We reduce the seasonality and latitudinal gradient
+                as required to avoid negative values in output.
             }
         \end{enumerate}
     }
@@ -275,9 +273,7 @@ while the specifics for each greenhouse gas are described in the following secti
             \item {
                 \textbf{Step 5: Prepare the components to be combined}
                 We reduce the latitudinal gradient
-                as required to avoid negative values in output
-                % ZNTODO: consider a check here, although it could be very difficult
-                (such reductions are only required to remove rounding errors).
+                as required to avoid negative values in output.
             }
         \end{enumerate}
     }
@@ -587,7 +583,10 @@ For CO_2, we use surface flask and in-situ data from the NOAA observation networ
 (Figure~\ref{fig:methods-co2}).
 % Calibration scales: following \citet{meinshausen_historical_2017} (Section~2),
 % all our CO2 data is from NOAA, so no scale conversion is needed.
-% We think this holds for NOAA's flask vs. in-situ data too, but haven't checked carefully (see TODOs.md).
+% This holds for NOAA's flask vs. in-situ data too: both are on the WMO X2019 CO2 scale
+% (stated in the in-situ files' headers, `scale : CO2_X2019`,
+% and in NOAA's README for the flask data, section 6,
+% https://gml.noaa.gov/aftp/data/trace_gases/co2/flask/surface/README_co2_surface-flask_ccgg.html).
 
 \begin{figure}[tp]
 \includegraphics[width=12cm]{@co2-methods-figure@}
@@ -740,6 +739,7 @@ $c(y)$ is global-, annual-mean CO_2 concentrations,
 $_r$ indicates that the quantity is a mean over the reference period (1850-1880 in this study, following \citet{meinshausen_historical_2017}),
 and $_n$ indicates that the quantity is a mean over the normalisation period (2000-2010 in this study, following \citet{meinshausen_historical_2017}).
 
+% value-check: {"tag": "co2-seasonality-change-regression-start-year", "unit": "yr", "lower": 1850, "upper": 1850}
 Using this regression, we extend the PC back to 1850,
 the start of [TODO cite HadCRUT]'s dataset.
 Before 1850, we keep the PC value constant (Figure~\ref{fig:methods-co2}h)).
@@ -936,7 +936,7 @@ except in Step 2 (Bin and interpolate observations), Step 4 (Extend) and Step 5 
 These differences accommodate some gases' sparse observation networks,
 allow some specific data sources take priority over our observation network-based method,
 recognise the need to interpolate between observation network values and pre-industrial values from the literature,
-and avoid spurious negative values in the output due to rounding.
+and avoid negative values in the output.
 
 The approach described in this section is also used for
 C_2F_6, C_3F_8, CCl_4, CF_4,
@@ -1191,11 +1191,43 @@ As for N_2O (Section~\ref{sssec:methods-n2o-extend}).
 
 This step is the same as for N_2O (Section~\ref{sssec:methods-n2o-prepare-components}),
 except that we do an extra check: that no negative values will be generated when we apply Equation~\ref{eq:native-resolution-sum}.
-Where negative values are identified, we reduce the seasonality and/or latitudinal gradient as required
-so that the negative values become zero.
-% ZNTODO: add discussion point around fixing upstream processing so you don't get small negative values in the output
-This is a crude method, but these negative values are only introduced because of rounding errors
-so we view this as an acceptable fix given the intended application of the dataset.
+Negative values arise in the years shortly after a gas' pre-industrial year,
+when the global-, annual-mean is still very small,
+but the latitudinal gradient (extended using the regression against emissions, see Step~4) is not.
+Where combining the two would give negative values,
+we scale down the latitudinal gradient.
+% % value-check: {"tag": "max-lat-gradient-fraction", "unit": "dimensionless", "lower": 0.5, "upper": 0.5}
+% so that its most negative value is half the global-, annual-mean
+% (or set it to zero where the global-, annual-mean is zero).
+% % value-check: {"tag": "cfc12-like-lat-gradient-capped-years-after-pre-industrial", "unit": "yr", "lower": 44, "upper": 44}
+% For all gases except HFC-152a, this only affects years within 44 years of the gas' pre-industrial year.
+% % value-check: {"tag": "hfc152a-lat-gradient-capped-years-first", "unit": "yr", "lower": 1991, "upper": 1991}
+% % value-check: {"tag": "hfc152a-lat-gradient-capped-years-last", "unit": "yr", "lower": 2023, "upper": 2023}
+% For HFC-152a, the latitudinal gradient is scaled down in some months in the period from 1991 to 2023.
+Similarly, when combining the seasonality and the global-, annual-mean
+(and the latitudinal gradient) would lead to negative values, we scale it down.
+% value-check: {"tag": "max-seasonality-fraction", "unit": "dimensionless", "lower": 0.35, "upper": 0.35}
+% in any year in which the seasonality's magnitude
+% is more than 35\% of the global-, annual-mean,
+% we scale the seasonality down to this limit
+% (or set it to zero where the global-, annual-mean is zero).
+% % value-check: {"tag": "cfc12-like-seasonality-capped-gases"}
+% % value-check: {"tag": "hfc236fa-seasonality-capped-years-first", "unit": "yr", "lower": 1996, "upper": 1996}
+% % value-check: {"tag": "hfc236fa-seasonality-capped-years-last", "unit": "yr", "lower": 2023, "upper": 2023}
+% This affects HFC-236fa in every year from 1996 to 2023
+% and HFC-32, HFC-152a and HFC-365mfc in a single year each.
+% Because we scale the latitudinal gradient by a single factor in each month
+% and the seasonality by a single factor in each year,
+% these reductions do not change the global-, annual-mean
+% (the latitudinal gradient still has an area-weighted mean of zero
+% and the seasonality still has an annual-mean of zero),
+% only how it is distributed in space and time.
+This is a crude fix.
+The need for it points to inconsistencies in our approach,
+e.g. between our pre-industrial values and the emissions used to extend the latitudinal gradient.
+Improving this is an area for future work (Section~\ref{sec:discussion}).
+% ZNTODO: add the inconsistencies (pre-industrial values vs. emissions-driven latitudinal gradient,
+% HFC-152a latitudinal gradient and HFC-236fa seasonality) to the discussion
 
 \subsubsection{Step 6: Generate native resolution}
 \label{sssec:methods-cfc12-like-generate-native-resolution}
@@ -1212,7 +1244,7 @@ These differences are due to the lack of a comprehensive observation network.
 Instead, we only use data from a single source,
 so there is nothing to bin and interpolate
 and we assume the shape of the latitudinal gradient EOF and that seasonality is zero, rather than performing PCA.
-As for CFC12-like gases, we also avoid spurious negative values in the output due to rounding.
+As for CFC12-like gases, we also avoid negative values in the output.
 
 The approach described in this section is also used for
 cC_4F_8, C_5F_12, C_6F_14 and C_7F_16.
@@ -1320,6 +1352,10 @@ except that we apply the same negative value check as is done for CFC12-like gas
 (Section~\ref{sssec:methods-cfc12-like-prepare-components}).
 Here we can only adjust the latitudinal gradient
 (the seasonality is already assumed to be zero).
+% % value-check: {"tag": "c4f10-like-lat-gradient-capped-years-first", "unit": "yr", "lower": 1934, "upper": 1934}
+% % value-check: {"tag": "c4f10-like-lat-gradient-capped-years-last", "unit": "yr", "lower": 2001, "upper": 2001}
+% For these gases, the latitudinal gradient is scaled down in some months in the period from 1934 to 2001,
+% when concentrations are still very small (Section~\ref{sssec:methods-c4f10-like-pca}).
 
 \subsubsection{Step 6: Generate native resolution}
 \label{sssec:methods-c4f10-like-generate-native-resolution}
@@ -1382,7 +1418,7 @@ we have not produced the 0.5\textdegree~latitudinal grid product as part of our 
 \subsection{Equivalent species}
 \label{ssec:methods-equivalent-species}
 
-Given that the majority, it not all, ESMs will not want the computational expense of including 43 greenhouse gas tracers,
+Given that the majority, if not all, ESMs will not want the computational expense of including 43 greenhouse gas tracers,
 we also produce the equivalent species described in \citet{meinshausen_historical_2017}.
 These equivalent species allow modelling teams to pick one of three options when running:
 
@@ -1401,15 +1437,18 @@ These equivalent species allow modelling teams to pick one of three options when
         \textbf{Use CO_2, CH_4, N_2O, CFC12 equivalent and HFC134a equivalent}
         CFC12-eq captures the equivalent effect of all ozone-depleting substances
         (namely CFC-11, CFC12, CFC-113, CFC-114, CFC-115, CCl_4, CH_2Cl_2, CH_3Br, CH_3CCl_3, CH_3Cl, CHCl_3, Halon-1211, Halon-1301, Halon-2402, HCFC-141b, HCFC-142b, HCFC-22)
-        while HFC134-eq captures the equivalent effect of all other fluorinated gases
+        while HFC134a-eq captures the equivalent effect of all other fluorinated gases
         (namely CF_4, C_2F_6, C_3F_8, cC_4F_8, C_4F_10, C_5F_12, C_6F_14, C_7F_16, C_8F_18, HFC-23, HFC-32, HFC-125, HFC134a, HFC-143a, HFC-152a, HFC-227ea, HFC-236fa, HFC-245fa, HFC-365mfc, HFC-4310mee, NF_3, SF_6, SO_2F_2).
     }
 \end{enumerate}
 
 The equivalence is calculated following the `full equivalence' definition given in Equation 7 of \citet{meinshausen_historical_2017}.
 We use the radiative efficiencies from the last IPCC Assessment Report,
-% ZNTODO: double check this is correct
-specifically the radiative efficiencies given in Table 7.SM.6 of the Working Group 1 Chapter 7 Supplementary Material [TODO citation].
+% Checked (2026-10-08): all the radiative efficiencies we use (`RADIATIVE_EFFICIENCIES` in
+% `src/local/historical_ghg_forcing_for_cmip7/comparison_data.py`) match Table 7.SM.7 of the AR6 WG1 Ch. 7 SM.
+% (Table 7.SM.6 is the carbon cycle response function, the radiative efficiencies are in Table 7.SM.7,
+% which is in Section 7.SM.6.)
+specifically the radiative efficiencies given in Table 7.SM.7 of the Working Group 1 Chapter 7 Supplementary Material [TODO citation].
 
 These equivalent species are derived based on output that is already on the desired output grid,
 rather than on the native grid (with further processing applied thereafter).
@@ -1426,7 +1465,8 @@ This includes setting the data format and metadata,
 in line with the formats and metadata that have been used previously (specifically in CMIP6).
 
 We format the data according to the input4MIPs data reference syntax (DRS).
-We do not go into the full details of this here ([ZNTODO point to what to see for full details]).
+We do not go into the full details of this here
+(for full details, see [TODO ref input4MIPs CVs page and user guide]).
 The key details for users are related to the frequency and grid label attributes.
 We provide data at two different frequencies:
 monthly-means (\texttt{frequency} attribute in the directory path, filename and file attributes set to `mon')

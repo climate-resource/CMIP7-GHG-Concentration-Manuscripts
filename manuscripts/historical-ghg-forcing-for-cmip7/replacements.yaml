@@ -1,3 +1,6 @@
+# Applied in order (see `apply_replacements` in scripts/compile-gmd-template-based-latex.py),
+# so a key must come before any key it contains (e.g. CFC-11-eq before CFC-11),
+# otherwise the longer key never matches.
 # TODO: double check these mappings, particularly for minor species
 CO_2: CO\textsubscript{2}
 CH_4: CH\textsubscript{4}
@@ -13,13 +16,13 @@ C_6F_14: C\textsubscript{6}F\textsubscript{14}
 C_7F_16: C\textsubscript{7}F\textsubscript{16}
 C_8F_18: C\textsubscript{8}F\textsubscript{18}
 CCl_4: CCl\textsubscript{4}
-CFC-11: CFC\nobreakdash-11
 CFC-11-eq: CFC\nobreakdash-11\nobreakdash-eq
 CFC-113: CFC\nobreakdash-113
 CFC-114: CFC\nobreakdash-114
 CFC-115: CFC\nobreakdash-115
-CFC12: CFC\nobreakdash-12
+CFC-11: CFC\nobreakdash-11
 CFC12-eq: CFC\nobreakdash-12\nobreakdash-eq
+CFC12: CFC\nobreakdash-12
 CH_2Cl_2: CH\textsubscript{2}Cl\textsubscript{2}
 CH_3Br: CH\textsubscript{3}Br
 CH_3CCl_3: CH\textsubscript{3}CCl\textsubscript{3}
@@ -33,14 +36,14 @@ HCFC-141b: HCFC\nobreakdash-141b
 HCFC-142b: HCFC\nobreakdash-142b
 HCFC-22: HCFC\nobreakdash-22
 HFC-125: HFC\nobreakdash-125
+HFC134aeq: HFC\nobreakdash-134a\nobreakdash-eq
+HFC134a-eq: HFC\nobreakdash-134a\nobreakdash-eq
 HFC134a: HFC\nobreakdash-134a
-HFC134aeq: HFC\nobreakdash-134a-\nobreakdash-eq
-HFC134a-eq: HFC\nobreakdash-134a-\nobreakdash-eq
 HFC-143a: HFC\nobreakdash-143a
 HFC-152a: HFC\nobreakdash-152a
 HFC-227ea: HFC\nobreakdash-227ea
-HFC-23: HFC\nobreakdash-23
 HFC-236fa: HFC\nobreakdash-236fa
+HFC-23: HFC\nobreakdash-23
 HFC-245fa: HFC\nobreakdash-245fa
 HFC-32: HFC\nobreakdash-32
 HFC-365mfc: HFC\nobreakdash-365mfc

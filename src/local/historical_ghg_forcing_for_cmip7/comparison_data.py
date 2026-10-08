@@ -170,6 +170,8 @@ RADIATIVE_EFFICIENCIES: dict[str, pint.Quantity] = {
     # `3501_calculate-full-equivalence` notebook,
     # which cites Table 7.SM.6 of
     # https://www.ipcc.ch/report/ar6/wg1/downloads/report/IPCC_AR6_WGI_Chapter07_SM.pdf
+    # (the values are actually in Table 7.SM.7, which is in Section 7.SM.6;
+    # all checked against it on 2026-10-08)
     # Chlorofluorocarbons
     "cfc11": Q(0.291, "W / m^2 / ppb"),
     "cfc11eq": Q(0.291, "W / m^2 / ppb"),
