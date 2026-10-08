@@ -85,16 +85,16 @@ create_all_tables(engine)
 # # Dataset construction
 #
 # The dataset is constructed following a similar methodology
-# to {raw-latex}`\textcite{meinshausen_shared_2020}`.
+# to {raw-latex}`\textcite{meinshausen_ssp-ghgs_2020}`.
 # The full method will be described in a forthcoming paper.
 # In brief, the method is:
 #
 # 1. **retrieve concentrations** of GHG gases
 #
 #     1. for gases covered under the Montreal Protocol
-#        {raw-latex}`\parencite{montreal_protocol_1987}`
+#        {raw-latex}`\parencite{montreal-protocol_final-act_1989}`
 #        and whose concentration evolution is
-#        already specified in WMO 2022 {raw-latex}`\parencite{hermanson2022wmo}`,
+#        already specified in WMO 2022 {raw-latex}`\parencite{hermanson_wmo-climate-update_2022}`,
 #        we simply use the WMO 2022 concentrations
 #
 #     1. for all other gases, we
@@ -106,11 +106,11 @@ create_all_tables(engine)
 #              as part of the ongoing ScenarioMIP process
 #
 #         1. run MAGICC
-#            {raw-latex}`\parencite{meinshausen2011emulating1,meinshausen2011emulating2}`
+#            {raw-latex}`\parencite{meinshausen_magicc6-part-1_2011,meinshausen_magicc6-part-2_2011}`
 #            to translate these emissions into global-mean concentrations
 #
 #            1. MAGICC is run in the same configuration which was used in AR6
-#              {raw-latex}`\parencite[as described/evaluated in Cross-Chapter Box 7.1][]{IPCC_2021_WGI_Ch_7}`.
+#              {raw-latex}`\parencite[as described/evaluated in Cross-Chapter Box 7.1][]{IPCC_AR6-WG1-Ch-7_2021}`.
 #              This represents our best estimate, in line with the last IPCC report,
 #              of the concentrations that result from the emissions.
 #              Note, given that CMIP7 models have not yet been run, this will,
@@ -149,7 +149,7 @@ create_all_tables(engine)
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## ESGF
 #
-# The **Earth System Grid Federation** {raw-latex}`\parencite{esgf_docs}`
+# The **Earth System Grid Federation** {raw-latex}`\parencite{esgf_docs_2025}`
 # provides access to a range of climate data.
 #
 # The scenario data of interest here
@@ -188,7 +188,7 @@ create_all_tables(engine)
 # and does not issue DOIs.
 # In order to provide more reliable, citable access to the data,
 # we have also provided the final scenario datasets on Zenodo
-# {raw-latex}`\parencite{zenodo}`,
+# {raw-latex}`\parencite{zenodo_zenodo_2025}`,
 # see [https://doi.org/10.5281/zenodo.18690744](https://doi.org/10.5281/zenodo.18690744).
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -197,7 +197,7 @@ create_all_tables(engine)
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Format
 #
-# The data is provided in netCDF format {raw-latex}`\parencite{unidata_netcdf}`.
+# The data is provided in netCDF format {raw-latex}`\parencite{unidata_netcdf_2024}`.
 # This self-describing format allows the data
 # to be placed in the same file as metadata
 # (in the so-called "file header").
@@ -266,7 +266,7 @@ print(f"{extract_scenario_id('CR-l-1-1-0')=}")
 # These details will be provided both via the CMIP CVs
 # (see https://github.com/WCRP-CMIP/CMIP7-CVs)
 # and the final ScenarioMIP paper
-# (revisions of {raw-latex}`\textcite{van_vuuren_scenariomip_2025}`
+# (revisions of {raw-latex}`\textcite{van-vuuren_scenariomip_2025}`
 #  are expected soon).
 # Scenario IDs of the final datasets can be confirmed
 # [here](https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785)[^scenario-id-final-comment].
@@ -391,7 +391,7 @@ print(f"{extract_scenario_id('CR-l-1-1-0')=}")
 # As in CMIP6, we do not provide any vertical profiles.
 # For users who require such profiles,
 # we refer to the 'The vertical dimension' sub-header
-# in Section 4 of {raw-latex}`\cite{meinshausen_historical_2017}`.
+# in Section 4 of {raw-latex}`\cite{meinshausen_historical-ghgs_2017}`.
 # There are three key changes:
 #
 # 1. the global-mean and hemispheric-mean data are split into separate files.

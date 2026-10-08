@@ -765,13 +765,23 @@ def get_uci_ch4_comparison(deseasonalised: bool) -> ComparisonTimeseries:
     Get UCI's global-mean CH4 record
 
     UCI (University of California, Irvine) sample the remote Pacific
-    (71N to 46S) every three months,
+    (approximately 71N to 47S, according to the network's README:
+    https://data.ornldaac.earthdata.nasa.gov/public/nacp/NACP_GHG_Data_Compilation/comp/README_irvinelatnet_flasks.txt)
+    every three months,
     so the record is quarterly.
     The record's reference is Simpson et al. (2012),
     https://doi.org/10.1038/nature11342.
     The archived version of it (https://doi.org/10.3334/CDIAC/ATG.002)
     stops in 2009, so we take the version compiled for
     the Global Methane Budget 2000-2020, which runs to the end of 2022.
+
+    If we ever wanted the network's individual flask samples instead
+    (i.e. to derive our own global-mean), those for 2000-2008 are in
+    https://data.ornldaac.earthdata.nasa.gov/protected/nacp/NACP_GHG_Data_Compilation/data/irvinelatnet_flasks.zip
+    (needs a free NASA Earthdata login), part of the NACP Greenhouse Gases
+    Multi-Source Data Compilation, 2000-2009 (https://doi.org/10.3334/ORNLDAAC/1206).
+    We don't use them: they only cover 2000-2008 and would need processing
+    from individual samples (date, latitude, longitude, CH4 and other gases).
 
     Parameters
     ----------

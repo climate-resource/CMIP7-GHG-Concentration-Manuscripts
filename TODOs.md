@@ -412,7 +412,7 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           Decide how to describe where they come from (the table's "Pre-industrial: source" reads as if M17 gives them).
           Done: text says they don't come from M17, are close to the original sources but some don't match exactly
           (time pressure), with minimal impact; the caption says the source is for the value and the years are ours
-    - [x] Velders citation: `velders_2022` is the right paper (it goes with the Zenodo dataset the run used).
+    - [x] Velders citation: `velders_hfcs_2022` is the right paper (it goes with the Zenodo dataset the run used).
           Table note a's 1988 and 1980 now have value-checks
     - [x] Velders' data start in 1990 (raw and processed; several HFCs are zero in 1990),
           so the 1980 pre-industrial year is our choice, consistent with Velders, rather than a value Velders gives.
@@ -566,53 +566,76 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 
 ## 7. Citations
 
-Already in `references/references.bib`, just need wiring in:
+Source of truth for the input-data references: the original run's
+`../CMIP-GHG-Concentration-Generation/output-bundles/v1.0.0/data/processed/dependencies.db`
+(`source` table: reference text and DOI; `dependencies` table: gas to source).
+It is what was written into the output files, so it has the same gaps (e.g. no PRIMAP).
 
-- [ ] Check all of these against the citations in the output files: those are the citations I am most confident of and the ones we should make sure we match
-- [ ] Droste et al. → `acp-20-4787-2020` (`methods.tex:240,250,255,1158,1169,1194,1206,1222,1230,1233`)
-- [ ] NOAA CO_2 / CH_4 → `lan_atmospheric_co2_2025`, `lan_atmospheric_ch4_2025` (`methods.tex:729`, `results.tex:47,111,182`)
-- [ ] AGAGE → `prinn_history_2000`, `prinn2018history` (`methods.tex:308,729,921`, `results.tex:128,190,239`)
-- [ ] NOAA HATS CFC-12 → `noaa_hats_cfc12` (`methods.tex:919`); uncomment the existing `\citep`s
-- [ ] NOAA HATS combined products → `noaa_hats_cfc12`, `noaa_hats_cfc11`, `noaa_hats_cfc113`, `noaa_hats_ccl4`, `noaa_hats_sf6`;
-      NOAA HATS flask → `montzka_1999`
-      (CFC-12 Step 1, `[TODO cite NOAA HATS combined products]` / `[TODO cite NOAA HATS flask]`, keys in comments beside them)
-- [x] SSP2-4.5 / M2020 → `meinshausen_shared_2020` (C_8F_18 section)
-- [ ] AR6 Ch7 SM → `IPCC_2021_WGI_Ch_7_SM` (`methods.tex:1326`, `results.tex:301,357`)
-- [ ] Daniel et al. / WMO 2022 → `wmo_2022_ozone_ch7`? Check (`results.tex:242,260`)
+Wired in (2026-10-08; build has no undefined citations):
 
-Need adding to the bib:
+- [x] Droste et al. → `droste_pfcs_2020` (methods, C_4F_10 appendix caption)
+- [x] NOAA CO_2 / CH_4 network inputs → `lan_co2-flask_2024`, `lan_ch4-flask_2024` (flask),
+      `thoning_co2-in-situ_2024`, `thoning_ch4-in-situ_2024` (in-situ), in CO_2 and CH_4 Step 1.
+      These are the versions the run used; the bib's unused 2025-04-26 flask entries were replaced.
+- [x] NOAA comparison timeseries in the results are NOAA's Trends files, not the flask data:
+      `lan_co2-trends_2026` (global and Mauna Loa, plus `keeling_co2-exchanges_2001` for the Scripps data before May 1974)
+      and `lan_ch4-n2o-sf6-trends_2026`
+- [x] AGAGE → `prinn_ale-gage-agage_2000`, `prinn_agage_2018`; GAGE and ALE → `prinn_ale-gage-agage_2000`
+- [x] NOAA HATS: N_2O → `dutton_hats-n2o_2022` (new); CFC12 and the other combined products → existing `dutton_hats-*_2022`;
+      flask → `montzka_ods_1999`
+- [x] SSP2-4.5 / M2020 → `meinshausen_ssp-ghgs_2020` (C_8F_18 section)
+- [x] AR6 Ch7 SM → `IPCC_AR6-WG1-Ch-7-SM_2021` (methods equivalent species; results, where AR6 is now defined on first use)
+- [x] Daniel et al. = WMO 2022 Ch. 7 → `wmo_ozone-ch7_2022` (`results.tex`, CFC12)
+- [x] scipy, numpy → `virtanen_scipy_2020`, `harris_numpy_2020`
+- [x] Menking et al. 2025 (in prep.) → `menking_law-dome_2025`
+- [x] Law Dome - Mauna Loa merged record (Scripps' `spline_merged_ice_core_yearly.csv`)
+      → `keeling_co2-exchanges_2001`, `rubino_law-dome-dataset_2019`, as its file header asks
+- [x] PRIMAP-hist v2.5.1 → `gutschow_primap-hist-dataset_2024`, `gutschow_primap-hist_2016`
+- [x] HadCRUT5 (5.0.2.0) → `morice_hadcrut5_2021`, `met-office_hadcrut5-data_2025`
+- [x] Law Dome CH_4 → `rubino_law-dome-dataset_2019` (v3); NEEM → `rhodes-brook_neem-ch4-dataset_2019`, `rhodes_neem-ch4_2013`;
+      EPICA → `epica_edml-ch4_2006`
+- [x] UCI CH_4 → `simpson_ethane_2012`, retrieved from the supplement of `saunois_methane-budget_2025`;
+      latitude range (approximately 71N to 47S) from UCI's network README, `blake_uci-network-readme_2010`
+      (https://data.ornldaac.earthdata.nasa.gov/public/nacp/NACP_GHG_Data_Compilation/comp/README_irvinelatnet_flasks.txt;
+      the "46S" previously in the `get_uci_ch4_comparison` docstring was unsourced)
+      The network's individual flask samples for 2000-2008 are available (free NASA Earthdata login) at
+      https://data.ornldaac.earthdata.nasa.gov/protected/nacp/NACP_GHG_Data_Compilation/data/irvinelatnet_flasks.zip
+      (https://doi.org/10.3334/ORNLDAAC/1206), should we ever want to process the network ourselves.
+      Not used: 2000-2008 only, and individual samples rather than a global-mean (link is also in the docstring).
+- [x] CH_4 ice-core comparison → `lamantia_tropical-ch4_2026`, plus the records it compiles
+      (`mitchell_ch4-constraints_2013`, `rubino_law-dome-records_2019`, `rhodes_neem-ch4_2013`)
+- [x] IGCC → `forster_igcc_2026`, `smith_igcc-forcings_2026` (confirmed correct by ZN)
+- [x] AR5 WG1 Ch. 8 Appendix 8.A → `IPCC_AR5-WG1-Ch-8_2013`
+- [x] input4mips-validation, input4MIPs CVs → `input4mips-validation_docs_2026`, `input4mips-cvs_docs_2026` (websites, accessed 2026-10-08)
+- [x] WMO 2012: not needed, `discussion.tex` now cites M17 alone
+- [x] M17's sources for the non-zero pre-industrial values, cited in `tab:cfc12-like-per-gas` instead of M17
+      via `PRE_INDUSTRIAL_SOURCE_CITATION_OVERRIDES` in `cfc12_like_tables.py`
+      (footnote c: values are M17's estimates based on the cited sources):
+      CH_3Cl, CH_3Br → `velders-daniel_ods-uncertainty_2014`; CHCl_3 → `worton_chloroform-firn_2006`, `aucott_chloroform-emissions_1999`; CH_2Cl_2 → `trudinger_halocarbons-firn_2004`;
+      CF_4 → `trudinger_pfcs_2016`, `muhle_pfcs_2010`; CCl_4 (zero in the run, not M17's 0.025 ppt) → `walker_cfc-histories_2000`.
+      The other zeros are M17's assumption of no natural sources (M17 Sects. 3.4, 3.5 cite nothing further), so M17 stays.
+- [x] Funke et al. solar → `funke_solar_2024`; scenario in-prep paper → `nicholls_scenario-ghgs_2026`;
+      Vaishali's paper → `naik_input-data-releases_2025`; forcing process over time / task team → `durack_forcing_2025`
 
-- [ ] NOAA HATS N_2O, GAGE, ALE (`methods.tex:308-309`; GAGE and ALE also in CH_4 Step 1)
-- [ ] WMO 2012 (N_2O calibration scales, `discussion.tex`; via M17)
-- [ ] scipy, numpy (`methods.tex:58,381`)
-- [ ] Menking et al. 2025 (many places in `methods.tex` and `results.tex`)
-- [ ] Law Dome - Mauna Loa merged record (`methods.tex:180,623-651`, `results.tex:79`)
-- [ ] NOAA Mauna Loa (`results.tex:48`)
-- [ ] PRIMAP-hist, with version (`methods.tex:609,611,783`)
-- [ ] HadCRUT (`methods.tex:668,686`)
-- [ ] Law Dome CH_4, NEEM, EPICA (`methods.tex:790-877`)
-- [ ] UCI CH_4 (`results.tex:122`), CH_4 ice-core comparison paper (`results.tex:136`)
-- [ ] IGCC citations (`results.tex:53,116,184`; `forster_indicators_2026` exists, check it's the right one)
-- [ ] AR5 WG1 Ch. 8 Appendix 8.A (`results.tex:320`)
-- [ ] input4mips-validation, input4MIPs CVs (`methods.tex:1350,1354`)
-- [ ] M17's sources for the non-zero pre-industrial values (M17 Sects. 3.4 and 3.5),
-      to cite in the CFC12-like per-gas table (`tab:cfc12-like-per-gas`) instead of M17
-      (and in the commented-out sentences in CFC-12 Step 4, `methods.tex:1116,1118`):
-    - [ ] CH_3Cl (457 ppt) and CH_3Br (5.3 ppt): Velders and Daniel (2014)
-          (budget with lifetimes from AR5 WG1 Table 8.A.1, see the AR5 item above)
-    - [ ] CHCl_3 (6 ppt): Worton et al. (2006), Aucott et al. (1999)
-    - [ ] CH_2Cl_2 (6.9 ppt): Trudinger et al. (2004) (firn; not the same as `trudinger_2016`)
-    - [ ] CF_4 (34.05 ppt): Mühle et al. (2010) (plus `trudinger_2016`, already in the bib)
-    - [ ] CCl_4 (0 ppt): Walker et al. (2000) (M17 also mentions Butler et al. 1999 and Liang et al. 2016 for firn evidence)
-    - [ ] the gases with zero pre-industrial values: check what M17 refers to for each.
-          If M17 cites an original source for the zero (e.g. a firn or archive record),
-          cite that source in the table too.
-          If M17 just assumes zero (no natural sources), leave M17 as the source
-          (or `velders_2022` for the HFCs whose pre-industrial value comes from there)
-    - [ ] the table's citations come from `PRE_INDUSTRIAL_SOURCE_CITATIONS` in `src/local/historical_ghg_forcing_for_cmip7/cfc12_like_tables.py`,
-          keyed by the original run's config source ("M17"),
-          so it will need a per-gas override for these gases
-- [ ] Funke et al. solar, scenario in-prep paper, Vaishali's paper, intro forcing papers (section 6)
+Still to do:
+
+- [ ] BUG: "Summit" in the CH_4 ice-core supplement is Huascarán Summit Core A (9.122S, 6768 m; Lamantia et al., 2026),
+      not Summit, Greenland. `CH4_ICE_CORE_SUPPLEMENT_SITES` in `comparison_data.py` puts it at 72.58N,
+      so the CH_4 results figure plots it at the wrong latitude
+      and the "outlier ... at a similar latitude" text in `results.tex` (CH_4 section) is wrong. Fix the code and the text.
+- [ ] `results.tex` CH_4 section: the UCI sentences still have two `[TODO check ...]`
+      (what the UCI timeseries represents exactly; whether the sentence on its latitude range is right).
+- [ ] `introduction.tex`: ZN to review the Durack et al. (2025) sentence and choose the other CMIP7 forcing papers
+      to cite alongside `funke_solar_2024` (and an overview of model inputs over time, perhaps Durack et al., 2018, Eos, unchecked).
+- [ ] NOAA Trends entries (`lan_co2-trends_2026`, `lan_ch4-n2o-sf6-trends_2026`): the note says "Data files created 5 September 2026";
+      swap for NOAA's version string (e.g. "Version 2026-09") once confirmed on the Trends pages.
+- [ ] User guide citation (`results.tex:16`, `methods.tex` output format section: `[TODO ref user guide]`), see Section 6.
+- [ ] Check "IGCC uses Hodnebrog" and "the same source is used by the IGCC" (`[TODO check]`s in `results.tex`), see Section 5.
+- [ ] Clean-up: bib entries marked "Is this reference correct or needed?" / "rename to ..." (`references/references.bib`).
+- [ ] Last: a table which, for each output gas, lists all the input-data references.
+      Query `dependencies.db` (it includes the per-gas AGAGE papers, 46 of them, e.g. CH_4: Prinn 2018, Rigby 2008 and 2017),
+      then add what it misses by hand (e.g. PRIMAP for CO_2 and CH_4).
+      Decide whether the per-gas AGAGE papers are cited only in this table (the text cites Prinn et al. 2000 and 2018).
 
 ## 8. Nomenclature and typos
 

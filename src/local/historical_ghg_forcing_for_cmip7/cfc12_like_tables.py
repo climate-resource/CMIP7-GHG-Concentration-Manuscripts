@@ -96,10 +96,10 @@ Keyed by the product, as [get_noaa_hats_product][] returns it.
 """
 
 PRE_INDUSTRIAL_SOURCE_CITATIONS = {
-    "M17": r"\citet{meinshausen_historical_2017}",
-    "Velders et al., 2022": r"\citet{velders_2022}",
+    "M17": r"\citet{meinshausen_historical-ghgs_2017}",
+    "Velders et al., 2022": r"\citet{velders_hfcs_2022}",
     "Velders et al., 2022 (with adjustments to support interpolation)": (
-        r"\citet{velders_2022}\textsuperscript{a}"
+        r"\citet{velders_hfcs_2022}\textsuperscript{a}"
     ),
 }
 """Citation for each pre-industrial source, as the original run's config names it
@@ -109,6 +109,25 @@ The adjustment is HFC-134a's pre-industrial year, which the original run
 moved from 1980 to 1988 because, with 1980, every gap-filling method
 in `1304_sf6-like_create-global-annual-mean` fails
 (the fits overshoot or go negative).
+"""
+
+PRE_INDUSTRIAL_SOURCE_CITATION_OVERRIDES = {
+    "ch3cl": r"\citet{velders-daniel_ods-uncertainty_2014}\textsuperscript{c}",
+    "ch3br": r"\citet{velders-daniel_ods-uncertainty_2014}\textsuperscript{c}",
+    "chcl3": r"\citet{worton_chloroform-firn_2006,aucott_chloroform-emissions_1999}\textsuperscript{c}",
+    "ch2cl2": r"\citet{trudinger_halocarbons-firn_2004}\textsuperscript{c}",
+    "cf4": r"\citet{trudinger_pfcs_2016,muhle_pfcs_2010}\textsuperscript{c}",
+    "ccl4": r"\citet{walker_cfc-histories_2000}",
+}
+"""Citation for the pre-industrial source of the gases where we cite the original source
+
+The original run's config gives "M17" (Meinshausen et al., 2017) as the source for these gases.
+For the gases with natural sources (non-zero pre-industrial values),
+we instead cite the sources which M17's estimates are based on (M17 Sections 3.4 and 3.5).
+These are marked with a footnote, which the table explains, because the values are M17's estimates.
+For CCl_4, the original run uses zero (rather than M17's 0.025 ppt), in line with Walker et al. (2000).
+For all other gases whose source is M17, the pre-industrial value is zero
+because M17 assumes there are no natural sources, so M17 stays as the source.
 """
 
 PRE_INDUSTRIAL_UNIT = "ppt"
@@ -298,6 +317,39 @@ def get_global_mean_source_cell(gas: str, bundle_dir: Path) -> str:
     return f"{citation}\\textsuperscript{{b}}"
 
 
+def get_pre_industrial_source_citation(gas: str, source: str) -> str:
+    """
+    Get the citation for a gas' pre-industrial source
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    source
+        The gas' pre-industrial source, as the original run's config names it
+
+    Returns
+    -------
+    :
+        The citation, as tex
+
+    Raises
+    ------
+    AssertionError
+        The gas has an override, but the original run's source for it is not M17
+        (the overrides only replace M17 with the sources M17 builds on)
+    """
+    if gas not in PRE_INDUSTRIAL_SOURCE_CITATION_OVERRIDES:
+        return PRE_INDUSTRIAL_SOURCE_CITATIONS[source]
+
+    if source != "M17":
+        msg = f"Expected {gas=}'s pre-industrial source to be M17, got {source}"
+        raise AssertionError(msg)
+
+    return PRE_INDUSTRIAL_SOURCE_CITATION_OVERRIDES[gas]
+
+
 def get_per_gas_row(gas: str, bundle_dir: Path) -> str:
     """
     Get a gas' row in the per-gas table
@@ -350,7 +402,7 @@ def get_per_gas_row(gas: str, bundle_dir: Path) -> str:
         get_global_mean_source_cell(gas, bundle_dir),
         str(pre_industrial["year"]),
         f"{pre_industrial_value:.2f}" if pre_industrial_value > 0.0 else "0",
-        PRE_INDUSTRIAL_SOURCE_CITATIONS[pre_industrial["source"]],
+        get_pre_industrial_source_citation(gas, pre_industrial["source"]),
     )
 
     return " & ".join(cells) + r" \\"

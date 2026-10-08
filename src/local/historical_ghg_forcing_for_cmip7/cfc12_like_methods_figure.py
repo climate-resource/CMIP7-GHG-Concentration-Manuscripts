@@ -214,11 +214,11 @@ take their global-mean from the observation network alone.
 """
 
 SOURCE_BIBKEYS = {
-    "Daniel et al. (2022)": "wmo_2022_ozone_ch7",
-    "Western et al. (2024)": "western_2024",
-    "Velders et al. (2022)": "velders_2022",
-    "Adam et al. (2024)": "adam_2024",
-    "Trudinger et al. (2016)": "trudinger_2016",
+    "Daniel et al. (2022)": "wmo_ozone-ch7_2022",
+    "Western et al. (2024)": "western_hcfcs_2024",
+    "Velders et al. (2022)": "velders_hfcs_2022",
+    "Adam et al. (2024)": "adam_hfc23_2024",
+    "Trudinger et al. (2016)": "trudinger_pfcs_2016",
 }
 """Bibtex key of each global-mean source, by its label
 
