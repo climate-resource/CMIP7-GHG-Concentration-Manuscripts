@@ -354,9 +354,13 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           The text now says so
     - [x] value-checks `ch4-epica-lat`, `ch4-epica-lat-bin` and `ch4-law-dome-lat-bin`
           (data loaded via `zenodo_missing.py`)
-- [ ] CH_4 Step 4: "[TODO cite EPIC]" typo (`methods.tex:870`); check the first year of EPICA use is 154 (`methods.tex:864`).
+- [x] CH_4 Step 4: "[TODO cite EPIC]" typo (`methods.tex:870`); check the first year of EPICA use is 154 (`methods.tex:864`).
     - [x] typo fixed
-    - [ ] check the first year of EPICA use is 154
+    - [x] check the first year of EPICA use is 154.
+          The smoothed Law Dome data starts in 154 and EPICA is used for years 1 to 153
+          (`np.arange(1, law_dome_start_year)` in `1104_ch4_extend-global-annual-mean`).
+          The text said "year 1 to year 154", now "year 1 to year 153".
+          Value-checks `ch4-law-dome-start-year` and `ch4-first-year`
 - [x] CO_2 Step 4: "we then extend emissions back to the 1750" (`methods.tex:610`) should be "extend the first PC back to 1750".
 - [x] CO_2 composite equation (`methods.tex:672-677`): the trailing `\\` before `\end{align}` adds an empty numbered line,
       and the `t'` and `c'` lines get their own numbers. Use `\nonumber` or `aligned`.
@@ -369,8 +373,18 @@ The build supports appendices (see Infrastructure), and most of the figures alre
     - [x] integral shows the area weighting, now normalised ($\int a(l) dl = 1$)
     - [x] value-check `lat-gradient-eofs-area-weighted-mean` over all 42 gases' `allyears` EOFs
           (actual value about 6e-14, relative to the EOF's magnitude)
-- [ ] Relative seasonality: is average(seasonality)/average(global-mean) equal to average(seasonality/global-mean)?
+- [x] Relative seasonality: is average(seasonality)/average(global-mean) equal to average(seasonality/global-mean)?
       Convince ourselves, or note the bug (`methods.tex:409-410`).
+    - [x] they aren't equal, but it isn't a bug.
+          The code's ratio of averages is the average of each year's ratio, weighted by each year's global-, annual-mean.
+          Multiplied back out (Step 5), it reproduces the observed average seasonality over the observation network period exactly
+          (when the global-, annual-mean over that period is the observation network's, as for N_2O and CH_4).
+          The text now says this; value-check `n2o-seasonality-reproduces-observed-average`
+    - [x] recomputed both for the 36 gases with relative seasonality (in the bundle's pixi env; reproduces the saved files exactly).
+          Max difference relative to the seasonality's max magnitude:
+          N_2O 0.5%, CH_4 0.6%, CFC-12 19%, SF_6 37%, HFC-134a 74%, HCFC-141b 180%
+    - [x] decide whether the sensitivity of fast-growing gases' seasonality to this choice
+          belongs in the discussion of limitations
 - [ ] CFC-12 Step 2: the "lat grid bands are 15 degrees" zalue-check at `methods.tex:991` sits next to the 1979-2023 statement.
       It should be a `cfc12-obs-network-start/end` check.
 - [ ] CFC-12 Step 4: figure out the Trudinger composite period and add a check (`methods.tex:1064`);

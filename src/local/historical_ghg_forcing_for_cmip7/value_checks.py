@@ -523,6 +523,50 @@ def get_obs_network_years(gas: str, *, bundle_dir: Path) -> tuple[int, int]:
     return int(years.min()), int(years.max())
 
 
+def get_seasonality_diff_from_observed_average(
+    gas: str, *, bundle_dir: Path
+) -> pint.Quantity:
+    """
+    Get how far our seasonality's average is from the observed average seasonality
+
+    Both are averaged over the observation network period.
+    The observed average seasonality is the relative seasonality
+    multiplied by the observation network's average global-, annual-mean
+    (which undoes the division used to calculate the relative seasonality).
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Maximum absolute difference,
+        relative to the maximum absolute observed average seasonality
+    """
+    gas_dir = bundle_dir / "data" / "interim" / gas
+    relative_seasonality = xr.load_dataarray(
+        gas_dir / f"{gas}_observational-network_seasonality.nc"
+    )
+    obs_network_global_annual_mean = xr.load_dataarray(
+        gas_dir / f"{gas}_observational-network_global-annual-mean.nc"
+    )
+    seasonality = xr.load_dataarray(
+        gas_dir / f"{gas}_seasonality_fifteen-degree_allyears-monthly.nc"
+    )
+
+    observed = relative_seasonality * float(obs_network_global_annual_mean.mean())
+    ours = seasonality.sel(year=obs_network_global_annual_mean["year"]).mean("year")
+
+    return Q(
+        float(np.abs(ours - observed).max() / np.abs(observed).max()), "dimensionless"
+    )
+
+
 def get_max_lat_gradient_eof_area_weighted_mean(*, bundle_dir: Path) -> pint.Quantity:
     """
     Get the largest area-weighted mean of any gas' latitudinal gradient EOFs
@@ -1172,6 +1216,26 @@ def get_ch4_ice_core_lat(source: str, *, data_raw_dir: Path) -> pint.Quantity:
     return Q(lat, "degree")
 
 
+def get_ch4_law_dome_start_year(*, data_raw_dir: Path) -> pint.Quantity:
+    """
+    Get the first year of the smoothed Law Dome CH4 data
+
+    The original run (`1104_ch4_extend-global-annual-mean`)
+    uses EPICA for every year before this one.
+
+    Parameters
+    ----------
+    data_raw_dir
+        Raw data directory
+
+    Returns
+    -------
+    :
+        First year of the smoothed Law Dome CH4 data
+    """
+    return Q(int(load_ch4_ice_core("law-dome", data_raw_dir)["year"].min()), "yr")
+
+
 def get_ch4_ice_core_lat_bin(
     source: str, *, bundle_dir: Path, data_raw_dir: Path
 ) -> pint.Quantity:
@@ -1324,10 +1388,30 @@ def get_value_checks(
         )
 
     add(
+        "n2o-seasonality-reproduces-observed-average",
+        partial(
+            get_seasonality_diff_from_observed_average, "n2o", bundle_dir=bundle_dir
+        ),
+        "difference between our seasonality and the observed seasonality, "
+        "both averaged over the observation network period "
+        "(relative to the observed seasonality's magnitude)",
+    )
+    add(
         "lat-gradient-eofs-area-weighted-mean",
         partial(get_max_lat_gradient_eof_area_weighted_mean, bundle_dir=bundle_dir),
         "largest area-weighted mean of any gas' latitudinal gradient EOFs "
         "(relative to the EOF's magnitude)",
+    )
+
+    add(
+        "ch4-law-dome-start-year",
+        partial(get_ch4_law_dome_start_year, data_raw_dir=data_raw_dir),
+        "first year of the smoothed Law Dome CH4 data",
+    )
+    add(
+        "ch4-first-year",
+        lambda: Q(int(get_output("ch4", bundle_dir=bundle_dir)[1]["year"].min()), "yr"),
+        "first year of our CH4 output",
     )
 
     for source in CH4_ICE_CORE_FILES:

@@ -462,8 +462,21 @@ annual-mean at each latitude from the longitudinal mean.
 The seasonality is the average of these residuals over all available years
 and thus has dimensions (month, lat).
 Relative seasonality is seasonality divided by the average global-, annual-mean over all available years.
-% ZNTODO: think whether there is a bug in processing or not. I think calculating average(seasonality) / average(global-mean) is the same as average(seasonality / global-mean)
-% because the denominator is the same in each case (number of years) and therefore cancels, but we should convince ourselves of this or write a note about this bug.
+% % If we're asked why we do this and not average of seasonality dividied by global- annual-mean in each year, here is the answer.
+% This is a ratio of averages,
+% which is not the same as the average of each year's ratio
+% (i.e. each year's residuals divided by that year's global-, annual-mean).
+% Instead, it is equivalent to a weighted average of each year's ratio,
+% with each year weighted by its global-, annual-mean.
+% We use this form because, when we multiply the relative seasonality by the global-, annual-mean
+% (Section~\ref{sssec:methods-n2o-prepare-components}),
+% the average of the resulting seasonality over the observation network period
+% % value-check: {"tag": "n2o-seasonality-reproduces-observed-average", "unit": "dimensionless", "lower": 0.0, "upper": 1e-10}
+% is exactly the seasonality calculated from the observations
+% (provided that the global-, annual-mean over this period is the one derived from the observation network).
+% It also gives less weight to years with lower concentrations,
+% in which the ratio is more sensitive to noise in the observations.
+% The two forms differ more for gases whose concentrations have grown rapidly over the observation network period.
 
 \subsubsection{Step 4: Extend}
 \label{sssec:methods-n2o-extend}
@@ -846,6 +859,7 @@ as for N_2O (Section~\ref{sssec:methods-n2o-extend}).
 
 \textbf{Global-, annual-mean.}
 To extend the global-, annual-mean back in time (Figure~\ref{fig:methods-ch4}g)),
+% value-check: {"tag": "ch4-law-dome-start-year", "unit": "yr", "lower": 154, "upper": 154}
 we use the smoothed [TODO cite Law dome] data to extend back to the start of the [TODO cite Law Dome] data, year 154.
 We use it in the same way as the [TODO cite Menking et al 2025] data is used for CO_2 (Section~\ref{sssec:methods-co2-extend}),
 i.e. we harmonise it to the value implied by our observation network-based global-, annual-mean and latitudinal gradient
@@ -855,10 +869,13 @@ then calculate the temporally extended global-, annual-mean such that our output
 % value-check: {"tag": "ch4-law-dome-lat-bin", "unit": "degree", "lower": -67.5, "upper": -67.5}
 in the -67.5\textdegree~latitudinal bin, the bin in which the ice cores were taken.
 
+% value-check: {"tag": "ch4-first-year", "unit": "yr", "lower": 1, "upper": 1}
 We then use data from [TODO cite EPICA] to extend back to year 1.
-% ZNTODO: zalue-check of this and that the first year of EPICA use is year 154
+% value-check: {"tag": "ch4-law-dome-start-year", "unit": "yr", "lower": 154, "upper": 154}
 We simply linearly interpolate the underlying EPICA data,
-rather than smoothing because the period from year 1 to year 154 is not the focus of this dataset.
+rather than smoothing because the period from year 1 to year 153
+(the year before the [TODO cite Law Dome] data starts)
+is not the focus of this dataset.
 As for the smoothed [TODO cite Law Dome] data,
 we calculate the global-, annual-mean such that our output dataset matches the [TODO cite EPICA] data
 % value-check: {"tag": "ch4-epica-lat", "unit": "degree", "lower": -75.0025, "upper": -75.0025}
