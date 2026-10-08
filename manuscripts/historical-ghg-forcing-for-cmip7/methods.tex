@@ -58,7 +58,11 @@ be broken down as follows:
          Then, since the surface observation network does not cover the entire globe,
          we interpolate the binned observations spatially to get complete global coverage.
 
-         % ZNTODO: check of this claim
+         % value-check: {"tag": "min-points-for-spatial-interpolation", "unit": "dimensionless", "lower": 4, "upper": 4}
+         % The north/south requirement isn't an explicit rule in the code:
+         % linear interpolation (griddata) can't extrapolate beyond the outermost data
+         % and months whose interpolation leaves gaps are dropped
+         % (see the original run's `*_interpolate-observational-network` notebooks).
          We specify that at least four data points are required for us to do spatial interpolation
          and we must have data points in both the most northern and most southern latitudinal box.
          This is clearly a relatively low data requirement,
@@ -457,7 +461,7 @@ If all EOFs are retained, then the product of the EOFs and the PCs
 reproduces the residuals we started with exactly.
 However, following \citet{meinshausen_historical_2017}
 we only retain the first two EOFs as these are sufficient
-% ZNTODO: add check of this claim
+% value-check: {"tag": "n2o-lat-gradient-first-two-eofs-variance", "unit": "dimensionless", "lower": 0.98, "upper": 1.0}
 to explain almost all of the variance (Figure~\ref{fig:methods-appendix-n2o}c)).
 The retained EOFs and PCs are shown in Figures~\ref{fig:methods-n2o}f) and~\ref{fig:methods-appendix-n2o}d) respectively.
 
@@ -508,15 +512,15 @@ which is imperfect but acceptable given the focus and intended use case of this 
 We use the spline-interpolated data from [TODO cite Menking et al 2025],
 removing the need for us to make our own spline interpolation choices
 (unlike \citet{meinshausen_historical_2017}, which used a much more involved interpolation method).
-% ZNTODO: add check of this number
-There is a small offset of around 2.0~ppb between the [TODO cite Menking et al 2025] data
+% value-check: {"tag": "n2o-menking-offset", "unit": "ppb", "lower": 1.6, "upper": 1.9}
+There is a small offset of around 1.7~ppb between the [TODO cite Menking et al 2025] data
 and our global-, annual-mean.
 To avoid introducing an artificial step in the output,
 we harmonise the [TODO cite Menking et al 2025] data to the observation network
-% ZNTODO: add check of decline years
+% value-check: {"tag": "harmonisation-transition-years", "unit": "yr", "lower": 100, "upper": 100}
 i.e. add a declining offset (with the decline set to reach zero over 100 years)
 to ensure that the [TODO cite Menking et al 2025] data and the observation network-derived
-% ZNTODO: add check 1989 is correct
+% value-check: {"tag": "n2o-obs-network-start", "unit": "yr", "lower": 1989, "upper": 1989}
 global-, annual-mean agree in 1989 - the earliest year in our observation network-derived global-, annual-mean.
 % ZNTODO: add discussion of harmonisation into discussion
 This is crude and a clear area for further investigation in future work ([TODO forward ref discussion]).
@@ -631,7 +635,7 @@ As for N_2O (Section~\ref{sssec:methods-n2o-pca}, Figure~\ref{fig:methods-co2}d)
 \textbf{Latitudinal gradient.}
 As for N_2O (Section~\ref{sssec:methods-n2o-pca}),
 including retaining only the first two EOFs,
-% ZNTODO: add check of this claim
+% value-check: {"tag": "co2-lat-gradient-first-two-eofs-variance", "unit": "dimensionless", "lower": 0.98, "upper": 1.0}
 as they explain almost all of the variance (Figure~\ref{fig:methods-appendix-co2}f)).
 The retained EOFs and PCs are shown in Figures~\ref{fig:methods-co2}f) and~\ref{fig:methods-appendix-co2}g) respectively.
 
@@ -650,9 +654,10 @@ However, in the case of seasonality, while the PCs are still only a function of 
 the EOFs have dimensions (latitude, month).
 For the seasonality change, again following \cite{meinshausen_historical_2017},
 we retain only the first EOF.
+% value-check: {"tag": "co2-seasonality-change-first-eof-variance", "unit": "dimensionless", "lower": 0.45, "upper": 0.55}
 This captures around half of the variance in the seasonality change,
-% ZNTODO: add check of this statement here
-with a single EOF being a pragmatic choice given that subsequent EOFs only explain 10\% or less of the variance
+% value-check: {"tag": "co2-seasonality-change-max-other-eof-variance", "unit": "dimensionless", "lower": 0.0, "upper": 0.11}
+with a single EOF being a pragmatic choice given that subsequent EOFs each only explain around 10\% or less of the variance
 so an unworkably large number would be required to capture a large fraction of the variance
 (Figure~\ref{fig:methods-appendix-co2}c)).
 The retained EOF and PC are shown in Figures~\ref{fig:methods-co2}g) and~\ref{fig:methods-appendix-co2}d) respectively.
@@ -683,14 +688,14 @@ To extend the global-, annual-mean back in time, we rely on the
 We start with the [TODO cite Mauna Loa merged record].
 We use all data from [TODO cite Mauna Loa merged record] which is not already covered by the interpolated observation network dataset.
 % value-check: {"tag": "co2-obs-network-start", "unit": "yr", "upper": 1981, "lower": 1981}
-% ZNTODO zalue-check: {"tag": "mauna-loa-start", "unit": "yr", "upper": 1959, "lower": 1959}
+% value-check: {"tag": "co2-mauna-loa-start-year", "unit": "yr", "lower": 1959, "upper": 1959}
 In practice this means that we use [TODO cite Mauna Loa merged record] from 1959 to 1980.
-% ZNTODO zalue-check: {"tag": "mauna-loa-obs-record-offset", "unit": "ppm", "upper": 1.5, "lower": 0.5}
-There is an offset of around 1~ppm between the [TODO cite Mauna Loa merged record]
+% value-check: {"tag": "co2-mauna-loa-offset", "unit": "ppm", "lower": 1.4, "upper": 1.6}
+There is an offset of around 1.5~ppm between the [TODO cite Mauna Loa merged record]
 and the global-, annual-mean we derive from the observation network in 1981.
 To avoid introducing an artificial step in the output,
 we harmonise the [TODO cite Mauna Loa merged record] data to the observation network
-% ZNTODO zalue-check: {"tag": "mauna-loa-harmonisation-horizon", "unit": "yr", "upper": 100, "lower": 100}
+% value-check: {"tag": "harmonisation-transition-years", "unit": "yr", "lower": 100, "upper": 100}
 i.e. add a declining offset (with the decline set to reach zero over 100 years)
 to ensure that the [TODO cite Mauna Loa merged record] data and the observation network-derived
 global-, annual-mean agree in 1981 - their first overlap year.
@@ -701,7 +706,7 @@ We then use data from [TODO cite Menking et al 2025] to extend back to year 1.
 We use the spline-interpolated data from [TODO cite Menking et al 2025],
 removing the need for us to make our own spline interpolation choices (unlike \citet{meinshausen_historical_2017}).
 As for the [TODO cite Mauna Loa merged record] data,
-% ZNTODO zalue-check: {"tag": "menking-co2-offset", "unit": "ppm", "upper": 0.5, "lower": 0.0}
+% value-check: {"tag": "co2-menking-offset", "unit": "ppm", "lower": 0.4, "upper": 0.6}
 there is a small offset, albeit of only around 0.5~ppm in this case,
 between the [TODO cite Menking et al 2025]
 and the value implied by our global-, annual-mean and latitudinal gradient
@@ -712,8 +717,7 @@ we harmonise the [TODO cite Menking et al 2025] data.
 We then calculate the temporally extended global-, annual-mean such that,
 when it is combined with the (now temporally extended) latitudinal gradient,
 our output dataset matches the harmonised [TODO cite Menking et al 2025]
-% ZNTODO zalue-check: {"tag": "menking-output-match", "unit": "ppm", "upper": 0.5, "lower": 0.0}
-% update text below if needed
+% value-check: {"tag": "co2-menking-output-match", "unit": "ppm", "lower": 0.0, "upper": 1e-05}
 in the latitudinal bin in which the ice cores were taken exactly
 (this is the -67.5\textdegree~bin on our native grid).
 
@@ -811,7 +815,7 @@ we end up with an interpolated observation network dataset that runs from 1984 t
 
 This step is the same as for N_2O (Section~\ref{sssec:methods-n2o-pca}, Figure~\ref{fig:methods-ch4}d)--f)),
 including retaining only the first two latitudinal gradient EOFs,
-% ZNTODO: add check of this claim
+% value-check: {"tag": "ch4-lat-gradient-first-two-eofs-variance", "unit": "dimensionless", "lower": 0.98, "upper": 1.0}
 as they explain almost all of the variance (Figure~\ref{fig:methods-appendix-ch4}c)).
 
 \subsubsection{Step 4: Extend}
@@ -822,10 +826,10 @@ As for CO_2 (Section~\ref{sssec:methods-co2-extend}),
 the first PC is initially extended by performing a linear regression against emissions of a geological origin,
 in this case CH_4 emissions from the [TODO cite PRIMAP version] dataset (Figure~\ref{fig:methods-appendix-ch4}e)).
 Using this regression, we extend the first PC back to the latest year
-% ZNTODO zalue-check: {"tag": "ch4-first-year-both-ice-cores", "unit": "yr", "upper": 1948, "lower": 1948}
+% value-check: {"tag": "ch4-pc0-optimised-years-last", "unit": "yr", "lower": 1948, "upper": 1948}
 in which we have observations from ice cores in both the northern and southern hemispheres, in our case 1948.
 
-% ZNTODO zalue-check: {"tag": "ch4-first-year-both-ice-cores", "unit": "yr", "upper": 1948, "lower": 1948}
+% value-check: {"tag": "ch4-pc0-optimised-years-last", "unit": "yr", "lower": 1948, "upper": 1948}
 For the period including and before 1948, we use ice core information to optimise the first PC.
 We use ice core values from [TODO cite Law Dome] for the southern hemisphere
 and [TODO cite Neem] for the northern hemisphere.
@@ -839,14 +843,17 @@ We smooth the ice core data from [TODO cite Law Dome] following the method used 
 To each data point in the [TODO cite Law Dome] dataset,
 we add random noise.
 The noise is normally distributed.
-% ZNTODO: zalue-check of this
+% value-check: {"tag": "ch4-law-dome-noise-value-sd", "unit": "ppb", "lower": 3, "upper": 3}
 In the value axis, it has a standard deviation of 3~ppb.
-% ZNTODO: zalue-check of this
+% value-check: {"tag": "ch4-law-dome-noise-time-relative-sd", "unit": "dimensionless", "lower": 0.025, "upper": 0.025}
+% value-check: {"tag": "ch4-law-dome-noise-time-ref-year", "unit": "yr", "lower": 2024, "upper": 2024}
 In the time axis, the standard deviation increases as the age of the observation increases
 according to the equation $\sigma = 0.025 \times (2024 - y)$, where $y$ is the year to which the observation applies.
 For each year between the start and end of the [TODO cite Law Dome] dataset,
+% value-check: {"tag": "ch4-law-dome-min-points-either-side", "unit": "dimensionless", "lower": 4, "upper": 4}
+% value-check: {"tag": "ch4-law-dome-max-points-either-side", "unit": "dimensionless", "lower": 10, "upper": 10}
 we pick at least four points either side of that year and a maximum of ten points either side of that year.
-% ZNTODO: zalue-check of this
+% value-check: {"tag": "ch4-law-dome-window-width", "unit": "yr", "lower": 100, "upper": 100}
 If there are four or more points within 100 years of the year of interest
 (on a given side, i.e. before or after the year of interest),
 the points that are closest to the year for which we are trying to generate a value are used (on that side).
@@ -855,7 +862,7 @@ If there are fewer than four points within 100 years of the window of interest
 then the nearest four points on that side are used, irrespective of how far away they are from the year of interest.
 Based on the selected points, a quantile regression with a third order polynomial is performed.
 The inferred value for the year of interest is then taken from this regression.
-% ZNTODO: zalue-check of this
+% value-check: {"tag": "ch4-law-dome-n-draws", "unit": "dimensionless", "lower": 250, "upper": 250}
 This process is repeated over all years, and the entire process is then repeated 250 times.
 The smoothed dataset is then the median over these 250 repeats.
 % [If requested by reviewers,
@@ -874,7 +881,7 @@ The first PC is then linearly interpolated between the years in which we have ob
 By combining the first PC values from a) the observation network,
 b) based on the regression with CH_4 emissions of a geological origin,
 c) the optimisation against ice cores
-% ZNTODO: zalue-check of year 287
+% value-check: {"tag": "ch4-pc0-optimised-years-first", "unit": "yr", "lower": 287, "upper": 287}
 and d) assuming that the first PC is constant before the first year in which we have ice core observations in both hemispheres (year 287),
 we end up with first PC values for the entire timespan from year 1 to 2023 (Figure~\ref{fig:methods-ch4}h)).
 
@@ -887,7 +894,7 @@ To extend the global-, annual-mean back in time (Figure~\ref{fig:methods-ch4}g))
 we use the smoothed [TODO cite Law dome] data to extend back to the start of the [TODO cite Law Dome] data, year 154.
 We use it in the same way as the [TODO cite Menking et al 2025] data is used for CO_2 (Section~\ref{sssec:methods-co2-extend}),
 i.e. we harmonise it to the value implied by our observation network-based global-, annual-mean and latitudinal gradient
-% ZNTODO zalue-check: {"tag": "menking-ch4-offset", "unit": "ppb", "upper": 1.0, "lower": 0.0}
+% value-check: {"tag": "ch4-law-dome-offset", "unit": "ppb", "lower": 0.0, "upper": 1.0}
 (the offset is less than 1~ppb, so the harmonisation has a much smaller effect than for CO_2),
 then calculate the temporally extended global-, annual-mean such that our output dataset matches the harmonised data
 % value-check: {"tag": "ch4-law-dome-lat-bin", "unit": "degree", "lower": -67.5, "upper": -67.5}
@@ -909,9 +916,9 @@ in the latitudinal bin in which the ice cores were taken
 lies on the boundary between our -82.5\textdegree~and -67.5\textdegree~bins
 but is slightly closer to the centre of the -82.5\textdegree bin).
 
-% ZNTODO: zalue-check of this
+% value-check: {"tag": "ch4-neem-max-relative-diff", "unit": "dimensionless", "lower": 0.0, "upper": 0.001}
 As a final check, we verify that the values implied by our global-, annual-mean and latitudinal gradient
-match the values from the [TODO NEEM] data to within 0.5\%.
+match the values from the [TODO NEEM] data to within 0.1\%.
 This ensures that our processing has closely maintained the latitudinal gradient information
 provided by the ice cores throughout the various processing steps.
 
@@ -1068,10 +1075,11 @@ we end up with an interpolated observation network dataset that runs from 1979 t
 
 This step is the same as for N_2O (Section~\ref{sssec:methods-n2o-pca}, Figure~\ref{fig:methods-cfc12}d)--f)),
 except that we retain only the first latitudinal gradient EOF.
-% ZNTODO: add check of this claim
+% value-check: {"tag": "cfc12-lat-gradient-first-eof-variance", "unit": "dimensionless", "lower": 0.98, "upper": 1.0}
 For CFC12, this explains almost all of the variance (Figure~\ref{fig:methods-appendix-cfc12}c)).
-% ZNTODO: add check of these claims
+% value-check: {"tag": "cfc12-like-min-lat-gradient-first-eof-variance-excl-hfc236fa", "unit": "dimensionless", "lower": 0.9, "upper": 1.0}
 For the other gases processed like CFC12, it explains more than 90\% of the variance,
+% value-check: {"tag": "hfc236fa-lat-gradient-first-eof-variance", "unit": "dimensionless", "lower": 0.75, "upper": 0.85}
 except for HFC-236fa, for which it explains around 80\%
 (see the equivalent panels in Appendix~\ref{app:methods-figures-cfc12-like}).
 By using seasonality and latitudinal gradient based on the observation network in all cases,
@@ -1196,13 +1204,13 @@ when the global-, annual-mean is still very small,
 but the latitudinal gradient (extended using the regression against emissions, see Step~4) is not.
 Where combining the two would give negative values,
 we scale down the latitudinal gradient.
-% % value-check: {"tag": "max-lat-gradient-fraction", "unit": "dimensionless", "lower": 0.5, "upper": 0.5}
+% value-check: {"tag": "max-lat-gradient-fraction", "unit": "dimensionless", "lower": 0.5, "upper": 0.5}
 % so that its most negative value is half the global-, annual-mean
 % (or set it to zero where the global-, annual-mean is zero).
-% % value-check: {"tag": "cfc12-like-lat-gradient-capped-years-after-pre-industrial", "unit": "yr", "lower": 44, "upper": 44}
+% value-check: {"tag": "cfc12-like-lat-gradient-capped-years-after-pre-industrial", "unit": "yr", "lower": 44, "upper": 44}
 % For all gases except HFC-152a, this only affects years within 44 years of the gas' pre-industrial year.
-% % value-check: {"tag": "hfc152a-lat-gradient-capped-years-first", "unit": "yr", "lower": 1991, "upper": 1991}
-% % value-check: {"tag": "hfc152a-lat-gradient-capped-years-last", "unit": "yr", "lower": 2023, "upper": 2023}
+% value-check: {"tag": "hfc152a-lat-gradient-capped-years-first", "unit": "yr", "lower": 1991, "upper": 1991}
+% value-check: {"tag": "hfc152a-lat-gradient-capped-years-last", "unit": "yr", "lower": 2023, "upper": 2023}
 % For HFC-152a, the latitudinal gradient is scaled down in some months in the period from 1991 to 2023.
 Similarly, when combining the seasonality and the global-, annual-mean
 (and the latitudinal gradient) would lead to negative values, we scale it down.
@@ -1211,9 +1219,9 @@ Similarly, when combining the seasonality and the global-, annual-mean
 % is more than 35\% of the global-, annual-mean,
 % we scale the seasonality down to this limit
 % (or set it to zero where the global-, annual-mean is zero).
-% % value-check: {"tag": "cfc12-like-seasonality-capped-gases"}
-% % value-check: {"tag": "hfc236fa-seasonality-capped-years-first", "unit": "yr", "lower": 1996, "upper": 1996}
-% % value-check: {"tag": "hfc236fa-seasonality-capped-years-last", "unit": "yr", "lower": 2023, "upper": 2023}
+% value-check: {"tag": "cfc12-like-seasonality-capped-gases"}
+% value-check: {"tag": "hfc236fa-seasonality-capped-years-first", "unit": "yr", "lower": 1996, "upper": 1996}
+% value-check: {"tag": "hfc236fa-seasonality-capped-years-last", "unit": "yr", "lower": 2023, "upper": 2023}
 % This affects HFC-236fa in every year from 1996 to 2023
 % and HFC-32, HFC-152a and HFC-365mfc in a single year each.
 % Because we scale the latitudinal gradient by a single factor in each month
@@ -1352,8 +1360,8 @@ except that we apply the same negative value check as is done for CFC12-like gas
 (Section~\ref{sssec:methods-cfc12-like-prepare-components}).
 Here we can only adjust the latitudinal gradient
 (the seasonality is already assumed to be zero).
-% % value-check: {"tag": "c4f10-like-lat-gradient-capped-years-first", "unit": "yr", "lower": 1934, "upper": 1934}
-% % value-check: {"tag": "c4f10-like-lat-gradient-capped-years-last", "unit": "yr", "lower": 2001, "upper": 2001}
+% value-check: {"tag": "c4f10-like-lat-gradient-capped-years-first", "unit": "yr", "lower": 1934, "upper": 1934}
+% value-check: {"tag": "c4f10-like-lat-gradient-capped-years-last", "unit": "yr", "lower": 2001, "upper": 2001}
 % For these gases, the latitudinal gradient is scaled down in some months in the period from 1934 to 2001,
 % when concentrations are still very small (Section~\ref{sssec:methods-c4f10-like-pca}).
 

@@ -10,18 +10,20 @@ Differences are always our (CMIP7) dataset minus the other dataset.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from functools import cache, partial
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import numpy as np
 import openscm_units
 import pandas as pd
 import pint
 import xarray as xr
+import yaml
 
-from local.cmip_ghg_generation import DEFAULT_BUNDLE_DIR
+from local.cmip_ghg_generation import BUNDLE_CONFIG_FILE, DEFAULT_BUNDLE_DIR
 from local.historical_ghg_forcing_for_cmip7.c4f10_like_methods_figure import (
     C4F10_LIKE_GASES,
 )
@@ -1048,13 +1050,17 @@ TRUDINGER_GASES = ("cf4", "c2f6", "c3f8")
 """Gases whose global-, annual-mean includes Trudinger et al. (2016) data"""
 
 
-TRUDINGER_HARMONISATION_TRANSITION_YEARS = 100
+HARMONISATION_TRANSITION_YEARS = 100
 """
-Years over which the offset added to Trudinger et al. (2016) declines to zero
+Years over which a harmonisation offset declines to zero
 
-Mirrors `n_transition_years=100` in the original run's
-`1304_sf6-like_create-global-annual-mean` notebook
-(the same in the executed notebooks for CF4, C2F6 and C3F8).
+Mirrors `n_transition_years=100`, which the original run uses for every harmonisation:
+Menking et al. (2025) for N2O (`1004_n2o_extend-global-annual-mean`),
+Law Dome for CH4 (`1104_ch4_extend-global-annual-mean`),
+the Mauna Loa - Law Dome merged record and Menking et al. (2025) for CO2
+(`1204_co2_extend-global-annual-mean`)
+and Trudinger et al. (2016) for CF4, C2F6 and C3F8
+(`1304_sf6-like_create-global-annual-mean`).
 """
 
 
@@ -1654,6 +1660,371 @@ def get_co2_seasonality_change_regression_start_year(
     return Q(int(pc["year"][first_change - 1]), "yr")
 
 
+MIN_POINTS_FOR_SPATIAL_INTERPOLATION = 4
+"""
+Minimum number of binned values needed to spatially interpolate a month
+
+Mirrors `MIN_POINTS_FOR_SPATIAL_INTERPOLATION` in the original run's
+`*_interpolate-observational-network` notebooks (N2O, CH4, CO2 and SF6-like).
+"""
+
+CO2_MAUNA_LOA_START = 1959
+"""
+First year of the Mauna Loa - Law Dome merged record we use
+
+Mirrors `mauna_loa_start` in the original run's `1204_co2_extend-global-annual-mean`
+(the first full year of Mauna Loa data).
+"""
+
+
+def get_variance_explained_fraction(
+    decomposition: str, *, bundle_dir: Path
+) -> pd.Series[float]:
+    """
+    Get the fraction of the variance each EOF of a decomposition explains
+
+    These come from re-running the original run's notebooks
+    (see [local.historical_ghg_forcing_for_cmip7.variance_explained][]),
+    which the methods figures do.
+
+    Parameters
+    ----------
+    decomposition
+        Decomposition of interest, e.g. `"co2_lat-gradient"`
+        or `"co2_seasonality-change"`
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Fraction of the variance explained, indexed by EOF
+    """
+    return pd.read_csv(
+        bundle_dir / "manuscript-outputs" / f"{decomposition}-variance-explained.csv",
+        index_col="eof",
+    )["variance_explained_fraction"]
+
+
+def get_min_lat_gradient_first_eof_variance(
+    exclude: tuple[str, ...], *, bundle_dir: Path
+) -> pint.Quantity:
+    """
+    Get the smallest variance explained by the first EOF over the CFC12-like gases
+
+    Parameters
+    ----------
+    exclude
+        Gases to exclude
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Smallest fraction of the variance explained by the first EOF
+    """
+    return Q(
+        min(
+            float(
+                get_variance_explained_fraction(
+                    f"{gas}_lat-gradient", bundle_dir=bundle_dir
+                ).loc[0]
+            )
+            for gas in CFC12_LIKE_GASES
+            if gas not in exclude
+        ),
+        "dimensionless",
+    )
+
+
+def get_annual_mean_at_lat(gas: str, lat: float, *, bundle_dir: Path) -> xr.DataArray:
+    """
+    Get the annual-mean of our native resolution output in a latitudinal bin
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    lat
+        Latitude of interest (the bin whose centre is nearest is used)
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Annual-mean in the bin, by year
+    """
+    native = get_output(gas, bundle_dir=bundle_dir)[0]
+
+    return native.sel(lat=lat, method="nearest").mean("month")
+
+
+def load_menking(gas: str, *, bundle_dir: Path) -> tuple[pd.Series[float], float]:
+    """
+    Load the Menking et al. (2025) data for a gas, as the original run processed it
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Values, by year, and the latitude of the data
+    """
+    menking = pd.read_csv(
+        bundle_dir
+        / "data"
+        / "interim"
+        / "menking-et-al-2025"
+        / "menking_et_al_2025.csv"
+    )
+    menking = menking[menking["gas"] == gas]
+    (lat,) = menking["latitude"].unique()
+
+    return menking.set_index("year")["value"], float(lat)
+
+
+def get_n2o_menking_offset(*, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the offset between our N2O global-, annual-mean and Menking et al. (2025)
+
+    In the first year of the observation network period,
+    which is where the original run harmonises them.
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Observation network-derived global-, annual-mean minus Menking et al. (2025)
+    """
+    menking, _ = load_menking("n2o", bundle_dir=bundle_dir)
+    harmonisation_year = get_obs_network_years("n2o", bundle_dir=bundle_dir)[0]
+    obs_network = xr.load_dataarray(
+        interim_dir("n2o", bundle_dir)
+        / "n2o_observational-network_global-annual-mean.nc"
+    )
+
+    return Q(
+        float(obs_network.sel(year=harmonisation_year))
+        - menking.loc[harmonisation_year],
+        get_units("n2o", bundle_dir=bundle_dir),
+    )
+
+
+def get_co2_mauna_loa_offset(*, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the offset between our CO2 global-, annual-mean and the Mauna Loa merged record
+
+    In the first year of the observation network period,
+    which is where the original run harmonises them
+    (using the merged record's mid-year value, as the original run does).
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Observation network-derived global-, annual-mean minus the merged record
+    """
+    merged = pd.read_csv(
+        bundle_dir / "data" / "interim" / "mauna_loa" / "merged_ice_core.csv"
+    ).set_index("time")["value"]
+    harmonisation_year = get_obs_network_years("co2", bundle_dir=bundle_dir)[0]
+    obs_network = xr.load_dataarray(
+        interim_dir("co2", bundle_dir)
+        / "co2_observational-network_global-annual-mean.nc"
+    )
+
+    return Q(
+        float(obs_network.sel(year=harmonisation_year))
+        - merged.loc[harmonisation_year + 0.5],
+        get_units("co2", bundle_dir=bundle_dir),
+    )
+
+
+def get_co2_menking_offset_and_match(
+    *, bundle_dir: Path
+) -> tuple[pint.Quantity, pint.Quantity]:
+    """
+    Get the CO2 Menking et al. (2025) offset and how well our output then matches it
+
+    The original run harmonises Menking et al. (2025)
+    to our output in Menking et al. (2025)'s latitudinal bin
+    in [CO2_MAUNA_LOA_START][],
+    then sets our earlier output to match the harmonised data in that bin.
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Offset (our output minus Menking et al. (2025)) in the harmonisation year
+        and the largest absolute difference between our output
+        and the harmonised Menking et al. (2025) data before that year
+    """
+    menking, lat = load_menking("co2", bundle_dir=bundle_dir)
+    ours = get_annual_mean_at_lat("co2", lat, bundle_dir=bundle_dir)
+    harmonisation_year = CO2_MAUNA_LOA_START
+    offset = float(ours.sel(year=harmonisation_year)) - menking.loc[harmonisation_year]
+
+    years = np.arange(int(ours["year"].min()), harmonisation_year)
+    harmonised = menking.loc[years].to_numpy() + offset * np.clip(
+        (years - (harmonisation_year - HARMONISATION_TRANSITION_YEARS))
+        / HARMONISATION_TRANSITION_YEARS,
+        0.0,
+        None,
+    )
+    units = get_units("co2", bundle_dir=bundle_dir)
+
+    return (
+        Q(offset, units),
+        Q(float(np.abs(ours.sel(year=years).to_numpy() - harmonised).max()), units),
+    )
+
+
+def get_ch4_law_dome_offset(*, data_raw_dir: Path, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the size of the offset between our CH4 output and the smoothed Law Dome data
+
+    In Law Dome's latitudinal bin,
+    in the first year of the observation network period,
+    which is where the original run harmonises them.
+
+    Parameters
+    ----------
+    data_raw_dir
+        Raw data directory
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Absolute offset
+    """
+    law_dome = load_ch4_ice_core("law-dome", data_raw_dir)
+    lat = get_ice_core_latitude(law_dome, "law-dome")
+    harmonisation_year = get_obs_network_years("ch4", bundle_dir=bundle_dir)[0]
+    ours = get_annual_mean_at_lat("ch4", lat, bundle_dir=bundle_dir)
+
+    return Q(
+        abs(
+            float(ours.sel(year=harmonisation_year))
+            - law_dome.set_index("year")["value"].loc[harmonisation_year]
+        ),
+        get_units("ch4", bundle_dir=bundle_dir),
+    )
+
+
+def get_ch4_max_neem_relative_diff(
+    *, data_raw_dir: Path, bundle_dir: Path
+) -> pint.Quantity:
+    """
+    Get how far our CH4 output is from the NEEM data, at most
+
+    In NEEM's latitudinal bin, in the years of NEEM's observations
+    (rounded to the nearest year, as the original run does).
+
+    Parameters
+    ----------
+    data_raw_dir
+        Raw data directory
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Largest absolute difference, relative to NEEM
+    """
+    neem = load_ch4_ice_core("neem", data_raw_dir)
+    lat = get_ice_core_latitude(neem, "neem")
+    ours = get_annual_mean_at_lat("ch4", lat, bundle_dir=bundle_dir).sel(
+        year=neem["year"].round(0).to_numpy()
+    )
+    neem_values = neem["value"].to_numpy()
+
+    return Q(
+        float(np.max(np.abs(ours.to_numpy() - neem_values) / neem_values)),
+        "dimensionless",
+    )
+
+
+def get_ch4_pc0_optimised_years(*, bundle_dir: Path) -> tuple[int, int]:
+    """
+    Get the first and last year in which the CH4 first PC is optimised against ice cores
+
+    These come from re-running the original run's `1103_ch4_extend-pcs` notebook,
+    which the CH4 methods figure does.
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        First and last year
+    """
+    years = json.loads(
+        (bundle_dir / "manuscript-outputs" / "ch4_pc0-optimised-years.json").read_text()
+    )
+
+    return min(years), max(years)
+
+
+def get_ch4_law_dome_smoothing_config(*, bundle_dir: Path) -> dict[str, Any]:
+    """
+    Get the original run's config for smoothing the CH4 Law Dome data
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        The config, as loaded from the YAML
+
+    Raises
+    ------
+    AssertionError
+        The bundle's config has no CH4 Law Dome smoothing config
+    """
+    config = yaml.safe_load((bundle_dir / BUNDLE_CONFIG_FILE).read_text())
+    for step_config in config["smooth_law_dome_data"]:
+        if step_config["gas"] == "ch4":
+            return step_config  # type: ignore[no-any-return]
+
+    msg = "No CH4 Law Dome smoothing config"
+    raise AssertionError(msg)
+
+
 def get_input_lat_gradient_weakening(gas: str, *, bundle_dir: Path) -> pint.Quantity:
     """
     Get how fast the latitudinal gradient in the input data is weakening
@@ -2231,8 +2602,165 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
         "first year in which the CO2 seasonality change PC comes from the regression",
     )
     add(
+        "min-points-for-spatial-interpolation",
+        lambda: Q(MIN_POINTS_FOR_SPATIAL_INTERPOLATION, "dimensionless"),
+        "minimum number of binned values needed to spatially interpolate a month",
+    )
+    add(
+        "harmonisation-transition-years",
+        lambda: Q(HARMONISATION_TRANSITION_YEARS, "yr"),
+        "number of years over which harmonisation offsets decline to zero",
+    )
+
+    def variance(decomposition: str, eofs: tuple[int, ...]) -> pint.Quantity:
+        fractions = get_variance_explained_fraction(
+            decomposition, bundle_dir=bundle_dir
+        )
+        return Q(float(fractions.loc[list(eofs)].sum()), "dimensionless")
+
+    for gas in ("n2o", "co2", "ch4"):
+        add(
+            f"{gas}-lat-gradient-first-two-eofs-variance",
+            partial(variance, f"{gas}_lat-gradient", (0, 1)),
+            "fraction of the variance explained by the first two "
+            "latitudinal gradient EOFs",
+        )
+    add(
+        "co2-seasonality-change-first-eof-variance",
+        partial(variance, "co2_seasonality-change", (0,)),
+        "fraction of the variance explained by the first seasonality change EOF",
+    )
+    add(
+        "co2-seasonality-change-max-other-eof-variance",
+        lambda: Q(
+            float(
+                get_variance_explained_fraction(
+                    "co2_seasonality-change", bundle_dir=bundle_dir
+                )
+                .iloc[1:]
+                .max()
+            ),
+            "dimensionless",
+        ),
+        "largest fraction of the variance explained by any other "
+        "seasonality change EOF",
+    )
+    for gas in ("cfc12", "hfc236fa"):
+        add(
+            f"{gas}-lat-gradient-first-eof-variance",
+            partial(variance, f"{gas}_lat-gradient", (0,)),
+            "fraction of the variance explained by the first latitudinal gradient EOF",
+        )
+    add(
+        "cfc12-like-min-lat-gradient-first-eof-variance-excl-hfc236fa",
+        partial(
+            get_min_lat_gradient_first_eof_variance,
+            ("cfc12", "hfc236fa"),
+            bundle_dir=bundle_dir,
+        ),
+        "smallest fraction of the variance explained by the first latitudinal "
+        "gradient EOF (CFC12-like gases except CFC12 and HFC-236fa)",
+    )
+    add(
+        "n2o-menking-offset",
+        partial(get_n2o_menking_offset, bundle_dir=bundle_dir),
+        "N2O observation network global-, annual-mean minus Menking et al. (2025) "
+        "in the harmonisation year",
+    )
+    add(
+        "co2-mauna-loa-start-year",
+        lambda: Q(CO2_MAUNA_LOA_START, "yr"),
+        "first year of the Mauna Loa - Law Dome merged record we use",
+    )
+    add(
+        "co2-mauna-loa-offset",
+        partial(get_co2_mauna_loa_offset, bundle_dir=bundle_dir),
+        "CO2 observation network global-, annual-mean minus the Mauna Loa merged "
+        "record in the harmonisation year",
+    )
+    for i, (tag, description) in enumerate(
+        (
+            ("co2-menking-offset", "offset from Menking et al. (2025)"),
+            (
+                "co2-menking-output-match",
+                "max abs difference from harmonised Menking et al. (2025)",
+            ),
+        )
+    ):
+        add(
+            tag,
+            lambda i=i: get_co2_menking_offset_and_match(bundle_dir=bundle_dir)[i],
+            f"CO2 {description} in Menking et al. (2025)'s latitudinal bin",
+        )
+    for i, which in enumerate(("first", "last")):
+        add(
+            f"ch4-pc0-optimised-years-{which}",
+            lambda i=i: Q(get_ch4_pc0_optimised_years(bundle_dir=bundle_dir)[i], "yr"),
+            f"{which} year in which the CH4 first PC is optimised against ice cores",
+        )
+    for tag, getter, unit in (
+        (
+            "ch4-law-dome-noise-value-sd",
+            lambda c: c["noise_adder"]["y_random_error"],
+            None,
+        ),
+        (
+            "ch4-law-dome-noise-time-relative-sd",
+            lambda c: c["noise_adder"]["x_relative_random_error"],
+            None,
+        ),
+        ("ch4-law-dome-noise-time-ref-year", lambda c: c["noise_adder"]["x_ref"], None),
+        (
+            "ch4-law-dome-min-points-either-side",
+            lambda c: c["point_selector_settings"]["minimum_data_points_either_side"],
+            "dimensionless",
+        ),
+        (
+            "ch4-law-dome-max-points-either-side",
+            lambda c: c["point_selector_settings"]["maximum_data_points_either_side"],
+            "dimensionless",
+        ),
+        (
+            "ch4-law-dome-window-width",
+            lambda c: c["point_selector_settings"]["window_width"],
+            None,
+        ),
+        ("ch4-law-dome-n-draws", lambda c: c["n_draws"], "dimensionless"),
+    ):
+        add(
+            tag,
+            lambda getter=getter, unit=unit: (
+                Q(
+                    getter(get_ch4_law_dome_smoothing_config(bundle_dir=bundle_dir)),
+                    unit,
+                )
+                if unit is not None
+                else Q(
+                    *getter(get_ch4_law_dome_smoothing_config(bundle_dir=bundle_dir))
+                )
+            ),
+            f"CH4 Law Dome smoothing setting ({tag})",
+        )
+    add(
+        "ch4-law-dome-offset",
+        partial(
+            get_ch4_law_dome_offset, data_raw_dir=data_raw_dir, bundle_dir=bundle_dir
+        ),
+        "absolute offset between our CH4 output and smoothed Law Dome "
+        "in the harmonisation year",
+    )
+    add(
+        "ch4-neem-max-relative-diff",
+        partial(
+            get_ch4_max_neem_relative_diff,
+            data_raw_dir=data_raw_dir,
+            bundle_dir=bundle_dir,
+        ),
+        "largest difference between our CH4 output and NEEM, relative to NEEM",
+    )
+    add(
         "trudinger-harmonisation-transition-years",
-        lambda: Q(TRUDINGER_HARMONISATION_TRANSITION_YEARS, "yr"),
+        lambda: Q(HARMONISATION_TRANSITION_YEARS, "yr"),
         "number of years over which the Trudinger et al. (2016) offset declines",
     )
     for tag, source in (

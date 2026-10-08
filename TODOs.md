@@ -489,8 +489,21 @@ The build supports appendices (see Infrastructure), and most of the figures alre
     - [x] `numpy.linalg.svd`
     - [x] "scipy's griddata function" in general Step 2 → `\texttt{scipy.interpolate.griddata}` (checked it's what the code uses)
 - [x] Check M17's names for EOFs and PCs (`methods.tex:383,385`).
-- [ ] Convert all remaining `ZNTODO zalue-check` / "add check" comments into real `value-check`s
+- [x] Convert all remaining `ZNTODO zalue-check` / "add check" comments into real `value-check`s
       (`methods.tex:183,429,434,437,574,598,628,630,635,646,657,785,788,802,804,809,818,835,846,859,864,871,875,987,991,1064,1069`).
+    - [x] all `methods.tex` ones converted (the `results.tex` ones are for Section 5).
+          Constants copied from the original notebooks/config: min. 4 points for interpolation,
+          100-year harmonisation (now one `HARMONISATION_TRANSITION_YEARS`, used by every harmonisation in the run),
+          Mauna Loa start 1959, CH_4 Law Dome smoothing settings (from the bundle config).
+          Computed from the bundle: EOF variance fractions, harmonisation offsets, CH_4 ice-core optimisation years,
+          the CO_2 output matching harmonised Menking, NEEM match
+    - [x] text corrected where the numbers were off:
+          N_2O Menking offset "around 2.0 ppb" → 1.7 ppb (1.75);
+          CO_2 Mauna Loa offset "around 1 ppm" → 1.5 ppm (1.50);
+          CO_2 seasonality change "subsequent EOFs only explain 10% or less" → "each only explain around 10% or less" (second EOF 10.5%);
+          NEEM match "within 0.5%" → "within 0.1%" (the original run's own tolerance; actual max 0.008%)
+    - [x] the "both most northern and southern box" requirement in general Step 2 isn't an explicit rule
+          (it follows from linear griddata not extrapolating and gappy months being dropped); comment added saying so
 
 ## 5. Results
 
