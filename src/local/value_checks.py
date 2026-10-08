@@ -325,7 +325,7 @@ class ValueCheckResult:
         return f"[{', '.join(f'{v:.4g}' for v in magnitude)}] {self.spec.unit}"
 
 
-def evaluate(
+def evaluate_check(
     spec: ValueCheckSpec, check: ValueCheck, value: CheckValue
 ) -> ValueCheckResult:
     """
@@ -360,6 +360,7 @@ def evaluate(
                 ),
             )
 
+        # Shouldn't this check that value is True?
         return ValueCheckResult(spec=spec, check=check, value=value, passed=value)
 
     if isinstance(value, bool):
@@ -542,7 +543,7 @@ def run_value_checks(
 
         value = check.calculate()
         for i, spec in matching:
-            results.append(evaluate(spec, check, value))
+            results.append(evaluate_check(spec, check, value))
             checked.add(i)
 
     return ValueCheckReport(

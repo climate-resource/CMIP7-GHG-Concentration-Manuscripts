@@ -18,7 +18,8 @@ from typing import IO, Annotated, Any
 import typer
 import yaml
 
-from local.historical_ghg_forcing_for_cmip7.value_checks import VALUE_CHECKS
+from local.cmip_ghg_generation import DEFAULT_BUNDLE_DIR
+from local.historical_ghg_forcing_for_cmip7.value_checks import get_value_checks
 from local.value_checks import ValueCheckCollector, run_value_checks
 
 REPO_ROOT = Path(__file__).parents[1]
@@ -777,6 +778,17 @@ def main(  # noqa: PLR0913, PLR0915
             )
         ),
     ] = True,
+    bundle_dir: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Directory which holds the original run's bundle. "
+                "Only used to check values (see `--check-values`)."
+            ),
+            dir_okay=True,
+            file_okay=False,
+        ),
+    ] = DEFAULT_BUNDLE_DIR,
 ) -> None:
     """
     Compile the PDF
@@ -923,7 +935,9 @@ def main(  # noqa: PLR0913, PLR0915
     # Last thing before building, so every file has been read
     # (and its value check comments collected)
     if check_values:
-        value_check_report = run_value_checks(collector.specs, VALUE_CHECKS)
+        value_check_report = run_value_checks(
+            collector.specs, get_value_checks(bundle_dir=bundle_dir)
+        )
         print(value_check_report.to_str())
         value_check_report.raise_if_not_ok()
 

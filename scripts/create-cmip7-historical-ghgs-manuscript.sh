@@ -222,6 +222,7 @@ uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
     --copernicus-template-dir "${copernicus_latex_template_dir}" \
     --clean-copernicus-template-filename "${clean_copernicus_template_filename}" \
     --build-dir "${build_dir}" \
+    --bundle-dir "${zenodo_bundle_dir}" \
     --output "${output_pdf}"
 # --no-check-values
 # --extra "${methods_subfile}" \

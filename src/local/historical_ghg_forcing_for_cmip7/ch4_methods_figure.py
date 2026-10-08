@@ -78,6 +78,11 @@ from local.historical_ghg_forcing_for_cmip7.variance_explained import (
     DecompositionToSave,
     get_variance_explained,
 )
+from local.historical_ghg_forcing_for_cmip7.zenodo_missing import (
+    get_ch4_ice_core_file,
+    get_ice_core_latitude,
+    load_ch4_ice_core,
+)
 from local.paths import DATA_RAW_DIR
 
 ALL_DATA_WITH_BINS_FILE = Path("manuscript-outputs") / "ch4_all-data-with-bins.csv"
@@ -327,6 +332,7 @@ manuscript_out_file
 def get_ch4_primap_regression_data(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
+    data_raw_dir: Path = DATA_RAW_DIR,
     force_rerun: bool = False,
 ) -> pd.DataFrame:
     """
@@ -342,6 +348,12 @@ def get_ch4_primap_regression_data(
 
         Only used if we don't already have a copy of the notebook we need.
 
+    data_raw_dir
+        Raw data directory
+
+        Only used to get the original run's files which aren't on Zenodo
+        (see [local.historical_ghg_forcing_for_cmip7.zenodo_missing][]).
+
     force_rerun
         Re-run the notebook even if its output is already there
 
@@ -355,13 +367,16 @@ def get_ch4_primap_regression_data(
         logger.info(f"Using existing {out_file}")
         return xr.load_dataset(out_file)
 
-    re_run_pc_extension_notebook(bundle_dir, original_run_notebooks_dir)
+    re_run_pc_extension_notebook(
+        bundle_dir, original_run_notebooks_dir, data_raw_dir=data_raw_dir
+    )
     return xr.load_dataset(out_file)
 
 
 def get_ch4_primap_regression_years(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
+    data_raw_dir: Path = DATA_RAW_DIR,
     force_rerun: bool = False,
 ) -> pd.DataFrame:
     """
@@ -376,6 +391,12 @@ def get_ch4_primap_regression_years(
         The original run's `notebooks-executed` directory
 
         Only used if we don't already have a copy of the notebook we need.
+
+    data_raw_dir
+        Raw data directory
+
+        Only used to get the original run's files which aren't on Zenodo
+        (see [local.historical_ghg_forcing_for_cmip7.zenodo_missing][]).
 
     force_rerun
         Re-run the notebook even if its output is already there
@@ -393,7 +414,9 @@ def get_ch4_primap_regression_years(
 
         return res
 
-    re_run_pc_extension_notebook(bundle_dir, original_run_notebooks_dir)
+    re_run_pc_extension_notebook(
+        bundle_dir, original_run_notebooks_dir, data_raw_dir=data_raw_dir
+    )
     with open(out_file) as fh:
         res = json.load(fh)
 
@@ -403,6 +426,7 @@ def get_ch4_primap_regression_years(
 def get_ch4_pc0_optimised_regression_years(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
+    data_raw_dir: Path = DATA_RAW_DIR,
     force_rerun: bool = False,
 ) -> pd.DataFrame:
     """
@@ -417,6 +441,12 @@ def get_ch4_pc0_optimised_regression_years(
         The original run's `notebooks-executed` directory
 
         Only used if we don't already have a copy of the notebook we need.
+
+    data_raw_dir
+        Raw data directory
+
+        Only used to get the original run's files which aren't on Zenodo
+        (see [local.historical_ghg_forcing_for_cmip7.zenodo_missing][]).
 
     force_rerun
         Re-run the notebook even if its output is already there
@@ -434,7 +464,9 @@ def get_ch4_pc0_optimised_regression_years(
 
         return res
 
-    re_run_pc_extension_notebook(bundle_dir, original_run_notebooks_dir)
+    re_run_pc_extension_notebook(
+        bundle_dir, original_run_notebooks_dir, data_raw_dir=data_raw_dir
+    )
     with open(out_file) as fh:
         res = json.load(fh)
 
@@ -444,9 +476,26 @@ def get_ch4_pc0_optimised_regression_years(
 def re_run_pc_extension_notebook(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
+    data_raw_dir: Path = DATA_RAW_DIR,
 ) -> None:
     """
     Re-run the pc extension notebook
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    original_run_notebooks_dir
+        The original run's `notebooks-executed` directory
+
+        Only used if we don't already have a copy of the notebook we need.
+
+    data_raw_dir
+        Raw data directory
+
+        Only used to get the original run's files which aren't on Zenodo
+        (see [local.historical_ghg_forcing_for_cmip7.zenodo_missing][]).
     """
     base_notebook = (
         Path("calculate_ch4_monthly_fifteen_degree_pieces")
@@ -499,17 +548,11 @@ def re_run_pc_extension_notebook(
     # TODO: try and reduce hard-coding here
     for source_file, target_file in (
         (
-            (
-                DATA_RAW_DIR
-                / "historical-ghg-forcing-for-cmip7/zenodo-missing/law-dome_ch4_smoothed_median.csv"  # noqa: E501
-            ),
+            get_ch4_ice_core_file("law-dome", data_raw_dir),
             bundle_dir / "data/interim/law_dome/law-dome_ch4_smoothed_median.csv",
         ),
         (
-            (
-                DATA_RAW_DIR
-                / "historical-ghg-forcing-for-cmip7/zenodo-missing/neem_with_location.csv"  # noqa: E501
-            ),
+            get_ch4_ice_core_file("neem", data_raw_dir),
             bundle_dir / "data/interim/neem/neem_with_location.csv",
         ),
     ):
@@ -567,11 +610,12 @@ pc0_optimised_years_file
 
 
 @manuscript_style
-def generate_ch4_methods_figure(  # noqa: PLR0915
+def generate_ch4_methods_figure(  # noqa: PLR0913, PLR0915
     outfile: Path,
     appendix_outfile: Path,
     bundle_dir: Path,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
+    data_raw_dir: Path = DATA_RAW_DIR,
     force_rerun: bool = False,
 ) -> tuple[Path, Path]:
     """
@@ -590,6 +634,12 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
 
     original_run_notebooks_dir
         The original run's `notebooks-executed` directory
+
+    data_raw_dir
+        Raw data directory
+
+        Only used to get the original run's files which aren't on Zenodo
+        (see [local.historical_ghg_forcing_for_cmip7.zenodo_missing][]).
 
     force_rerun
         Re-generate the figures, even if the output files already exist
@@ -697,6 +747,7 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
     primap_regression_data = get_ch4_primap_regression_data(
         bundle_dir=bundle_dir,
         original_run_notebooks_dir=original_run_notebooks_dir,
+        data_raw_dir=data_raw_dir,
         force_rerun=force_rerun,
     )
     pcs_extended = xr.load_dataset(
@@ -740,24 +791,12 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
     global_mean_extended = xr.load_dataset(
         bundle_dir / "data/interim/ch4/ch4_global-annual-mean_allyears.nc"
     )
-    law_dome_smoothed = pd.read_csv(
-        DATA_RAW_DIR
-        / "historical-ghg-forcing-for-cmip7/zenodo-missing/law-dome_ch4_smoothed_median.csv"  # noqa: E501
-    )
-    law_dome_lat_l = law_dome_smoothed["latitude"].unique()
-    if len(law_dome_lat_l) > 1:
-        raise AssertionError
-    law_dome_lat = law_dome_lat_l[0]
+    law_dome_smoothed = load_ch4_ice_core("law-dome", data_raw_dir)
+    law_dome_lat = get_ice_core_latitude(law_dome_smoothed, "law-dome")
 
-    epica = pd.read_csv(
-        DATA_RAW_DIR
-        / "historical-ghg-forcing-for-cmip7/zenodo-missing/epica_with_location.csv"
-    )
+    epica = load_ch4_ice_core("epica", data_raw_dir)
     epica = epica[epica["year"] < law_dome_smoothed["year"].min()]
-    epica_lat_l = epica["latitude"].unique()
-    if len(epica_lat_l) > 1:
-        raise AssertionError
-    epica_lat = epica_lat_l[0]
+    epica_lat = get_ice_core_latitude(epica, "epica")
 
     plot_global_mean_extension(
         global_mean_extended,
@@ -784,6 +823,7 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
     primap_regression_years_l = get_ch4_primap_regression_years(
         bundle_dir=bundle_dir,
         original_run_notebooks_dir=original_run_notebooks_dir,
+        data_raw_dir=data_raw_dir,
         force_rerun=force_rerun,
     )
     primap_regression_years = np.array(primap_regression_years_l)
@@ -791,6 +831,7 @@ def generate_ch4_methods_figure(  # noqa: PLR0915
     pc0_optimised_years_l = get_ch4_pc0_optimised_regression_years(
         bundle_dir=bundle_dir,
         original_run_notebooks_dir=original_run_notebooks_dir,
+        data_raw_dir=data_raw_dir,
         force_rerun=force_rerun,
     )
     pc0_optimised_years = np.arange(
