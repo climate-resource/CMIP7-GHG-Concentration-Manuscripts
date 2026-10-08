@@ -385,8 +385,13 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           N_2O 0.5%, CH_4 0.6%, CFC-12 19%, SF_6 37%, HFC-134a 74%, HCFC-141b 180%
     - [x] decide whether the sensitivity of fast-growing gases' seasonality to this choice
           belongs in the discussion of limitations
-- [ ] CFC-12 Step 2: the "lat grid bands are 15 degrees" zalue-check at `methods.tex:991` sits next to the 1979-2023 statement.
+- [x] CFC-12 Step 2: the "lat grid bands are 15 degrees" zalue-check at `methods.tex:991` sits next to the 1979-2023 statement.
       It should be a `cfc12-obs-network-start/end` check.
+    - [x] 1979-2023 statement now has real `cfc12-obs-network-start/end` value-checks
+    - [x] "15 degrees" now has value-check `native-grid-lat-band-width`
+          (also checks the bands are uniform and cover the globe).
+          Every other "15\textdegree" mention in the manuscript (all in `methods.tex`, incl. the four figure captions
+          and the Step 2 binning grid, which has the same latitude bands) now has the same tag
 - [ ] CFC-12 Step 4: figure out the Trudinger composite period and add a check (`methods.tex:1064`);
       check the harmonisation decline period (`methods.tex:1069`);
       check pre-industrial sources and pull references from M17 (`methods.tex:1076`);

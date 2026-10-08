@@ -494,6 +494,97 @@ def get_cmip6_feature_size(
     return Q(float(size), get_units(gas, bundle_dir=bundle_dir))
 
 
+def get_native_grid_lat_band_width(*, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the width of the latitudinal bands on our native grid
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Width of each latitudinal band
+
+    Raises
+    ------
+    AssertionError
+        The bands aren't all the same width, or don't cover the globe
+    """
+    # Doesn't matter which gas we get, they're all on the same grid
+    lat = get_output("ch4", bundle_dir=bundle_dir)[0]["lat"].to_numpy()
+    widths = np.unique(np.diff(lat))
+    if widths.size != 1:
+        msg = f"Latitudinal bands aren't all the same width: {widths=}"
+        raise AssertionError(msg)
+
+    width = float(widths[0])
+    if not np.isclose(width * lat.size, 180.0):
+        msg = f"Latitudinal bands don't cover the globe: {lat=}"
+        raise AssertionError(msg)
+
+    return Q(width, "degree")
+
+
+def get_binning_grid_lon_band_width(*, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the width of the longitudinal bands we bin the observations into
+
+    Read from every gas' interpolated observation network,
+    which is on the grid the observations are binned into.
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Width of each longitudinal band
+
+    Raises
+    ------
+    FileNotFoundError
+        No interpolated observation network files were found in `bundle_dir`
+
+    AssertionError
+        The bands aren't all the same width, don't go round the globe
+        or differ between gases
+    """
+    files = sorted(
+        (bundle_dir / "data" / "interim").glob(
+            "*/*_observational-network_interpolated.nc"
+        )
+    )
+    if not files:
+        msg = f"No interpolated observation network files found in {bundle_dir}"
+        raise FileNotFoundError(msg)
+
+    widths = set()
+    for file in files:
+        lon = xr.load_dataarray(file)["lon"].to_numpy()
+        file_widths = np.unique(np.diff(lon))
+        if file_widths.size != 1:
+            msg = f"Longitudinal bands aren't all the same width in {file}: {lon=}"
+            raise AssertionError(msg)
+
+        width = float(file_widths[0])
+        if not np.isclose(width * lon.size, 360.0):
+            msg = f"Longitudinal bands don't go round the globe in {file}: {lon=}"
+            raise AssertionError(msg)
+
+        widths.add(width)
+
+    if len(widths) != 1:
+        msg = f"Longitudinal band widths differ between gases: {widths=}"
+        raise AssertionError(msg)
+
+    return Q(widths.pop(), "degree")
+
+
 @cache
 def get_obs_network_years(gas: str, *, bundle_dir: Path) -> tuple[int, int]:
     """
@@ -1395,6 +1486,16 @@ def get_value_checks(
         "difference between our seasonality and the observed seasonality, "
         "both averaged over the observation network period "
         "(relative to the observed seasonality's magnitude)",
+    )
+    add(
+        "binning-grid-lon-band-width",
+        partial(get_binning_grid_lon_band_width, bundle_dir=bundle_dir),
+        "width of the longitudinal bands we bin the observations into",
+    )
+    add(
+        "native-grid-lat-band-width",
+        partial(get_native_grid_lat_band_width, bundle_dir=bundle_dir),
+        "width of the latitudinal bands on our native grid",
     )
     add(
         "lat-gradient-eofs-area-weighted-mean",

@@ -15,6 +15,7 @@ No dependency on longitude is provided.
 For a brief discussion on how add a vertical dimension to these datasets, see Section~\ref{ssec:methods-vertical}.
 
 For all greenhouse gases, the first dataset
+% value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
 that we generate has monthly temporal resolution and 15\textdegree~latitudinal spatial resolution.
 We refer to this grid as our `native resolution', and therefore to these datasets
 as our `native resolution datasets'.
@@ -42,6 +43,8 @@ be broken down as follows:
          \textbf{Step 2: Bin and interpolate observations}
 
          The raw observations are binned spatially,
+         % value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
+         % value-check: {"tag": "binning-grid-lon-band-width", "unit": "degree", "lower": 60, "upper": 60}
          into a coarse 15\textdegree~latitudinal and 60\textdegree~longitudinal grid,
          and temporally, into monthly bins.
          Then, since the surface observation network does not cover the entire globe,
@@ -365,6 +368,7 @@ When referring to `AGAGE' data, we also mean data from the predecessor GAGE [TOD
 \caption{
     Production of the N_2O datasets (for full details, see Section~\ref{ssec:methods-n2o}).
     a) Raw observation network data.
+    % value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
     b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
     c) Location of each sampling site in the observation networks.
     d) Global-, annual-mean derived from the observation network values.
@@ -471,7 +475,7 @@ Relative seasonality is seasonality divided by the average global-, annual-mean 
 % We use this form because, when we multiply the relative seasonality by the global-, annual-mean
 % (Section~\ref{sssec:methods-n2o-prepare-components}),
 % the average of the resulting seasonality over the observation network period
-% % value-check: {"tag": "n2o-seasonality-reproduces-observed-average", "unit": "dimensionless", "lower": 0.0, "upper": 1e-10}
+% value-check: {"tag": "n2o-seasonality-reproduces-observed-average", "unit": "dimensionless", "lower": 0.0, "upper": 1e-10}
 % is exactly the seasonality calculated from the observations
 % (provided that the global-, annual-mean over this period is the one derived from the observation network).
 % It also gives less weight to years with lower concentrations,
@@ -574,6 +578,7 @@ For CO_2, we use data from the NOAA observation network
 \caption{
     Production of the CO_2 datasets (for full details, see Section~\ref{ssec:methods-co2}).
     a) Raw observation network data.
+    % value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
     b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
     c) Location of each sampling site in the observation networks.
     d) Global-, annual-mean derived from the observation network values.
@@ -761,6 +766,7 @@ For CH_4, we use data from the NOAA [TODO ref] and AGAGE [TODO ref] observation 
 \caption{
     Production of the CH_4 datasets (for full details, see Section~\ref{ssec:methods-ch4}).
     a) Raw observation network data.
+    % value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
     b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
     c) Location of each sampling site in the observation networks.
     d) Global-, annual-mean derived from the observation network values.
@@ -959,6 +965,7 @@ The networks used are:
 \caption{
     Production of the CFC12 datasets (for full details, see Section~\ref{ssec:methods-cfc12-like}).
     a) Raw observation network data.
+    % value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
     b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
     c) Location of each sampling site in the observation networks.
     d) Global-, annual-mean derived from the observation network values.
@@ -985,12 +992,12 @@ For some gases (Table~\ref{tab:cfc12-like-per-gas}), the observation network is 
 that, even with this extrapolation, latitudinal bins near the poles cannot be filled in some months.
 For these gases, we permit even further extension:
 allowing the constant extrapolation to be applied over multiple latitudinal bands
-% ZNTODO: zalue-check that lat grid bands are 15 degrees
+% value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
 (each of which is 15\textdegree~on our native grid)
 rather than the default, which only allows the extension to happen over a single latitudinal band.
 When we take the longest dataset that is continuous for CFC12,
-% ZNTODO zalue-check: {"tag": "cfc12-obs-network-start", "unit": "yr", "upper": 1979, "lower": 1979}
-% ZNTODO zalue-check: {"tag": "cfc12-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
+% value-check: {"tag": "cfc12-obs-network-start", "unit": "yr", "upper": 1979, "lower": 1979}
+% value-check: {"tag": "cfc12-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
 we end up with an interpolated observation network dataset that runs from 1979 to 2023
 (both inclusive, see Table~\ref{tab:cfc12-like-per-gas} for the extents for other gases processed like CFC12).
 
@@ -1283,6 +1290,7 @@ This is clearly imperfect and should be considered for future iterations (Sectio
 \label{ssec:methods-derived-grids}
 
 For each gas, we apply Equation~\ref{eq:native-resolution-sum}
+% value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
 to create a gridded dataset on our 15\textdegree~latitudinal (spatial), monthly (temporal) `native resolution' grid.
 From this native grid output, we then derive four other output products:
 
@@ -1358,6 +1366,7 @@ We provide data at two different frequencies:
 monthly-means (\texttt{frequency} attribute in the directory path, filename and file attributes set to `mon')
 and annual-means (`yr').
 We provide data at three different spatial resolutions:
+% value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
 15\textdegree~latitudinal grid i.e. our native resolution (\texttt{grid\_label} attribute in the directory path, filename and file attributes set to `gnz'),
 hemispheric-means (`gr1z')
 and global-mean (`gm').
@@ -1366,6 +1375,7 @@ and global-mean (`gm').
 % it's hard to predict what they might want repeated rather than being ok with references to other sources.
 We provide the following five combinations of these options:
 \begin{enumerate}
+    % value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
     \item mon-gnz: Our native dataset (monthly-means on our native 15\textdegree~latitudinal grid)
     \item mon-gr1z: Monthly-mean hemispheric-means
     \item mon-gm: Monthly-mean global-mean
