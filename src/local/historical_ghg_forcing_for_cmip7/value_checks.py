@@ -22,6 +22,9 @@ import pint
 import xarray as xr
 
 from local.cmip_ghg_generation import DEFAULT_BUNDLE_DIR
+from local.historical_ghg_forcing_for_cmip7.c4f10_like_methods_figure import (
+    C4F10_LIKE_GASES,
+)
 from local.historical_ghg_forcing_for_cmip7.cfc12_like_methods_figure import (
     CFC12_LIKE_GASES,
     get_cfc12_like_all_data_with_bins,
@@ -1224,6 +1227,185 @@ def is_velders_first_year_zero_except(exception: str, *, bundle_dir: Path) -> bo
     return bool((values.drop(exception) == 0.0).all() and values[exception] > 0.0)
 
 
+DROSTE_SITE_HEMISPHERES = {
+    "cape-grim": -1,
+    "tacolneston": 1,
+}
+"""Hemisphere of each site in Droste et al. (2020) (-1 south, 1 north)
+
+The data identifies the sites by latitude only,
+and the two are in different hemispheres.
+"""
+
+
+def load_droste(*, bundle_dir: Path) -> pd.DataFrame:
+    """
+    Load the Droste et al. (2020) data, as the original run processed it
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Droste et al. (2020) data, for all of [C4F10_LIKE_GASES][]
+    """
+    res = pd.read_csv(
+        bundle_dir / "data" / "interim" / "droste-et-al-2020" / "droste_et_al_2020.csv"
+    )
+    if set(res["gas"]) != set(C4F10_LIKE_GASES):
+        msg = f"Expected data for {C4F10_LIKE_GASES=}, found {set(res['gas'])}"
+        raise AssertionError(msg)
+
+    return res
+
+
+def get_droste_years(*, bundle_dir: Path) -> tuple[int, int]:
+    """
+    Get the first and last year of the Droste et al. (2020) data
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        First and last year
+
+    Raises
+    ------
+    AssertionError
+        The years differ between gases or sites
+    """
+    droste = load_droste(bundle_dir=bundle_dir)
+    years = droste.groupby(["gas", "lat"])["year"].agg(["min", "max"])
+    if len(years.drop_duplicates()) != 1:
+        msg = f"Droste et al. (2020)'s years differ between gases or sites: {years}"
+        raise AssertionError(msg)
+
+    return int(years["min"].iloc[0]), int(years["max"].iloc[0])
+
+
+def get_droste_max_first_year_value(*, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the largest Droste et al. (2020) value in its first year
+
+    Over all gases and both sites.
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Largest value in the first year
+    """
+    droste = load_droste(bundle_dir=bundle_dir)
+    (unit,) = droste["unit"].unique()
+    first_year = get_droste_years(bundle_dir=bundle_dir)[0]
+
+    return Q(float(droste.loc[droste["year"] == first_year, "value"].max()), unit)
+
+
+def get_droste_site_lat(site: str, *, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the latitude of a site in Droste et al. (2020)
+
+    Parameters
+    ----------
+    site
+        Site of interest (a key of [DROSTE_SITE_HEMISPHERES][])
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Latitude of `site`
+
+    Raises
+    ------
+    AssertionError
+        The data doesn't have exactly one latitude in `site`'s hemisphere
+    """
+    lats = load_droste(bundle_dir=bundle_dir)["lat"].unique()
+    (lat,) = (v for v in lats if np.sign(v) == DROSTE_SITE_HEMISPHERES[site])
+
+    return Q(float(lat), "degree")
+
+
+def get_c4f10_like_last_year(*, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the last year of our output for the gases processed like C4F10
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Last year
+
+    Raises
+    ------
+    AssertionError
+        The last year differs between gases
+    """
+    last_years = {
+        int(get_output(gas, bundle_dir=bundle_dir)[1]["year"].max())
+        for gas in C4F10_LIKE_GASES
+    }
+    if len(last_years) != 1:
+        msg = f"Last year differs between gases: {last_years=}"
+        raise AssertionError(msg)
+
+    return Q(last_years.pop(), "yr")
+
+
+def get_c4f10_like_erf(year: int, *, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the approximate ERF of all the gases processed like C4F10 together
+
+    Each gas' ERF is its concentration change since 1750
+    multiplied by its radiative efficiency
+    (see [get_radiative_effect][]).
+
+    Parameters
+    ----------
+    year
+        Year of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Approximate ERF of the gases processed like C4F10 in `year`
+    """
+    res = Q(0.0, "W / m^2")
+    for gas in C4F10_LIKE_GASES:
+        global_annual_mean = get_output(gas, bundle_dir=bundle_dir)[1]
+        change = Q(
+            float(
+                global_annual_mean.sel(year=year) - global_annual_mean.sel(year=1750)
+            ),
+            get_units(gas, bundle_dir=bundle_dir),
+        )
+        res += (change * RADIATIVE_EFFICIENCIES[gas]).to("W / m^2")
+
+    return res
+
+
 def get_input_lat_gradient_weakening(gas: str, *, bundle_dir: Path) -> pint.Quantity:
     """
     Get how fast the latitudinal gradient in the input data is weakening
@@ -1707,6 +1889,35 @@ def get_value_checks(  # noqa: PLR0915
             "ppt",
         ),
         "Velders et al. (2022)'s first-year HFC-143a value",
+    )
+    for i, (tag, description) in enumerate(
+        (("droste-first-year", "first"), ("droste-last-year", "last"))
+    ):
+        add(
+            tag,
+            lambda i=i: Q(get_droste_years(bundle_dir=bundle_dir)[i], "yr"),
+            f"{description} year of the Droste et al. (2020) data",
+        )
+    add(
+        "droste-max-first-year-value",
+        partial(get_droste_max_first_year_value, bundle_dir=bundle_dir),
+        "largest Droste et al. (2020) value in its first year (all gases and sites)",
+    )
+    for site in DROSTE_SITE_HEMISPHERES:
+        add(
+            f"droste-{site}-lat",
+            partial(get_droste_site_lat, site, bundle_dir=bundle_dir),
+            f"latitude of {site} in the Droste et al. (2020) data",
+        )
+    add(
+        "c4f10-like-last-year",
+        partial(get_c4f10_like_last_year, bundle_dir=bundle_dir),
+        "last year of our output for the gases processed like C4F10",
+    )
+    add(
+        "c4f10-like-erf-2022",
+        partial(get_c4f10_like_erf, 2022, bundle_dir=bundle_dir),
+        "approx. ERF of the gases processed like C4F10 in 2022",
     )
     add(
         "trudinger-harmonisation-transition-years",

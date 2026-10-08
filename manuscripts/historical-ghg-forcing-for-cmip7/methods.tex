@@ -259,6 +259,8 @@ while the specifics for each greenhouse gas are described in the following secti
                 We don't perform PCA.
                 Instead, we assume that the (area-weighted) latitudinal gradient is linear,
                 then calculate the PC and the global-, annual-mean based on the data from [TODO Droste et al].
+                % value-check: {"tag": "droste-last-year", "unit": "yr", "lower": 2018, "upper": 2018}
+                % value-check: {"tag": "c4f10-like-last-year", "unit": "yr", "lower": 2022, "upper": 2022}
                 Both are linearly extrapolated from the end of the [TODO Droste et al] data (2018) to 2022.
                 We assume that seasonality is zero.
             }
@@ -1199,10 +1201,10 @@ For these species, there is no significant observation network to use.
 Instead, we use the data provided in [TODO cite Droste et al].
 % \cite{acp-20-4787-2020}.
 This provides observations of these gases at two observational sites:
-% ZNTODO: add check
-Cape Grim: Tasmania, Australia, 41\degree S, 145\degree E, and
-Tacolneston: Norfolk, UK, 52\degree N, 1\degree E
-(Figure~\ref{fig:methods-c4f10},
+% value-check: {"tag": "droste-cape-grim-lat", "unit": "degree", "lower": -40.75, "upper": -40.65}
+Cape Grim (40.7\degree S) and
+% value-check: {"tag": "droste-tacolneston-lat", "unit": "degree", "lower": 52.45, "upper": 52.55}
+Tacolneston (52.5\degree N) (Figure~\ref{fig:methods-c4f10},
 see Appendix~\ref{app:methods-figures-c4f10-like} for similar figures for all other gases processed like C_4F_10).
 %  Taiwan: Cape Fuguei, 25\degree N, 122\degree E , and Hengchun, 22\degree N, 121\degree E
 \begin{figure}[t]
@@ -1240,11 +1242,12 @@ the EOF (and therefore the latitudinal gradient) does not appear linear if the d
 We then set the PCs such that change in value between the
 Cape Grim and Tacolneston observations in each year
 is matched by our latitudinal gradient (i.e. the product of the EOF and the PC, Figure~\ref{fig:methods-c4f10}c)).
-% ZNTODO: add check of last year of Droste data
+% value-check: {"tag": "droste-last-year", "unit": "yr", "lower": 2018, "upper": 2018}
+% value-check: {"tag": "c4f10-like-last-year", "unit": "yr", "lower": 2022, "upper": 2022}
 As the [TODO cite Droste] data only extends to 2018,
 we use a basic linear extrapolation to extend the PCs to 2022.
-% ZNTODO: calculate number, use in here and add check here
-This is very simple, but given that these gases account for [TODO absolute and \% of total ERF],
+% value-check: {"tag": "c4f10-like-erf-2022", "unit": "W/m^2", "lower": 0.0, "upper": 0.001}
+This is very simple, but given that these gases together account for less than 0.001~W/m^2,
 the sensitivity of climate simulations to this choice is negligible.
 
 \textbf{Global-, annual-mean.}
@@ -1252,7 +1255,8 @@ We calculate the global-, annual-mean such that the values in the
 Cape Grim and Tacolneston latitudinal boxes are matched
 when the global-, annual-mean is combined with the latitudinal gradient we just derived
 (Figure~\ref{fig:methods-c4f10}d)).
-% ZNTODO: add check of last year of Droste data
+% value-check: {"tag": "droste-last-year", "unit": "yr", "lower": 2018, "upper": 2018}
+% value-check: {"tag": "c4f10-like-last-year", "unit": "yr", "lower": 2022, "upper": 2022}
 As the [TODO cite Droste] data only extends to 2018,
 we also use a basic linear extrapolation to extend the global-, annual-mean to 2022.
 As above, this is very simple, but acceptable given the small climate impact of these gases.
@@ -1266,18 +1270,20 @@ As noted previously, seasonality is assumed to be zero for gases processed like 
 \textbf{Latitudinal gradient.}
 We extend the PC value (as we retain only one) back in time by
 assuming that the PC value is constant at zero
-% ZNTODO: add check of first year of Droste data
-before the first year of [TODO cite Droste] data [TODO Droste first year].
-We make this assumption based on the fact that the [TODO Droste data]
-% ZNTODO: add check of this
-is zero before this year, hence the latitudinal gradient must also be zero
+% value-check: {"tag": "droste-first-year", "unit": "yr", "lower": 1934, "upper": 1934}
+before the first year of [TODO cite Droste] data (1934).
+We make this assumption based on the fact that the [TODO cite Droste] data
+% value-check: {"tag": "droste-max-first-year-value", "unit": "ppt", "lower": 0.0, "upper": 1e-5}
+is less than $10^{-5}$~ppt at both sites in this first year,
+hence the latitudinal gradient must also be effectively zero before this year
 because negative concentrations are not possible (Figure~\ref{fig:methods-c4f10}f)).
 
 \textbf{Global-, annual-mean.}
 In line with the [TODO cite Droste] data,
-% ZNTODO: add check of first year of Droste data
-% ZNTODO: add check that Droste data is always zero in its first year
-we assume that concentrations remain at zero before the first year of data provided in [TODO cite Droste], [TODO first Droste year]
+% value-check: {"tag": "droste-max-first-year-value", "unit": "ppt", "lower": 0.0, "upper": 1e-5}
+% value-check: {"tag": "droste-first-year", "unit": "yr", "lower": 1934, "upper": 1934}
+which is approximately zero in its first year,
+we assume that concentrations are zero before the first year of data provided in [TODO cite Droste], 1934
 (Figure~\ref{fig:methods-c4f10}e)).
 
 % Doesn't apply: seasonality is assumed to be zero (Step 3), so there is nothing to extend.

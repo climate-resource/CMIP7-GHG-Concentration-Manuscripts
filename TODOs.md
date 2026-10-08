@@ -425,9 +425,20 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           Added prose before the list (from the draft comment) explaining the two and that these are the labels;
           it doesn't repeat the gas names, so no value-check needed
 - [ ] CO_2/CH_4 Step 1: check in-situ vs flask, and the implications for assuming the same scales (`methods.tex:505,730`).
-- [ ] C_4F_10-like: add checks for the Droste first/last years and that Droste is zero in its first year
+- [x] C_4F_10-like: add checks for the Droste first/last years and that Droste is zero in its first year
       (`methods.tex:1193,1205,1221-1233`); fill in "[TODO Droste first year]";
       calculate the ERF share of these gases (`methods.tex:1196-1197`); check the site coordinates (`methods.tex:1161`).
+    - [x] Droste covers 1934-2018 for all five gases at both sites; output runs to 2022.
+          "[TODO Droste first year]" filled in (1934). Value-checks `droste-first-year`, `droste-last-year`, `c4f10-like-last-year`
+          (also on the general approach's "(2018) to 2022")
+    - [x] Droste isn't exactly zero in 1934, but effectively zero (at most 4.8e-6 ppt; the original run requires < 1e-5).
+          Text now says "effectively zero (less than 1e-5 ppt)". Value-check `droste-max-first-year-value`
+    - [x] ERF: these gases together are 8.8e-4 W/m^2 in 2022 (from our concentrations: change since 1750 x AR6 radiative efficiency).
+          Text says "less than 0.001 W/m^2". Value-check `c4f10-like-erf-2022`.
+          No share of total ERF: we'd need an external total, and we decided to stick to estimates from our own values
+    - [x] site latitudes from the data: Cape Grim -40.6833, Tacolneston 52.5127.
+          Text had 41S, 52N (52.5 rounds to 53), now 40.7S, 52.5N with value-checks.
+          Longitudes (145E, 1E) aren't in the processed data (from the Droste paper, comment in the tex), so unchecked
 - [ ] CO_2 Step 4: check the 1850 value for the seasonality change PC extension (`methods.tex:183`).
 - [ ] CFC-12-like/C_4F_10-like Step 5: consider a check that the negative-value reduction only removes rounding errors (`methods.tex:229,261`).
 - [ ] Equivalent species (`methods.tex:1296-1331`): "it not all" should be "if not all";
