@@ -485,13 +485,17 @@ CH4_ICE_CORE_SUPPLEMENT_FILE = (
 Ignored by git, because we can always download it again.
 """
 
-# TODO: check
 CH4_ICE_CORE_SUPPLEMENT_SITES = {
     # Column prefix: (label, latitude, marker)
-    # The new record the paper presents
-    "Summit": ("Summit", 72.58, "D"),
+    # The new record the paper presents: Summit Core A (SCA),
+    # drilled from the South Peak summit of Nevado Huascarán, Peru
+    # (9.122S, 77.605W, 6768 m above sea level, from the paper's abstract).
+    # It is a tropical, high-altitude site, not Summit, Greenland.
+    "Summit": ("Huascarán", -9.122, "D"),
+    # https://nsidc.org/data/nsidc-0493/versions/1
     "WAIS": ("WAIS Divide", -79.47, "v"),
-    "GISP2": ("GISP2", 72.60, "^"),
+    # https://catalog.data.gov/dataset/noaa-wds-paleoclimatology-gisp2-ice-core-112kyr-methane-concentration-data
+    "GISP2": ("GISP2", 72.58, "^"),
     # Same site and latitude as the Law Dome data we build our record from
     "LawDome": ("Law Dome", -66.73, "s"),
     # Same site and latitude as the NEEM data we optimise our record against
@@ -500,7 +504,9 @@ CH4_ICE_CORE_SUPPLEMENT_SITES = {
 }
 """The sites in the CH4 ice core supplementary data
 
-The spreadsheet has no locations in it, so they are written out here.
+The spreadsheet has no locations in it, so they are written out here
+(checked 2026-10-09: the paper for its own record, the linked pages for WAIS Divide and GISP2,
+our own input data for Law Dome and NEEM and [MAUNA_LOA_LATITUDE][] for Mauna Loa).
 Each site gets its own marker, because colour is taken by latitude.
 """
 
@@ -560,9 +566,9 @@ def get_ch4_ice_core_comparisons(
     sites: tuple[str, ...] | None = None,
 ) -> tuple[ComparisonTimeseries, ...]:
     """
-    Get the CH4 records from the supplementary data of the Summit ice core paper
+    Get the CH4 records from the supplementary data of the Huascarán ice core paper
 
-    https://www.nature.com/articles/s41586-026-10938-1
+    Lamantia et al. (2026), https://www.nature.com/articles/s41586-026-10938-1
 
     Parameters
     ----------

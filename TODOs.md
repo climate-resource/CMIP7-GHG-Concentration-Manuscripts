@@ -516,8 +516,8 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       the HFC-134a-eq lat. gradient (`results.tex:350`), the radiative efficiency source (`results.tex:25`).
 - [ ] CH_4: update the IGCC comparison to treat the non-NOAA period properly (`results.tex:115`);
       UCI: check what the UCI timeseries is exactly (spatial region, averaging; it's probably not a global-mean)
-      and make sure it's described correctly, its latitude bounds and where the data was retrieved from (`results.tex:122-126`);
-      "Summit" ice core outlier: what is it, and does the paper explain it (`results.tex:139-141`, `comparison_data.py:486`).
+      and make sure it's described correctly, its latitude bounds and where the data was retrieved from (`results.tex:122-126`).
+      ("Summit" ice core outlier: done, see Section 7.)
 - [ ] Check "IGCC is also based on NOAA data" (`results.tex:60,120,188`) and "the same source is used by IGCC" (`results.tex:244`).
 - [ ] Check IGCC citations and processing (`results.tex:388`, `src/local/historical_ghg_forcing_for_cmip7/comparison_data.py:826`).
 - [ ] Define AR6 once and cite it (`results.tex:301,357`); check "IGCC uses Hodnebrog" (`results.tex:302,358`).
@@ -619,10 +619,17 @@ Wired in (2026-10-08; build has no undefined citations):
 
 Still to do:
 
-- [ ] BUG: "Summit" in the CH_4 ice-core supplement is Huascarán Summit Core A (9.122S, 6768 m; Lamantia et al., 2026),
-      not Summit, Greenland. `CH4_ICE_CORE_SUPPLEMENT_SITES` in `comparison_data.py` puts it at 72.58N,
-      so the CH_4 results figure plots it at the wrong latitude
-      and the "outlier ... at a similar latitude" text in `results.tex` (CH_4 section) is wrong. Fix the code and the text.
+- [x] BUG: "Summit" in the CH_4 ice-core supplement is Huascarán Summit Core A (9.122S, 77.605W, 6768 m; Lamantia et al., 2026),
+      not Summit, Greenland. `CH4_ICE_CORE_SUPPLEMENT_SITES` in `comparison_data.py` put it at 72.58N.
+      Done (2026-10-09): the site is now at 9.122S and labelled "Huascarán" (the latitude is from the paper's abstract,
+      it is not in the data), the CH_4 results figure is redrawn
+      and the `results.tex` text now says it is a tropical record which, before 1750, sits above our dataset
+      and the polar ice cores, with the paper's interpretation (higher equatorial emissions)
+      and why our dataset can't reproduce it (gradient constrained only by Law Dome and NEEM).
+      We decided not to quantify the difference from our dataset (no value-check).
+      The other sites' latitudes were checked too: WAIS Divide 79.47S (https://nsidc.org/data/nsidc-0493/versions/1),
+      GISP2 72.58N (https://catalog.data.gov/dataset/noaa-wds-paleoclimatology-gisp2-ice-core-112kyr-methane-concentration-data;
+      the code had 72.60), Law Dome 66.73S and NEEM 77.45N (match our input data), Mauna Loa 19.54N (`MAUNA_LOA_LATITUDE`).
 - [ ] `results.tex` CH_4 section: the UCI sentences still have two `[TODO check ...]`
       (what the UCI timeseries represents exactly; whether the sentence on its latitude range is right).
 - [ ] `introduction.tex`: ZN to review the Durack et al. (2025) sentence and choose the other CMIP7 forcing papers
@@ -684,7 +691,8 @@ Still to do:
 
 Manuscript-relevant:
 
-- [ ] `historical_ghg_forcing_for_cmip7/comparison_data.py:486`: check the CH_4 ice-core supplement site metadata (Summit etc.).
+- [x] `historical_ghg_forcing_for_cmip7/comparison_data.py:486`: check the CH_4 ice-core supplement site metadata (Summit etc.).
+      Done, see the Summit/Huascarán item in Section 7.
 - [ ] `historical_ghg_forcing_for_cmip7/comparison_data.py:826`: check the IGCC processing (release v6.4.0).
 - [ ] `historical_ghg_forcing_for_cmip7/equivalent_species.py:77`: use pint for unit handling
       (relevant to the radiative efficiency "halving" worry).

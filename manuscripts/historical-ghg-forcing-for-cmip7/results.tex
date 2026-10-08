@@ -141,9 +141,16 @@ The output dataset is also in line with the ice core data compiled by \citet{lam
 \citep[which also includes the records of][]{mitchell_ch4-constraints_2013,rubino_law-dome-records_2019,rhodes_neem-ch4_2013}.
 The difference between our global-, annual-mean and the ice core data makes sense
 given methane's strong latitudinal gradient.
-The outlier here is data taken from the Summit [TODO check what this is] sampling site before 1750,
-which reports much higher concentrations than our dataset or the other ice core sites at a similar latitude.
-[TODO see if the underlying paper has any explanation for this]
+The exception is the new record presented by \citet{lamantia_tropical-ch4_2026},
+% Ice core latitude and altitude checked with the paper, can't be checked against data
+which comes from an ice core drilled at the summit of Nevado Huascar\'an, Peru (9\textdegree S, 6768~m above sea level).
+Before 1750, this tropical record reports higher concentrations than our dataset and than the polar ice cores,
+which \citet{lamantia_tropical-ch4_2026} interpret as evidence that
+equatorial CH_4 emissions were higher than estimates based on polar ice cores alone suggest.
+Inclusion of this dataset in our processing would likely alter our latitudinal gradients significantly
+in the period covered only by ice cores
+(currently we only use polar ice cores to determine the latitudinal gradient in this period,
+so have no source which suggests an equitorial maximum (Section~\ref{ssec:methods-ch4})).
 
 The dataset has changed relatively little from the CMIP6 dataset.
 % value-check: {"tag": "ch4-diff-from-cmip6-all", "unit": "ppb", "upper": 30, "lower": 10}
