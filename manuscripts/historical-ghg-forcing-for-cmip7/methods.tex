@@ -37,6 +37,14 @@ be broken down as follows:
         including making subjective choices such as which measurements are appropriate to include in such an aggregation,
         how to weight measurements and how to treat raw measurements taken at different points within each month.
         This is different to \citet{meinshausen_historical_2017}, which used the raw data directly and performed their own aggregation.
+
+        We use the observations on the calibration scales on which they are reported,
+        i.e. we do not convert between the calibration scales of different observation networks.
+        Time pressure meant that we did not explore the differences between calibration scales in depth.
+        This is a limitation, but the differences are acceptable for the purposes of this dataset
+        (as in \citet{meinshausen_historical_2017},
+        see their Section~6.4, Section~\ref{sec:output-dataset-requirements}
+        and discussion in Section~\ref{sec:discussion}).
     }
 
      \item {
@@ -364,6 +372,10 @@ Here we give the exact data sources used and the N_2O-specific details of each s
 
 For N_2O, we use both the NOAA HATS [TODO ref] and AGAGE [TODO ref] networks (Figure~\ref{fig:methods-n2o}).
 When referring to `AGAGE' data, we also mean data from the predecessor GAGE [TODO ref] and ALE [TODO ref] networks.
+% Calibration scales: we don't convert between the networks' scales (general approach, Step 1).
+% For N2O, this is not needed: following \citet{meinshausen_historical_2017} (Section~2),
+% the AGAGE (SIO1998) and NOAA (NOAA-2006) scales are compatible
+% without the need for a conversion factor (they cite WMO, 2012).
 
 \begin{figure}[tp]
 \includegraphics[width=12cm]{@n2o-methods-figure@}
@@ -571,9 +583,11 @@ and make use of the merged Law Dome - Mauna Loa record when extending back in ti
 \subsubsection{Step 1: Collect observations}
 \label{sssec:methods-co2-collect-observations}
 
-For CO_2, we use data from the NOAA observation network
-[ZNTODO check whether in-situ and flask or just one, and what this means in terms of assuming scales are the same etc.]
+For CO_2, we use surface flask and in-situ data from the NOAA observation network
 (Figure~\ref{fig:methods-co2}).
+% Calibration scales: following \citet{meinshausen_historical_2017} (Section~2),
+% all our CO2 data is from NOAA, so no scale conversion is needed.
+% We think this holds for NOAA's flask vs. in-situ data too, but haven't checked carefully (see TODOs.md).
 
 \begin{figure}[tp]
 \includegraphics[width=12cm]{@co2-methods-figure@}
@@ -759,9 +773,11 @@ This difference allows us to make use of ice core observations in both hemispher
 \subsubsection{Step 1: Collect observations}
 \label{sssec:methods-ch4-collect-observations}
 
-For CH_4, we use data from the NOAA [TODO ref] and AGAGE [TODO ref] observation networks
-[TODO check whether in-situ and flask or just one, and what this means in terms of assuming scales are the same etc.]
-(Figure~\ref{fig:methods-ch4}).
+For CH_4, we use NOAA's surface flask and in-situ data
+and the AGAGE network's data, including the predecessor GAGE [TODO ref] and ALE [TODO ref] networks (Figure~\ref{fig:methods-ch4})
+% Calibration scales: unlike \citet{meinshausen_historical_2017}, we don't convert the AGAGE data to the NOAA scale.
+% \citet{meinshausen_historical_2017} (Section~2) converted AGAGE CH4 (Tohoku University scale)
+% to the NOAA scale (NOAA04) by multiplying by 1.0003, so the difference is negligible.
 
 \begin{figure}[tp]
 \includegraphics[width=12cm]{@ch4-methods-figure@}
@@ -948,7 +964,14 @@ see Appendix~\ref{app:methods-figures-cfc12-like} for similar figures for all ot
 For other gases processed like CFC12, we use different data sources based on data availability.
 In all cases, we use the data from the observation network(s) as reported,
 i.e. we do not convert between the networks' calibration scales
-[TODO note this in discussion].
+(see Section~\ref{ssec:methods-general-approach}).
+% Direct quote from \citet{meinshausen_historical_2017} (Section~2):
+% "For halocarbons, the difference in calibration scales has been estimated as small,
+% but not negligible, i.e. within 2.5 %, often within 1 % (Rhoderick et al., 2015)."
+% The other scale conversion factors \citet{meinshausen_historical_2017} mentions are between 0.99 and 1.2
+% (HFC-125, HFC-227ea, HFC-236fa, HFC-245fa, HFC-365mfc, HFC-43-10mee and CH2Cl2, from WMO, 2012),
+% used to put older data products onto the current SIO14 scale.
+% Not converting between scales here makes negligible difference to the output.
 For NOAA, there are two kinds of data.
 Where it is available (as it is for CFC12), we use NOAA's combined HATS product
 [TODO cite NOAA HATS combined products],

@@ -424,7 +424,16 @@ The build supports appendices (see Infrastructure), and most of the figures alre
     - [x] the generated list already labels them `NOAA HATS combined` (CCl_4, CFC-11, CFC-113, CFC12, SF_6) and `NOAA HATS flask`.
           Added prose before the list (from the draft comment) explaining the two and that these are the labels;
           it doesn't repeat the gas names, so no value-check needed
-- [ ] CO_2/CH_4 Step 1: check in-situ vs flask, and the implications for assuming the same scales (`methods.tex:505,730`).
+- [x] CO_2/CH_4 Step 1: check in-situ vs flask, and the implications for assuming the same scales (`methods.tex:505,730`).
+    - [x] the original run uses NOAA surface flask and in-situ data for CO_2;
+          NOAA surface flask and in-situ, AGAGE GC-MD, GAGE and ALE for CH_4. It applies no scale conversions
+          (unlike M17's x1.0003 for AGAGE CH_4). The visible `[ZNTODO ...]`/`[TODO ...]` notes are replaced by what's used
+    - [x] M17-based notes on scales added as comments in each gas' Step 1
+          (N_2O compatible; CO_2 all NOAA; CH_4 x1.0003; halocarbons quote from M17, other factors 0.99-1.2)
+    - [x] general approach, Step 1: not converting / not exploring scales is a limitation, but fine for our purposes (cites M17 Sect. 6.4)
+    - [x] discussion: new "fifth" limitation paragraph on calibration scales
+- [ ] CO_2 Step 1: check more carefully that NOAA's CO_2 surface flask and in-situ data are on the same calibration scale
+      (we think so, see the comment in CO_2 Step 1).
 - [x] C_4F_10-like: add checks for the Droste first/last years and that Droste is zero in its first year
       (`methods.tex:1193,1205,1221-1233`); fill in "[TODO Droste first year]";
       calculate the ERF share of these gases (`methods.tex:1196-1197`); check the site coordinates (`methods.tex:1161`).
@@ -536,7 +545,8 @@ Already in `references/references.bib`, just need wiring in:
 
 Need adding to the bib:
 
-- [ ] NOAA HATS N_2O, GAGE, ALE (`methods.tex:308-309`)
+- [ ] NOAA HATS N_2O, GAGE, ALE (`methods.tex:308-309`; GAGE and ALE also in CH_4 Step 1)
+- [ ] WMO 2012 (N_2O calibration scales, `discussion.tex`; via M17)
 - [ ] scipy, numpy (`methods.tex:58,381`)
 - [ ] Menking et al. 2025 (many places in `methods.tex` and `results.tex`)
 - [ ] Law Dome - Mauna Loa merged record (`methods.tex:180,623-651`, `results.tex:79`)
