@@ -514,6 +514,11 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       with new tags `{gas}-diff-from-igcc-noaa-era` and `{gas}-noaa-global-mean-start`.
       N_2O's comment moved to `n2o-diff-from-igcc-noaa-era` so it checks the same thing as before
       (its full-overlap max is 1.67 ppb, in 1881, so "A similar difference" needs fixing with the missing checks below).
+      Pre-1979 text now says IGCC uses the AR6 timeseries there (new bib entry `IPCC_AR6-WG1-Annex-III_2021`; AR6 now defined here,
+      the CFC-12-eq paragraph just says "AR6"). Checked against the numbers too: IGCC v6.4.0's CO_2 is exactly
+      AR6 * 1.00079 - 0.142 ppm (X2007 to X2019) for 1750-1978 and exactly NOAA's `co2_annmean_gl.txt` for 1979-2025.
+      AR6's CO_2 before 1980 is CMIP6 plus an offset tapering linearly from 1.18 ppm (1850) to zero (1980),
+      so the text now also says it is the CMIP6 dataset adjusted to match AR6's assessed 1850 value.
 - [ ] Go through all value-checks (`results.tex:41`) and fix the disabled ones:
       `co2-monthly-diff-from-maunoa-loa` (the difference is bigger than stated, `results.tex:49-50`),
       the 1940 dip / 1970 spike checks (`results.tex:80,82`), `cfc12-monthly-diff-from-noaa/agage` (`results.tex:237-238`),
