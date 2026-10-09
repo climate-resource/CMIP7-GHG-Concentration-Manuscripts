@@ -100,6 +100,9 @@ done
 # These are inlined into the methods in place of their tags.
 cfc12_like_obs_network_sources_list_file="${repo_root}/tables/historical-ghg-forcing-for-cmip7/cfc12_like_obs_network_sources.tex"
 cfc12_like_per_gas_table_file="${repo_root}/tables/historical-ghg-forcing-for-cmip7/cfc12_like_per_gas.tex"
+# The references of every gas' input data.
+# These tables are inlined into the appendices in place of their tag.
+input_data_references_tables_file="${repo_root}/tables/historical-ghg-forcing-for-cmip7/input_data_references.tex"
 
 # methods_subfile="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/methods-detail.tex"
 results_file="${repo_root}/manuscripts/historical-ghg-forcing-for-cmip7/results.tex"
@@ -193,6 +196,7 @@ uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-input
     --c8f18-methods-figure-file "${c8f18_methods_figure_file}" \
     --cfc12-like-obs-network-sources-list-file "${cfc12_like_obs_network_sources_list_file}" \
     --cfc12-like-per-gas-table-file "${cfc12_like_per_gas_table_file}" \
+    --input-data-references-tables-file "${input_data_references_tables_file}" \
     ${cfc12_like_args[@]+"${cfc12_like_args[@]}"} \
     ${c4f10_like_args[@]+"${c4f10_like_args[@]}"} \
     ${results_args[@]+"${results_args[@]}"} \

@@ -133,6 +133,10 @@
 
 %% Since the Copernicus LaTeX package includes the BibTeX style file copernicus.bst,
 %% authors experienced with BibTeX only have to include the following two lines:
+%% Note: copernicus.cls loads natbib with sorting and compression of citations turned off
+%% (`\def\NAT@sort{0}\def\NAT@cmprs{0}`), so the references in a multi-key citation
+%% appear in the order the keys are given, e.g. "Thompson et al. (2013, 2014a, c, b)"
+%% if the keys aren't in the order of the reference list.
 \bibliographystyle{copernicus}
 \bibliography{example.bib}
 %%

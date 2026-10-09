@@ -23,6 +23,7 @@ from local.historical_ghg_forcing_for_cmip7 import (
     generate_cfc12_like_per_gas_table,
     generate_ch4_methods_figure,
     generate_co2_methods_figure,
+    generate_input_data_references_tables,
     generate_n2o_methods_figure,
     generate_results_figure_for_gas,
     get_figure_tags_in_text,
@@ -155,6 +156,17 @@ def main(  # noqa: PLR0913
             help=(
                 "Path in which to write the table of per-gas inputs and choices "
                 "for the gases processed like CFC-12."
+            ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
+    input_data_references_tables_file: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Path in which to write the tables "
+                "which list the references of each gas' input data."
             ),
             dir_okay=False,
             file_okay=True,
@@ -409,6 +421,14 @@ def main(  # noqa: PLR0913
         force_rerun=force_rerun,
     )
     inline["@cfc12-like-per-gas-table@"] = cfc12_like_per_gas_table_file
+
+    # The references of every gas' input data, for the appendices.
+    generate_input_data_references_tables(
+        input_data_references_tables_file,
+        bundle_dir=bundle_dir,
+        force_rerun=force_rerun,
+    )
+    inline["@input-data-references-tables@"] = input_data_references_tables_file
 
     # The figures of each group of gases which share a figure layout,
     # for the appendices.

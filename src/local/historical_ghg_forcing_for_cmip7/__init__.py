@@ -18,6 +18,7 @@ from .cfc12_like_tables import (
 )
 from .ch4_methods_figure import generate_ch4_methods_figure
 from .co2_methods_figure import generate_co2_methods_figure
+from .input_data_references_tables import generate_input_data_references_tables
 from .n2o_methods_figure import generate_n2o_methods_figure
 from .results_figure import generate_results_figure_for_gas
 
@@ -32,6 +33,7 @@ __all__ = [
     "generate_cfc12_like_per_gas_table",
     "generate_ch4_methods_figure",
     "generate_co2_methods_figure",
+    "generate_input_data_references_tables",
     "generate_n2o_methods_figure",
     "generate_results_figure_for_gas",
     "get_figure_tags_in_text",
