@@ -143,6 +143,10 @@ tex_inputs_manifest_file="${build_dir}/tex-inputs.json"
 # The latex of the groups of appendix figures (e.g. all the CFC-12-like gases' figures).
 # Written by the input generation, inlined by the compilation (like the tables).
 appendix_figures_dir="${build_dir}/appendix-figures"
+# The author contributions statement.
+# Written by the input generation from the authors' contributions in the metadata file,
+# inlined by the compilation into the author contributions in place of its tag.
+author_contributions_file="${build_dir}/author-contributions.tex"
 
 output_pdf_dir="${repo_root}/compiled-manuscripts"
 output_pdf="${output_pdf_dir}/historical-ghg-forcing-for-cmip7.pdf"
@@ -197,6 +201,8 @@ uv run python "${script_dir}/historical-ghg-forcing-for-cmip7/generate-tex-input
     --cfc12-like-obs-network-sources-list-file "${cfc12_like_obs_network_sources_list_file}" \
     --cfc12-like-per-gas-table-file "${cfc12_like_per_gas_table_file}" \
     --input-data-references-tables-file "${input_data_references_tables_file}" \
+    --metadata-file "${latex_metadata_file}" \
+    --author-contributions-file "${author_contributions_file}" \
     ${cfc12_like_args[@]+"${cfc12_like_args[@]}"} \
     ${c4f10_like_args[@]+"${c4f10_like_args[@]}"} \
     ${results_args[@]+"${results_args[@]}"} \

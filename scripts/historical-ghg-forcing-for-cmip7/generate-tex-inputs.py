@@ -16,6 +16,7 @@ from local.historical_ghg_forcing_for_cmip7 import (
     C4F10_LIKE_GASES,
     CFC12_LIKE_GASES,
     generate_appendix_figures,
+    generate_author_contributions,
     generate_c4f10_like_methods_figure,
     generate_c8f18_methods_figure,
     generate_cfc12_like_methods_figure,
@@ -168,6 +169,26 @@ def main(  # noqa: PLR0913
                 "Path in which to write the tables "
                 "which list the references of each gas' input data."
             ),
+            dir_okay=False,
+            file_okay=True,
+        ),
+    ],
+    metadata_file: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Path to the manuscript's metadata file, "
+                "which holds the authors and their contributions."
+            ),
+            dir_okay=False,
+            file_okay=True,
+            exists=True,
+        ),
+    ],
+    author_contributions_file: Annotated[
+        Path,
+        typer.Option(
+            help="Path in which to write the author contributions statement.",
             dir_okay=False,
             file_okay=True,
         ),
@@ -429,6 +450,11 @@ def main(  # noqa: PLR0913
         force_rerun=force_rerun,
     )
     inline["@input-data-references-tables@"] = input_data_references_tables_file
+
+    # The author contributions statement, from the authors' contributions.
+    inline["@author-contributions@"] = generate_author_contributions(
+        author_contributions_file, metadata_file=metadata_file
+    )
 
     # The figures of each group of gases which share a figure layout,
     # for the appendices.

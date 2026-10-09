@@ -576,9 +576,20 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 - [ ] Conclusion: user guide link (`conclusion.tex:3-4`); fill the maximum-difference numbers and years (`conclusion.tex:15-18`);
       QUICCA full name / C3S paragraph if confirmed (`conclusion.tex:28-31`).
 - [ ] Author contribution is a placeholder (`author-contribution.tex`); maybe auto-generate from `metadata.toml`.
+    - [x] auto-generation (2026-10-09): each author in `metadata.toml` has `contributions` (a list of tags)
+          and `contributions_initials`. `src/local/historical_ghg_forcing_for_cmip7/author_contributions.py`
+          maps each contribution to its authors and writes one sentence per contribution
+          ("<initials> <contribution text>.", "All authors ..." when everyone made it), in the order of its `CONTRIBUTIONS`,
+          which is also where the tags and their text are hard-coded.
+          `generate-tex-inputs.py` (`--metadata-file`, `--author-contributions-file`) writes it to the build directory
+          and it is inlined at `@author-contributions@` in `author-contribution.tex`.
+          An unknown tag, a missing entry or duplicate initials fails the build.
+    - [ ] the contributions in `metadata.toml` are placeholders (ZN: lead roles; MM: conceptualisation support, funding;
+          everyone: review and editing). Fill in every author's properly, adding tags to `CONTRIBUTIONS` as needed.
 - [ ] Acknowledgements: the funding text is in (CMIP IPO/ESA, ESA CCI contract).
-      Still to add: the rest of the planning list in section 10 (data collectors, CMIP organisers, Forcings TT panel).
-- [ ] Competing interests: add a statement about the funding being sought (`competing-interests.tex:1`).
+      Still to write: the rest of the planning list in section 10 (data collectors, CMIP organisers, Forcings TT panel).
+      Each has a `[TODO ...]` placeholder in `acknowledgements.tex`.
+- [x] Competing interests: add a statement about the funding being sought (`competing-interests.tex:1`).
 - [ ] Results intro: user guide citation (standalone Zenodo doc to start, `results.tex:16`).
 
 ## 7. Citations
