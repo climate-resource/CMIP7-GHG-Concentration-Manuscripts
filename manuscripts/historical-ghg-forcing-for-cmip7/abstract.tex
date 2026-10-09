@@ -3,21 +3,55 @@ Here we present the greenhouse gas concentration boundary conditions, i.e. forci
 to be used for the pre-industrial control (piControl) and historical experiments
 in the seventh phase of the Coupled Model Intercomparison Project (CMIP7).
 We show that, despite the use of updated input data sources, changes between the previous phase's forcings (CMIP6) and CMIP7 forcings are small:
-% ZNTODO: get these numbers and checks out of results.tex
-CO_2 has a maximum deviation of [TODO X], with the maximum deviation since the beginning of ground-based observations in [TODO Y] being limited to [TODO X];
-CH_4 has a maximum deviation of [TODO X], [TODO X] since [TODO Y];
-N_2O has a maximum deviation of [TODO X], [TODO X] since [TODO Y]
-and CFC12 [TODO check nomenclature] has a maximum deviation of [TODO X], since [TODO Y].
-The larger changes are driven by revisions in the interpolating spline used over the period that is only covered by ice core records.
+% value-check: {"tag": "co2-diff-from-cmip6-all", "unit": "ppm", "upper": 4.45, "lower": 4.35}
+% value-check: {"tag": "co2-diff-from-cmip6-all-year", "unit": "yr", "upper": 250, "lower": 150}
+% value-check: {"tag": "co2-obs-network-start", "unit": "yr", "upper": 1981, "lower": 1981}
+% value-check: {"tag": "co2-diff-from-cmip6-obs-network", "unit": "ppm", "upper": 0.5, "lower": 0}
+CO_2 has a maximum deviation of 4.4~ppm (around year 200),
+with the maximum deviation since the start of the observation network we use (1981) being less than 0.5~ppm;
+% value-check: {"tag": "ch4-diff-from-cmip6-all", "unit": "ppb", "upper": 27.5, "lower": 22.5}
+% value-check: {"tag": "ch4-diff-from-cmip6-all-year", "unit": "yr", "upper": 1924, "lower": 1920}
+% value-check: {"tag": "ch4-obs-network-start", "unit": "yr", "upper": 1984, "lower": 1984}
+% value-check: {"tag": "ch4-diff-from-cmip6-obs-network", "unit": "ppb", "upper": 5, "lower": 0}
+CH_4 has a maximum deviation of approximately 25~ppb (in the early 1920s) and less than 5~ppb since 1984;
+% value-check: {"tag": "n2o-diff-from-cmip6-all", "unit": "ppb", "upper": 12.5, "lower": 7.5}
+% value-check: {"tag": "n2o-diff-from-cmip6-all-year", "unit": "yr", "upper": 950, "lower": 850}
+% value-check: {"tag": "n2o-obs-network-start", "unit": "yr", "upper": 1989, "lower": 1989}
+% value-check: {"tag": "n2o-diff-from-cmip6-obs-network", "unit": "ppb", "upper": 0.5, "lower": 0}
+N_2O has a maximum deviation of approximately 10~ppb (around year 900) and less than 0.5~ppb since 1989
+% value-check: {"tag": "cfc12-diff-from-cmip6-all", "unit": "ppt", "upper": 4.5, "lower": 3.5}
+% value-check: {"tag": "cfc12-diff-from-cmip6-all-year", "unit": "yr", "upper": 1986, "lower": 1984}
+and CFC12 has a maximum deviation of approximately 4~ppt (in the mid-1980s).
+The larger changes are driven by revisions in the interpolating spline used over the period that is only covered by ice core records or requires interpolation.
 % ZNTODO: check we consistently use radiative forcing or radiative effect, not both unless it's clear why we're making an exception
-In approximate effective radiative forcing terms (ERF), all changes are less than [TODO X]
-and the biggest change between the two datasets is [TODO Y]~W / m^2 in [TODO Z year].
+% value-check: {"tag": "co2-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0.055}
+% value-check: {"tag": "ch4-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0}
+% value-check: {"tag": "n2o-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0}
+% value-check: {"tag": "cfc12-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0}
+In approximate effective radiative forcing terms (ERF), all changes are less than 0.06~W / m^2
+and the biggest change between the two datasets is for CO_2 around year 200.
+% value-check: {"tag": "co2-cmip6-last-year", "unit": "yr", "upper": 2014, "lower": 2014}
+% value-check: {"tag": "ch4-cmip6-last-year", "unit": "yr", "upper": 2014, "lower": 2014}
+% value-check: {"tag": "n2o-cmip6-last-year", "unit": "yr", "upper": 2014, "lower": 2014}
+% value-check: {"tag": "cfc12-cmip6-last-year", "unit": "yr", "upper": 2014, "lower": 2014}
 The forcing dataset also shows that, between 2014 (the end of CMIP6's historical dataset)
+% value-check: {"tag": "co2-last-year", "unit": "yr", "upper": 2022, "lower": 2022}
+% value-check: {"tag": "ch4-last-year", "unit": "yr", "upper": 2022, "lower": 2022}
+% value-check: {"tag": "n2o-last-year", "unit": "yr", "upper": 2022, "lower": 2022}
+% value-check: {"tag": "cfc12-last-year", "unit": "yr", "upper": 2022, "lower": 2022}
 and 2022 (the end of these datasets),
-concentrations of CO_2 have increased from [TODO X] to [TODO Y],
-of CH_4 from [TODO X] to [TODO Y],
-of N_2O from [TODO X] to [TODO Y]
-while concentrations of CFC12 have fallen from [TODO X] to [TODO Y].
+% value-check: {"tag": "co2-global-annual-mean-cmip6-last-year", "unit": "ppm", "upper": 397.85, "lower": 397.75}
+% value-check: {"tag": "co2-global-annual-mean-last-year", "unit": "ppm", "upper": 417.35, "lower": 417.25}
+concentrations of CO_2 have increased from 397.8~ppm to 417.3~ppm,
+% value-check: {"tag": "ch4-global-annual-mean-cmip6-last-year", "unit": "ppb", "upper": 1835.5, "lower": 1834.5}
+% value-check: {"tag": "ch4-global-annual-mean-last-year", "unit": "ppb", "upper": 1922.5, "lower": 1921.5}
+of CH_4 from 1835~ppb to 1922~ppb,
+% value-check: {"tag": "n2o-global-annual-mean-cmip6-last-year", "unit": "ppb", "upper": 327.25, "lower": 327.15}
+% value-check: {"tag": "n2o-global-annual-mean-last-year", "unit": "ppb", "upper": 335.75, "lower": 335.65}
+of N_2O from 327.2~ppb to 335.7~ppb
+% value-check: {"tag": "cfc12-global-annual-mean-cmip6-last-year", "unit": "ppt", "upper": 519.65, "lower": 519.55}
+% value-check: {"tag": "cfc12-global-annual-mean-last-year", "unit": "ppt", "upper": 491.55, "lower": 491.45}
+while concentrations of CFC12 have fallen from 519.6~ppt to 491.5~ppt.
 We include a comparison with other available timeseries where the two overlap
 (no dataset has the complete spatial and temporal coverage provided by this dataset),
 such as the timeseries produced annually by the Indicators of Global Climate Change (IGCC) project

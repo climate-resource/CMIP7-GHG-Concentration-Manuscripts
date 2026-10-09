@@ -551,9 +551,18 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           The `ZNTODO` in CFC12-like Step 5 is removed.
           The explanations of the HFC-152a and HFC-236fa cases (the observation-derived gradient is too strong for the global-mean;
           the seasonality is most likely measurement noise) are interpretation, not something we have checked in the data.
-- [ ] Abstract: fill all [TODO X/Y/Z] numbers from `results.tex` (`abstract.tex:6-20`).
+- [x] Abstract: fill all [TODO X/Y/Z] numbers from `results.tex` (`abstract.tex:6-20`).
       Most already exist in results (e.g. CO_2 4.4 ppm around year 200, 2 ppm since 1850, <0.5 ppm since 1981).
       Ideally drive them from the same value-checks.
+    - [x] filled (2026-10-09), each number with the same value-check tags as the results.
+          New checks for the 2014 and 2022 values: `{gas}-cmip6-last-year`, `{gas}-last-year`,
+          `{gas}-global-annual-mean-cmip6-last-year` and `{gas}-global-annual-mean-last-year` (CO_2, CH_4, N_2O, CFC12).
+          "Since [year]" is the start of the observation network we use, not of ground-based observations.
+          The ERF sentence is "all changes are less than 0.06 W/m2", the biggest being CO_2 around year 200.
+    - [x] three results sentences didn't match the data, so were changed with their check ranges tightened:
+          CH_4 max deviation 20 ppb around 1920 (0.008 W/m2) is 24.5 ppb in 1923 (0.0095 W/m2), now "approximately 25 ppb in the early 1920s" (0.01 W/m2);
+          CFC12 5 ppt around 1980 is 4.3 ppt in 1985, now "approximately 4 ppt in the mid-1980s";
+          CO_2 0.05 W/m2 is 0.058 W/m2, now 0.06 W/m2.
 - [ ] Use either "radiative forcing" or "radiative effect" consistently (`abstract.tex:12`).
 - [ ] Discussion claims all differences are "less than 0.03 W/m2" (`discussion.tex:7-8`),
       but results give about 0.05 W/m2 (CO_2, full period) and about 0.04 W/m2 (N_2O, full period). Reconcile.

@@ -68,6 +68,13 @@ Q = openscm_units.unit_registry.Quantity
 LAST_N_YEARS = 10
 """Number of years the statements about 'the last ten years' cover"""
 
+CMIP6_LAST_YEAR = 2014
+"""
+Last year of CMIP6's historical dataset
+
+Checked against the CMIP6 data by the `{gas}-cmip6-last-year` value checks.
+"""
+
 NORTHERN_HEMISPHERE = "Northern hemisphere"
 """Name of the northern hemisphere in our hemispheric-mean output"""
 
@@ -140,6 +147,57 @@ def get_last_n_years(gas: str, *, bundle_dir: Path) -> np.ndarray:
     last_year = int(get_output(gas, bundle_dir=bundle_dir)[1]["year"].max())
 
     return np.arange(last_year - LAST_N_YEARS + 1, last_year + 1)
+
+
+def get_last_year(gas: str, *, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the last year of our output for a gas
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Last year of our global-, annual-mean
+    """
+    return Q(int(get_output(gas, bundle_dir=bundle_dir)[1]["year"].max()), "yr")
+
+
+def get_global_annual_mean(
+    gas: str, year: int | None = None, *, bundle_dir: Path
+) -> pint.Quantity:
+    """
+    Get our global-, annual-mean for a gas in a given year
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    year
+        Year of interest
+
+        If `None`, the last year of our output.
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Our global-, annual-mean in `year`
+    """
+    ours = get_output(gas, bundle_dir=bundle_dir)[1].to_series()
+    if year is None:
+        year = int(ours.index.max())
+
+    return Q(float(ours.loc[year]), get_units(gas, bundle_dir=bundle_dir))
 
 
 def get_decimal_month(
@@ -2461,6 +2519,31 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
         )
 
     for gas in ("co2", "ch4", "n2o", "cfc12"):
+        add(
+            f"{gas}-last-year",
+            partial(get_last_year, gas, bundle_dir=bundle_dir),
+            "last year of our global-, annual-mean",
+        )
+        add(
+            f"{gas}-cmip6-last-year",
+            lambda gas=gas: Q(
+                int(get_diff_from_cmip6(gas, bundle_dir=bundle_dir).index.max()), "yr"
+            ),
+            "last year of CMIP6's global-, annual-mean",
+        )
+        add(
+            f"{gas}-global-annual-mean-cmip6-last-year",
+            partial(
+                get_global_annual_mean, gas, CMIP6_LAST_YEAR, bundle_dir=bundle_dir
+            ),
+            f"our global-, annual-mean in {CMIP6_LAST_YEAR} "
+            "(the last year of CMIP6's historical dataset)",
+        )
+        add(
+            f"{gas}-global-annual-mean-last-year",
+            partial(get_global_annual_mean, gas, bundle_dir=bundle_dir),
+            "our global-, annual-mean in the last year of our output",
+        )
         add(
             f"{gas}-obs-network-start",
             lambda gas=gas: Q(

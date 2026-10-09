@@ -93,9 +93,9 @@ whereas the latitudinal gradient follows emissions, which can already be well ab
 A better approach would derive the components in a way that guarantees their consistency,
 for example by constraining the latitudinal gradient and the seasonality relative to the global-mean when they are derived and extended
 or by considering the consistency between the emissions estimates and concentration changes.
-% % value-check: {"tag": "cfc12-like-lat-gradient-capped-years-after-pre-industrial", "unit": "yr", "lower": 44, "upper": 44}
-% % value-check: {"tag": "c4f10-like-lat-gradient-capped-years-first", "unit": "yr", "lower": 1934, "upper": 1934}
-% % value-check: {"tag": "c4f10-like-lat-gradient-capped-years-last", "unit": "yr", "lower": 2001, "upper": 2001}
+% % zalue-check: {"tag": "cfc12-like-lat-gradient-capped-years-after-pre-industrial", "unit": "yr", "lower": 44, "upper": 44}
+% % zalue-check: {"tag": "c4f10-like-lat-gradient-capped-years-first", "unit": "yr", "lower": 1934, "upper": 1934}
+% % zalue-check: {"tag": "c4f10-like-lat-gradient-capped-years-last", "unit": "yr", "lower": 2001, "upper": 2001}
 % As a result, we scale down the latitudinal gradient of nearly every CFC12-like gas
 % in the (up to 44) years after its pre-industrial year
 % and of the C_4F_10-like gases in some months between 1934 and 2001.
@@ -117,7 +117,7 @@ in every year from 1996 to 2023.
 A seasonal cycle of this size is not plausible for such a long-lived gas
 and most likely reflects noise in the measurements of its very low concentrations (Figure~\ref{fig:methods-hfc236fa}).
 As for HFC-152a, a more careful handling of the input data would likely solve this issue.
-% % value-check: {"tag": "hfc236fa-lat-gradient-first-eof-variance", "unit": "dimensionless", "lower": 0.75, "upper": 0.85}
+% % zalue-check: {"tag": "hfc236fa-lat-gradient-first-eof-variance", "unit": "dimensionless", "lower": 0.75, "upper": 0.85}
 % (HFC-236fa is also the only CFC12-like gas for which the first latitudinal gradient EOF explains less than 90\% of the variance,
 % Section~\ref{sssec:methods-cfc12-like-pca}).
 Scaling the components down is a crude fix which future work should look to improve on.
