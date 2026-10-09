@@ -593,10 +593,17 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           Fixed (2026-10-09): `load_monthly_pieces` in `value_checks.py` drops years after `output-last-year`.
           Now HFC-152a 1991-2020 (not scaled down in 2021 or 2022), HFC-236fa 1996-2022.
           The other capped-year checks (44 years after pre-industrial, C_4F_10-like 1934-2001, the single-year gases) are unchanged.
-- [ ] Introduction: cite Vaishali's paper (`introduction.tex:9`); find papers on how forcing generation evolved / the forcings task team
+- [x] Introduction: cite Vaishali's paper (`introduction.tex:9`); find papers on how forcing generation evolved / the forcings task team
       (`introduction.tex:15-18`); cite other forcing papers and an overview of model inputs (`introduction.tex:22`).
-- [ ] Output requirements: Funke et al. solar ref (`output-requirements.tex:16`); scenario paper cite (`:29`);
+    - [x] already done (checked 2026-10-09): `naik_input-data-releases_2025`, `durack_input4mips_2018`, `durack_forcing_2025`
+          and `funke_solar_2024` are cited. The two "Note to self" comments (more history papers; other forcing papers
+          e.g. volcanic, CEDS) are deliberately left for reviewers to prompt.
+- [x] Output requirements: Funke et al. solar ref (`output-requirements.tex:16`); scenario paper cite (`:29`);
       check 0.01 W/m2 is about 1 ppm CO_2 (`:60`).
+    - [x] (2026-10-09) both citations were already in (`funke_solar_2024`, `nicholls_scenario-ghgs_2026`).
+          0.01 W/m2 is 0.75 ppm CO_2 with the AR6 radiative efficiency (1.33e-5 W/m2/ppb), not 1 ppm:
+          text now says "around 0.75 ppm", value-check `co2-for-energy-balance-threshold`
+          (threshold is `ENERGY_BALANCE_THRESHOLD` in `value_checks.py`).
 - [ ] Discussion: add the points flagged in methods/results/output requirements (`discussion.tex:4`):
     - more robust interpolation (`methods.tex:54-55`)
     - harmonisation is crude (`methods.tex:439-440,639-640`)

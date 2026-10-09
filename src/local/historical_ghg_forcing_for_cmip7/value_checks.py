@@ -75,6 +75,13 @@ Last year of CMIP6's historical dataset
 Checked against the CMIP6 data by the `{gas}-cmip6-last-year` value checks.
 """
 
+ENERGY_BALANCE_THRESHOLD = Q(0.01, "W / m^2")
+"""
+Change in energy balance below which a choice is not critical
+
+As stated in the output requirements section of the manuscript.
+"""
+
 NORTHERN_HEMISPHERE = "Northern hemisphere"
 """Name of the northern hemisphere in our hemispheric-mean output"""
 
@@ -2555,6 +2562,12 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
             "max abs difference from CMIP6 global-, annual-mean, 1850 onwards",
         )
 
+    add(
+        "co2-for-energy-balance-threshold",
+        lambda: (ENERGY_BALANCE_THRESHOLD / RADIATIVE_EFFICIENCIES["co2"]).to("ppm"),
+        f"CO2 concentration change with an approx. radiative effect of "
+        f"{ENERGY_BALANCE_THRESHOLD:~}",
+    )
     add(
         "output-first-year",
         partial(get_written_year, "start_year", bundle_dir=bundle_dir),
