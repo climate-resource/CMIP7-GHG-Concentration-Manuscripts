@@ -576,7 +576,8 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 - [ ] Conclusion: user guide link (`conclusion.tex:3-4`); fill the maximum-difference numbers and years (`conclusion.tex:15-18`);
       QUICCA full name / C3S paragraph if confirmed (`conclusion.tex:28-31`).
 - [ ] Author contribution is a placeholder (`author-contribution.tex`); maybe auto-generate from `metadata.toml`.
-- [ ] Acknowledgements is a placeholder: CMIP IPO, ESA funding (from the data files), plus the planning list in section 10.
+- [ ] Acknowledgements: the funding text is in (CMIP IPO/ESA, ESA CCI contract).
+      Still to add: the rest of the planning list in section 10 (data collectors, CMIP organisers, Forcings TT panel).
 - [ ] Competing interests: add a statement about the funding being sought (`competing-interests.tex:1`).
 - [ ] Results intro: user guide citation (standalone Zenodo doc to start, `results.tex:16`).
 
@@ -793,62 +794,71 @@ https://gmd.copernicus.org/articles/10/2057/2017/gmd-10-2057-2017.pdf
 
 - [ ] Invite all the data producers to be co-authors
 - Abstract
-    - [ ] GHGs are a major driver of past climate change, therefore key for model simulations
-    - [ ] Updated GHG concentrations for CMIP7
-    - [ ] Once again a composite of multiple input sources, now covering [time range]
-    - [ ] Put ERF due to GHGs in; note 'highest ever' or whatever, and the largest increases in recent times
-    - [ ] Available for modelling teams to use: "Finally, we describe where to access the data and provide a summary of key data changes compared to CMIP6."
+    - [x] GHGs are a major driver of past climate change, therefore key for model simulations. Not needed
+    - [x] Updated GHG concentrations for CMIP7
+    - [x] Once again a composite of multiple input sources, now covering [time range]. Not needed
+    - [x] Put ERF due to GHGs in; note 'highest ever' or whatever, and the largest increases in recent times. Not needed.
+    - [x] Available for modelling teams to use: "Finally, we describe where to access the data and provide a summary of key data changes compared to CMIP6." Not needed/already done
 - Content
     - [ ] Mole fraction in dry air vs. mole fraction in the real atmosphere
-    - [ ] Different scales (ignored this time, noise in the scheme of things)
-    - [ ] Historical experiment ends in 2021 even though this dataset goes to 2022 (and we hope to extend further in future)
-    - [ ] Changes compared to CMIP6 (and the reasons)
-    - [ ] Comparisons with other datasets (lots of 'time pressure tied our hands' in here)
-    - [ ] If you need explanation/justification for methods, refer back to M17
-    - [ ] Missing halon in the historical dataset: note the ERF difference is tiny, so not ideal, but not a reason to re-write/re-run
-    - [ ] Don't compare the seasonal cycle and latitudinal gradient from CMIP6 ESMs (unless there's way more time than expected)
-    - [ ] "Given the negligible radiative forcing from ..., this uncertainty does not affect the overall results."
-    - [ ] If time: build a portal for visualising/exploring/accessing results
+    - [x] Different scales (ignored this time, noise in the scheme of things)
+    - [ ] Historical experiment ends in 2021 even though this dataset goes to 2022 (and we hope to extend further in future).
+          Go through the whole manuscript and fix this up wherever end years are mentioned:
+          the output requirements say historical ends 2021-12 and the abstract says the datasets end in 2022,
+          but nothing connects the two (see also the "Check the end year" item in section 6).
+    - [x] Changes compared to CMIP6 (and the reasons)
+    - [x] Comparisons with other datasets (lots of 'time pressure tied our hands' in here)
+    - [x] If you need explanation/justification for methods, refer back to M17
+    - [x] Missing halon in the historical dataset: note the ERF difference is tiny, so not ideal, but not a reason to re-write/re-run. Not a thing - only an issue for MAGICC (we don't produce it for scenarios either)
+    - [x] Don't compare the seasonal cycle and latitudinal gradient from CMIP6 ESMs (unless there's way more time than expected)
+    - [x] "Given the negligible radiative forcing from ..., this uncertainty does not affect the overall results."
+    - [x] If time: build a portal for visualising/exploring/accessing results. Not required for this paper
 - Introduction
-    - [ ] CMIP context
-    - [ ] Unique requirements of CMIP, therefore the goal of this study
+    - [x] CMIP context
+    - [x] Unique requirements of CMIP, therefore the goal of this study
 - Methods
-    - [ ] Flowchart figure for the overall idea, with sub-panels for key variants/details (probably only 5).
+    - [x] Flowchart figure for the overall idea, with sub-panels for key variants/details (probably only 5). Done differently.
           Maybe a table too, or just text given how big the tables are in M17
           (see `tmp-figure-scribbles/hist-methodology-figure-*.jpeg` and the table decision in section 1)
-    - [ ] Build out based on notebooks
+    - [x] Build out based on notebooks
+    - [ ] Say whether the concentrations are meant to be observed concentrations
+          or concentrations that reflect background conditions (M17 discusses this; nothing in our text does yet).
     - Compared to the CMIP6 workflow
-        - [ ] Removed optimisation step
-        - [ ] Updated/captured polynomial smoothing (break out a package?)
-        - [ ] Removed N_2O interpolation from 1966-1987?
+        - [x] Removed optimisation step. Not removed: we kept it for CH_4
+              (the latitudinal gradient PC is optimised against ice cores, CH_4 Step 4), so there is nothing to note.
+        - [x] Updated/captured polynomial smoothing (break out a package?)
+        - [x] Removed N_2O interpolation from 1966-1987? (Not noted, but also fine, we note the updated ice core source)
 - Results
-    - [ ] We don't do uncertainties (future work)
-    - [ ] Compare to CMIP6 throughout
-    - [ ] Compare to other studies here?
+    - [x] We don't do uncertainties (future work)
+    - [x] Compare to CMIP6 throughout
+    - [x] Compare to other studies here?
     - CO_2: global-mean, lat. grad. (compare with M17), seasonality
-        - [ ] Make plots that show all components of M17 Fig. 9, but don't put them in the paper (outreach product)
-        - [ ] Main paper needs a plot with the relevant components: global-mean, global-mean monthly steps, lat. gradient, seasonality
+        - [x] Make plots that show all components of M17 Fig. 9, but don't put them in the paper (outreach product)
+        - [x] Main paper needs a plot with the relevant components: global-mean, global-mean monthly steps, lat. gradient, seasonality
     - CH_4: global-mean, lat. grad., seasonality
-        - [ ] Compare with https://www.nature.com/articles/s41586-026-10938-1
+        - [x] Compare with https://www.nature.com/articles/s41586-026-10938-1
     - N_2O: global-mean, lat. grad., seasonality
     - ODSs
-        - [ ] Reproduce/check all the pre-industrial choices, extrapolations, hard-coded zero seasonality and lat. gradient etc.
+        - [x] Reproduce/check all the pre-industrial choices, extrapolations, hard-coded zero seasonality and lat. gradient etc.
 - Data format and recommendations
-    - [ ] Use input4MIPs CVs text
+    - [x] Use input4MIPs CVs text
     - [ ] Point to the forcings implementation and forcing usage recording docs (i.e. how to record what f1 means), and papers as secondary
 - Discussion
-    - [ ] Explain the differences from CMIP6 here?
+    - [x] Explain the differences from CMIP6 here? Done in results instead
     - Limitations (all relatively small given the use case)
-        - [ ] Focussed on CMIP; don't use for inversion studies etc., you need a different product (dup from M17)
+        - [ ] Focussed on CMIP; don't use for inversion studies etc., you need a different product (dup from M17).
+              Partly there: the output requirements say inversion studies would need our choices considered more carefully
+              (`output-requirements.tex`, end of the greenhouse gas specific choices).
+              Put these limitations on use in the discussion too.
         - [ ] No vertical or longitudinal resolution (dup from M17)
         - [ ] Do we want observed concs or concs that reflect background concs (dup from M17)
-        - [ ] Hybrid nature of calibration scales (dup from M17)
-        - [ ] Uncertainty (dup from M17)
+        - [x] Hybrid nature of calibration scales (dup from M17). Done: the fifth limitation in the discussion
+        - [x] Uncertainty (dup from M17). Done: the third limitation in the discussion
 - Acknowledgements
     - [ ] Everyone collecting raw data, particularly for their openness
     - [ ] CMIP organisers and all involved
     - [ ] Forcings TT panel
-    - [ ] Direct funding acknowledgements (ESA)
+    - [x] Direct funding acknowledgements (ESA). Done: CMIP IPO/ESA and the ESA CCI contract are in `acknowledgements.tex`
 - Data access
-    - [ ] ESGF
-    - [ ] Zenodo
+    - [ ] ESGF: not in `code-and-data-availability.tex` (only described in the methods' output format section)
+    - [x] Zenodo. Done: the Zenodo DOI (and the GitHub repositories) are in `code-and-data-availability.tex`
