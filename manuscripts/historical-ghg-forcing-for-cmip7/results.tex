@@ -52,14 +52,14 @@ The output dataset also reproduces the absolute values and seasonal cycle seen i
 % ZNTODO: fix this because the difference is actually slightly bigger
 % ZNTODO zalue-check: {"tag": "co2-monthly-diff-from-maunoa-loa", "unit": "ppm", "upper": 2, "lower": -2}
 to within approximately 1~ppm once Mauna Loa's latitude is taken into account.
-% value-check: {"tag": "co2-diff-from-igcc", "unit": "ppm", "upper": 3, "lower": -3}
-The output dataset also matches IGCC's annual timeseries \citep{forster_igcc_2026,smith_igcc-forcings_2026} to within 3~ppm,
-% ZNTODO: add check here.
+% value-check: {"tag": "co2-diff-from-igcc", "unit": "ppm", "upper": 2.5, "lower": 1.5}
+The output dataset also matches IGCC's annual timeseries \citep{forster_igcc_2026,smith_igcc-forcings_2026} to within approximately 2~ppm,
 with the bigger differences coming over the period which the NOAA data does not cover
 i.e. where extrapolation or other approximations are used by IGCC.
 The agreement over the period that the NOAA data covers is much closer.
-% ZNTODO: add text and check here.
-Differences over the period A-B are less than X~ppm.
+% value-check: {"tag": "co2-noaa-global-mean-start", "unit": "yr", "upper": 1979, "lower": 1979}
+% value-check: {"tag": "co2-diff-from-igcc-noaa-era", "unit": "ppm", "upper": 0.7, "lower": 0}
+From 1979 onwards, the differences are less than 0.7~ppm.
 % Checked (2026-10-09) against IGCC's `notebooks/01_trace-gas-global-mean.py` (v6.4.0) and Sect. 3 of Forster et al. (2026):
 % IGCC's CO_2 is NOAA's global-mean alone (on the X2019 scale, like our NOAA inputs),
 % appended to the AR6 timeseries (which is rescaled to X2019).
@@ -212,7 +212,7 @@ relative to what was available when \citet{meinshausen_historical-ghgs_2017} was
 Atmospheric N_2O concentrations continue on their steady upward trend (Figure~\ref{fig:results-n2o}).
 % value-check: {"tag": "n2o-monthly-diff-from-noaa", "unit": "ppb", "upper": 1, "lower": -1}
 The output dataset matches NOAA's global-mean monthly and trend timeseries \citep{lan_ch4-n2o-sf6-trends_2026} to within approximately 0.5~ppb.
-% value-check: {"tag": "n2o-diff-from-igcc", "unit": "ppb", "upper": 1, "lower": -1}
+% value-check: {"tag": "n2o-diff-from-igcc-noaa-era", "unit": "ppb", "upper": 1, "lower": -1}
 A similar difference is seen from the IGCC's annual timeseries \citep{forster_igcc_2026,smith_igcc-forcings_2026},
 % ZNTODO: add check here.
 with the bigger differences coming over the period which the NOAA and AGAGE data does not cover.

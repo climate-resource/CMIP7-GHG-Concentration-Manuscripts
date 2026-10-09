@@ -507,7 +507,13 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 
 ## 5. Results
 
-- [ ] Uncommented placeholder text: "Differences over the period A-B are less than X~ppm." (`results.tex:58-59`).
+- [x] Uncommented placeholder text: "Differences over the period A-B are less than X~ppm." (`results.tex:58-59`).
+      Done (2026-10-09): "From 1979 onwards, the differences are less than 0.7~ppm" (max 0.65 ppm, in 1979).
+      `co2-diff-from-igcc` was the NOAA-era max (0.65 ppm), not the full-overlap one the "within 3~ppm" text is about.
+      It is now the full overlap (1850-2022, max 2.15 ppm in 1918, text now "approximately 2~ppm"),
+      with new tags `{gas}-diff-from-igcc-noaa-era` and `{gas}-noaa-global-mean-start`.
+      N_2O's comment moved to `n2o-diff-from-igcc-noaa-era` so it checks the same thing as before
+      (its full-overlap max is 1.67 ppb, in 1881, so "A similar difference" needs fixing with the missing checks below).
 - [ ] Go through all value-checks (`results.tex:41`) and fix the disabled ones:
       `co2-monthly-diff-from-maunoa-loa` (the difference is bigger than stated, `results.tex:49-50`),
       the 1940 dip / 1970 spike checks (`results.tex:80,82`), `cfc12-monthly-diff-from-noaa/agage` (`results.tex:237-238`),

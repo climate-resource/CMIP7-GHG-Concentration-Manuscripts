@@ -955,6 +955,23 @@ def get_diff_from_igcc(
     return (ours - igcc).dropna().loc[start:]
 
 
+def get_noaa_global_mean_start_year(gas: str) -> int:
+    """
+    Get the first year of NOAA's global-mean record
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    Returns
+    -------
+    :
+        First year of NOAA's global-mean record
+    """
+    return int(np.floor(get_noaa_global_mean(gas).data[TIME_COLUMN].min()))
+
+
 def get_max_abs_diff_from_igcc_noaa_era(gas: str, *, bundle_dir: Path) -> pint.Quantity:
     """
     Get the max absolute difference from IGCC over the years NOAA's global-mean covers
@@ -976,7 +993,7 @@ def get_max_abs_diff_from_igcc_noaa_era(gas: str, *, bundle_dir: Path) -> pint.Q
     :
         Maximum absolute difference from IGCC
     """
-    noaa_start = int(np.floor(get_noaa_global_mean(gas).data[TIME_COLUMN].min()))
+    noaa_start = get_noaa_global_mean_start_year(gas)
 
     return max_abs(
         get_diff_from_igcc(gas, start=noaa_start, bundle_dir=bundle_dir),
@@ -1001,7 +1018,7 @@ def get_mean_diff_from_igcc_noaa_era(gas: str, *, bundle_dir: Path) -> pint.Quan
     :
         Mean difference from IGCC
     """
-    noaa_start = int(np.floor(get_noaa_global_mean(gas).data[TIME_COLUMN].min()))
+    noaa_start = get_noaa_global_mean_start_year(gas)
 
     return Q(
         float(get_diff_from_igcc(gas, start=noaa_start, bundle_dir=bundle_dir).mean()),
@@ -3012,9 +3029,23 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
         )
         add(
             f"{gas}-diff-from-igcc",
+            lambda gas=gas: max_abs(
+                get_diff_from_igcc(gas, bundle_dir=bundle_dir),
+                get_units(gas, bundle_dir=bundle_dir),
+            ),
+            "max abs difference from IGCC global-, annual-mean, "
+            "over all the years both cover",
+        )
+        add(
+            f"{gas}-diff-from-igcc-noaa-era",
             partial(get_max_abs_diff_from_igcc_noaa_era, gas, bundle_dir=bundle_dir),
             "max abs difference from IGCC global-, annual-mean, "
             "over the years NOAA's global-mean covers",
+        )
+        add(
+            f"{gas}-noaa-global-mean-start",
+            lambda gas=gas: Q(get_noaa_global_mean_start_year(gas), "yr"),
+            "first year of NOAA's global-mean record",
         )
 
     # CO2
