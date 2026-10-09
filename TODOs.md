@@ -604,7 +604,7 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           0.01 W/m2 is 0.75 ppm CO_2 with the AR6 radiative efficiency (1.33e-5 W/m2/ppb), not 1 ppm:
           text now says "around 0.75 ppm", value-check `co2-for-energy-balance-threshold`
           (threshold is `ENERGY_BALANCE_THRESHOLD` in `value_checks.py`).
-- [ ] Discussion: add the points flagged in methods/results/output requirements (`discussion.tex:4`):
+- [x] Discussion: add the points flagged in methods/results/output requirements (`discussion.tex:4`):
     - more robust interpolation (`methods.tex:54-55`)
     - harmonisation is crude (`methods.tex:439-440,639-640`)
     - Menking CH_4 processing error and not using Menking pre-1850 (`methods.tex:792-797`, `output-requirements.tex:97-99`)
@@ -618,8 +618,17 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       the "How to do extensions" notes in `NOTES.md` sketch the approach
       (optimise the existing lat. gradient/seasonality change against new network data rather than re-deriving or regressing PCs)
     - vertical resolution (`discussion.tex:60`)
+    - [x] listed as comments at the top of `discussion.tex` (2026-10-09), with where each is flagged.
+          Text still to write, see the last item of this section.
 - [ ] Conclusion: user guide link (`conclusion.tex:3-4`); fill the maximum-difference numbers and years (`conclusion.tex:15-18`);
       QUICCA full name / C3S paragraph if confirmed (`conclusion.tex:28-31`).
+    - [x] maximum differences filled (2026-10-09): about 0.06 W/m2 (CO_2, around year 200) and,
+          from 1850 on, about 0.025 W/m2 (CO_2, 1969), each with value-checks, plus checks that every other gas'
+          difference is smaller (so CO_2's is the maximum). New check `{gas}-diff-from-cmip6-1850-on-year`.
+    - [x] QUICCA's full name added to the commented-out paragraph
+          (Quality-assured Updates of forcing Information for Climate Change Assessments).
+    - [ ] the C3S paragraph stays commented out until C3S is confirmed (it also needs the C3S project name).
+    - [ ] user guide link: same as the results intro item below.
 - [ ] Author contribution is a placeholder (`author-contribution.tex`); maybe auto-generate from `metadata.toml`.
     - [x] auto-generation (2026-10-09): each author in `metadata.toml` has `contributions` (a list of tags)
           and `contributions_initials`. `src/local/historical_ghg_forcing_for_cmip7/author_contributions.py`
@@ -636,6 +645,7 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       Each has a `[TODO ...]` placeholder in `acknowledgements.tex`.
 - [x] Competing interests: add a statement about the funding being sought (`competing-interests.tex:1`).
 - [ ] Results intro: user guide citation (standalone Zenodo doc to start, `results.tex:16`).
+- [ ] write text for all remaining items in discussion.tex
 
 ## 7. Citations
 

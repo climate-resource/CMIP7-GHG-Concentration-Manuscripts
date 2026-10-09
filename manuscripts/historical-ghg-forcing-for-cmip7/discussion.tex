@@ -1,7 +1,41 @@
 \section{Discussion}
 \label{sec:discussion}
 
-% ZNTODO: add discussion points from methods
+% ZNTODO: write text for these points flagged elsewhere in the manuscript
+% (where they are flagged is given in brackets; each place has a `[TODO ... forward ref]` or `ZNTODO` to update once the text is written):
+% - more robust interpolation methods
+%   (methods, general approach, "More robust interpolation methods are an area for future work")
+% - harmonisation of ice core data to the observation network is crude
+%   (methods, N_2O and CO_2 Step 4, "This is crude and a clear area for further investigation")
+% - the configuration error which means we don't use the Menking et al. (2025) CH_4 data,
+%   and the resulting care needed when using the dataset for pre-1850 studies
+%   (methods, CH_4 Step 4; output requirements, "we didn't use Menking dataset for pre-1850")
+% - calibration scales are not converted and observations on different scales are combined
+%   (methods, CH_4; output requirements, "we don't consider different scales of observations").
+%   Partly covered by the fifth point below.
+% - constant poleward extrapolation as a clear weakness
+%   (methods, CFC12-like Step 2, "[TODO note this as a clear weakness in discussion]")
+% - needing more rapidly updated historical emissions estimates, or an approach without the regression against emissions;
+%   the need for a method which creates a complete dataset back to year 1
+%   and can be projected forward from emissions and MAGICC alone (all we have when creating scenario forcings)
+%   (methods, CFC12-like Step 4)
+% - fixing the upstream processing so it doesn't produce small negative values.
+%   Probably covered by the sixth point below (scaling down the latitudinal gradient and seasonality).
+% - the CH_4 seasonal cycle may be slightly too strong; a more sophisticated handling than relative seasonality
+%   (results, CH_4, "[TODO add section on this in discussion]")
+% - C_8F_18 should be considered for future iterations
+%   (methods, C_8F_18, "should be considered for future iterations")
+% - annual updates of the forcings (abstract, "discuss annual updates more clearly in discussion")
+%   and a REF for forcings (output requirements, "put points below into discussion").
+%   Annual updates ameliorate the risk of not delivering on time;
+%   a REF would help validation against the experiment design and speed up finding bugs.
+%   NOTES.md's "How to do extensions" sketches the approach:
+%   optimise the existing latitudinal gradient/seasonality change against new network data
+%   rather than re-deriving or regressing PCs.
+% - vertical resolution (see the `ZNTODO` at the end of this section; methods, Vertical dimension)
+% - gathering more data sources, e.g. the Nevado Huascar\'an ice core (see the `ZNTODO` at the end of this section)
+% - piControl should be done by repeating the 1850 values: make sure this is stated somewhere
+%   (output requirements `ZNTODO`, may belong in the results rather than here)
 
 The output dataset shows differences from its inputs, other observation networks and the CMIP6 dataset
 that are small in the context of earth system modelling (Section~\ref{sec:results}).

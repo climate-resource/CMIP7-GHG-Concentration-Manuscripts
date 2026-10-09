@@ -12,10 +12,24 @@ Further guidance on how to use forcings in each CMIP experiment can be found at
 \newline \mbox{\url{https://wcrp-cmip.github.io/cmip7-guidance/docs/CMIP7/Experiment_set_up_and_Forcings/}}.
 
 Compared to the CMIP6 dataset, the changes are minor.
-% ZNTODO: check
-The maximum difference, in approximate radiative effect terms, is [TODO value] in the CO_2 dataset in year X.
+% value-check: {"tag": "co2-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0.055}
+% value-check: {"tag": "co2-diff-from-cmip6-all-year", "unit": "yr", "upper": 250, "lower": 150}
+% The other gases' differences are smaller, so CO_2's is the maximum
+% value-check: {"tag": "ch4-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.055, "lower": 0}
+% value-check: {"tag": "n2o-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.055, "lower": 0}
+% value-check: {"tag": "cfc12-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.055, "lower": 0}
+% value-check: {"tag": "cfc12eq-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.055, "lower": 0}
+% value-check: {"tag": "hfc134aeq-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.055, "lower": 0}
+The maximum difference, in approximate radiative effect terms, is approximately 0.06~W/m2 in the CO_2 dataset around year 200.
 Over the period used in the historical and piControl experiments, i.e. 1850 onwards,
-the maximum difference is [TODO value] in the CO_2 dataset in year X.
+% value-check: {"tag": "co2-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.03, "lower": 0.02}
+% value-check: {"tag": "co2-diff-from-cmip6-1850-on-year", "unit": "yr", "upper": 1969, "lower": 1969}
+% value-check: {"tag": "ch4-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.02, "lower": 0}
+% value-check: {"tag": "n2o-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.02, "lower": 0}
+% value-check: {"tag": "cfc12-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.02, "lower": 0}
+% value-check: {"tag": "cfc12eq-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.02, "lower": 0}
+% value-check: {"tag": "hfc134aeq-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.02, "lower": 0}
+the maximum difference is approximately 0.025~W/m2 in the CO_2 dataset in 1969.
 
 While the analysis we have done here suggests that the dataset
 accurately and faithfully represents the variations in atmospheric greenhouse gas concentrations
@@ -27,5 +41,5 @@ which is why many elements were left unimproved
 We look foward to developing on this dataset to provide an improved product for users.
 % % Include if we get confirmation of C3S before submission
 % In particular, we are excited to provide annual updates of this and other forcing datasets
-% as part of the European Union Horizon project [TODO get full name] (QUICCA)
+% as part of the European Union Horizon project Quality-assured Updates of forcing Information for Climate Change Assessments (QUICCA)
 % and C3S project `'.

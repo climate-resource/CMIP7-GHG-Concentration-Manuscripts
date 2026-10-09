@@ -542,7 +542,9 @@ def get_max_abs_diff_from_cmip6(
     )
 
 
-def get_year_of_max_abs_diff_from_cmip6(gas: str, *, bundle_dir: Path) -> pint.Quantity:
+def get_year_of_max_abs_diff_from_cmip6(
+    gas: str, start: int | None = None, *, bundle_dir: Path
+) -> pint.Quantity:
     """
     Get the year in which the absolute difference from CMIP6 is greatest
 
@@ -550,6 +552,11 @@ def get_year_of_max_abs_diff_from_cmip6(gas: str, *, bundle_dir: Path) -> pint.Q
     ----------
     gas
         Gas of interest
+
+    start
+        First year to consider
+
+        If `None`, all years.
 
     bundle_dir
         Directory in which to keep the original run's bundle
@@ -559,7 +566,10 @@ def get_year_of_max_abs_diff_from_cmip6(gas: str, *, bundle_dir: Path) -> pint.Q
     :
         Year of maximum absolute difference
     """
-    return Q(int(get_diff_from_cmip6(gas, bundle_dir=bundle_dir).abs().idxmax()), "yr")
+    return Q(
+        int(get_diff_from_cmip6(gas, bundle_dir=bundle_dir).loc[start:].abs().idxmax()),
+        "yr",
+    )
 
 
 def get_cmip6_feature_size(
@@ -2560,6 +2570,13 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
             gas,
             partial(get_max_abs_diff_from_cmip6, gas, 1850, bundle_dir=bundle_dir),
             "max abs difference from CMIP6 global-, annual-mean, 1850 onwards",
+        )
+        add(
+            f"{gas}-diff-from-cmip6-1850-on-year",
+            partial(
+                get_year_of_max_abs_diff_from_cmip6, gas, 1850, bundle_dir=bundle_dir
+            ),
+            "year of max abs difference from CMIP6 global-, annual-mean, 1850 onwards",
         )
 
     add(
