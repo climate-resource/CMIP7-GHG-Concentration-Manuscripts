@@ -36,6 +36,7 @@ import yaml
 from loguru import logger
 
 from local.cmip_ghg_generation import (
+    BUNDLE_CONFIG_FILE,
     DEFAULT_BUNDLE_DIR,
     DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
     MODIFIED_NOTEBOOKS_DIR,
@@ -84,6 +85,16 @@ from local.historical_ghg_forcing_for_cmip7.zenodo_missing import (
     load_ch4_ice_core,
 )
 from local.paths import DATA_RAW_DIR
+
+CH4_ICE_CORE_BUNDLE_CONFIG = {
+    "law-dome": ("smooth_law_dome_data", "ch4", "smoothed_median_file"),
+    "neem": ("retrieve_and_process_neem_data", "only", "processed_data_with_loc_file"),
+}
+"""Where in the original run's config each ice core's processed file is set
+
+Each value is the step, its `step_config_id`
+and the key which holds the file's path.
+"""
 
 ALL_DATA_WITH_BINS_FILE = Path("manuscript-outputs") / "ch4_all-data-with-bins.csv"
 """Where the re-run notebook saves the data we want
@@ -473,6 +484,40 @@ def get_ch4_pc0_optimised_regression_years(
     return res
 
 
+def get_ch4_ice_core_bundle_file(source: str, bundle_dir: Path) -> Path:
+    """
+    Get where the original run expects an ice core's processed CH4 data
+
+    Parameters
+    ----------
+    source
+        Ice core of interest (a key of [CH4_ICE_CORE_BUNDLE_CONFIG][])
+
+    bundle_dir
+        Directory which holds the original run's bundle
+
+    Returns
+    -------
+    :
+        Where, in `bundle_dir`, the original run expects `source`'s processed data
+
+    Raises
+    ------
+    AssertionError
+        The bundle's config has no entry for `source`
+    """
+    step, step_config_id, key = CH4_ICE_CORE_BUNDLE_CONFIG[source]
+    with open(bundle_dir / BUNDLE_CONFIG_FILE) as fh:
+        config = yaml.safe_load(fh)
+
+    for step_config in config[step]:
+        if step_config["step_config_id"] == step_config_id:
+            return bundle_dir / step_config[key]
+
+    msg = f"No {step} config for {step_config_id=}"
+    raise AssertionError(msg)
+
+
 def re_run_pc_extension_notebook(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
@@ -544,18 +589,10 @@ def re_run_pc_extension_notebook(
         bundle_dir=bundle_dir,
     )
 
-    # Put needed file in right directory
-    # TODO: try and reduce hard-coding here
-    for source_file, target_file in (
-        (
-            get_ch4_ice_core_file("law-dome", data_raw_dir),
-            bundle_dir / "data/interim/law_dome/law-dome_ch4_smoothed_median.csv",
-        ),
-        (
-            get_ch4_ice_core_file("neem", data_raw_dir),
-            bundle_dir / "data/interim/neem/neem_with_location.csv",
-        ),
-    ):
+    # Put the ice core files where the notebook expects them
+    for source in CH4_ICE_CORE_BUNDLE_CONFIG:
+        source_file = get_ch4_ice_core_file(source, data_raw_dir)
+        target_file = get_ch4_ice_core_bundle_file(source, bundle_dir)
         target_file.parent.mkdir(exist_ok=True, parents=True)
         shutil.copy2(source_file, target_file)
 

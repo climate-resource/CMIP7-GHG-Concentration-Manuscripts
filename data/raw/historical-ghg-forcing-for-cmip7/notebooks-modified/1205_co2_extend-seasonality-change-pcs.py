@@ -370,3 +370,17 @@ co2_seasonality_change_composite_file = Path("manuscript-outputs/co2_seasonality
 co2_seasonality_change_composite_file.parent.mkdir(exist_ok=True, parents=True)
 regression_timeseries_same_years.pint.dequantify().to_netcdf(co2_seasonality_change_composite_file)
 co2_seasonality_change_composite_file
+
+# %%
+import json
+
+composite_regression_years = np.setdiff1d(
+    regression_timeseries["year"],
+    pc0_obs_network["year"],
+)
+composite_regression_years_file = Path("manuscript-outputs/co2_seasonality-change-composite-regression-years.json")
+composite_regression_years_file.parent.mkdir(exist_ok=True, parents=True)
+with open(composite_regression_years_file, "w") as fh:
+    json.dump([int(v) for v in composite_regression_years], fh)
+
+composite_regression_years_file

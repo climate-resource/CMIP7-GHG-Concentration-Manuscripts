@@ -845,12 +845,30 @@ Manuscript-relevant:
       Done, see the Summit/Huascarán item in Section 7.
 - [x] `historical_ghg_forcing_for_cmip7/comparison_data.py:826`: check the IGCC processing (release v6.4.0).
       Done, see Section 5.
-- [ ] `historical_ghg_forcing_for_cmip7/equivalent_species.py:77`: use pint for unit handling
+- [x] `historical_ghg_forcing_for_cmip7/equivalent_species.py:77`: use pint for unit handling
       (relevant to the radiative efficiency "halving" worry).
-- [ ] `historical_ghg_forcing_for_cmip7/results_figure.py:168-175`: `SHOW_OUTPUT_AT_COMPARISON_LATITUDES` is off.
+      `EquivalenceDefinition.radiative_efficiencies` are now pint quantities
+      (CMIP7 uses `RADIATIVE_EFFICIENCIES` directly, no more stripping to floats)
+      and each gas' weight comes from `get_weight`, which divides them and converts to dimensionless.
+      Decompositions unchanged (bar float32 rounding in the CMIP6 sums, < 2e-4 ppt); all 231 value checks pass.
+- [x] `historical_ghg_forcing_for_cmip7/results_figure.py:168-175`: `SHOW_OUTPUT_AT_COMPARISON_LATITUDES` is off.
       Decide whether the fairer site comparison is needed (e.g. for the Mauna Loa claim at `results.tex:48-51`).
-- [ ] `historical_ghg_forcing_for_cmip7/co2_methods_figure.py:944,982`, `ch4_methods_figure.py:499`: remove the hard-coding.
-- [ ] `src/local/historical_ghg_forcing_for_cmip7/__pycache__` has a stale `sf6_like_methods_figure` .pyc (module now `cfc12_like_methods_figure`). Clean up.
+      Not needed: it stays off, the docstring now says so.
+      The Mauna Loa value check already interpolates our output to Mauna Loa's latitude
+      (the claim itself is the Section 5 `co2-monthly-diff-from-maunoa-loa` item).
+- [x] `historical_ghg_forcing_for_cmip7/co2_methods_figure.py:944,982`, `ch4_methods_figure.py:499`: remove the hard-coding.
+    - [x] CO_2 PRIMAP regression years: the save cell saved the regression's fit years (unused).
+          It now saves the years PRIMAP covers minus the observational network's
+          (not `years_to_fill_with_regression`, which also has the constant pre-1750 years),
+          and the figure loads them via `get_co2_primap_regression_years`
+    - [x] CO_2 seasonality change composite regression years: new save cell in the re-run of `1205`
+          (the composite's years minus the observational network's),
+          loaded via `get_co2_seasonality_change_composite_regression_years`
+    - [x] both match what the hard-coded ranges gave exactly (1750-1980 and 1850-1980)
+    - [x] CH_4 ice core files: where they are copied to in the bundle now comes from the original run's config
+          (`smooth_law_dome_data` and `retrieve_and_process_neem_data`, see `CH4_ICE_CORE_BUNDLE_CONFIG`)
+- [x] `src/local/historical_ghg_forcing_for_cmip7/__pycache__` has a stale `sf6_like_methods_figure` .pyc (module now `cfc12_like_methods_figure`). Clean up.
+      Deleted (it is gitignored, so nothing to commit).
 
 General tooling (low priority, not manuscript-blocking, skip all of these for now):
 

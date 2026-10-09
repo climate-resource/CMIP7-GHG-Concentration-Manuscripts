@@ -403,9 +403,13 @@ primap_regression_data_file
 # %%
 import json
 
-years_to_fill_with_regression_file = Path("manuscript-outputs/co2_primap-regression-years.json")
-years_to_fill_with_regression_file.parent.mkdir(exist_ok=True, parents=True)
-with open(years_to_fill_with_regression_file, "w") as fh:
-    json.dump([int(v) for v in regression_years], fh)
+primap_regression_years = np.setdiff1d(
+    primap_fossil_co2_emissions["year"],
+    pc0_obs_network_regression["year"],
+)
+primap_regression_years_file = Path("manuscript-outputs/co2_primap-regression-years.json")
+primap_regression_years_file.parent.mkdir(exist_ok=True, parents=True)
+with open(primap_regression_years_file, "w") as fh:
+    json.dump([int(v) for v in primap_regression_years], fh)
 
-years_to_fill_with_regression_file
+primap_regression_years_file

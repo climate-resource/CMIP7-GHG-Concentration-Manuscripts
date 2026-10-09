@@ -175,7 +175,10 @@ SHOW_OUTPUT_AT_COMPARISON_LATITUDES = False
 
 This is the fairer comparison for a site record,
 but with more than a couple of sites the lines are too hard to read
-(and to explain), so it is off for now.
+(and to explain), so it is off.
+The manuscript doesn't need it: where a statement relies on a site comparison
+(e.g. against Mauna Loa), its value check interpolates our output
+to the site's latitude instead.
 """
 
 CONTEXT_MARKER_SIZE = 1.5

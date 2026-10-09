@@ -37,6 +37,7 @@ import matplotlib.figure
 import matplotlib.pyplot as plt
 import openscm_units
 import pandas as pd
+import pint
 import xarray as xr
 
 from local.cmip_ghg_generation import DEFAULT_BUNDLE_DIR
@@ -54,6 +55,8 @@ from local.historical_ghg_forcing_for_cmip7.plotting import (
     get_only_data_variable,
     label_name,
 )
+
+Q = openscm_units.unit_registry.Quantity
 
 EQUIVALENT_SPECIES = ("cfc11eq", "cfc12eq", "hfc134aeq")
 """The equivalent species we produce"""
@@ -74,10 +77,8 @@ class EquivalenceDefinition:
     components: Mapping[str, tuple[str, ...]]
     """Gases included in each equivalent species, keyed by the equivalent species"""
 
-    # TODO: change this so it uses pint for unit handling
-    # and that unit handling propagates elsewhere.
-    radiative_efficiencies: Mapping[str, float]
-    """Radiative efficiency of each gas, in W / m^2 / ppb"""
+    radiative_efficiencies: Mapping[str, pint.Quantity]
+    """Radiative efficiency of each gas"""
 
     def get_reference_gas(self, equivalent_species: str) -> str:
         """
@@ -191,10 +192,7 @@ CMIP7_DEFINITION = EquivalenceDefinition(
         ),
     },
     # AR6, see RADIATIVE_EFFICIENCIES
-    radiative_efficiencies={
-        gas: float(value.to("W / m^2 / ppb").m)
-        for gas, value in RADIATIVE_EFFICIENCIES.items()
-    },
+    radiative_efficiencies=RADIATIVE_EFFICIENCIES,
 )
 """Our definition of the equivalent species"""
 
@@ -298,46 +296,46 @@ CMIP6_DEFINITION = EquivalenceDefinition(
     # That sheet is Appendix 8.A of the IPCC's Fifth Assessment Report
     # (Myhre et al., 2013).
     radiative_efficiencies={
-        "cfc11": 0.26,
-        "cfc12": 0.32,
-        "cfc113": 0.3,
-        "cfc114": 0.31,
-        "cfc115": 0.2,
-        "hcfc22": 0.21,
-        "hcfc141b": 0.16,
-        "hcfc142b": 0.19,
-        "ch3ccl3": 0.07,
-        "ccl4": 0.17,
-        "ch3cl": 0.01,
-        "ch2cl2": 0.03,
-        "chcl3": 0.08,
-        "ch3br": 0.004,
-        "halon1211": 0.29,
-        "halon1301": 0.3,
-        "halon2402": 0.31,
-        "hfc134a": 0.16,
-        "hfc23": 0.18,
-        "hfc32": 0.11,
-        "hfc125": 0.23,
-        "hfc143a": 0.16,
-        "hfc152a": 0.1,
-        "hfc227ea": 0.26,
-        "hfc236fa": 0.24,
-        "hfc245fa": 0.24,
-        "hfc365mfc": 0.22,
-        "hfc4310mee": 0.42,
-        "nf3": 0.2,
-        "sf6": 0.57,
-        "so2f2": 0.2,
-        "cf4": 0.09,
-        "c2f6": 0.25,
-        "c3f8": 0.28,
-        "c4f10": 0.36,
-        "c5f12": 0.41,
-        "c6f14": 0.44,
-        "c7f16": 0.5,
-        "c8f18": 0.55,
-        "cc4f8": 0.32,
+        "cfc11": Q(0.26, "W / m^2 / ppb"),
+        "cfc12": Q(0.32, "W / m^2 / ppb"),
+        "cfc113": Q(0.3, "W / m^2 / ppb"),
+        "cfc114": Q(0.31, "W / m^2 / ppb"),
+        "cfc115": Q(0.2, "W / m^2 / ppb"),
+        "hcfc22": Q(0.21, "W / m^2 / ppb"),
+        "hcfc141b": Q(0.16, "W / m^2 / ppb"),
+        "hcfc142b": Q(0.19, "W / m^2 / ppb"),
+        "ch3ccl3": Q(0.07, "W / m^2 / ppb"),
+        "ccl4": Q(0.17, "W / m^2 / ppb"),
+        "ch3cl": Q(0.01, "W / m^2 / ppb"),
+        "ch2cl2": Q(0.03, "W / m^2 / ppb"),
+        "chcl3": Q(0.08, "W / m^2 / ppb"),
+        "ch3br": Q(0.004, "W / m^2 / ppb"),
+        "halon1211": Q(0.29, "W / m^2 / ppb"),
+        "halon1301": Q(0.3, "W / m^2 / ppb"),
+        "halon2402": Q(0.31, "W / m^2 / ppb"),
+        "hfc134a": Q(0.16, "W / m^2 / ppb"),
+        "hfc23": Q(0.18, "W / m^2 / ppb"),
+        "hfc32": Q(0.11, "W / m^2 / ppb"),
+        "hfc125": Q(0.23, "W / m^2 / ppb"),
+        "hfc143a": Q(0.16, "W / m^2 / ppb"),
+        "hfc152a": Q(0.1, "W / m^2 / ppb"),
+        "hfc227ea": Q(0.26, "W / m^2 / ppb"),
+        "hfc236fa": Q(0.24, "W / m^2 / ppb"),
+        "hfc245fa": Q(0.24, "W / m^2 / ppb"),
+        "hfc365mfc": Q(0.22, "W / m^2 / ppb"),
+        "hfc4310mee": Q(0.42, "W / m^2 / ppb"),
+        "nf3": Q(0.2, "W / m^2 / ppb"),
+        "sf6": Q(0.57, "W / m^2 / ppb"),
+        "so2f2": Q(0.2, "W / m^2 / ppb"),
+        "cf4": Q(0.09, "W / m^2 / ppb"),
+        "c2f6": Q(0.25, "W / m^2 / ppb"),
+        "c3f8": Q(0.28, "W / m^2 / ppb"),
+        "c4f10": Q(0.36, "W / m^2 / ppb"),
+        "c5f12": Q(0.41, "W / m^2 / ppb"),
+        "c6f14": Q(0.44, "W / m^2 / ppb"),
+        "c7f16": Q(0.5, "W / m^2 / ppb"),
+        "c8f18": Q(0.55, "W / m^2 / ppb"),
+        "cc4f8": Q(0.32, "W / m^2 / ppb"),
     },
 )
 """The definition of the equivalent species used to produce the CMIP6 dataset"""
@@ -407,54 +405,54 @@ IGCC_DEFINITION = EquivalenceDefinition(
     # Only the gases in our or IGCC's equivalent species are copied.
     # IGCC's C6F14 is n-C6F14, the isomer we match ours to.
     radiative_efficiencies={
-        "hfc125": 0.23378,
-        "hfc134a": 0.16714,
-        "hfc143a": 0.168,
-        "hfc152a": 0.10174,
-        "hfc227ea": 0.27325,
-        "hfc23": 0.19111,
-        "hfc236fa": 0.25069,
-        "hfc245fa": 0.24498,
-        "hfc32": 0.11144,
-        "hfc365mfc": 0.22813,
-        "hfc4310mee": 0.35731,
-        "nf3": 0.20448,
-        "c2f6": 0.26105,
-        "c3f8": 0.26999,
-        "c4f10": 0.36874,
-        "c5f12": 0.4076,
-        "c6f14": 0.44888,
-        "c7f16": 0.50312,
-        "c8f18": 0.55787,
-        "cf4": 0.09859,
-        "cc4f8": 0.31392,
-        "sf6": 0.56657,
-        "so2f2": 0.21074,
-        "ccl4": 0.16616,
-        "cfc11": 0.25941,
-        "cfc112": 0.28192,
-        "cfc112a": 0.24564,
-        "cfc113": 0.30142,
-        "cfc113a": 0.24094,
-        "cfc114": 0.31433,
-        "cfc114a": 0.29747,
-        "cfc115": 0.24625,
-        "cfc12": 0.31998,
-        "cfc13": 0.27752,
-        "ch2cl2": 0.02882,
-        "ch3br": 0.00432,
-        "ch3ccl3": 0.06454,
-        "ch3cl": 0.00466,
-        "chcl3": 0.07357,
-        "hcfc124": 0.20721,
-        "hcfc133a": 0.14995,
-        "hcfc141b": 0.16065,
-        "hcfc142b": 0.19329,
-        "hcfc22": 0.21385,
-        "hcfc31": 0.068,
-        "halon1211": 0.30014,
-        "halon1301": 0.29943,
-        "halon2402": 0.31169,
+        "hfc125": Q(0.23378, "W / m^2 / ppb"),
+        "hfc134a": Q(0.16714, "W / m^2 / ppb"),
+        "hfc143a": Q(0.168, "W / m^2 / ppb"),
+        "hfc152a": Q(0.10174, "W / m^2 / ppb"),
+        "hfc227ea": Q(0.27325, "W / m^2 / ppb"),
+        "hfc23": Q(0.19111, "W / m^2 / ppb"),
+        "hfc236fa": Q(0.25069, "W / m^2 / ppb"),
+        "hfc245fa": Q(0.24498, "W / m^2 / ppb"),
+        "hfc32": Q(0.11144, "W / m^2 / ppb"),
+        "hfc365mfc": Q(0.22813, "W / m^2 / ppb"),
+        "hfc4310mee": Q(0.35731, "W / m^2 / ppb"),
+        "nf3": Q(0.20448, "W / m^2 / ppb"),
+        "c2f6": Q(0.26105, "W / m^2 / ppb"),
+        "c3f8": Q(0.26999, "W / m^2 / ppb"),
+        "c4f10": Q(0.36874, "W / m^2 / ppb"),
+        "c5f12": Q(0.4076, "W / m^2 / ppb"),
+        "c6f14": Q(0.44888, "W / m^2 / ppb"),
+        "c7f16": Q(0.50312, "W / m^2 / ppb"),
+        "c8f18": Q(0.55787, "W / m^2 / ppb"),
+        "cf4": Q(0.09859, "W / m^2 / ppb"),
+        "cc4f8": Q(0.31392, "W / m^2 / ppb"),
+        "sf6": Q(0.56657, "W / m^2 / ppb"),
+        "so2f2": Q(0.21074, "W / m^2 / ppb"),
+        "ccl4": Q(0.16616, "W / m^2 / ppb"),
+        "cfc11": Q(0.25941, "W / m^2 / ppb"),
+        "cfc112": Q(0.28192, "W / m^2 / ppb"),
+        "cfc112a": Q(0.24564, "W / m^2 / ppb"),
+        "cfc113": Q(0.30142, "W / m^2 / ppb"),
+        "cfc113a": Q(0.24094, "W / m^2 / ppb"),
+        "cfc114": Q(0.31433, "W / m^2 / ppb"),
+        "cfc114a": Q(0.29747, "W / m^2 / ppb"),
+        "cfc115": Q(0.24625, "W / m^2 / ppb"),
+        "cfc12": Q(0.31998, "W / m^2 / ppb"),
+        "cfc13": Q(0.27752, "W / m^2 / ppb"),
+        "ch2cl2": Q(0.02882, "W / m^2 / ppb"),
+        "ch3br": Q(0.00432, "W / m^2 / ppb"),
+        "ch3ccl3": Q(0.06454, "W / m^2 / ppb"),
+        "ch3cl": Q(0.00466, "W / m^2 / ppb"),
+        "chcl3": Q(0.07357, "W / m^2 / ppb"),
+        "hcfc124": Q(0.20721, "W / m^2 / ppb"),
+        "hcfc133a": Q(0.14995, "W / m^2 / ppb"),
+        "hcfc141b": Q(0.16065, "W / m^2 / ppb"),
+        "hcfc142b": Q(0.19329, "W / m^2 / ppb"),
+        "hcfc22": Q(0.21385, "W / m^2 / ppb"),
+        "hcfc31": Q(0.068, "W / m^2 / ppb"),
+        "halon1211": Q(0.30014, "W / m^2 / ppb"),
+        "halon1301": Q(0.29943, "W / m^2 / ppb"),
+        "halon2402": Q(0.31169, "W / m^2 / ppb"),
     },
 )
 """The definition of the equivalent species used to produce the IGCC dataset"""
@@ -506,7 +504,38 @@ def to_units(values: Iterable[float], units: str) -> list[float]:
     :
         `values`, in [UNITS][]
     """
-    return list(openscm_units.unit_registry.Quantity(list(values), units).to(UNITS).m)
+    return list(Q(list(values), units).to(UNITS).m)
+
+
+def get_weight(
+    gas: str, equivalent_species: str, definition: EquivalenceDefinition
+) -> float:
+    """
+    Get the weight of a gas in an equivalent species
+
+    I.e. the ratio of its radiative efficiency
+    to that of the equivalent species' reference gas.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    equivalent_species
+        Equivalent species of interest
+
+    definition
+        Definition whose radiative efficiencies to use
+
+    Returns
+    -------
+    :
+        Weight of `gas` in `equivalent_species`
+    """
+    res = definition.radiative_efficiencies
+    reference = res[definition.get_reference_gas(equivalent_species)]
+
+    return float((res[gas] / reference).to("dimensionless").m)
 
 
 def calculate_equivalent(
@@ -542,11 +571,9 @@ def calculate_equivalent(
     if components is None:
         components = definition.components[equivalent_species]
 
-    res = definition.radiative_efficiencies
-    reference = res[definition.get_reference_gas(equivalent_species)]
-
     return sum(  # type: ignore[return-value]
-        concentrations[gas] * res[gas] / reference for gas in components
+        concentrations[gas] * get_weight(gas, equivalent_species, definition)
+        for gas in components
     )
 
 
@@ -696,15 +723,12 @@ def get_contributions_by_gas(
     """
     our_gases = ours.definition.components[equivalent_species]
     other_gases = other.definition.components[equivalent_species]
-    reference = ours.definition.get_reference_gas(equivalent_species)
-    our_res = ours.definition.radiative_efficiencies
-    other_res = other.definition.radiative_efficiencies
 
     rows = {}
     for gas in sorted(set(our_gases) | set(other_gases)):
         other_conc = other.concentrations.loc[year, gas]
         # Weight of the gas in the other dataset's calculation
-        other_weight = other_res[gas] / other_res[reference]
+        other_weight = get_weight(gas, equivalent_species, other.definition)
 
         if gas in our_gases and gas not in other_gases:
             included = other_conc * other_weight
@@ -714,7 +738,7 @@ def get_contributions_by_gas(
             included = 0.0
 
         if gas in our_gases:
-            our_weight = our_res[gas] / our_res[reference]
+            our_weight = get_weight(gas, equivalent_species, ours.definition)
             radiative_efficiency = other_conc * (our_weight - other_weight)
             concentration = (
                 ours.concentrations.loc[year, gas] - other_conc
@@ -902,10 +926,7 @@ def get_radiative_effect(equivalent_species: str, concentration: float) -> float
         Approximate radiative effect, in W / m^2
     """
     return float(
-        (
-            openscm_units.unit_registry.Quantity(concentration, UNITS)
-            * RADIATIVE_EFFICIENCIES[equivalent_species]
-        )
+        (Q(concentration, UNITS) * RADIATIVE_EFFICIENCIES[equivalent_species])
         .to("W / m^2")
         .m
     )

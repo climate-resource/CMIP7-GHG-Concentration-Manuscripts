@@ -117,6 +117,16 @@ CO2_SEASONALITY_CHANGE_COMPOSITE_FILE = (
 Relative to the bundle's root directory,
 because that is the notebook's working directory.
 """
+
+CO2_SEASONALITY_CHANGE_COMPOSITE_REGRESSION_YEARS_FILE = (
+    Path("manuscript-outputs")
+    / "co2_seasonality-change-composite-regression-years.json"
+)
+"""Where the re-run notebook saves the years the composite regression fills
+
+Relative to the bundle's root directory,
+because that is the notebook's working directory.
+"""
 # PC0_OPTIMISED_YEARS_FILE = Path("manuscript-outputs") / "co2_pc0-optimised-years.json"
 # """Where the re-run notebook saves the PC0 optimised years information we want
 #
@@ -419,9 +429,14 @@ def get_co2_primap_regression_years(
     bundle_dir: Path = DEFAULT_BUNDLE_DIR,
     original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
     force_rerun: bool = False,
-) -> pd.DataFrame:
+) -> list[int]:
     """
     Get the years in which PC0 is extended using a regression against emissions
+
+    I.e. the years PRIMAP covers,
+    other than those the observational network covers.
+    In the years before PRIMAP starts,
+    PC0 is held constant (by holding the emissions constant).
 
     Parameters
     ----------
@@ -522,15 +537,22 @@ primap_regression_data.pint.dequantify().to_netcdf(primap_regression_data_file)
 primap_regression_data_file
 """
 
+    # Not `years_to_fill_with_regression`:
+    # that also has the years before PRIMAP starts,
+    # in which the emissions (so PC0) are just held constant.
     save_cell_primap_years = f"""
 import json
 
-years_to_fill_with_regression_file = Path("{PRIMAP_REGRESSION_YEARS_FILE.as_posix()}")
-years_to_fill_with_regression_file.parent.mkdir(exist_ok=True, parents=True)
-with open(years_to_fill_with_regression_file, "w") as fh:
-    json.dump([int(v) for v in regression_years], fh)
+primap_regression_years = np.setdiff1d(
+    primap_fossil_co2_emissions["year"],
+    pc0_obs_network_regression["year"],
+)
+primap_regression_years_file = Path("{PRIMAP_REGRESSION_YEARS_FILE.as_posix()}")
+primap_regression_years_file.parent.mkdir(exist_ok=True, parents=True)
+with open(primap_regression_years_file, "w") as fh:
+    json.dump([int(v) for v in primap_regression_years], fh)
 
-years_to_fill_with_regression_file
+primap_regression_years_file
 """
 
     notebook_name = base_notebook.stem
@@ -558,7 +580,10 @@ def get_co2_seasonality_change_composite_timeseries(
     force_rerun: bool = False,
 ) -> xr.Dataset:
     """
-    Get the years in which PC0 is extended using a regression against emissions
+    Get the composite the seasonality change PC is regressed against
+
+    Only in the years the observational network covers,
+    i.e. the years used for the regression.
 
     Parameters
     ----------
@@ -576,15 +601,74 @@ def get_co2_seasonality_change_composite_timeseries(
     Returns
     -------
     :
-        Years in which the PRIMAP regression was used
+        Composite timeseries
     """
     out_file = bundle_dir / CO2_SEASONALITY_CHANGE_COMPOSITE_FILE
     if out_file.exists() and not force_rerun:
         logger.info(f"Using existing {out_file}")
-        res = xr.load_dataset(out_file)
+        return xr.load_dataset(out_file)
+
+    re_run_seasonality_change_pc_extension_notebook(
+        bundle_dir, original_run_notebooks_dir
+    )
+    return xr.load_dataset(out_file)
+
+
+def get_co2_seasonality_change_composite_regression_years(
+    bundle_dir: Path = DEFAULT_BUNDLE_DIR,
+    original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
+    force_rerun: bool = False,
+) -> list[int]:
+    """
+    Get the years in which the seasonality change PC comes from the composite regression
+
+    I.e. the years the composite covers,
+    other than those the observational network covers.
+    In the years before the composite starts,
+    the PC is held constant (by holding the composite constant).
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    original_run_notebooks_dir
+        The original run's `notebooks-executed` directory
+
+        Only used if we don't already have a copy of the notebook we need.
+
+    force_rerun
+        Re-run the notebook even if its output is already there
+
+    Returns
+    -------
+    :
+        Years in which the composite regression was used
+    """
+    out_file = bundle_dir / CO2_SEASONALITY_CHANGE_COMPOSITE_REGRESSION_YEARS_FILE
+    if out_file.exists() and not force_rerun:
+        logger.info(f"Using existing {out_file}")
+        with open(out_file) as fh:
+            res = json.load(fh)
 
         return res
 
+    re_run_seasonality_change_pc_extension_notebook(
+        bundle_dir, original_run_notebooks_dir
+    )
+    with open(out_file) as fh:
+        res = json.load(fh)
+
+    return res
+
+
+def re_run_seasonality_change_pc_extension_notebook(
+    bundle_dir: Path = DEFAULT_BUNDLE_DIR,
+    original_run_notebooks_dir: Path = DEFAULT_ORIGINAL_RUN_NOTEBOOKS_DIR,
+) -> None:
+    """
+    Re-run the seasonality change pc extension notebook
+    """
     base_notebook = (
         Path("calculate_co2_monthly_fifteen_degree_pieces")
         / "only"
@@ -622,6 +706,21 @@ regression_timeseries_same_years.pint.dequantify().to_netcdf(co2_seasonality_cha
 co2_seasonality_change_composite_file
 """  # noqa: E501
 
+    save_cell_composite_regression_years = f"""
+import json
+
+composite_regression_years = np.setdiff1d(
+    regression_timeseries["year"],
+    pc0_obs_network["year"],
+)
+composite_regression_years_file = Path("{CO2_SEASONALITY_CHANGE_COMPOSITE_REGRESSION_YEARS_FILE.as_posix()}")
+composite_regression_years_file.parent.mkdir(exist_ok=True, parents=True)
+with open(composite_regression_years_file, "w") as fh:
+    json.dump([int(v) for v in composite_regression_years], fh)
+
+composite_regression_years_file
+"""  # noqa: E501
+
     notebook_name = base_notebook.stem
     ipynb_to_run = bundle_dir / "notebooks-rerun" / f"{notebook_name}.ipynb"
     to_run = write_modified_notebook(
@@ -630,6 +729,7 @@ co2_seasonality_change_composite_file
         out_ipynb=ipynb_to_run,
         extra_cells=[
             save_cell_timeseries_data,
+            save_cell_composite_regression_years,
         ],
         step_config_id="only",
     )
@@ -638,9 +738,6 @@ co2_seasonality_change_composite_file
         ipynb_to_run,
         bundle_dir=bundle_dir,
     )
-    res = xr.load_dataset(out_file)
-
-    return res
 
 
 def plot_seasonality_change_from_obs_network(
@@ -941,12 +1038,14 @@ def generate_co2_methods_figure(  # noqa: PLR0915
         bundle_dir / "data/interim/co2/co2_allyears-seasonality-change-eofs-pcs.nc"
     )
 
-    # TODO: remove hard-coding?
     obs_based_years = seasonality_change_from_obs_network["year"].values
-    composite_regression_years = np.arange(1850, 2023)
-    composite_regression_years = composite_regression_years[
-        ~np.isin(composite_regression_years, obs_based_years)
-    ]
+    composite_regression_years = np.array(
+        get_co2_seasonality_change_composite_regression_years(
+            bundle_dir=bundle_dir,
+            original_run_notebooks_dir=original_run_notebooks_dir,
+            force_rerun=force_rerun,
+        )
+    )
     seasonality_change_pc_constant_years = seasonality_change_extended["year"][
         ~np.isin(seasonality_change_extended["year"], obs_based_years)
         & ~np.isin(seasonality_change_extended["year"], composite_regression_years)
@@ -979,13 +1078,14 @@ def generate_co2_methods_figure(  # noqa: PLR0915
         x_unit="GtC / yr",
     )
 
-    # TODO: remove hard-coding?
-    primap_years_all = np.arange(1750, 2024)
-
     obs_based_years = lat_gradient_from_obs_network["year"].values
-    primap_regression_years = primap_years_all[
-        ~np.isin(primap_years_all, obs_based_years)
-    ]
+    primap_regression_years = np.array(
+        get_co2_primap_regression_years(
+            bundle_dir=bundle_dir,
+            original_run_notebooks_dir=original_run_notebooks_dir,
+            force_rerun=force_rerun,
+        )
+    )
 
     pc0_constant_years = pcs_extended["year"].values[
         ~np.isin(pcs_extended["year"], obs_based_years)
