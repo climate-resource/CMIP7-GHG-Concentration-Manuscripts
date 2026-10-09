@@ -4,7 +4,7 @@
 #   - name: Anna Lanteri
 #   - name: Zebedee Nicholls
 #   - name: Florence Bockting
-#   - name: Mika Pflüger
+#   - name: "Mika Pfl\xFCger"
 #   jupytext:
 #     notebook_metadata_filter: title,authors
 #     text_representation:
@@ -76,35 +76,30 @@ create_all_tables(engine)
 # TODO: update this to point at the final, published EO-update dataset
 # once it exists (e.g. once it's on ESGF and can be fetched the same way
 # as the original dataset above). For now, this points directly at a local
-# dev-run output bundle from CMIP-GHG-Concentration-Generation, so there is
+# output bundle from CMIP-GHG-Concentration-Generation, so there is
 # no ESGF fetch step for this data.
 EO_UPDATE_DATA_ROOT = (
     REPO_ROOT.parent
     / "CMIP-GHG-Concentration-Generation"
     / "output-bundles"
-    / "dev-test-run"
+    / "eo-update"
     / "data"
     / "processed"
     / "esgf-ready"
-    / "input4MIPs"
-    / "CMIP6Plus"
+    / "EO-update-input4MIPs"
+    / "CMIP7Plus"
     / "CMIP"
     / "CR"
-    / "CR-CMIP-testing"
+    / "CR-CMIP7Plus"
     / "atmos"
 )
-EO_UPDATE_DATA_VERSION = "v20260907"
-# The two gases use different statistical fits for the satellite-extension step
-EO_UPDATE_FIT_SUFFIX = {
-    "co2": "SAT_LINEAR_SEASONAL_LAT_STD_WEIGHT_FIT",
-    "ch4": "SAT_NONLINEAR_LAT_STD_WEIGHT_FIT",
-}
+EO_UPDATE_DATA_VERSION = "v20261008"
 
 
 def get_eo_update_local_files(ghg, time_sampling, grid):
     """Get the local files for the EO-updated (satellite-extended) dataset"""
     d = EO_UPDATE_DATA_ROOT / time_sampling / ghg / grid / EO_UPDATE_DATA_VERSION
-    return sorted(d.glob(f"*_{EO_UPDATE_FIT_SUFFIX[ghg]}.nc"))
+    return sorted(d.glob("*.nc"))
 
 
 # %% [markdown] jp-MarkdownHeadingCollapsed=true
@@ -179,7 +174,7 @@ def get_eo_update_local_files(ghg, time_sampling, grid):
 #        but have not done so at the moment to save processing and storage space
 #        given that there has been no demand for these products from modelling teams
 #
-# The updated dataset (produced by adding satellite data information, hereafter referred to as EO-CMIP7) is produced with the same methodology, save from the fact that pre-processed satellite data is also used ats input in the first step. The pre-processing consists in scaling the satellite data using a function obtained by fitting the satellite data to the ground based data. The assumption is that this simple approach already provides us with a new dataset, therefore referred as 'scaled satellite data', compatible with ground based data, but with a wider coverage. Evalutation of results will focus on determining the fairness of this assumption.
+# The updated dataset (produced by adding satellite data information, hereafter referred to as EO-CMIP7) is produced with the same methodology, save from the fact that pre-processed satellite data is also used as input in the first step. The pre-processing consists in scaling the satellite data using a function obtained by fitting the satellite data to the ground based data. The assumption is that this simple approach already provides us with a new dataset, therefore referred as 'scaled satellite data', compatible with ground based data, but with a wider coverage. Evalutation of results will focus on determining the fairness of this assumption.
 #
 # The input datasets, including the satellite datasets, and associated references
 # are documented in the `references*` attributes of each netCDF file.
@@ -193,77 +188,41 @@ def get_eo_update_local_files(ghg, time_sampling, grid):
 # [^gh-code]: https://github.com/climate-resource/CMIP-GHG-Concentration-Generation
 #
 #
-# ## Satellide data preprocessing
-#
-# The satellite data used in this work is taken from OBS4MIPs L3 total column (XCH4/XCO2) product. This consists in a harmonized gridded multi-satellite merged product using EMMA, calibrated using the TCCON network, using an a-priori profile generated with SLIM.
-#
+# ## Satellite data preprocessing
 # [TODO: update references]
 #
-# The satellite data is then pre-processed with the objective of producing a new dataset with the coverage of the satellite product but with values that can be treated in the same way as data from a ground based network. To achieve this, we scale the satellite data with a factor/a function derived by the relationship between satellite and ground based.
+# The satellite data used in this work is taken from OBS4MIPs L3 total column (XCH4/XCO2) product. This consists in a harmonized gridded multi-satellite merged product using EMMA, calibrated using the TCCON network, using an a-priori profile generated with SLIM. This means that observations from multiple satellites have been combined to create an internally consistent, composite dataset with maximal spatial and temporal coverage from the underlying raw data products, on a lon-lat grid. This dataset was chosen as it is the most temporally and spatially complete output product available based on satellite observations, and it brings improvements, especially for the spatial coverage, compared to the ground-based network.
 #
-# We therefore perform a series of fits between matching (in space and time) datapoints for satellite and ground-based data. These fits include dependencies on concentrations, latitude, and seasonality, since those variables are identified as the key components for the PC decomposition performed in the GHG concentrations generation pipeline. Satellite data is then scaled using the function given by the best fit for each gas, which is respectively:
+# However, the satellite and ground-based data do not measure the same thing, so simply adding the satellite data to the pipeline directly would introduce strong biases. Ground-based observations measure surface concentrations directly. Satellite observations instead indirectly observe total column quantities. The translation between the two is the key: we want to produce a ground-based-equivalent product from the satellite observations. At present, there is no established method for producing such a product from satellite observations. We propose a simple approach in this work.
+#
+# The satellite data is therefore pre-processed with the objective of producing a new dataset with the coverage of the satellite product, but with values that can be treated in the same way as data from a ground based network. To achieve this, we scale the satellite data with a factor/a function derived by the relationship between satellite and ground based data. We note that this approach does not introduce assumptions on the shape of the tropospheric bias.
+#
+# To choose the scaling function, we perform a series of fits between matching (in space and time) datapoints for satellite and ground-based data. These fits include dependencies on concentrations, latitude, and seasonality, since those variables are identified as the key components for the PC decomposition performed in the GHG concentrations generation pipeline. Implicitly, we are assuming that we can derive a fit that allows us to translate satellite based values into their ground-based equivalent via basic modelling alone. We examine the validity of this assumption later on. Satellite data is then scaled using the function given by the best fit for each gas, which is respectively:
 #
 # - CO{raw-latex}`\textsubscript{2}`: linear dependency on concentration, latitude, seasonality, using inverse variance weighting
 # - CH{raw-latex}`\textsubscript{4}`: non-linear (quadratic) dependency on concentration, linear dependency on latitude, using inverce variance weighting.
 #
 # An uncertainty estimation is then performed combining a Monte Carlo approach and fit uncertainty. We first run the fit 200 times perturbing the satellite and ground data within their error bars, taking then the variance of the distribution for each gridpoint and time. We then multiply all resulting uncertainty values by the squared root of the reduced {raw-latex}`\ensuremath{\chi^2}` (aka the standard error of the regression) wherever the reduced {raw-latex}`\ensuremath{\chi^2}` is > 1.
 #
-# The fitting and therefore pre-prossing of the data is kept simple for interpretability and to allow straightforward uncertainty estimation, but more sophisticated approaches including machine learning algorithms or complex generative approaches remain of interest for future works.
+# The fitting and therefore pre-processing of the data is kept simple for interpretability and to allow straightforward uncertainty estimation, but more sophisticated approaches including machine learning algorithms or complex generative approaches remain of interest for future works.
 #
 # ## Adding the satellite to the GHG generation pipeline
 #
-# To reduce the impact of satellite data on bins that already have robust information from the ground-based networks, we also weight the satellite data using the uncertainty we described above. We do not apply any weighting to the ground-based data, to remain as close as possible to the current pipeline. This results in the scaled satellite data being treated as an additional ground-based network where no other data is available, but being de facto ignored wherever we already have strong coverage.
+# To reduce the impact of satellite data on bins that already have robust information from the ground-based networks, we also weight the satellite data using the uncertainty we described above. Althought uncertainty for ground based data is available, we apply a weight of 1 to the ground based data instead, to remain as close as possible to the current pipeline where no weighting is performed. This results in the scaled satellite data being treated as an additional ground-based network where no other data is available, but being de facto ignored wherever we already have strong coverage. This approach is justified by the fact that the satellite data is scaled to the ground data, using the ground data as ground truth. Therefore, if the scaling is effective, the satellite data should agree with ground data, and disagree with it if bias is introduced by the methodology. As a note, we looked into this agreement/disagreement between ground based data and satellite data as part of our in-depth evaluation. This evaluation is not shown here, but is available with the appended material or by request.
 #
 
 # %% [markdown]
 # # Finding and accessing the data
 
-# %% [markdown] jp-MarkdownHeadingCollapsed=true
-# ## ESGF
-#
-# [TODO: clarify if theese data will be stored on esgf, I assume not?]
-#
-# The **Earth System Grid Federation** {raw-latex}`\parencite{esgf_docs}`
-# provides access to a range of climate data.
-# The historical data of interest here,
-# which is the data to be used
-# for historical and piControl simulations within CMIP
-# {raw-latex}`\parencite{dunne2025evolving}`,
-# can be found under the "source ID", `CR-CMIP-1-0-0`.
-# The concept of a "source ID" is a bit of a perculiar one
-# to CMIP forcings data.
-# In practice, it is simply a unique identifier for a collection of datasets
-# (and it's best not to read more than that into it).
-#
-# It is possible to filter searches on ESGF
-# via the user interface (see ESGF user guides[^esgf-user-guides-url]).
-# Alternatively, searches can be encoded in URLs. However, a caveat with this
-# approach is that URLs sometimes move, so we make no guarantee that this link
-# will always be live. The following link provides an example of a search
-# that is encoded in a URL:
-#
-# > [esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%2ource_id%22%3A%22CR-CMIP-1-0-0%22%7D](https://esgf-node.ornl.gov/search?project=input4MIPs&activeFacets=%7B%2ource_id%22%3A%22CR-CMIP-1-0-0%22%7D)
-#
-# To download the data, we recommend accessing it directly via the ESGF user interfaces
-# via links like the one above.
-# Alternately, there are tools dedicated to accessing ESGF data,
-# with two prominent examples being **esgpull**[^esgpull-url]
-# and **intake-esgf**[^intake-esgf-url].
-# Please refer to the tools' docs for usage instructions.
-#
-# [^esgf-user-guides-url]: https://esgf.github.io/esgf-user-support/user_guide.html#data-search-and-download
-# [^esgpull-url]: https://esgf.github.io/esgf-download
-# [^intake-esgf-url]: https://intake-esgf.readthedocs.io
-
 # %% [markdown]
 # ## Zenodo
 #
-# While it aims to be, the ESGF is technically not a permanent archive
-# and does not issue DOIs.
-# In order to provide more reliable, citable access to the data,
-# we also provide it on **Zenodo** {raw-latex}`\parencite{zenodo}`.
+# In order to provide reliable, citable access to the data,
+# we provide it on **Zenodo** {raw-latex}`\parencite{zenodo}`.
 # The data, as well as all the source code and input data used to process it,
 # can be found at [TODO: add data on zenodo, put link here]
+#
+# There is no current plan to store data on ESGF, but it can be done in case this dataset is of high importance for enough users.
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Data description
@@ -331,11 +290,15 @@ def get_eo_update_local_files(ghg, time_sampling, grid):
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Differences compared to CMIP6 and original
 #
-# [TODO: update with correct analysis]
-# At present, the changes from CMIP6 are minor,
+# The changes from CMIP6 are minor,
 # with the maximum difference in effective radiative forcing terms
-# being 0.05 W / m{raw-latex}`\textsuperscript{2}`
+# being around 0.06 W / m{raw-latex}`\textsuperscript{2}`
 # (and generally much smaller than this, particularly after 1850).
+# This is compatible with the difference from the original CMIP7 concentrations,
+# that have a maximum difference of 0.05 W / m{raw-latex}`\textsuperscript{2}`.
+#
+# The changes from CMIP7 are extremely small, reaching a maximum of 0.004 W / m{raw-latex}`\textsuperscript{2}`.
+#
 # For more details, see the plots in the user guide below
 # and the forthcoming manuscript.
 
@@ -364,8 +327,6 @@ co2_yearly_global_fps = get_eo_update_local_files(
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Annual-, global-mean data
-#
-# [TODO: format of the files needs to be finalised, so the metadata shown here will most likely change]
 #
 # We start with the annual-, global-mean data.
 # Like all our datasets, this is composed of three files,
@@ -1114,7 +1075,7 @@ plt.show()
 #
 # {raw-latex}`\newpage`
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
 # ### Data comparisons with CMIP6
 #
 # Comparing the data from CMIP6 and from this data (CMIP7-like, with adedd EO information, referred to from now on as EO-CMIP7) shows minor changes
@@ -1333,16 +1294,18 @@ plt.show()
 # {raw-latex}`\newpage`
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Atmospheric concentrations: Year 1957 - 2022
+# #### Atmospheric concentrations: Year 1945 - 2022
 #
-# 1957 is the start of the Scripps ground-based record.
-# Before this, data is based on ice cores alone.
+# For CO{raw-latex}`\textsubscript{2}`, 1957 is the start of the Scripps ground-based record.
+# Before this, data is based on ice cores alone up to 1948, splined to ground based values from Mauna Loa until 1957.
+#
+# For CH{raw-latex}`\textsubscript{4}`, the ice core data is only available up to 1948, creating therefore a gap between 1948 and 1957. This gap is handled with emission regression for the CMIP7 product, but adding satellite data creates an unphysical jump in concentrations around the year 1948 for the EO-CMIP7 product for CH{raw-latex}`\textsubscript{4}`.
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig, axes_d = get_default_delta_mosaic()
 axes_d = remove_empty_axes(axes_d)
 
-min_year = 1957
+min_year = 1945
 plot_overview_and_deltas(
     sel_times(ds_gases_full_d, lambda x: x.dt.year >= min_year),
     axes_d,
@@ -1361,7 +1324,7 @@ plt.show()
 # name: "cmip6-v-cmip7-year-1957-2022-fig"
 # ---
 #
-# CMIP6 vs. EO-CMIP7 for the time period from year 1957 to 2022.
+# CMIP6 vs. EO-CMIP7 for the time period from year 1945 to 2022.
 # For each pair of plots, the top panel shows the datasets' absolute values,
 # the bottom panel shows the difference (EO-CMIP7 minus CMIP6).
 # We show CO{raw-latex}`\textsubscript{2}` and
@@ -1686,7 +1649,10 @@ plt.show()
 #
 # Comparing the original CMIP7 data (without satellite information)
 # and EO-CMIP7 (this dataset, with added EO information) shows minor changes in the case of CO{raw-latex}`\textsubscript{2}`. In case of CH{raw-latex}`\textsubscript{4}`, even though the magnitude of the changes is not high, some unphysical artefacts are introduced, specifically in the year 2003 (when satellite measurements start) and in 1948 (when the firn dataset stops).
-# For an in-detail exploration and discussion of these differences, feel free to contact the authors of this user guide, but for now we do not recommend using the EO-CMIP7 concentrations for CH{raw-latex}`\textsubscript{4}` in your work.
+#
+# These artifacts are introduced by adding the scaled satellite data to the GHG concentration generation pipeline without introducing an harmonising step. This comes as no surprise, also considering that the method use for scaling satellite data to a ground-based-equivalent product is very simple and makes no assumption on tropospheric biases. This is especially true for methane due to the nature and time coverage of the ground based observations. Resolving this issue was not a priority for this work, as we aimed to see the impact of adding scaled satellite data to the pipeline without changing the pipeline itself, but it would be a necessary step if a more stable product was needed.
+#
+# For an in-detail exploration and discussion of these issues, feel free to contact the authors of this user guide, but for now we do not recommend using the EO-CMIP7 concentrations for CH{raw-latex}`\textsubscript{4}` in your work.
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 ds_gases_full_cmip7_d = {}
@@ -1787,16 +1753,18 @@ plt.show()
 # {raw-latex}`\newpage`
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# #### Atmospheric concentrations: Year 1957 - 2022
+# #### Atmospheric concentrations: Year 1945 - 2022
 #
-# 1957 is the start of the Scripps ground-based record.
-# Before this, data is based on ice cores alone.
+# For CO{raw-latex}`\textsubscript{2}`, 1957 is the start of the Scripps ground-based record.
+# Before this, data is based on ice cores alone up to 1948, splined to ground based values from Mauna Loa until 1957.
+#
+# For CH{raw-latex}`\textsubscript{4}`, the ice core data is only available up to 1948, creating therefore a gap between 1948 and 1957. This gap is handled with emission regression for the CMIP7 product, but adding satellite data creates an unphysical jump in concentrations around the year 1948 for the EO-CMIP7 product for CH{raw-latex}`\textsubscript{4}`.
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 fig, axes_d = get_default_delta_mosaic()
 axes_d = remove_empty_axes(axes_d)
 
-min_year = 1957
+min_year = 1945
 plot_overview_and_deltas(
     sel_times(ds_gases_full_cmip7_d, lambda x: x.dt.year >= min_year),
     axes_d,
@@ -1815,7 +1783,7 @@ plt.show()
 # name: "cmip7-v-eo-cmip7-year-1957-2022-fig"
 # ---
 #
-# Original CMIP7 vs. EO-CMIP7 for the time period from year 1957 to 2022.
+# Original CMIP7 vs. EO-CMIP7 for the time period from year 1945 to 2022.
 # For each pair of plots, the top panel shows the datasets' absolute values,
 # the bottom panel shows the difference (EO-CMIP7 minus original CMIP7).
 # We show CO{raw-latex}`\textsubscript{2}` and

@@ -12,21 +12,21 @@ from pathlib import Path
 def main():
     """Generate the listing"""
     # TODO: point this at the final, published EO-updated dataset once it
-    # exists. For now, this points at a local dev-run output bundle from
-    # CMIP-GHG-Concentration-Generation (dev-test-run, CR-CMIP-testing).
+    # exists. For now, this points at a local output bundle from
+    # CMIP-GHG-Concentration-Generation (eo-update, CR-CMIP7Plus).
     read_path = (
         Path(__file__).parents[2]
         / "CMIP-GHG-Concentration-Generation"
         / "output-bundles"
-        / "dev-test-run"
+        / "eo-update"
         / "data"
         / "processed"
         / "esgf-ready"
-        / "input4MIPs"
-        / "CMIP6Plus"
+        / "EO-update-input4MIPs"
+        / "CMIP7Plus"
         / "CMIP"
         / "CR"
-        / "CR-CMIP-testing"
+        / "CR-CMIP7Plus"
         / "atmos"
         / "mon"
     )
