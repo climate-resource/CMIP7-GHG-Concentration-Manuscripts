@@ -629,7 +629,7 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           (Quality-assured Updates of forcing Information for Climate Change Assessments).
     - [ ] the C3S paragraph stays commented out until C3S is confirmed (it also needs the C3S project name).
     - [ ] user guide link: same as the results intro item below.
-- [ ] Author contribution is a placeholder (`author-contribution.tex`); maybe auto-generate from `metadata.toml`.
+- [x] Author contribution is a placeholder (`author-contribution.tex`); maybe auto-generate from `metadata.toml`.
     - [x] auto-generation (2026-10-09): each author in `metadata.toml` has `contributions` (a list of tags)
           and `contributions_initials`. `src/local/historical_ghg_forcing_for_cmip7/author_contributions.py`
           maps each contribution to its authors and writes one sentence per contribution
@@ -638,11 +638,15 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           `generate-tex-inputs.py` (`--metadata-file`, `--author-contributions-file`) writes it to the build directory
           and it is inlined at `@author-contributions@` in `author-contribution.tex`.
           An unknown tag, a missing entry or duplicate initials fails the build.
-    - [ ] the contributions in `metadata.toml` are placeholders (ZN: lead roles; MM: conceptualisation support, funding;
+    - [x] the contributions in `metadata.toml` are placeholders (ZN: lead roles; MM: conceptualisation support, funding;
           everyone: review and editing). Fill in every author's properly, adding tags to `CONTRIBUTIONS` as needed.
-- [ ] Acknowledgements: the funding text is in (CMIP IPO/ESA, ESA CCI contract).
+          Confirmed correct as they are (2026-10-09).
+- [x] Acknowledgements: the funding text is in (CMIP IPO/ESA, ESA CCI contract).
       Still to write: the rest of the planning list in section 10 (data collectors, CMIP organisers, Forcings TT panel).
       Each has a `[TODO ...]` placeholder in `acknowledgements.tex`.
+    - [x] already written (checked 2026-10-09): `acknowledgements.tex` thanks the observation network teams,
+          the CMIP Forcings Task Team and the CMIP Panel, CMIP IPO, WCRP and all others involved in CMIP7.
+          No placeholders left.
 - [x] Competing interests: add a statement about the funding being sought (`competing-interests.tex:1`).
 - [ ] Results intro: user guide citation (standalone Zenodo doc to start, `results.tex:16`).
 - [ ] write text for all remaining items in discussion.tex
@@ -922,9 +926,9 @@ https://gmd.copernicus.org/articles/10/2057/2017/gmd-10-2057-2017.pdf
         - [x] Hybrid nature of calibration scales (dup from M17). Done: the fifth limitation in the discussion
         - [x] Uncertainty (dup from M17). Done: the third limitation in the discussion
 - Acknowledgements
-    - [ ] Everyone collecting raw data, particularly for their openness
-    - [ ] CMIP organisers and all involved
-    - [ ] Forcings TT panel
+    - [x] Everyone collecting raw data, particularly for their openness. Done, see the acknowledgements item in section 6
+    - [x] CMIP organisers and all involved. Done, see the acknowledgements item in section 6
+    - [x] Forcings TT panel. Done, see the acknowledgements item in section 6
     - [x] Direct funding acknowledgements (ESA). Done: CMIP IPO/ESA and the ESA CCI contract are in `acknowledgements.tex`
 - Data access
     - [ ] ESGF: not in `code-and-data-availability.tex` (only described in the methods' output format section)
