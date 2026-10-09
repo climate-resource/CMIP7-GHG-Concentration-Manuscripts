@@ -570,8 +570,15 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           (the results note's contrast, the discussion's general statements, the "use all GHGs" option in the methods).
           The abstract no longer says "effective" or "ERF".
           The label `ssec:results-radiative-forcing-comparisons-note` is unchanged.
-- [ ] Discussion claims all differences are "less than 0.03 W/m2" (`discussion.tex:7-8`),
+- [x] Discussion claims all differences are "less than 0.03 W/m2" (`discussion.tex:7-8`),
       but results give about 0.05 W/m2 (CO_2, full period) and about 0.04 W/m2 (N_2O, full period). Reconcile.
+    - [x] reconciled (2026-10-09): the numbers now only apply to the differences from CMIP6,
+          "less than 0.06 W/m2 over the length of the dataset and less than 0.03 W/m2 over the period used for CMIP modelling (1850 onwards)",
+          with the `-diff-from-cmip6-all-radiative-effect` and `-diff-from-cmip6-1850-on-radiative-effect` value-checks
+          for CO_2, CH_4, N_2O, CFC12, CFC12-eq and HFC-134a-eq.
+          The differences from the inputs and other networks are still called small, but without a number:
+          0.03 W/m2 doesn't hold for all of them (e.g. CO_2 is within 3 ppm of IGCC, about 0.04 W/m2;
+          HFC-134a-eq's difference from IGCC is only checked to be less than 0.05 W/m2).
 - [ ] Check the end year: the abstract says datasets end in 2022, the obs networks run to 2023 (`methods.tex:346,549,768,837`),
       historical ends 2021-12 (`output-requirements.tex:31`).
 - [ ] Introduction: cite Vaishali's paper (`introduction.tex:9`); find papers on how forcing generation evolved / the forcings task team
