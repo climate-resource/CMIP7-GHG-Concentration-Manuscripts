@@ -518,9 +518,25 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       UCI: check what the UCI timeseries is exactly (spatial region, averaging; it's probably not a global-mean)
       and make sure it's described correctly, its latitude bounds and where the data was retrieved from (`results.tex:122-126`).
       ("Summit" ice core outlier: done, see Section 7.)
-- [ ] Check "IGCC is also based on NOAA data" (`results.tex:60,120,188`) and "the same source is used by IGCC" (`results.tex:244`).
-- [ ] Check IGCC citations and processing (`results.tex:388`, `src/local/historical_ghg_forcing_for_cmip7/comparison_data.py:826`).
-- [ ] Define AR6 once and cite it (`results.tex:301,357`); check "IGCC uses Hodnebrog" (`results.tex:302,358`).
+- [x] Check "IGCC is also based on NOAA data" (`results.tex:60,120,188`) and "the same source is used by IGCC" (`results.tex:244`).
+      Done (2026-10-09), checked against IGCC's `notebooks/01_trace-gas-global-mean.py` (v6.4.0) and Sect. 3 of Forster et al. (2026).
+      IGCC is the AR6 timeseries, extended with: NOAA's global-mean alone for CO_2 (X2019 scale, like our inputs);
+      the average of NOAA and AGAGE (from 2019 on) for CH_4, N_2O, SF_6 and the halogenated gases both networks report;
+      one network (some with an offset) or extrapolation (linear, or from the literature) for the rest.
+      "Vimont et al. (2022)" is the ozone-depleting substances section of BAMS' State of the Climate in 2022
+      (https://doi.org/10.1175/BAMS-D-23-0090.1), one of IGCC's sources for extrapolating minor gases.
+    - [x] CO_2, CH_4, N_2O: `[TODO check]`s replaced by what IGCC uses for each gas
+    - [x] CFC12: "the same source is used by the IGCC" was wrong. IGCC doesn't use WMO (2022),
+          it averages NOAA and AGAGE, so is also a middle-ground between the two. Text now says so
+    - [x] discussion (uncertainties paragraph): IGCC's reported uncertainties (0.4 ppm CO_2, 3.3 ppb CH_4, 0.4 ppb N_2O,
+          carried over from AR6) look too small given the networks' lack of global coverage,
+          i.e. they miss the leading (methodological) uncertainty. ZN to review the wording (ZNTODO in `discussion.tex`)
+    - [ ] CH_4: the "our dataset also includes AGAGE" explanation for the ~10 ppb difference from NOAA
+          applies less to IGCC, which includes AGAGE too (ZNTODO in `results.tex`)
+- [x] Check IGCC citations and processing (`results.tex:388`, `src/local/historical_ghg_forcing_for_cmip7/comparison_data.py:826`).
+      Citations confirmed by ZN (Section 7); `get_igcc_comparison`'s docstring now describes IGCC's sources.
+- [x] Define AR6 once and cite it (`results.tex:301,357`); check "IGCC uses Hodnebrog" (`results.tex:302,358`).
+      AR6 is defined on first use (Section 7). IGCC's `radeff` cites Hodnebrog et al. (2020); `[TODO check]`s removed.
 - [ ] Plain-text gas names that the replacements won't catch: "CO2" (`results.tex:43`), "CH4" (`results.tex:106,132,153`).
 - [ ] Heading vs text names: "CFC-12-eq"/"HFC-134a-eq" headings vs "CFC12-eq"/HFC134a in text. Check `replacements.yaml` covers all forms.
 - [ ] Specify that piControl should repeat the 1850 values (`output-requirements.tex:117`; probably in results).
@@ -630,15 +646,45 @@ Still to do:
       The other sites' latitudes were checked too: WAIS Divide 79.47S (https://nsidc.org/data/nsidc-0493/versions/1),
       GISP2 72.58N (https://catalog.data.gov/dataset/noaa-wds-paleoclimatology-gisp2-ice-core-112kyr-methane-concentration-data;
       the code had 72.60), Law Dome 66.73S and NEEM 77.45N (match our input data), Mauna Loa 19.54N (`MAUNA_LOA_LATITUDE`).
-- [ ] `results.tex` CH_4 section: the UCI sentences still have two `[TODO check ...]`
+- [x] `results.tex` CH_4 section: the UCI sentences still have two `[TODO check ...]`
       (what the UCI timeseries represents exactly; whether the sentence on its latitude range is right).
-- [ ] `introduction.tex`: ZN to review the Durack et al. (2025) sentence and choose the other CMIP7 forcing papers
+      Done (2026-10-09). The latitude range `[TODO check]` was already gone (range is from UCI's network README).
+      The timeseries is UCI's estimate of the global-mean: about 80 samples from about 45 Pacific basin locations,
+      collected four times a year (March, June, September, December), are averaged within each of 16 latitudinal bands
+      (each holding an equal volume of air), the values of bands 15 and 16 are interpolated and the 16 band averages are averaged.
+      Source: UCI's slides from the 2011 NOAA GML annual meeting
+      (https://gml.noaa.gov/publications/annual_meetings/2011/slides/70-110415-A.pdf), found via a web search summary;
+      Simpson et al. (2012) is paywalled, so not checked directly.
+      The text now calls it "an estimate of the global-mean derived from samples collected four times a year".
+      Still open in Section 5: the "UCI global-mean" figure label and anything else under the UCI item there.
+- [x] `introduction.tex`: ZN to review the Durack et al. (2025) sentence and choose the other CMIP7 forcing papers
       to cite alongside `funke_solar_2024` (and an overview of model inputs over time, perhaps Durack et al., 2018, Eos, unchecked).
-- [ ] NOAA Trends entries (`lan_co2-trends_2026`, `lan_ch4-n2o-sf6-trends_2026`): the note says "Data files created 5 September 2026";
+      Done (2026-10-09): ZN reviewed the sentence. Durack et al. (2018, Eos, "Toward Standardized Data Sets for Climate Model
+      Experimentation", checked at https://doi.org/10.1029/2018EO101751) added as `durack_input4mips_2018`, cited with `durack_forcing_2025`.
+      Other forcing papers: left as `funke_solar_2024` only, with ZN's note in the tex to add others (volcanic, CEDS)
+      if needed or requested by reviewers.
+- [x] NOAA Trends entries (`lan_co2-trends_2026`, `lan_ch4-n2o-sf6-trends_2026`): the note says "Data files created 5 September 2026";
       swap for NOAA's version string (e.g. "Version 2026-09") once confirmed on the Trends pages.
+      Done (2026-10-09): both Trends pages (https://gml.noaa.gov/ccgg/trends/gl_data.html, https://gml.noaa.gov/ccgg/trends_ch4/)
+      ask for "Version 2026-09", which matches our files' creation date (5 September 2026). Notes updated.
 - [ ] User guide citation (`results.tex:16`, `methods.tex` output format section: `[TODO ref user guide]`), see Section 6.
-- [ ] Check "IGCC uses Hodnebrog" and "the same source is used by the IGCC" (`[TODO check]`s in `results.tex`), see Section 5.
-- [ ] Clean-up: bib entries marked "Is this reference correct or needed?" / "rename to ..." (`references/references.bib`).
+      Blocked (2026-10-09): there is nothing to cite yet. The user guide is built from this repo
+      (`scripts/create-historical-user-guide.sh`) but has no Zenodo record/DOI.
+      Once it has one, add the bib entry and replace the four placeholders
+      (`results.tex` intro, `methods.tex` output format section x2, `conclusion.tex`).
+- [x] Check "IGCC uses Hodnebrog" and "the same source is used by the IGCC" (`[TODO check]`s in `results.tex`), see Section 5.
+- [x] Clean-up: bib entries marked "Is this reference correct or needed?" / "rename to ..." (`references/references.bib`).
+      Done (2026-10-09), no such markers left:
+    - correct and cited, marker replaced by a note on the source: `prinn_ale-gage-agage_2000`,
+      the five `dutton_hats-*_2022` (DOIs and versions match `dependencies.db`;
+      "Chloroflurocarbon" in three titles is the spelling `dependencies.db` records, left as is)
+    - fixed: `prinn_agage_2018` was the Discussions version's details with the final paper's DOI,
+      now Earth Syst. Sci. Data, 10, 985-1018
+    - kept, not cited yet: `rigby_methane-growth_2008`, `rigby_methane-oxidation_2017` (for the per-gas table below)
+    - kept, not cited anywhere (doesn't hurt to keep them), marker removed: `hermanson_wmo-climate-update_2022`,
+      `meinshausen_magicc6-part-1_2011`, `meinshausen_magicc6-part-2_2011`, `wcrp-cmip_cvs-mip-tables_2025`, `zenodo_zenodo_2025`
+    - not touched: five more entries are not cited anywhere but weren't marked
+      (`esgf_docs_2025`, `montreal-protocol_final-act_1989`, `unidata_netcdf_2024`, `van-vuuren_scenariomip_2025`, `IPCC_AR6-WG1-Ch-7_2021`)
 - [ ] Last: a table which, for each output gas, lists all the input-data references.
       Query `dependencies.db` (it includes the per-gas AGAGE papers, 46 of them, e.g. CH_4: Prinn 2018, Rigby 2008 and 2017),
       then add what it misses by hand (e.g. PRIMAP for CO_2 and CH_4).
@@ -693,7 +739,8 @@ Manuscript-relevant:
 
 - [x] `historical_ghg_forcing_for_cmip7/comparison_data.py:486`: check the CH_4 ice-core supplement site metadata (Summit etc.).
       Done, see the Summit/Huascarán item in Section 7.
-- [ ] `historical_ghg_forcing_for_cmip7/comparison_data.py:826`: check the IGCC processing (release v6.4.0).
+- [x] `historical_ghg_forcing_for_cmip7/comparison_data.py:826`: check the IGCC processing (release v6.4.0).
+      Done, see Section 5.
 - [ ] `historical_ghg_forcing_for_cmip7/equivalent_species.py:77`: use pint for unit handling
       (relevant to the radiative efficiency "halving" worry).
 - [ ] `historical_ghg_forcing_for_cmip7/results_figure.py:168-175`: `SHOW_OUTPUT_AT_COMPARISON_LATITUDES` is off.

@@ -963,10 +963,19 @@ def get_igcc_comparison(gas: str) -> ComparisonTimeseries:
 
     Forster et al. (2026), Indicators of Global Climate Change 2025,
     https://doi.org/10.5194/essd-18-3889-2026.
-    The record is compiled from NOAA and AGAGE data
-    (and, before those, the AR6 concentrations,
-    which are themselves partly based on the CMIP6 concentrations),
+    The record is the AR6 concentrations
+    (which are themselves partly based on the CMIP6 concentrations),
+    extended with NOAA and AGAGE data,
     so it is not independent of our output or of CMIP6.
+    For the extension, CO2 is NOAA's global-mean alone (on the X2019 scale);
+    CH4, N2O, SF6 and the halogenated gases both networks report
+    (CFC-12 included) are the average of NOAA and AGAGE from 2019 on;
+    other gases come from one network (some with an offset)
+    or are extrapolated, either linearly or from the literature
+    (e.g. Vimont et al., 2022, https://doi.org/10.1175/BAMS-D-23-0090.1,
+    the ozone-depleting substances section of BAMS' State of the Climate in 2022).
+    See `notebooks/01_trace-gas-global-mean.py` in IGCC's repository
+    and Sect. 3 of Forster et al. (2026).
 
     Parameters
     ----------

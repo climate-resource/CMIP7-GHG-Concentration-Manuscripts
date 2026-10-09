@@ -851,7 +851,8 @@ def get_max_abs_diff_from_igcc_noaa_era(gas: str, *, bundle_dir: Path) -> pint.Q
     """
     Get the max absolute difference from IGCC over the years NOAA's global-mean covers
 
-    IGCC's record is based on NOAA's over these years,
+    IGCC's record is based on NOAA's over these years
+    (alone for CO2, averaged with AGAGE for CH4 and N2O from 2019 on),
     which is what the statements about IGCC are about.
 
     Parameters
