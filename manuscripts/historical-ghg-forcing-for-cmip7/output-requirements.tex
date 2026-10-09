@@ -1,0 +1,121 @@
+\section{Output dataset requirements and implications thereof}
+\label{sec:output-dataset-requirements}
+
+As a result of their specific use case, the requirements of CMIP forcings are unique.
+These requirements affect the delivery timelines, the level of accuracy required,
+spatial and temporal characteristics of the data.
+
+The first requirement is to work within CMIP's overall delivery timeline.
+This timeline is, by scientific standards, relatively strict,
+which means that forcings producers have to produce data and make it available to modelling teams quickly
+and that the benefit of improvements must be weighed against any delays that would result from switching to the improved datasets.
+For example, this paper is being released after the data has already been made available to modelling teams.
+Releasing it before providing data to modelling teams would be the more ideal order,
+but this would have introduced an unacceptable delay to the overall process in our case
+(other forcings providers, e.g. solar \citep{funke_solar_2024},
+have managed to work in the more ideal order).
+The result of this constraint is that some identified bugs are not fixed:
+this is a clear example of a pragmatic balance being struck
+between fixing identified errors and beginning ESM simulations.
+Sometimes the need to start simulations means that identified bugs are not fixed
+because the cost of the fix, i.e. restarting simulations, is not worth the benefit.
+
+The second requirement is to meet CMIP's overall experiment design.
+CMIP7 includes a number of different experiments.
+Ideally, forcings datasets would support all experiments.
+In practice, forcings datasets are produced for the historical, piControl and scenario experiments,
+with all other experiments only requiring (user-created) combinations and variations thereof.
+Here we only focus on the historical and piControl experiments:
+the scenario experiments are considered in \citet{nicholls_scenario-ghgs_2026}.
+Supporting the historical and piControl experiments drives the temporal requirements of the dataset.
+The historical experiment starts in 1850 and, for CMIP7, ends in 2021-12, so the dataset must start in 1850 and extend to at least 2021-12.
+% value-check: {"tag": "output-first-year", "unit": "yr", "lower": 1, "upper": 1}
+% value-check: {"tag": "output-last-year", "unit": "yr", "lower": 2022, "upper": 2022}
+(The dataset we present here covers year 1 to the end of 2022, Section~\ref{ssec:prep-for-esgf}.)
+The piControl dataset must also facilitate a multi-century simulation with 1850-like conditions.
+The other requirement introduced by the experimental design is that there should only be one forcing dataset.
+In other words, forcing dataset producers must produce a single, best-estimate dataset,
+rather than being able to produce a number of versions that span the uncertainty in their forcing dataset.
+
+The third requirement is that the data must support use as an input to ESM simulations.
+This means that the data must be complete i.e. it may not contain any missing values for data points required by ESMs.
+All required temporal values must be included, or able to be derived trivially (e.g. via linear interpolation),
+and spatial coverage must be complete, which usually means globally complete
+but can also mean e.g. `over land areas' for datasets which are only defined on land (e.g. land-use forcings).
+This requirement is key to standardisation: if there were missing values,
+then each modelling team would have to make their own interpolation choice
+(a model cannot have a missing value as an input),
+which would introduce the risk that each ESM team makes a slightly different choice
+(thus failing to provide the desired standardisation).
+
+The use within ESM simulations also has implications for the accuracy of the data.
+Differences in energy balance of <0.01~W/m^2 have almost zero impact on climate simulations.
+As a result, this threshold can be used to identify higher priority areas or choices
+when constructing the dataset
+(if a choice changes the dataset in a way that alters the energy balance by less than 0.01~W/m^2,
+it is usually not a critical choice because the difference betwen the options is effectively zero).
+
+Taken together, these considerations define the output requirements for this study:
+a temporally (at least from 1850 to end of 2021),
+spatially (global coverage) complete dataset
+that is appropriate for ESM simulations
+(choices which alter the implied energy balance by more than 0.01~W / m2,
+% value-check: {"tag": "co2-for-energy-balance-threshold", "unit": "ppm", "lower": 0.7, "upper": 0.8}
+i.e. around 0.75~ppm CO_2 (Section~\ref{ssec:results-radiative-forcing-comparisons-note}),
+should be more carefully considered and documented).
+
+These requirements have some key implications.
+Firstly, the requirement of completeness means that
+we (and other forcings providers)
+must make a number of choices to fill gaps in observational data, both spatially and temporally.
+These choices usually mean that forcings will differ from the raw data products that underpin them.
+These differences should not be taken as a sign that the raw data is problematic
+(on the contrary, the raw data is usually the better source, if you can use it),
+but are a sign that the process of creating a temporally and spatially complete data product comes with compromises.
+In practice, these gaps are usually filled by including data from a number of different sources,
+meaning that most forcings are composite data products.
+Combining data from multiple sources comes with a number of subjective choices
+for which no objective answer and a decision must simply be made.
+In the best case, there is time to consider the implications of each different choice.
+In the worst case, this time is not available and a choice is made,
+with a thorough analysis of the pros and cons of other choices having to be left to future work.
+
+The requirement to produce a single, best-estimate dataset further compels us and other forcings providers to make choices:
+providing multiple datasets and letting users choose based on their own use case is not an option.
+In practice, forcings providers produce the best-estimate data product that they can,
+based on their knowledge of the underlying data products and the CMIP use case.
+However, it is again important to reinforce that forcings products
+should not be viewed as an authoritative set of global observations.
+They are a best-estimate, suitable for the CMIP exercise,
+but they do not imply that one product is better than an another
+or that the numbers they provide are better
+than those from other, particularly more directly observation-based, exercises.
+
+Given their unique requirements, potential users must be aware
+that CMIP forcings may not be the most appropriate dataset for their use case
+or that some post-processing might be required to make the dataset work for a different use case.
+In any given forcing dataset, there are likely to be underlying choices which,
+were the forcings to be produced for a different context, would be different.
+For the greenhouse gas forcings specifically, there are two key choices to flag.
+The first is that the key application is for simulations that start in 1850.
+% ZNTODO: add in discussion of fact that we didn't use Menking dataset for pre-1850
+% and that this is a problem for paleo studies but correcting wasn't an option for us,
+% given that re-publishing would provide no benefit for CMIP but could lead to confusion.
+While our dataset begins in year 1, the period from year 1 to year 1849 has been checked far less carefully
+and therefore should be considered carefully before being used for studies that focus on the pre-1850 period.
+% ZNTODO: add notes in relevant places where we don't consider different scales of observations
+% and ideally quantify the effect that such consideration could have
+% (and also note that `true' resolution would require understanding the scale that every ESM expects,
+% which is definitely out of scope
+% - area for future work that could be fixed by better interaction between ESM teams and observation makers).
+The second is that we combine multiple data sources in a relatively crude way.
+For studies that required greater precision or specificity, e.g. inversion studies,
+these choices would likely need to be considered much more carefully.
+
+% % ZNTODO: put points below into discussion
+% Note: this section might be a good point to mention a few things: efforts to produce annual updates of forcings,
+%  since that would ameliorate the risks connected to requirement 1 (deliver on time); future plans to have REF for forcings,
+%  since that would help with validation for requirement 2 (meet experiment design), and speed up finding bugs in the data, again helping with the
+%  pace for requirement 1 (if we are allowed to talk about ref for forcings as an idea before it gets officially funded).
+
+% ZNTODO: make sure that our specification that piControl should just be done by repeating 1850 values is somewhere (results?).

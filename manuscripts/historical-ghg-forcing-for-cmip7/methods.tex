@@ -1,0 +1,1535 @@
+\section{Methods}
+\label{sec:methods}
+
+To derive our dataset, we largely follow the methods described in \citet{meinshausen_historical-ghgs_2017}.
+However, we have made changes in a number of places and completely re-implemented the underlying software so,
+for reasons of clarity and accuracy, we describe the method in full.
+
+\subsection{General approach}
+\label{ssec:methods-general-approach}
+
+In line with \citet{meinshausen_historical-ghgs_2017},
+we provide datasets of atmospheric concentrations for a wide selection of greenhouse gases.
+We provide the data at monthly resolution and include latitudinal variations.
+No dependency on longitude is provided.
+For a brief discussion on how add a vertical dimension to these datasets, see Section~\ref{ssec:methods-vertical}.
+
+For all greenhouse gases, the first dataset
+% value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
+that we generate has monthly temporal resolution and 15\textdegree~latitudinal spatial resolution.
+We refer to this grid as our `native resolution', and therefore to these datasets
+as our `native resolution datasets'.
+From the native resolution datasets, we create higher and lower resolution data products
+(see Section~\ref{ssec:methods-derived-grids}).
+
+Although there are differences in the methods and limitations for each gas, the general approach can
+be broken down as follows:
+
+\begin{itemize}
+    \item {
+        \textbf{Step 1: Collect observations}
+
+        The first step is collecting surface observations from available observation networks.
+        These networks provide surface concentrations at different locations and times around the world.
+
+        Where we have a choice, we use data that has already been aggregated to a monthly temporal resolution, rather than raw data.
+        We make this choice because we believe that the raw data providers are best placed to produce monthly aggregations from the raw data,
+        including making subjective choices such as which measurements are appropriate to include in such an aggregation,
+        how to weight measurements and how to treat raw measurements taken at different points within each month.
+        This is different to \citet{meinshausen_historical-ghgs_2017}, which used the raw data directly and performed their own aggregation.
+
+        We use the observations on the calibration scales on which they are reported,
+        i.e. we do not convert between the calibration scales of different observation networks.
+        Time pressure meant that we did not explore the differences between calibration scales in depth.
+        This is a limitation, but the differences are acceptable for the purposes of this dataset
+        (as in \citet{meinshausen_historical-ghgs_2017},
+        see their Section~6.4, Section~\ref{sec:output-dataset-requirements}
+        and discussion in Section~\ref{sec:discussion}).
+    }
+
+     \item {
+         \textbf{Step 2: Bin and interpolate observations}
+
+         The raw observations are binned spatially,
+         % value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
+         % value-check: {"tag": "binning-grid-lon-band-width", "unit": "degree", "lower": 60, "upper": 60}
+         into a coarse 15\textdegree~latitudinal and 60\textdegree~longitudinal grid,
+         and temporally, into monthly bins.
+         Then, since the surface observation network does not cover the entire globe,
+         we interpolate the binned observations spatially to get complete global coverage.
+
+         % value-check: {"tag": "min-points-for-spatial-interpolation", "unit": "dimensionless", "lower": 4, "upper": 4}
+         % The north/south requirement isn't an explicit rule in the code:
+         % linear interpolation (griddata) can't extrapolate beyond the outermost data
+         % and months whose interpolation leaves gaps are dropped
+         % (see the original run's `*_interpolate-observational-network` notebooks).
+         We specify that at least four data points are required for us to do spatial interpolation
+         and we must have data points in both the most northern and most southern latitudinal box.
+         This is clearly a relatively low data requirement,
+         but higher thresholds result in a significant amount of the observational record being discarded.
+         % ZNTODO: check discussion of this in future work i.e. discussion
+         More robust interpolation methods are an area for future work [TODO: forward ref].
+
+         We use 2D interpolation, specifically linear barycentric interpolation,
+         as implemented in scipy's \texttt{scipy.interpolate.griddata} function \citep{virtanen_scipy_2020}.
+         Before interpolating, we put the data on a grid that is `wrapped around' to avoid edge effects.
+         In practice, this means that we duplicate the data three times
+         and place these three copies next to each other in the longitudinal direction.
+         As a result, each point in the central `copy' `sees' its closest neighbours, irrespective of its longitude.
+         After interpolating, we throw away the outer `copies'
+         and are left with an `edge effect free' interpolated dataset over the domain of interest.
+
+         We then extract the longest time period in our spatially interpolated dataset
+         over which there are no data gaps
+         (gaps can appear if a time point in the middle of the record failed the minimum requirement for spatial interpolation,
+         which is why we cannot simply use the timespan of the observational record itself).
+         We refer to the result as the `interpolated observation network dataset'
+         and to the time period it covers as the `interpolated observation network period'.
+    }
+
+    \item {
+        \textbf{Step 3: Principal component analysis}
+
+        We decompose the interpolated observation network dataset into three components:
+
+        \begin{enumerate}
+            \item Global-, annual-mean concentrations
+            \item Relative seasonality at each latitude (i.e. seasonality at each latitude, divided by the global-, annual-mean)
+            \item Latitudinal gradient components
+        \end{enumerate}
+
+        The latitudinal gradient components are a set of empirical orthogonal functions (EOFs, a function of latitude only)
+        and principal components (PCs, a function of year only) derived using principal component analysis (PCA).
+        The number of EOFs and PCs retained is either one or two, depending on the gas.
+
+        The key to this decomposition is that the latitudinal gradient term
+        has a spatial (area-weighted) mean of zero
+        and that the seasonality term has an annual-mean of zero
+        so that they can be added to the global-, annual-mean term (see Step 6)
+        without affecting the corresponding global-, annual-mean values.
+    }
+
+    \item {
+        \textbf{Step 4: Extend}
+
+        We extend the global-, annual-mean and latitudinal gradient PC(s) back to year 1.
+
+        The global-, annual-mean is extended using ice cores where available,
+        otherwise based on pre-industrial values from the literature and interpolation.
+
+        The latitudinal gradient PC(s) are extended in one of two ways.
+        The first is based on historical emissions, driven by a regression between emissions and the PC(s).
+        The second is simple linear or constant extrapolation.
+    }
+
+    \item {
+        \textbf{Step 5: Prepare the components to be combined}
+
+        The global-, annual-mean, seasonality and latitudinal gradient components must be prepared before they can be combined.
+
+        All components must first be put on the same time axis.
+        This introduces the first subtlety: while our approach is based on a timeseries of global-, annual-mean concentrations,
+        this timeseries has to be interpolated to monthly timesteps
+        in order to avoid the change from year to year resulting in step changes between December of one year and January of the next.
+        The same interpolation requirement applies to the latitudinal gradient PC(s)
+        (which are initially calculated on a yearly timestep, see Step 3).
+        The following calculations are therefore performed:
+
+        \begin{enumerate}
+            \item The global-, annual-mean is converted into a global-, monthly-mean using mean-preserving interpolation
+            \item The relative seasonality is converted into an absolute seasonality over all time by multiplying it by the extended global-, annual-mean
+            \item The latitudinal gradient PCs are converted to monthly steps using mean-preserving interpolation
+            \item The latitudinal gradient is recovered by taking the product of the EOFs and the extended PCs
+        \end{enumerate}
+    }
+
+    \item {
+        \textbf{Step 6: Generate native resolution}
+
+        We calculate the native resolution dataset value from the components, using the equation:
+
+        \begin{equation}
+            \label{eq:native-resolution-sum}
+            gn(y, m, l) = gm(y, m) + lg(y, m, l) + s(y, m, l)
+        \end{equation}
+        where $gn$ is the native resolution dataset value
+        (`gn' is the `grid label' used for such output on ESGF,
+        so we re-use it here for convenience and consistency with the published output,
+        see Section~\ref{ssec:prep-for-esgf}),
+        $y$ is the year in which the value applies,
+        $m$ is the month in which the value applies,
+        $l$ is the latitude at which the value applies,
+        $gm$ is the global-, annual-mean that has been interpolated to monthly steps (this is broadcast across all latitudes during the sum),
+        $lg$ is the latitudinal gradient
+        and $s$ is the seasonality.
+        As stated in Step 3, the key to this sum is that $lg$ has an area-weighted spatial mean of zero
+        and $s$ has a temporal mean of zero
+        so that $\int \int gn(y, m, l) dm a(l) dl = \int gm(y, m) dm$,
+        where $a(l)$ is the area-weighting for latitude $l$ (normalised such that $\int a(l) dl = 1$)
+        i.e. the sum does not change the global-, annual-mean value we started with.
+    }
+
+\end{itemize}
+
+The key choices are about how we derive $gm$, $lg$ and $s$ for each greenhouse gas species in our dataset.
+These decisions are often guided by data availability and quality.
+The high-level summary is provided in the dot points below,
+while the specifics for each greenhouse gas are described in the following sections.
+Full references for the generation of each gas are given in Appendix~\ref{app:input-data-references}.
+
+\begin{enumerate}
+    \item {
+        N_2O
+
+        \begin{enumerate}
+            \item No changes from the general approach (see Section~\ref{ssec:methods-general-approach})
+        \end{enumerate}
+    }
+    \item {
+        CO_2
+
+        \begin{enumerate}
+            \item {
+                \textbf{Step 3: Principal component analysis}
+                An absolute seasonality and seasonality change EOF and associated PC is derived and used,
+                rather than relative seasonality alone.
+            }
+            \item {
+                \textbf{Step 4: Extend}
+                We use the merged Law Dome - Mauna Loa record \citep{keeling_co2-exchanges_2001,rubino_law-dome-dataset_2019}
+                to extend the global-, annual-mean back in time where available
+                (rather than ice core data alone).
+                % value-check: {"tag": "co2-seasonality-change-regression-start-year", "unit": "yr", "lower": 1850, "upper": 1850}
+                We extend the seasonality change PC back to 1850
+                using a composite of global-, annual-mean CO_2 concentrations and global-mean surface air temperature.
+            }
+            \item {
+                \textbf{Step 5: Prepare the components to be combined}
+                Seasonality change is calculated by taking the product of the seasonality change EOF and the extended PC
+                to get the seasonality change over time.
+                The seasonality change over time is then added to the base seasonality (derived from observations)
+                to get the full seasonality over time.
+            }
+        \end{enumerate}
+    }
+    \item {
+        CH_4
+
+        \begin{enumerate}
+            \item {
+                \textbf{Step 4: Extend}
+                The latitudinal gradient PC is extended back in time
+                by doing an optimisation against ice core data from both the Southern and Northern Hemispheres,
+                rather than based on a single ice core timeseries alone.
+                We check that we maintain agreement with available ice core data in both the Northern and Southern hemispheres
+                (based on the already extended latitudinal gradient)
+                to within 0.5\% when extending the global-, annual-mean.
+            }
+        \end{enumerate}
+    }
+    \item {
+        CFC12 and other gases processed similarly
+
+        \begin{enumerate}
+            \item {
+                \textbf{Step 2: Bin and interpolate observations}
+                We do not require data in the most northern and most southern latitudinal boxes.
+                Instead, where the interpolation cannot fill these boxes,
+                we fill them using constant extrapolation of the observations.
+                For gases with particularly sparse observation networks,
+                we allow the constant extrapolation to extend over multiple latitudinal boxes.
+            }
+            \item {
+                \textbf{Step 4: Extend}
+                In some cases, we use a specific source for the global-, annual-mean
+                and extend this, rather than extending the global-, annual-mean derived from the observation network.
+                We fill the gap between the global-, annual-mean and pre-industrial values from the literature
+                with a quartic fit.
+            }
+            \item {
+                \textbf{Step 5: Prepare the components to be combined}
+                We reduce the seasonality and latitudinal gradient
+                as required to avoid negative values in output.
+            }
+        \end{enumerate}
+    }
+    \item {
+        C_4F_10 and other gases processed similarly
+
+        \begin{enumerate}
+            \item {
+                \textbf{Step 1: Collect observations}
+                We only use data from \citet{droste_pfcs_2020}.
+            }
+            \item {
+                \textbf{Step 2: Bin and interpolate observations}
+                Our method means that we do not perform this step.
+            }
+            \item {
+                \textbf{Step 3: Principal component analysis}
+                We don't perform PCA.
+                Instead, we assume that the (area-weighted) latitudinal gradient is linear,
+                then calculate the PC and the global-, annual-mean based on the data from [TODO Droste et al].
+                % value-check: {"tag": "droste-last-year", "unit": "yr", "lower": 2018, "upper": 2018}
+                % value-check: {"tag": "c4f10-like-last-year", "unit": "yr", "lower": 2022, "upper": 2022}
+                Both are linearly extrapolated from the end of the [TODO Droste et al] data (2018) to 2022.
+                We assume that seasonality is zero.
+            }
+            \item {
+                \textbf{Step 5: Prepare the components to be combined}
+                We reduce the latitudinal gradient
+                as required to avoid negative values in output.
+            }
+        \end{enumerate}
+    }
+    \item {
+        C_8F_18
+
+        Because of a lack of new input data since \citet{meinshausen_historical-ghgs_2017},
+        we use the global- and hemispheric-, annual-means from the CMIP6 dataset
+        (taking the 2015-2022 time period from the SSP2-4.5 scenario, \citealp{meinshausen_ssp-ghgs_2020}).
+        As in \citet{meinshausen_historical-ghgs_2017}, we assume zero seasonality
+        and a linear latitudinal gradient, scaled to reproduce the CMIP6 hemispheric-means.
+    }
+\end{enumerate}
+
+% Table summarising the per-gas differences from the base case.
+% We're not including this now because we think it is too terse to be useful to the reader,
+% so we stick with the dot points above instead.
+% It is left here in case others want to see how it looks and consider making a different decision.
+% It compiles if uncommented (checked 2026-10-07).
+% \begin{table*}[t]
+% \caption{
+%     Differences from the base case (N_2O, Section~\ref{ssec:methods-n2o}) for each gas or group of gases,
+%     broken down by step (see Section~\ref{ssec:methods-general-approach}).
+%     --: as for N_2O.
+%     Step 6 (Generate native resolution) is the same for all gases, so is not shown.
+%     Full details are given in each gas' section.
+% }
+% \label{tab:methods-differences}
+% \small
+% \begin{tabularx}{\textwidth}{
+%     >{\raggedright\arraybackslash}p{2cm}
+%     *{5}{>{\raggedright\arraybackslash}X}
+% }
+% \tophline
+% Gas(es)
+% & 1: Collect observations
+% & 2: Bin and interpolate observations
+% & 3: Principal component analysis
+% & 4: Extend
+% & 5: Prepare the components to be combined \\
+% \middlehline
+% N_2O (Section~\ref{ssec:methods-n2o})
+% & --
+% & --
+% & --
+% & --
+% & -- \\
+% CO_2 (Section~\ref{ssec:methods-co2})
+% & --
+% & --
+% & Absolute seasonality plus seasonality change EOF and PC
+% & Merged Law Dome - Mauna Loa record for global-, annual-mean;
+%     seasonality change PC from temperature - CO_2 composite
+% & Add seasonality change to base seasonality \\
+% CH_4 (Section~\ref{ssec:methods-ch4})
+% & --
+% & --
+% & --
+% & Latitudinal gradient PC optimised against ice cores from both hemispheres
+% & -- \\
+% CFC12 and similar (Section~\ref{ssec:methods-cfc12-like})
+% & --
+% & Constant extrapolation into polar boxes
+% & --
+% & Specific global-, annual-mean sources;
+%     gap filled to pre-industrial value
+% & Remove negative values \\
+% C_4F_10 and similar (Section~\ref{ssec:methods-c4f10-like})
+% & Two sites from a single source
+% & Not performed
+% & Assumed linear latitudinal gradient EOF; zero seasonality
+% & --
+% & Remove negative values \\
+% C_8F_18 (Section~\ref{ssec:methods-c8f18})
+% & \multicolumn{5}{>{\raggedright\arraybackslash}p{\dimexpr\textwidth-2cm-4\tabcolsep\relax}}{
+%     CMIP6 global- and hemispheric-, annual-means;
+%     zero seasonality and a linear latitudinal gradient
+% } \\
+% \bottomhline
+% \end{tabularx}
+% \end{table*}
+
+\subsection{Generating concentrations for N_2O}
+\label{ssec:methods-n2o}
+
+N_2O follows the general approach (Section~\ref{ssec:methods-general-approach}) without modification,
+so we treat it as the `base case' for the other gases.
+Here we give the exact data sources used and the N_2O-specific details of each step.
+
+\subsubsection{Step 1: Collect observations}
+\label{sssec:methods-n2o-collect-observations}
+
+For N_2O, we use both the NOAA HATS \citep{dutton_hats-n2o_2022} and AGAGE \citep{prinn_ale-gage-agage_2000,prinn_agage_2018} networks (Figure~\ref{fig:methods-n2o}).
+When referring to `AGAGE' data, we also mean data from the predecessor GAGE and ALE networks \citep{prinn_ale-gage-agage_2000}.
+% Calibration scales: we don't convert between the networks' scales (general approach, Step 1).
+% For N2O, this is not needed: following \citet{meinshausen_historical-ghgs_2017} (Section~2),
+% the AGAGE (SIO1998) and NOAA (NOAA-2006) scales are compatible
+% without the need for a conversion factor (they cite WMO, 2012).
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@n2o-methods-figure@}
+\caption{
+    Production of the N_2O datasets (for full details, see Section~\ref{ssec:methods-n2o}).
+    a) Raw observation network data.
+    % value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
+    b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
+    c) Location of each sampling site in the observation networks.
+    d) Global-, annual-mean derived from the observation network values.
+    e) Seasonality derived from the observation network values.
+    f) Latitudinal gradient empirical orthogonal functions (EOFs) derived from the observation network values.
+    g) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
+    h) Latitudinal gradient principal components (PCs) for the entire output dataset timespan.
+}
+\label{fig:methods-n2o}
+\end{figure}
+
+\subsubsection{Step 2: Bin and interpolate observations}
+\label{sssec:methods-n2o-bin-and-interpolate}
+
+Binning and interpolation for N_2O
+follow the general approach described in Section~\ref{ssec:methods-general-approach}
+(Figures~\ref{fig:methods-n2o}b) and~\ref{fig:methods-appendix-n2o}a), b)).
+When we take the longest dataset that is continuous,
+% value-check: {"tag": "n2o-obs-network-start", "unit": "yr", "upper": 1989, "lower": 1989}
+% value-check: {"tag": "n2o-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
+we end up with an interpolated observation network dataset that runs from 1989 to 2023 (both inclusive).
+
+\subsubsection{Step 3: Principal component analysis}
+\label{sssec:methods-n2o-pca}
+
+We then take our spatially complete dataset and perform principal component analysis
+following the general approach described in Section~\ref{ssec:methods-general-approach}.
+The specifics of this step are described in the rest of this Section (Section~\ref{sssec:methods-n2o-pca}).
+
+\textbf{Zonal mean.}
+The first sub-step is to calculate the longitudinal (zonal) mean.
+This is done using an unweighted mean because each grid cell has the same area for a given latitude.
+
+\textbf{Global-, annual-mean.}
+The second sub-step is to calculate the global-, annual-mean (Figure~\ref{fig:methods-n2o}d)).
+We do this by first calculating an area-weighted mean, then the annual-mean.
+We weight each month equally.
+Weighting the months by their length would make a minor difference,
+but requires assuming that the processed data is truly representative of the entire month.
+We don't make that assumption because our workflow can include processing of point measurements,
+i.e. measurements taken at a particular point in time,
+and grouping them in months is a necessary processing step
+that should not be taken to mean
+that the monthly values robustly represent the average over the entire month, given the month's length.
+
+\textbf{Latitudinal gradient.}
+The third sub-step is to calculate our latitudinal gradient.
+We do this by first calculating the residuals at each latitude,
+i.e. the difference between the annual-mean of the longitudinal mean and the global-, annual-mean.
+By construction, these residuals have an area-weighted mean of zero.
+% Because the global-, annual-mean is the area-weighted mean of the longitudinal mean,
+% the residuals in each year have an area-weighted mean of zero.
+On these residuals, we then perform principal component analysis.
+We do this by using numpy's \citep{harris_numpy_2020} singular value decomposition function (\texttt{numpy.linalg.svd}).
+We translate the singular value decomposition output into two parts.
+The first part is our empirical orthogonal functions (EOFs) (also referred to as EOFs in \citealp{meinshausen_historical-ghgs_2017}).
+These quantify the spatial, in this case latitudinal, variation in the dataset and are a function of latitude only.
+These
+% value-check: {"tag": "lat-gradient-eofs-area-weighted-mean", "unit": "dimensionless", "lower": 0.0, "upper": 1e-10}
+Each EOF with a non-zero singular value
+is a linear combination of the residuals
+and therefore has an area-weighted mean of zero
+which ensures that we can use these EOFs for the $lg$ term in Equation~\ref{eq:native-resolution-sum}.
+% % More detailed explanation of why the EOFs have an area-weighted of zero if needed.
+% Each EOF with a non-zero singular value
+% is a linear combination of the residuals in each year
+% (this follows directly from the definition of the singular value decomposition).
+% As a result, each such EOF inherits the residuals' area-weighted mean of zero.
+% This holds for each EOF individually, not only for their sum.
+% Hence the latitudinal gradient has an area-weighted mean of zero
+% whatever values the PCs take,
+% including after we extend the PCs (Section~\ref{sssec:methods-n2o-extend}).
+The second part is our principal components (PCs) (referred to as scores, EOF scores or PCs in \citealp{meinshausen_historical-ghgs_2017}).
+These quantify the temporal variation in the dataset and are a function of year only.
+If all EOFs are retained, then the product of the EOFs and the PCs
+reproduces the residuals we started with exactly.
+However, following \citet{meinshausen_historical-ghgs_2017}
+we only retain the first two EOFs as these are sufficient
+% value-check: {"tag": "n2o-lat-gradient-first-two-eofs-variance", "unit": "dimensionless", "lower": 0.98, "upper": 1.0}
+to explain almost all of the variance (Figure~\ref{fig:methods-appendix-n2o}c)).
+The retained EOFs and PCs are shown in Figures~\ref{fig:methods-n2o}f) and~\ref{fig:methods-appendix-n2o}d) respectively.
+
+\textbf{Seasonality.}
+The fourth sub-step is to calculate our relative seasonality (Figure~\ref{fig:methods-n2o}e)).
+We do this by first calculating the residuals at each time and latitude.
+The first component in this calculation is our longitudinal mean (dimensions (year, month, lat)).
+The second component is the annual-mean at each latitude,
+interpolated to monthly timesteps using mean-preserving interpolation, see Section~\ref{sssec:methods-n2o-prepare-components}
+(as a result, this data also has dimensions (year, month, lat)).
+The interpolation to monthly timesteps is necessary
+so that the residuals do not include step changes at each year boundary
+(i.e. transition from December of year $Y$ to January of year $Y + 1$).
+We then calculate the residuals by subtracting the monthly-interpolated
+annual-mean at each latitude from the longitudinal mean.
+The seasonality is the average of these residuals over all available years
+and thus has dimensions (month, lat).
+Relative seasonality is seasonality divided by the average global-, annual-mean over all available years.
+% % If we're asked why we do this and not average of seasonality dividied by global- annual-mean in each year, here is the answer.
+% This is a ratio of averages,
+% which is not the same as the average of each year's ratio
+% (i.e. each year's residuals divided by that year's global-, annual-mean).
+% Instead, it is equivalent to a weighted average of each year's ratio,
+% with each year weighted by its global-, annual-mean.
+% We use this form because, when we multiply the relative seasonality by the global-, annual-mean
+% (Section~\ref{sssec:methods-n2o-prepare-components}),
+% the average of the resulting seasonality over the observation network period
+% value-check: {"tag": "n2o-seasonality-reproduces-observed-average", "unit": "dimensionless", "lower": 0.0, "upper": 1e-10}
+% is exactly the seasonality calculated from the observations
+% (provided that the global-, annual-mean over this period is the one derived from the observation network).
+% It also gives less weight to years with lower concentrations,
+% in which the ratio is more sensitive to noise in the observations.
+% The two forms differ more for gases whose concentrations have grown rapidly over the observation network period.
+
+\subsubsection{Step 4: Extend}
+\label{sssec:methods-n2o-extend}
+
+\textbf{Latitudinal gradient.}
+Following \cite{meinshausen_historical-ghgs_2017},
+we simply keep the PC values constant in the period before the interpolated observation network period (pre-1989, Figure~\ref{fig:methods-n2o}h)).
+
+\textbf{Global-, annual-mean.}
+We rely on the ice core data from \citet{menking_law-dome_2025} to extend the global-, annual-mean back in time
+(Figure~\ref{fig:methods-n2o}g)).
+We extrapolate the \citet{menking_law-dome_2025} data from year 5 back to year 1 using linear extrapolation,
+which is imperfect but acceptable given the focus and intended use case of this dataset (Section~\ref{sec:output-dataset-requirements}).
+
+We use the spline-interpolated data from \citet{menking_law-dome_2025},
+removing the need for us to make our own spline interpolation choices
+(unlike \citet{meinshausen_historical-ghgs_2017}, which used a much more involved interpolation method).
+% value-check: {"tag": "n2o-menking-offset", "unit": "ppb", "lower": 1.6, "upper": 1.9}
+There is a small offset of around 1.7~ppb between the \citet{menking_law-dome_2025} data
+and our global-, annual-mean.
+To avoid introducing an artificial step in the output,
+we harmonise the \citet{menking_law-dome_2025} data to the observation network
+% value-check: {"tag": "harmonisation-transition-years", "unit": "yr", "lower": 100, "upper": 100}
+i.e. add a declining offset (with the decline set to reach zero over 100 years)
+to ensure that the \citet{menking_law-dome_2025} data and the observation network-derived
+% value-check: {"tag": "n2o-obs-network-start", "unit": "yr", "lower": 1989, "upper": 1989}
+global-, annual-mean agree in 1989 - the earliest year in our observation network-derived global-, annual-mean.
+% ZNTODO: add discussion of harmonisation into discussion
+This is crude and a clear area for further investigation in future work ([TODO forward ref discussion]).
+
+\textbf{Seasonality.}
+No further processing of the seasonality is required to extend it in time.
+Following \cite{meinshausen_historical-ghgs_2017},
+its extension is always driven by global-, annual-mean values
+and these values have been temporally extended earlier in this step.
+
+\subsubsection{Step 5: Prepare the components to be combined}
+\label{sssec:methods-n2o-prepare-components}
+
+In this step, we construct the inputs needed for Equation~\ref{eq:native-resolution-sum}
+from the temporally extended components.
+
+\textbf{Global-, annual-mean.}
+We start with the global-, annual-mean term, $gm(y, m)$.
+This must be derived by interpolating the global-, annual-mean onto monthly timesteps.
+This interpolation must be mean-preserving,
+i.e. the mean of the interpolated values must match the mean of the input values (over the same time bounds),
+so that that the interpolated timeseries stays consistent with the global-, annual-mean values.
+We do this using the Lai-Kaplan algorithm \citep{lai-kaplan_algorithm_2022}.
+We additionally use the Rymes-Myers algorithm \citep{rymes-myers_algorithm_2001}
+when we need to ensure that interpolated values remain within specified bounds
+(e.g. avoid negative values).
+(Even with these algorithms,
+the mean-preserving interpolation remains one of the most computationally expensive steps in the whole process.)
+
+\textbf{Seasonality.}
+Next we calculate the seasonality term, $s(y, m, l)$.
+This is simply the product of the relative seasonality and the global-, annual-mean concentrations
+(not the monthly interpolation though:
+the seasonality already includes a monthly dimension
+so using the monthly interpolation would lead to an absolute seasonality
+which does not have an annual-mean of zero,
+breaking the key requirement of the seasonality term).
+
+\textbf{Latitudinal gradient.}
+Finally we calculate the latitudinal gradient term, $lg(y, m, l)$.
+Like for the global-, annual-mean,
+to avoid jumps at year boundaries, we must first interpolate the PCs to monthly timesteps
+using mean-preserving interpolation.
+Then the full latitudinal gradient is calculated
+by taking the product of the temporally extended, monthly interpolated PCs and the EOFs.
+
+\subsubsection{Step 6: Generate native resolution}
+\label{sssec:methods-n2o-generate-native-resolution}
+
+We calculate the native resolution from the derived components following the general approach (Section~\ref{ssec:methods-general-approach}).
+
+\subsection{Generating concentrations for CO_2}
+\label{ssec:methods-co2}
+
+CO_2 follows the base case (N_2O, Section~\ref{ssec:methods-n2o}),
+except in Step 3 (Principal component analysis), Step 4 (Extend) and Step 5 (Prepare the components to be combined).
+These differences allow for a more sophisticated handling of seasonality
+and make use of the merged Law Dome - Mauna Loa record when extending back in time.
+
+\subsubsection{Step 1: Collect observations}
+\label{sssec:methods-co2-collect-observations}
+
+For CO_2, we use surface flask \citep{lan_co2-flask_2024} and in-situ \citep{thoning_co2-in-situ_2024} data from the NOAA observation network
+(Figure~\ref{fig:methods-co2}).
+% Calibration scales: following \citet{meinshausen_historical-ghgs_2017} (Section~2),
+% all our CO2 data is from NOAA, so no scale conversion is needed.
+% This holds for NOAA's flask vs. in-situ data too: both are on the WMO X2019 CO2 scale
+% (stated in the in-situ files' headers, `scale : CO2_X2019`,
+% and in NOAA's README for the flask data, section 6,
+% https://gml.noaa.gov/aftp/data/trace_gases/co2/flask/surface/README_co2_surface-flask_ccgg.html).
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@co2-methods-figure@}
+\caption{
+    Production of the CO_2 datasets (for full details, see Section~\ref{ssec:methods-co2}).
+    a) Raw observation network data.
+    % value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
+    b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
+    c) Location of each sampling site in the observation networks.
+    d) Global-, annual-mean derived from the observation network values.
+    e) Seasonality derived from the observation network values.
+    f) Latitudinal gradient empirical orthogonal functions (EOFs) derived from the observation network values.
+    g) Seasonality change EOF derived from the observation network values.
+    h) Seasonality change principal component (PC) for the entire output dataset timespan.
+    i) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
+    j) Latitudinal gradient PCs for the entire output dataset timespan.
+}
+\label{fig:methods-co2}
+\end{figure}
+
+\subsubsection{Step 2: Bin and interpolate observations}
+\label{sssec:methods-co2-bin-and-interpolate}
+
+Binning and interpolation are the same as for N_2O
+(Section~\ref{sssec:methods-n2o-bin-and-interpolate}, Figures~\ref{fig:methods-co2}b) and~\ref{fig:methods-appendix-co2}a), b)).
+When we take the longest dataset that is continuous,
+% value-check: {"tag": "co2-obs-network-start", "unit": "yr", "upper": 1981, "lower": 1981}
+% value-check: {"tag": "co2-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
+we end up with an interpolated observation network dataset that runs from 1981 to 2023 (both inclusive).
+
+\subsubsection{Step 3: Principal component analysis}
+\label{sssec:methods-co2-pca}
+
+Atmospheric CO_2 concentrations are driven by the carbon cycle.
+So, following \citet{meinshausen_historical-ghgs_2017},
+we include extra complexity in this and subsequent steps,
+with the aim of better representing the variations in seasonality seen in the observational record.
+
+\textbf{Zonal and global-, annual-mean.}
+As for N_2O (Section~\ref{sssec:methods-n2o-pca}, Figure~\ref{fig:methods-co2}d)).
+
+\textbf{Latitudinal gradient.}
+As for N_2O (Section~\ref{sssec:methods-n2o-pca}),
+including retaining only the first two EOFs,
+% value-check: {"tag": "co2-lat-gradient-first-two-eofs-variance", "unit": "dimensionless", "lower": 0.98, "upper": 1.0}
+as they explain almost all of the variance (Figure~\ref{fig:methods-appendix-co2}f)).
+The retained EOFs and PCs are shown in Figures~\ref{fig:methods-co2}f) and~\ref{fig:methods-appendix-co2}g) respectively.
+
+\textbf{Seasonality.}
+The (absolute) seasonality is calculated as for N_2O (Section~\ref{sssec:methods-n2o-pca}, Figure~\ref{fig:methods-co2}e)).
+On top of this seasonality, we also calculate EOFs and PCs for the change in seasonality over time.
+These are calculated by taking the seasonality and the residuals from which the seasonality was derived.
+We then calculate the difference between these two, which we call `seasonality anomalies'.
+We then perform singular value decomposition on these seasonality anomalies
+(this is done by stacking the data so it has one dimension which is year
+while the other dimension combines latitude and month
+so that the singular value decomposition has a 2D dataset to work with).
+As for the latitudinal gradient, we convert the singular value decomposition results into EOFs and PCs.
+
+However, in the case of seasonality, while the PCs are still only a function of year,
+the EOFs have dimensions (latitude, month).
+For the seasonality change, again following \cite{meinshausen_historical-ghgs_2017},
+we retain only the first EOF.
+% value-check: {"tag": "co2-seasonality-change-first-eof-variance", "unit": "dimensionless", "lower": 0.45, "upper": 0.55}
+This captures around half of the variance in the seasonality change,
+% value-check: {"tag": "co2-seasonality-change-max-other-eof-variance", "unit": "dimensionless", "lower": 0.0, "upper": 0.11}
+with a single EOF being a pragmatic choice given that subsequent EOFs each only explain around 10\% or less of the variance
+so an unworkably large number would be required to capture a large fraction of the variance
+(Figure~\ref{fig:methods-appendix-co2}c)).
+The retained EOF and PC are shown in Figures~\ref{fig:methods-co2}g) and~\ref{fig:methods-appendix-co2}d) respectively.
+
+\subsubsection{Step 4: Extend}
+\label{sssec:methods-co2-extend}
+
+\textbf{Latitudinal gradient.}
+Following \cite{meinshausen_historical-ghgs_2017},
+the first PC is extended by performing a linear regression against CO_2 emissions of a geological origin
+(as opposed to CO_2 emissions that originate in the active biosphere)
+based on the PRIMAP-hist v2.5.1 dataset \citep{gutschow_primap-hist-dataset_2024,gutschow_primap-hist_2016} (Figure~\ref{fig:methods-appendix-co2}h)).
+Using this regression and PRIMAP-hist emissions, we then extend the first PC back to 1750,
+the first year reported in the PRIMAP-hist dataset.
+Before 1750, we keep the first PC value constant (Figure~\ref{fig:methods-co2}j)).
+
+The second PC is much simpler.
+It is simply linearly interpolated between its value at the start of
+% value-check: {"tag": "co2-obs-network-start", "unit": "yr", "upper": 1981, "lower": 1981}
+the interpolated observation network period, in our case 1981, and zero in 1850.
+It is kept constant at zero before 1850 (Figure~\ref{fig:methods-co2}j)).
+
+\textbf{Global-, annual-mean.}
+To extend the global-, annual-mean back in time, we rely on the
+merged Law Dome - Mauna Loa record \citep{keeling_co2-exchanges_2001,rubino_law-dome-dataset_2019} and ice core values from \citet{menking_law-dome_2025}
+(Figure~\ref{fig:methods-co2}i)).
+
+We start with the merged Law Dome - Mauna Loa record.
+We use all data from the merged Law Dome - Mauna Loa record which is not already covered by the interpolated observation network dataset.
+% value-check: {"tag": "co2-obs-network-start", "unit": "yr", "upper": 1981, "lower": 1981}
+% value-check: {"tag": "co2-mauna-loa-start-year", "unit": "yr", "lower": 1959, "upper": 1959}
+In practice this means that we use the merged Law Dome - Mauna Loa record from 1959 to 1980.
+% value-check: {"tag": "co2-mauna-loa-offset", "unit": "ppm", "lower": 1.4, "upper": 1.6}
+There is an offset of around 1.5~ppm between the merged Law Dome - Mauna Loa record
+and the global-, annual-mean we derive from the observation network in 1981.
+To avoid introducing an artificial step in the output,
+we harmonise the merged Law Dome - Mauna Loa record data to the observation network
+% value-check: {"tag": "harmonisation-transition-years", "unit": "yr", "lower": 100, "upper": 100}
+i.e. add a declining offset (with the decline set to reach zero over 100 years)
+to ensure that the merged Law Dome - Mauna Loa record data and the observation network-derived
+global-, annual-mean agree in 1981 - their first overlap year.
+% ZNTODO: ensure that there is a discussion of harmonisation in the discussion
+This is crude and a clear area for further investigation in future work ([TODO forward ref discussion]).
+
+We then use data from \citet{menking_law-dome_2025} to extend back to year 1.
+We use the spline-interpolated data from \citet{menking_law-dome_2025},
+removing the need for us to make our own spline interpolation choices (unlike \citet{meinshausen_historical-ghgs_2017}).
+As for the merged Law Dome - Mauna Loa record data,
+% value-check: {"tag": "co2-menking-offset", "unit": "ppm", "lower": 0.4, "upper": 0.6}
+there is a small offset, albeit of only around 0.5~ppm in this case,
+between the \citet{menking_law-dome_2025}
+and the value implied by our global-, annual-mean and latitudinal gradient
+in the time period in which they overlap.
+Like for the merged Law Dome - Mauna Loa record data,
+to avoid introducing an artificial step in the output,
+we harmonise the \citet{menking_law-dome_2025} data.
+We then calculate the temporally extended global-, annual-mean such that,
+when it is combined with the (now temporally extended) latitudinal gradient,
+our output dataset matches the harmonised \citet{menking_law-dome_2025}
+% value-check: {"tag": "co2-menking-output-match", "unit": "ppm", "lower": 0.0, "upper": 1e-05}
+in the latitudinal bin in which the ice cores were taken exactly
+(this is the -67.5\textdegree~bin on our native grid).
+
+\textbf{Seasonality.}
+Unlike N_2O, further processing of the seasonality is required to
+extend the seasonality change PC back in time.
+
+Following \cite{meinshausen_historical-ghgs_2017},
+the PC is extended by performing a linear regression against a composite of global-mean surface air temperatures from HadCRUT5 \citep[version 5.0.2.0,][]{morice_hadcrut5_2021,met-office_hadcrut5-data_2025}
+and our (now extended) global-, annual-mean CO_2 concentrations (Figure~\ref{fig:methods-appendix-co2}e)).
+The composite is described in Equation~\ref{eq:co2-pc-composite-regressor}:
+
+\begin{align}
+    \label{eq:co2-pc-composite-regressor}
+    r(y) &= \frac{t'(y) + c'(y)}{4} + \frac{t'(y) \cdot c'(y)}{2} \\
+    t'(y) &= \frac{t(y) - t_r}{t_n - t_r}  \\
+    c'(y) &= \frac{c(y) - c_r}{c_n - c_r}
+\end{align}
+where $r(y)$ is the composite timeseries against which we regress,
+$t(y)$ is global-, annual-mean temperature after applying a 15-year centred smoothing
+(with the values inside the window used at the edges, so values at the 1850 edge are based on fewer values than values in the centre of the smoothing),
+$c(y)$ is global-, annual-mean CO_2 concentrations,
+$_r$ indicates that the quantity is a mean over the reference period (1850-1880 in this study, following \citet{meinshausen_historical-ghgs_2017}),
+and $_n$ indicates that the quantity is a mean over the normalisation period (2000-2010 in this study, following \citet{meinshausen_historical-ghgs_2017}).
+
+% value-check: {"tag": "co2-seasonality-change-regression-start-year", "unit": "yr", "lower": 1850, "upper": 1850}
+Using this regression, we extend the PC back to 1850,
+the start of the HadCRUT5 dataset.
+Before 1850, we keep the PC value constant (Figure~\ref{fig:methods-co2}h)).
+
+\subsubsection{Step 5: Prepare the components to be combined}
+\label{sssec:methods-co2-prepare-components}
+
+\textbf{Global-, annual-mean.}
+As for N_2O (Section~\ref{sssec:methods-n2o-prepare-components}).
+
+\textbf{Seasonality.}
+Calculating the seasonality term, $s(y, m, l)$, requires first calculating the seasonality change over time
+by taking the product of the temporally extended PC and the EOF.
+This seasonality change is then added onto our `base seasonality' to give the full seasonality term.
+
+\textbf{Latitudinal gradient.}
+As for N_2O (Section~\ref{sssec:methods-n2o-prepare-components}).
+
+\subsubsection{Step 6: Generate native resolution}
+\label{sssec:methods-co2-generate-native-resolution}
+
+This step is the same as for N_2O (Section~\ref{sssec:methods-n2o-generate-native-resolution}).
+
+\subsection{Generating concentrations for CH_4}
+\label{ssec:methods-ch4}
+
+CH_4 follows the base case (N_2O, Section~\ref{ssec:methods-n2o}),
+except in Step 4 (Extend).
+This difference allows us to make use of ice core observations in both hemispheres.
+
+\subsubsection{Step 1: Collect observations}
+\label{sssec:methods-ch4-collect-observations}
+
+For CH_4, we use NOAA's surface flask \citep{lan_ch4-flask_2024} and in-situ \citep{thoning_ch4-in-situ_2024} data
+and the AGAGE network's data \citep{prinn_ale-gage-agage_2000,prinn_agage_2018}, including the predecessor GAGE and ALE networks \citep{prinn_ale-gage-agage_2000} (Figure~\ref{fig:methods-ch4}).
+% Calibration scales: unlike \citet{meinshausen_historical-ghgs_2017}, we don't convert the AGAGE data to the NOAA scale.
+% \citet{meinshausen_historical-ghgs_2017} (Section~2) converted AGAGE CH4 (Tohoku University scale)
+% to the NOAA scale (NOAA04) by multiplying by 1.0003, so the difference is negligible.
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@ch4-methods-figure@}
+\caption{
+    Production of the CH_4 datasets (for full details, see Section~\ref{ssec:methods-ch4}).
+    a) Raw observation network data.
+    % value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
+    b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
+    c) Location of each sampling site in the observation networks.
+    d) Global-, annual-mean derived from the observation network values.
+    e) Seasonality derived from the observation network values.
+    f) Latitudinal gradient empirical orthogonal functions (EOFs) derived from the observation network values.
+    g) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
+    h) Latitudinal gradient principal components (PCs) for the entire output dataset timespan.
+}
+\label{fig:methods-ch4}
+\end{figure}
+
+\subsubsection{Step 2: Bin and interpolate observations}
+\label{sssec:methods-ch4-bin-and-interpolate}
+
+Binning and interpolation are the same as for N_2O
+(Section~\ref{sssec:methods-n2o-bin-and-interpolate}, Figures~\ref{fig:methods-ch4}b) and~\ref{fig:methods-appendix-ch4}a), b)).
+When we take the longest dataset that is continuous,
+% value-check: {"tag": "ch4-obs-network-start", "unit": "yr", "upper": 1984, "lower": 1984}
+% value-check: {"tag": "ch4-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
+we end up with an interpolated observation network dataset that runs from 1984 to 2023 (both inclusive).
+
+\subsubsection{Step 3: Principal component analysis}
+\label{sssec:methods-ch4-pca}
+
+This step is the same as for N_2O (Section~\ref{sssec:methods-n2o-pca}, Figure~\ref{fig:methods-ch4}d)--f)),
+including retaining only the first two latitudinal gradient EOFs,
+% value-check: {"tag": "ch4-lat-gradient-first-two-eofs-variance", "unit": "dimensionless", "lower": 0.98, "upper": 1.0}
+as they explain almost all of the variance (Figure~\ref{fig:methods-appendix-ch4}c)).
+
+\subsubsection{Step 4: Extend}
+\label{sssec:methods-ch4-extend}
+
+\textbf{Latitudinal gradient.}
+As for CO_2 (Section~\ref{sssec:methods-co2-extend}),
+the first PC is initially extended by performing a linear regression against emissions of a geological origin,
+in this case CH_4 emissions from the PRIMAP-hist v2.5.1 dataset \citep{gutschow_primap-hist-dataset_2024,gutschow_primap-hist_2016} (Figure~\ref{fig:methods-appendix-ch4}e)).
+Using this regression, we extend the first PC back to the latest year
+% value-check: {"tag": "ch4-pc0-optimised-years-last", "unit": "yr", "lower": 1948, "upper": 1948}
+in which we have observations from ice cores in both the northern and southern hemispheres, in our case 1948.
+
+% value-check: {"tag": "ch4-pc0-optimised-years-last", "unit": "yr", "lower": 1948, "upper": 1948}
+For the period including and before 1948, we use ice core information to optimise the first PC.
+We use ice core values from Law Dome \citep{rubino_law-dome-dataset_2019} for the southern hemisphere
+and NEEM \citep{rhodes-brook_neem-ch4-dataset_2019,rhodes_neem-ch4_2013} for the northern hemisphere.
+We do not use the values from \citet{menking_law-dome_2025} because of a configuration error
+% ZNTODO: ensure that this discussion appears in the discussion
+([TODO forward ref discussion of this, basically say that it was an error,
+but doesn't affect CMIP datasets in a material way
+because of how similar the Law Dome and Menking data is,
+but users of CH_4 data before 1850 should be aware and may wish to make other choices]).
+We smooth the ice core data from Law Dome following the method used in \citet{meinshausen_historical-ghgs_2017}.
+To each data point in the Law Dome dataset,
+we add random noise.
+The noise is normally distributed.
+% value-check: {"tag": "ch4-law-dome-noise-value-sd", "unit": "ppb", "lower": 3, "upper": 3}
+In the value axis, it has a standard deviation of 3~ppb.
+% value-check: {"tag": "ch4-law-dome-noise-time-relative-sd", "unit": "dimensionless", "lower": 0.025, "upper": 0.025}
+% value-check: {"tag": "ch4-law-dome-noise-time-ref-year", "unit": "yr", "lower": 2024, "upper": 2024}
+In the time axis, the standard deviation increases as the age of the observation increases
+according to the equation $\sigma = 0.025 \times (2024 - y)$, where $y$ is the year to which the observation applies.
+For each year between the start and end of the Law Dome dataset,
+% value-check: {"tag": "ch4-law-dome-min-points-either-side", "unit": "dimensionless", "lower": 4, "upper": 4}
+% value-check: {"tag": "ch4-law-dome-max-points-either-side", "unit": "dimensionless", "lower": 10, "upper": 10}
+we pick at least four points either side of that year and a maximum of ten points either side of that year.
+% value-check: {"tag": "ch4-law-dome-window-width", "unit": "yr", "lower": 100, "upper": 100}
+If there are four or more points within 100 years of the year of interest
+(on a given side, i.e. before or after the year of interest),
+the points that are closest to the year for which we are trying to generate a value are used (on that side).
+If there are fewer than four points within 100 years of the window of interest
+(on a given side, i.e. before or after the year of interest),
+then the nearest four points on that side are used, irrespective of how far away they are from the year of interest.
+Based on the selected points, a quantile regression with a third order polynomial is performed.
+The inferred value for the year of interest is then taken from this regression.
+% value-check: {"tag": "ch4-law-dome-n-draws", "unit": "dimensionless", "lower": 250, "upper": 250}
+This process is repeated over all years, and the entire process is then repeated 250 times.
+The smoothed dataset is then the median over these 250 repeats.
+% [If requested by reviewers,
+% grab the figure that shows noise, window selector at start window, end window and something in between, and then how regression looks and is used at start window, end window and somewhere in the middle
+% from the notebook.]
+
+The value of the first PC is optimised such that,
+in all years where we have observations from NEEM,
+our output dataset matches the ice core values in the respective ice core's latitudinal bin
+% value-check: {"tag": "ch4-law-dome-lat-bin", "unit": "degree", "lower": -67.5, "upper": -67.5}
+% value-check: {"tag": "ch4-neem-lat-bin", "unit": "degree", "lower": 82.5, "upper": 82.5}
+(-67.5\textdegree~for Law Dome and 82.5\textdegree~for NEEM).
+As part of this optimisation, the global-, annual-mean concentration is included as a free parameter
+and we consider the value of the second PC and EOF too (see next paragraph).
+The first PC is then linearly interpolated between the years in which we have observations for both ice cores.
+By combining the first PC values from a) the observation network,
+b) based on the regression with CH_4 emissions of a geological origin,
+c) the optimisation against ice cores
+% value-check: {"tag": "ch4-pc0-optimised-years-first", "unit": "yr", "lower": 287, "upper": 287}
+and d) assuming that the first PC is constant before the first year in which we have ice core observations in both hemispheres (year 287),
+we end up with first PC values for the entire timespan from year 1 to 2023 (Figure~\ref{fig:methods-ch4}h)).
+
+The second PC is simply kept constant before the start of the interpolated observation network period (Figure~\ref{fig:methods-ch4}h)),
+as for N_2O (Section~\ref{sssec:methods-n2o-extend}).
+
+\textbf{Global-, annual-mean.}
+To extend the global-, annual-mean back in time (Figure~\ref{fig:methods-ch4}g)),
+% value-check: {"tag": "ch4-law-dome-start-year", "unit": "yr", "lower": 154, "upper": 154}
+we use the smoothed Law Dome data to extend back to the start of the Law Dome data, year 154.
+We use it in the same way as the \citet{menking_law-dome_2025} data is used for CO_2 (Section~\ref{sssec:methods-co2-extend}),
+i.e. we harmonise it to the value implied by our observation network-based global-, annual-mean and latitudinal gradient
+% value-check: {"tag": "ch4-law-dome-offset", "unit": "ppb", "lower": 0.0, "upper": 1.0}
+(the offset is less than 1~ppb, so the harmonisation has a much smaller effect than for CO_2),
+then calculate the temporally extended global-, annual-mean such that our output dataset matches the harmonised data
+% value-check: {"tag": "ch4-law-dome-lat-bin", "unit": "degree", "lower": -67.5, "upper": -67.5}
+in the -67.5\textdegree~latitudinal bin, the bin in which the ice cores were taken.
+
+% value-check: {"tag": "ch4-first-year", "unit": "yr", "lower": 1, "upper": 1}
+We then use data from EPICA \citep{epica_edml-ch4_2006} to extend back to year 1.
+% value-check: {"tag": "ch4-law-dome-start-year", "unit": "yr", "lower": 154, "upper": 154}
+We simply linearly interpolate the underlying EPICA data,
+rather than smoothing because the period from year 1 to year 153
+(the year before the Law Dome data starts)
+is not the focus of this dataset.
+As for the smoothed Law Dome data,
+we calculate the global-, annual-mean such that our output dataset matches the EPICA data
+% value-check: {"tag": "ch4-epica-lat", "unit": "degree", "lower": -75.0025, "upper": -75.0025}
+% value-check: {"tag": "ch4-epica-lat-bin", "unit": "degree", "lower": -82.5, "upper": -82.5}
+in the latitudinal bin in which the ice cores were taken
+(-82.5\textdegree: EPICA Dome C, at 75.0025\textdegree S,
+lies on the boundary between our -82.5\textdegree~and -67.5\textdegree~bins
+but is slightly closer to the centre of the -82.5\textdegree bin).
+
+% value-check: {"tag": "ch4-neem-max-relative-diff", "unit": "dimensionless", "lower": 0.0, "upper": 0.001}
+As a final check, we verify that the values implied by our global-, annual-mean and latitudinal gradient
+match the values from the NEEM data to within 0.1\%.
+This ensures that our processing has closely maintained the latitudinal gradient information
+provided by the ice cores throughout the various processing steps.
+
+\textbf{Seasonality.}
+As for N_2O (Section~\ref{sssec:methods-n2o-extend}).
+
+\subsubsection{Step 5: Prepare the components to be combined}
+\label{sssec:methods-ch4-prepare-components}
+
+This step is the same as for N_2O (Section~\ref{sssec:methods-n2o-prepare-components}).
+
+\subsubsection{Step 6: Generate native resolution}
+\label{sssec:methods-ch4-generate-native-resolution}
+
+This step is the same as for N_2O (Section~\ref{sssec:methods-n2o-generate-native-resolution}).
+
+\subsection{Generating concentrations for CFC12 and similarly processed species}
+\label{ssec:methods-cfc12-like}
+
+CFC12 follows the base case (N_2O, Section~\ref{ssec:methods-n2o}),
+except in Step 2 (Bin and interpolate observations), Step 4 (Extend) and Step 5 (Prepare the components to be combined).
+These differences accommodate some gases' sparse observation networks,
+allow some specific data sources take priority over our observation network-based method,
+recognise the need to interpolate between observation network values and pre-industrial values from the literature,
+and avoid negative values in the output.
+
+The approach described in this section is also used for
+C_2F_6, C_3F_8, CCl_4, CF_4,
+CFC-11, CFC-113, CFC-114, CFC-115,
+CH_2Cl_2, CH_3Br, CH_3CCl_3, CH_3Cl, CHCl_3,
+Halon-1211, Halon-1301, Halon-2402,
+HCFC-141b, HCFC-142b, HCFC-22,
+HFC-125, HFC134a, HFC-143a, HFC-152a, HFC-227ea, HFC-23, HFC-236fa, HFC-245fa, HFC-32, HFC-365mfc, HFC-4310mee,
+NF_3, SF_6 and SO_2F_2.
+
+\subsubsection{Step 1: Collect observations}
+\label{sssec:methods-cfc12-like-collect-observations}
+
+For CFC12, we use data from
+the NOAA HATS \citep{dutton_hats-cfc12_2022}
+and AGAGE \citep{prinn_ale-gage-agage_2000,prinn_agage_2018}
+observation networks
+(Figure~\ref{fig:methods-cfc12},
+see Appendix~\ref{app:methods-figures-cfc12-like} for similar figures for all other gases processed like CFC12).
+% The NOAA HATS data is NOAA's combined CFC12 product,
+% which combines the measurements from NOAA's different halocarbon measurement programmes.
+% The AGAGE data comes from three types of instrument (GC-MD, GC-MS and GC-MS-Medusa).
+For other gases processed like CFC12, we use different data sources based on data availability.
+In all cases, we use the data from the observation network(s) as reported,
+i.e. we do not convert between the networks' calibration scales
+(see Section~\ref{ssec:methods-general-approach}).
+% Direct quote from \citet{meinshausen_historical-ghgs_2017} (Section~2):
+% "For halocarbons, the difference in calibration scales has been estimated as small,
+% but not negligible, i.e. within 2.5 %, often within 1 % (Rhoderick et al., 2015)."
+% The other scale conversion factors \citet{meinshausen_historical-ghgs_2017} mentions are between 0.99 and 1.2
+% (HFC-125, HFC-227ea, HFC-236fa, HFC-245fa, HFC-365mfc, HFC-43-10mee and CH2Cl2, from WMO, 2012),
+% used to put older data products onto the current SIO14 scale.
+% Not converting between scales here makes negligible difference to the output.
+For NOAA, there are two kinds of data.
+Where it is available (as it is for CFC12), we use NOAA's combined HATS product
+(CFC12, \citealp{dutton_hats-cfc12_2022}; CFC-11, \citealp{dutton_hats-cfc11_2022}; CFC-113, \citealp{dutton_hats-cfc113_2022};
+CCl_4, \citealp{dutton_hats-ccl4_2022}; SF_6, \citealp{dutton_hats-sf6_2022}),
+which is a composite of measurements from NOAA's different halocarbon measurement programmes.
+For the other gases, we use NOAA's HATS raw flask data \citep{montzka_ods_1999}.
+The networks used are:
+
+\begin{itemize}
+% Gas names can't be broken at their hyphens,
+% so a justified line has too few places to stretch
+\raggedright
+@cfc12-like-obs-network-sources-list@
+\end{itemize}
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@cfc12-methods-figure@}
+\caption{
+    Production of the CFC12 datasets (for full details, see Section~\ref{ssec:methods-cfc12-like}).
+    a) Raw observation network data.
+    % value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
+    b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
+    c) Location of each sampling site in the observation networks.
+    d) Global-, annual-mean derived from the observation network values.
+    e) Seasonality derived from the observation network values.
+    f) Latitudinal gradient empirical orthogonal functions (EOFs) derived from the observation network values.
+    g) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
+    h) Latitudinal gradient principal components (PCs) for the entire output dataset timespan.
+}
+\label{fig:methods-cfc12}
+\end{figure}
+
+\subsubsection{Step 2: Bin and interpolate observations}
+\label{sssec:methods-cfc12-like-bin-and-interpolate}
+
+Binning and interpolation are the same as for N_2O
+(Section~\ref{sssec:methods-n2o-bin-and-interpolate}, Figures~\ref{fig:methods-cfc12}b) and~\ref{fig:methods-appendix-cfc12}a), b)),
+except that, due to a lack of data,
+we do not require data in the most northern and most southern latitudinal boxes.
+Instead, we allow for extrapolation to these boxes.
+In order to avoid spurious effects due to extrapolation,
+we use constant extrapolation rather than linear or smoother extrapolations such as cubic
+[TODO note this as a clear weakness in discussion].
+For some gases (Table~\ref{tab:cfc12-like-per-gas}), the observation network is so sparse
+that, even with this extrapolation, latitudinal bins near the poles cannot be filled in some months.
+For these gases, we permit even further extension:
+allowing the constant extrapolation to be applied over multiple latitudinal bands
+% value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
+(each of which is 15\textdegree~on our native grid)
+rather than the default, which only allows the extension to happen over a single latitudinal band.
+When we take the longest dataset that is continuous for CFC12,
+% value-check: {"tag": "cfc12-obs-network-start", "unit": "yr", "upper": 1979, "lower": 1979}
+% value-check: {"tag": "cfc12-obs-network-end", "unit": "yr", "upper": 2023, "lower": 2023}
+we end up with an interpolated observation network dataset that runs from 1979 to 2023
+(both inclusive, see Table~\ref{tab:cfc12-like-per-gas} for the extents for other gases processed like CFC12).
+
+\begin{table*}[t]
+\caption{
+    Per-gas inputs and choices for the gases processed like CFC12
+    (Section~\ref{ssec:methods-cfc12-like}).
+    Long poleward extension: whether we allow the observation network values to be extended
+    to the poles over multiple latitudinal bands.
+    Obs. network years: the interpolated observation network period.
+    Global-mean source: source from which the global-, annual-mean is derived.
+    Pre-industrial: year up to which the pre-industrial value applies, the pre-industrial value
+    and the source of the value
+    (the years may not match the original source exactly, see Section~\ref{sssec:methods-cfc12-like-extend}).
+}
+\label{tab:cfc12-like-per-gas}
+% Thirty-four rows only (nearly) fit on a page at this size.
+% The table is still 10pt too tall for the page ("Float too large" warning).
+% ZNTODO: check with the editor whether they want this long table as is
+% or for us to split it over multiple pages.
+\footnotesize
+@cfc12-like-per-gas-table@
+\belowtable{
+    % value-check: {"tag": "velders-adjusted-pre-industrial-year", "unit": "yr", "lower": 1988, "upper": 1988}
+    % value-check: {"tag": "velders-pre-industrial-year", "unit": "yr", "lower": 1980, "upper": 1980}
+    \textsuperscript{a} 1988 rather than the 1980 used for
+    the other \citet{velders_hfcs_2022} pre-industrial years
+    so that the interpolation algorithm is stable.
+    \textsuperscript{b} Used to extend the observation network-derived global-, annual-mean back in time.
+    Harmonised to the observation network
+    in the first year of the interpolated observation network period
+    % value-check: {"tag": "trudinger-harmonisation-transition-years", "unit": "yr", "lower": 100, "upper": 100}
+    (with a 100-year harmonisation convergence time).
+    \textsuperscript{c} Value as estimated by \citet{meinshausen_historical-ghgs_2017}, based on the cited source(s).
+}
+\end{table*}
+
+\subsubsection{Step 3: Principal component analysis}
+\label{sssec:methods-cfc12-like-pca}
+
+This step is the same as for N_2O (Section~\ref{sssec:methods-n2o-pca}, Figure~\ref{fig:methods-cfc12}d)--f)),
+except that we retain only the first latitudinal gradient EOF.
+% value-check: {"tag": "cfc12-lat-gradient-first-eof-variance", "unit": "dimensionless", "lower": 0.98, "upper": 1.0}
+For CFC12, this explains almost all of the variance (Figure~\ref{fig:methods-appendix-cfc12}c)).
+% value-check: {"tag": "cfc12-like-min-lat-gradient-first-eof-variance-excl-hfc236fa", "unit": "dimensionless", "lower": 0.9, "upper": 1.0}
+For the other gases processed like CFC12, it explains more than 90\% of the variance,
+% value-check: {"tag": "hfc236fa-lat-gradient-first-eof-variance", "unit": "dimensionless", "lower": 0.75, "upper": 0.85}
+except for HFC-236fa, for which it explains around 80\%
+(see the equivalent panels in Appendix~\ref{app:methods-figures-cfc12-like}).
+By using seasonality and latitudinal gradient based on the observation network in all cases,
+rather than assuming zero seasonality and/or latitudinal gradient for some gases,
+we depart slightly from the choices made in \citet{meinshausen_historical-ghgs_2017}.
+
+\subsubsection{Step 4: Extend}
+\label{sssec:methods-cfc12-like-extend}
+
+\textbf{Latitudinal gradient.}
+We extend the latitudinal gradient PC (as we retain only one, see Step 3)
+back in time by using a regression against total emissions
+from the SSP2-4.5 scenario (which includes the historical period) in the RCMIP v5.1.0 emissions dataset \citep{nicholls_rcmip_2020} (Figure~\ref{fig:methods-appendix-cfc12}e)).
+% ZNTODO: include more discussion of this in discussion.
+% The point is that we need more rapidly updated historical emissions estimates
+% to feed this, or to create a new approach that doesn't require this regression.
+% ZNTODO: somewhere (if not already there) make clear that we need a method of creating a complete dataset
+% that can get us back to year 1 and also project forward in time based on emissions and MAGICC modelling alone
+% (that is all we have at the time when we create scenario forcings).
+% This massively constraints our available options and is why the approach of decomposing into global-, annual-mean,
+% relative seasonality and lat. gradient EOFs with PCs scaled with emissions or basic extrapolation is where we land:
+% it is imperfect but it means we can cover the full time period we need to,
+% rather than hitting a dead-end for one time period or another.
+Using a scenario for the period from 2015 to 2023, rather than a historical based estimate is imperfect
+however it is an acceptable imperfection because historical emissions have approximately followed SSP2-4.5 for these gases.
+Using this regression, we then extend the PC back to 1750,
+the first year reported in the RCMIP v5.1.0 emissions dataset.
+Before 1750, we keep the PC constant (Figure~\ref{fig:methods-cfc12}h)).
+
+\textbf{Global-, annual-mean.}
+The global-, annual-mean is calculated in two sub-steps (Figure~\ref{fig:methods-cfc12}g)).
+First, we set the global-, annual-mean over the period covered by (potentially) multiple input data sources.
+For most gases, we use the global-, annual-mean from a specific source
+rather than the global-, annual-mean derived from the observation network
+(Table~\ref{tab:cfc12-like-per-gas}).
+For CF_4, C_2F_6 and C_3F_8, we use the global-, annual-mean from \citet{trudinger_pfcs_2016}.
+% value-check: {"tag": "trudinger-end-year", "unit": "yr", "lower": 2014, "upper": 2014}
+However, this does not extend as close to the present-day as our interpolated observation network dataset does
+(\citet{trudinger_pfcs_2016} ends in 2014),
+so we create a composite.
+% value-check: {"tag": "trudinger-start-year", "unit": "yr", "lower": 1901, "upper": 1901}
+From the start of the \citet{trudinger_pfcs_2016} data in 1901
+up to the year before the interpolated observation network period starts (Table~\ref{tab:cfc12-like-per-gas}),
+we use harmonised \citet{trudinger_pfcs_2016} data.
+We harmonise the \citet{trudinger_pfcs_2016} data to the global-, annual-mean derived from the observation network
+in the first year of the interpolated observation network period (Table~\ref{tab:cfc12-like-per-gas}).
+The harmonisation is done by adding an offset
+which equals the difference between the two datasets in this harmonisation year
+% value-check: {"tag": "trudinger-harmonisation-transition-years", "unit": "yr", "lower": 100, "upper": 100}
+and declines linearly to zero over 100 years.
+From the first year of the interpolated observation network period onwards,
+we use the global-, annual-mean derived from the observation network.
+For the gases that do not source their global-, annual-mean from a specific source,
+we use the global-, annual-mean derived from the observation network (Table~\ref{tab:cfc12-like-per-gas}).
+
+Second, for all gases, we extend the global-, annual-mean back in time
+based on information about the gas' pre-industrial value
+and when this pre-industrial value should be reached (Table~\ref{tab:cfc12-like-per-gas}).
+% value-check: {"tag": "cfc12-like-non-zero-pre-industrial-gases"}
+Following \citet{meinshausen_historical-ghgs_2017}, the pre-industrial value is zero
+except for gases with natural sources.
+% The references are in Table~\ref{tab:cfc12-like-per-gas}, which cites the original sources rather than M17
+% (done via `PRE_INDUSTRIAL_SOURCE_CITATION_OVERRIDES` in `src/local/historical_ghg_forcing_for_cmip7/cfc12_like_tables.py`).
+% The old text is left as a comment below for reference.
+% These are CH_3Cl, CH_3Br, CHCl_3 and CH_2Cl_2
+% (see Section~3.4 of \citet{meinshausen_historical-ghgs_2017}, which builds on
+% \citet{velders-daniel_ods-uncertainty_2014}, \citet{worton_chloroform-firn_2006}, \citet{aucott_chloroform-emissions_1999} and \citet{trudinger_halocarbons-firn_2004})
+% and CF_4 (see Section~3.5 of \citet{meinshausen_historical-ghgs_2017}, \citet{trudinger_pfcs_2016} and \citet{muhle_pfcs_2010}).
+% For CCl_4, we use zero, in line with \citet{walker_cfc-histories_2000},
+% rather than the near-zero 0.025~ppt in \citet{meinshausen_historical-ghgs_2017}.
+The pre-industrial years (i.e. the years up to which we assume the pre-industrial value applies)
+are close to the years implied by the original sources,
+but a lack of review time that some do not match the published sources exactly.
+The impact of this error on our results is minimal,
+because it only affects the early part of each gas' history,
+when concentrations are close to their pre-industrial values.
+% value-check: {"tag": "velders-pre-industrial-year", "unit": "yr", "lower": 1980, "upper": 1980}
+For the HFCs whose pre-industrial value comes from \citet{velders_hfcs_2022},
+we use a pre-industrial year of 1980 (1988 for HFC-134a, see Table~\ref{tab:cfc12-like-per-gas}).
+This is a pragmatic choice that allows our gap-filling fit (see below) to work
+% value-check: {"tag": "velders-first-year", "unit": "yr", "lower": 1990, "upper": 1990}
+and does no harm, because the \citet{velders_hfcs_2022} data start in 1990.
+
+We fill the gap between the pre-industrial value (assumed constant for all time points before the pre-industrial fitting year)
+and the global-, annual-mean from the first sub-step following the equation:
+
+\begin{equation}
+    \label{eq:cfc12-like-global-mean-gap-fill}
+    c(y) = a \left( \frac{y - y_{pi}}{w} \right)^4 + b \left( \frac{y - y_{pi}}{w} \right)^2
+\end{equation}
+where $c$ is the global-, annual-mean concentration,
+$y$ is the year in which the value applies,
+$y_{pi}$ is the pre-industrial year
+and $w$ is half the width of the gap.
+
+We fit Equation~\ref{eq:cfc12-like-global-mean-gap-fill}
+% Note to self: using the three years before the gap doesn't really make sense.
+% Forcing the coefficients to be positive and fitting on y-y_pi, does the work,
+% I don't know why we needed this data in the fit too.
+% If reviewers push on this, we probably have to just roll over
+% and put a note in the discussion that this doesn't make much sense, but it works so ok.
+to the data from the three years immediately before the gap
+and up to three years immediately after it, requiring that $a \geq 0$ and $b \geq 0$.
+Having only even powers of $y - y_{pi}$ with non-negative coefficients
+means that the fit is flat at the pre-industrial year
+and rises monotonically away from it,
+which ensures that concentrations of these gases only start to rise after the pre-industrial year
+(we don't use the fit before the pre-industrial year).
+Where this fit leads to values that are not within the range of values seen on either side of the gap
+(i.e. there are oscillations in the output)
+we instead interpolate through the same points with a quadratic and, failing that, a cubic spline.
+
+\textbf{Seasonality.}
+As for N_2O (Section~\ref{sssec:methods-n2o-extend}).
+
+\subsubsection{Step 5: Prepare the components to be combined}
+\label{sssec:methods-cfc12-like-prepare-components}
+
+This step is the same as for N_2O (Section~\ref{sssec:methods-n2o-prepare-components}),
+except that we do an extra check: that no negative values will be generated when we apply Equation~\ref{eq:native-resolution-sum}.
+Negative values arise in the years shortly after a gas' pre-industrial year,
+when the global-, annual-mean is still very small,
+but the latitudinal gradient (extended using the regression against emissions, see Step~4) is not.
+Where combining the two would give negative values,
+we scale down the latitudinal gradient.
+% value-check: {"tag": "max-lat-gradient-fraction", "unit": "dimensionless", "lower": 0.5, "upper": 0.5}
+% so that its most negative value is half the global-, annual-mean
+% (or set it to zero where the global-, annual-mean is zero).
+% value-check: {"tag": "cfc12-like-lat-gradient-capped-years-after-pre-industrial", "unit": "yr", "lower": 44, "upper": 44}
+% For all gases except HFC-152a, this only affects years within 44 years of the gas' pre-industrial year.
+% value-check: {"tag": "hfc152a-lat-gradient-capped-years-first", "unit": "yr", "lower": 1991, "upper": 1991}
+% value-check: {"tag": "hfc152a-lat-gradient-capped-years-last", "unit": "yr", "lower": 2020, "upper": 2020}
+% For HFC-152a, the latitudinal gradient is scaled down in some months in the period from 1991 to 2020.
+Similarly, when combining the seasonality and the global-, annual-mean
+(and the latitudinal gradient) would lead to negative values, we scale it down.
+% value-check: {"tag": "max-seasonality-fraction", "unit": "dimensionless", "lower": 0.35, "upper": 0.35}
+% in any year in which the seasonality's magnitude
+% is more than 35\% of the global-, annual-mean,
+% we scale the seasonality down to this limit
+% (or set it to zero where the global-, annual-mean is zero).
+% value-check: {"tag": "cfc12-like-seasonality-capped-gases"}
+% value-check: {"tag": "hfc236fa-seasonality-capped-years-first", "unit": "yr", "lower": 1996, "upper": 1996}
+% value-check: {"tag": "hfc236fa-seasonality-capped-years-last", "unit": "yr", "lower": 2022, "upper": 2022}
+% This affects HFC-236fa in every year from 1996 to 2022
+% and HFC-32, HFC-152a and HFC-365mfc in a single year each.
+% Because we scale the latitudinal gradient by a single factor in each month
+% and the seasonality by a single factor in each year,
+% these reductions do not change the global-, annual-mean
+% (the latitudinal gradient still has an area-weighted mean of zero
+% and the seasonality still has an annual-mean of zero),
+% only how it is distributed in space and time.
+This is a crude fix.
+The need for it points to inconsistencies in our approach,
+e.g. between our pre-industrial values and the emissions used to extend the latitudinal gradient.
+Improving this is an area for future work (Section~\ref{sec:discussion}).
+
+\subsubsection{Step 6: Generate native resolution}
+\label{sssec:methods-cfc12-like-generate-native-resolution}
+
+This step is the same as for N_2O (Section~\ref{sssec:methods-n2o-generate-native-resolution}).
+
+\subsection{Generating concentrations for C_4F_10 and similarly processed species}
+\label{ssec:methods-c4f10-like}
+
+C_4F_10 follows the base case (N_2O, Section~\ref{ssec:methods-n2o}),
+except in Step 1 (Collect observations), Step 2 (Bin and interpolate observations),
+Step 3 (Principal component analysis) and Step 5 (Prepare the components to be combined).
+These differences are due to the lack of a comprehensive observation network.
+Instead, we only use data from a single source,
+so there is nothing to bin and interpolate
+and we assume the shape of the latitudinal gradient EOF and that seasonality is zero, rather than performing PCA.
+As for CFC12-like gases, we also avoid negative values in the output.
+
+The approach described in this section is also used for
+cC_4F_8, C_5F_12, C_6F_14 and C_7F_16.
+
+\subsubsection{Step 1: Collect observations}
+\label{sssec:methods-c4f10-like-collect-observations}
+
+For these species, there is no significant observation network to use.
+Instead, we use the data provided in \citet{droste_pfcs_2020}.
+% \cite{droste_pfcs_2020}.
+This provides observations of these gases at two observational sites:
+% value-check: {"tag": "droste-cape-grim-lat", "unit": "degree", "lower": -40.75, "upper": -40.65}
+Cape Grim (40.7\degree S) and
+% value-check: {"tag": "droste-tacolneston-lat", "unit": "degree", "lower": 52.45, "upper": 52.55}
+Tacolneston (52.5\degree N) (Figure~\ref{fig:methods-c4f10},
+see Appendix~\ref{app:methods-figures-c4f10-like} for similar figures for all other gases processed like C_4F_10).
+%  Taiwan: Cape Fuguei, 25\degree N, 122\degree E , and Hengchun, 22\degree N, 121\degree E
+\begin{figure}[t]
+\includegraphics[width=12cm]{@c4f10-methods-figure@}
+\caption{
+    Production of the C_4F_10 datasets (for full details, see Section~\ref{ssec:methods-c4f10-like}).
+    a) \citet{droste_pfcs_2020} data.
+    b) Assumed latitudinal gradient EOF.
+    c) Derived latitudinal gradient PC.
+    d) Derived global-, annual-mean.
+    e) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
+    f) Latitudinal gradient PCs for the entire output dataset timespan.
+}
+\label{fig:methods-c4f10}
+\end{figure}
+
+\subsubsection{Step 2: Bin and interpolate observations}
+\label{sssec:methods-c4f10-like-bin-and-interpolate}
+
+This step is not needed.
+Due to the lack of an observation network, we do not perform spatial interpolation.
+
+\subsubsection{Step 3: Principal component analysis}
+\label{sssec:methods-c4f10-like-pca}
+
+Principal component analysis cannot be performed due to lack of observations.
+
+% Doesn't apply: there is no gridded observation network to take a zonal mean of.
+% \textbf{Zonal mean.}
+
+\textbf{Latitudinal gradient.}
+Instead, we assume a single linear EOF for the latitudinal gradient (Figure~\ref{fig:methods-c4f10}b))
+(note that this linearity is present when considering the area of each latitudinal box,
+the EOF (and therefore the latitudinal gradient) does not appear linear if the differing area of each latitudinal box is not considered).
+We then set the PCs such that change in value between the
+Cape Grim and Tacolneston observations in each year
+is matched by our latitudinal gradient (i.e. the product of the EOF and the PC, Figure~\ref{fig:methods-c4f10}c)).
+% value-check: {"tag": "droste-last-year", "unit": "yr", "lower": 2018, "upper": 2018}
+% value-check: {"tag": "c4f10-like-last-year", "unit": "yr", "lower": 2022, "upper": 2022}
+As the \citet{droste_pfcs_2020} data only extends to 2018,
+we use a basic linear extrapolation to extend the PCs to 2022.
+% value-check: {"tag": "c4f10-like-erf-2022", "unit": "W/m^2", "lower": 0.0, "upper": 0.001}
+This is very simple, but given that these gases together account for less than 0.001~W/m^2,
+the sensitivity of climate simulations to this choice is negligible.
+
+\textbf{Global-, annual-mean.}
+We calculate the global-, annual-mean such that the values in the
+Cape Grim and Tacolneston latitudinal boxes are matched
+when the global-, annual-mean is combined with the latitudinal gradient we just derived
+(Figure~\ref{fig:methods-c4f10}d)).
+% value-check: {"tag": "droste-last-year", "unit": "yr", "lower": 2018, "upper": 2018}
+% value-check: {"tag": "c4f10-like-last-year", "unit": "yr", "lower": 2022, "upper": 2022}
+As the \citet{droste_pfcs_2020} data only extends to 2018,
+we also use a basic linear extrapolation to extend the global-, annual-mean to 2022.
+As above, this is very simple, but acceptable given the small climate impact of these gases.
+
+\textbf{Seasonality.}
+As noted previously, seasonality is assumed to be zero for gases processed like C_4F_10.
+
+\subsubsection{Step 4: Extend}
+\label{sssec:methods-c4f10-like-extend}
+
+\textbf{Latitudinal gradient.}
+We extend the PC value (as we retain only one) back in time by
+assuming that the PC value is constant at zero
+% value-check: {"tag": "droste-first-year", "unit": "yr", "lower": 1934, "upper": 1934}
+before the first year of \citet{droste_pfcs_2020} data (1934).
+We make this assumption based on the fact that the \citet{droste_pfcs_2020} data
+% value-check: {"tag": "droste-max-first-year-value", "unit": "ppt", "lower": 0.0, "upper": 1e-5}
+is less than $10^{-5}$~ppt at both sites in this first year,
+hence the latitudinal gradient must also be effectively zero before this year
+because negative concentrations are not possible (Figure~\ref{fig:methods-c4f10}f)).
+
+\textbf{Global-, annual-mean.}
+In line with the \citet{droste_pfcs_2020} data,
+% value-check: {"tag": "droste-max-first-year-value", "unit": "ppt", "lower": 0.0, "upper": 1e-5}
+% value-check: {"tag": "droste-first-year", "unit": "yr", "lower": 1934, "upper": 1934}
+which is approximately zero in its first year,
+we assume that concentrations are zero before the first year of data provided in \citet{droste_pfcs_2020}, 1934
+(Figure~\ref{fig:methods-c4f10}e)).
+
+% Doesn't apply: seasonality is assumed to be zero (Step 3), so there is nothing to extend.
+% \textbf{Seasonality.}
+
+\subsubsection{Step 5: Prepare the components to be combined}
+\label{sssec:methods-c4f10-like-prepare-components}
+
+This step is the same as for N_2O (Section~\ref{sssec:methods-n2o-prepare-components}),
+except that we apply the same negative value check as is done for CFC12-like gases
+(Section~\ref{sssec:methods-cfc12-like-prepare-components}).
+Here we can only adjust the latitudinal gradient
+(the seasonality is already assumed to be zero).
+% value-check: {"tag": "c4f10-like-lat-gradient-capped-years-first", "unit": "yr", "lower": 1934, "upper": 1934}
+% value-check: {"tag": "c4f10-like-lat-gradient-capped-years-last", "unit": "yr", "lower": 2001, "upper": 2001}
+% For these gases, the latitudinal gradient is scaled down in some months in the period from 1934 to 2001,
+% when concentrations are still very small (Section~\ref{sssec:methods-c4f10-like-pca}).
+
+\subsubsection{Step 6: Generate native resolution}
+\label{sssec:methods-c4f10-like-generate-native-resolution}
+
+This step is the same as for N_2O (Section~\ref{sssec:methods-n2o-generate-native-resolution}).
+
+\subsection{Generating concentrations for C_8F_18}
+\label{ssec:methods-c8f18}
+
+C_8F_18 does not follow the base case (N_2O, Section~\ref{ssec:methods-n2o}).
+Due to a lack of data, we instead take the global- and hemispheric-, annual-means from the CMIP6 dataset
+(historical data to 2014 from \citealp{meinshausen_historical-ghgs_2017};
+SSP2-4.5 from 2015 from \citealp{meinshausen_ssp-ghgs_2020};
+see Figure~\ref{fig:methods-c8f18}a)).
+In line with \citet{meinshausen_historical-ghgs_2017},
+we assume zero seasonality and a linear latitudinal gradient (Figure~\ref{fig:methods-c8f18}c))
+that we scale to reproduce the CMIP6 hemispheric means (Figure~\ref{fig:methods-c8f18}b)),
+then prepare and combine the components as is done for N_2O
+(Sections~\ref{sssec:methods-n2o-prepare-components} and~\ref{sssec:methods-n2o-generate-native-resolution}).
+This is clearly imperfect and should be considered for future iterations (Section~\ref{sec:discussion}).
+
+\begin{figure}[t]
+\includegraphics[width=12cm]{@c8f18-methods-figure@}
+\caption{
+    Production of the C_8F_18 datasets (for full details, see Section~\ref{ssec:methods-c8f18}).
+    a) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
+    b) Latitudinal gradient PCs for the entire output dataset timespan.
+    c) Latitudinal gradient EOF.
+}
+\label{fig:methods-c8f18}
+\end{figure}
+
+\subsection{Derived output grids}
+\label{ssec:methods-derived-grids}
+
+For each gas, we apply Equation~\ref{eq:native-resolution-sum}
+% value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
+to create a gridded dataset on our 15\textdegree~latitudinal (spatial), monthly (temporal) `native resolution' grid.
+From this native grid output, we then derive four other output products:
+
+\begin{enumerate}
+    \item hemispheric (spatial) monthly (temporal) grid
+    \item global-mean (spatial) monthly (temporal) grid
+    \item hemispheric (spatial) yearly (temporal) grid
+    \item global-mean (spatial) yearly (temporal) grid
+\end{enumerate}
+
+These outputs are trivially derived by taking means in the relevant axes
+(where the spatial means are area-weighted).
+The outputs are then formatted before being published on the ESGF for distribution to modelling teams.
+
+We also have the ability to produce higher-resolution spatial grids
+by applying mean-preserving interpolation to the latitudinal axis of the native grid output.
+Arbitrary latitudinal resolution can be produced by applying this technique.
+%   See https://github.com/climate-resource/CMIP-GHG-Concentration-Generation/blob/v0.2.0/src/local/mean_preserving_interpolation.py
+%   if anyone ever needs these outputs.
+As a result of the processing time, data storage requirements and lack of use in CMIP6,
+we have not produced the 0.5\textdegree~latitudinal grid product as part of our `standard' offering this time.
+
+\subsection{Equivalent species}
+\label{ssec:methods-equivalent-species}
+
+Given that the majority, if not all, ESMs will not want the computational expense of including 43 greenhouse gas tracers,
+we also produce the equivalent species described in \citet{meinshausen_historical-ghgs_2017}.
+These equivalent species allow modelling teams to pick one of three options when running:
+
+\begin{enumerate}
+    \item {
+        \textbf{Use all GHGs individually}
+        Modelling teams can pick which of the 43 provided GHGs to run with.
+        Note that running with any of the 43 GHGs missing
+        means that the radiative forcing of some GHGs will be missing from the simulation.
+    }
+    \item {
+        \textbf{Use CO_2, CH_4, N_2O, CFC12 and CFC-11 equivalent}
+        CFC-11-eq captures the equivalent effect of all GHGs other than CO_2, CH_4, N_2O and CFC12.
+    }
+    \item {
+        \textbf{Use CO_2, CH_4, N_2O, CFC12 equivalent and HFC134a equivalent}
+        CFC12-eq captures the equivalent effect of all ozone-depleting substances
+        (namely CFC-11, CFC12, CFC-113, CFC-114, CFC-115, CCl_4, CH_2Cl_2, CH_3Br, CH_3CCl_3, CH_3Cl, CHCl_3, Halon-1211, Halon-1301, Halon-2402, HCFC-141b, HCFC-142b, HCFC-22)
+        while HFC134a-eq captures the equivalent effect of all other fluorinated gases
+        (namely CF_4, C_2F_6, C_3F_8, cC_4F_8, C_4F_10, C_5F_12, C_6F_14, C_7F_16, C_8F_18, HFC-23, HFC-32, HFC-125, HFC134a, HFC-143a, HFC-152a, HFC-227ea, HFC-236fa, HFC-245fa, HFC-365mfc, HFC-4310mee, NF_3, SF_6, SO_2F_2).
+    }
+\end{enumerate}
+
+The equivalence is calculated following the `full equivalence' definition given in Equation 7 of \citet{meinshausen_historical-ghgs_2017}.
+We use the radiative efficiencies from the last IPCC Assessment Report,
+% Checked (2026-10-08): all the radiative efficiencies we use (`RADIATIVE_EFFICIENCIES` in
+% `src/local/historical_ghg_forcing_for_cmip7/comparison_data.py`) match Table 7.SM.7 of the AR6 WG1 Ch. 7 SM.
+% (Table 7.SM.6 is the carbon cycle response function, the radiative efficiencies are in Table 7.SM.7,
+% which is in Section 7.SM.6.)
+specifically the radiative efficiencies given in Table 7.SM.7 of the Working Group 1 Chapter 7 Supplementary Material \citep{IPCC_AR6-WG1-Ch-7-SM_2021}.
+
+These equivalent species are derived based on output that is already on the desired output grid,
+rather than on the native grid (with further processing applied thereafter).
+This avoids any consistency issues due to non-linearity in the processing operations,
+such as from mean-preserving interpolation.
+
+\subsection{Preparation for publication on ESGF}
+\label{ssec:prep-for-esgf}
+
+The dataset is then formatted in a consistent way
+(we do not use the term `standard' way here,
+because no standards are robustly defined for forcings data).
+This includes setting the data format and metadata,
+in line with the formats and metadata that have been used previously (specifically in CMIP6).
+
+We format the data according to the input4MIPs data reference syntax (DRS).
+We do not go into the full details of this here
+(for full details, see \citet{input4mips-cvs_docs_2026} and the user guide [TODO ref user guide]).
+The key details for users are related to the frequency and grid label attributes.
+We provide data at two different frequencies:
+monthly-means (\texttt{frequency} attribute in the directory path, filename and file attributes set to `mon')
+and annual-means (`yr').
+We provide data at three different spatial resolutions:
+% value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
+15\textdegree~latitudinal grid i.e. our native resolution (\texttt{grid\_label} attribute in the directory path, filename and file attributes set to `gnz'),
+hemispheric-means (`gr1z')
+and global-mean (`gm').
+
+% value-check: {"tag": "output-first-year", "unit": "yr", "lower": 1, "upper": 1}
+% value-check: {"tag": "output-last-year", "unit": "yr", "lower": 2022, "upper": 2022}
+For every gas, the data covers the same time period: from year 1 to the end of 2022.
+% value-check: {"tag": "co2-obs-network-end", "unit": "yr", "lower": 2023, "upper": 2023}
+% value-check: {"tag": "ch4-obs-network-end", "unit": "yr", "lower": 2023, "upper": 2023}
+% value-check: {"tag": "n2o-obs-network-end", "unit": "yr", "lower": 2023, "upper": 2023}
+% value-check: {"tag": "cfc12-obs-network-end", "unit": "yr", "lower": 2023, "upper": 2023}
+For some gases, the steps above produce values for 2023 too
+(e.g. the observation networks for CO_2, CH_4, N_2O and CFC12 run to 2023).
+We do not publish these,
+because not all of our data sources are updated at the same rate
+and we want all gases to cover the same time period.
+The dataset therefore extends one year beyond 2021, which is the last year of the CMIP7 historical experiment
+(\citealp{dunne_cmip7_2025}, Section~\ref{sec:output-dataset-requirements}).
+
+% Leave reviewers to poke on anything else they want explained in full detail,
+% it's hard to predict what they might want repeated rather than being ok with references to other sources.
+We provide the following five combinations of these options:
+\begin{enumerate}
+    % value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
+    \item mon-gnz: Our native dataset (monthly-means on our native 15\textdegree~latitudinal grid)
+    \item mon-gr1z: Monthly-mean hemispheric-means
+    \item mon-gm: Monthly-mean global-mean
+    \item yr-gr1z: Annual-mean hemispheric-means
+    \item yr-gm: Annual-mean global-mean
+\end{enumerate}
+
+Consistency across forcings dataset formatting is emerging,
+partially aided by input4mips-validation \citep{input4mips-validation_docs_2026},
+but this is by no means a robust standard
+and more work is required to achieve robustness and true standards (Section~\ref{sec:discussion}).
+For a more complete exploration of the data formats used across forcings,
+see \citet{input4mips-cvs_docs_2026} and the user guide [TODO ref user guide].
+
+\subsection{Vertical dimension}
+\label{ssec:methods-vertical}
+
+For any modelling team which do not have their own tracer transport and therefore require a vertical gradient,
+we suggest using the simplified parameterisations provided in \citet{meinshausen_historical-ghgs_2017}.
+These simple parameterisations vary the vertical gradient as a function of surface concentrations at earlier points in time and latitude
+in an attempt to represent the effect of vertical and horizontal mixing.
+The parameter values used vary by gas in an attempt to represent the gas-specific features of the vertical gradient.
+These simple parameterisations allow users of our dataset to go from our surface concentrations
+to full vertical profiles for any pressure level with simple composite functions.
+The functions are composite because they typically use different forms in the lower and upper atmosphere.
+For full details, refer to Section~4, (Equations 9–13 and Table 11) of \citet{meinshausen_historical-ghgs_2017}.
+
+% Flush the methods figures and tables before the results start.
+% Otherwise the CFC-12-like per-gas table (which is slightly too tall for a page)
+% gets pushed to the end of the document.
+\clearpage

@@ -1,0 +1,80 @@
+[title_info]
+title = "Greenhouse gas concentration forcing for the CMIP7 historical and pre-industrial control experiments"
+running_title = "GHG forcing for CMIP7 DECK experiments"
+
+# Each author's `contributions` are tags, which are turned into the author contributions statement
+# (one sentence per tag, e.g. "ZN and MM acquired funding.").
+# The tags, and the text each is written as, are `CONTRIBUTIONS`
+# in `src/local/historical_ghg_forcing_for_cmip7/author_contributions.py`.
+# `contributions_initials` is how the author is written in that statement.
+# TODO: the contributions below are placeholders, every author's still have to be filled in properly.
+
+[[authors]]
+given_name = "Zebedee"
+surname = "Nicholls"
+email = "zebedee.nicholls@climate-resource.com"
+correspondence_author = true
+affiliations = ["crs", "cr", "uom-sgeas", "iiasa-ece"]
+contributions_initials = "ZN"
+contributions = [
+    "dataset-production",
+    "conceptualisation",
+    "figures-tables",
+    "original-draft",
+    "review-and-editing",
+    "funding-acquisition",
+]
+
+[[authors]]
+given_name = "Malte"
+surname = "Meinshausen"
+email = "malte.meinshausen@unimelb.edu.au"
+affiliations = ["cr", "uom-sgeas"]
+contributions_initials = "MM"
+contributions = [
+    "conceptualisation",
+    "dataset-contributed",
+    "review-and-editing",
+    "funding-acquisition",
+]
+
+[[authors]]
+given_name = "Mika"
+surname = 'Pfl\"uger'
+email = "mika.pflueger@climate-resource.com"
+affiliations = ["crs"]
+contributions_initials = "MP"
+contributions = [
+    "review-and-editing",
+    "funding-acquisition",
+]
+
+[[authors]]
+given_name = "Anna"
+surname = 'Lanteri'
+email = "anna.lanteri@climate-resource.com"
+affiliations = ["crs"]
+contributions_initials = "AL"
+contributions = [
+    "dataset-contributed",
+    "figures-tables",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Florence"
+surname = 'Bockting'
+email = "tbd@invalid.com"
+# TBD current affiliation
+affiliations = ["crs"]
+contributions_initials = "FB"
+contributions = [
+    "dataset-contributed",
+    "review-and-editing",
+]
+
+[affiliations]
+crs = "Climate Resource S, Berlin, Germany"
+cr =  "Climate Resource, Melbourne, Australia"
+uom-sgeas = "School of Geography, Earth and Atmospheric Sciences, The University of Melbourne, Melbourne, Victoria, Australia"
+iiasa-ece = "Energy, Climate and Environment Program, International Institute for Applied Systems Analysis (IIASA), 2361 Laxenburg, Austria"
