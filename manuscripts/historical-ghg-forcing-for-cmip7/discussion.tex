@@ -82,6 +82,46 @@ A more careful treatment of calibration scales,
 ideally developed together with the observation networks,
 would be an improvement.
 
+The sixth is internal consistency issues within our method, which lead to the use of scaling to avoid unphysical negative values.
+This is most visible for the CFC12-like and C_4F_10-like gases,
+where we have to scale down the latitudinal gradient and the seasonality to avoid negative values in the output
+(Sections~\ref{sssec:methods-cfc12-like-prepare-components} and \ref{sssec:methods-c4f10-like-prepare-components}).
+The need for this points to three inconsistencies.
+The first is between our pre-industrial values and the emissions used to extend the latitudinal gradient.
+The global-, annual-mean is held at its pre-industrial value until the pre-industrial year and only rises slowly after it,
+whereas the latitudinal gradient follows emissions, which can already be well above zero in these years.
+A better approach would derive the components in a way that guarantees their consistency,
+for example by constraining the latitudinal gradient and the seasonality relative to the global-mean when they are derived and extended
+or by considering the consistency between the emissions estimates and concentration changes.
+% % value-check: {"tag": "cfc12-like-lat-gradient-capped-years-after-pre-industrial", "unit": "yr", "lower": 44, "upper": 44}
+% % value-check: {"tag": "c4f10-like-lat-gradient-capped-years-first", "unit": "yr", "lower": 1934, "upper": 1934}
+% % value-check: {"tag": "c4f10-like-lat-gradient-capped-years-last", "unit": "yr", "lower": 2001, "upper": 2001}
+% As a result, we scale down the latitudinal gradient of nearly every CFC12-like gas
+% in the (up to 44) years after its pre-industrial year
+% and of the C_4F_10-like gases in some months between 1934 and 2001.
+The second is specific to HFC-152a,
+% value-check: {"tag": "hfc152a-lat-gradient-capped-years-first", "unit": "yr", "lower": 1991, "upper": 1991}
+% value-check: {"tag": "hfc152a-lat-gradient-capped-years-last", "unit": "yr", "lower": 2023, "upper": 2023}
+for which we scale down the latitudinal gradient in some months between 1991 and 2023.
+This period includes the years in which we have observations,
+so the extension back in time cannot be the only cause:
+the latitudinal gradient we derive from the observations is itself too strong for the global-mean in these months.
+This suggests that we need to consider how we handle the input data more carefully,
+for example removing outliers or pollution events (Figure~\ref{fig:methods-hfc152a}) before performing PCA.
+The third is specific to HFC-236fa,
+% value-check: {"tag": "hfc236fa-seasonality-capped-years-first", "unit": "yr", "lower": 1996, "upper": 1996}
+% value-check: {"tag": "hfc236fa-seasonality-capped-years-last", "unit": "yr", "lower": 2023, "upper": 2023}
+% value-check: {"tag": "max-seasonality-fraction", "unit": "dimensionless", "lower": 0.35, "upper": 0.35}
+for which the seasonality we derive from the observations is more than 35\% of the global-, annual-mean
+in every year from 1996 to 2023.
+A seasonal cycle of this size is not plausible for such a long-lived gas
+and most likely reflects noise in the measurements of its very low concentrations (Figure~\ref{fig:methods-hfc236fa}).
+As for HFC-152a, a more careful handling of the input data would likely solve this issue.
+% % value-check: {"tag": "hfc236fa-lat-gradient-first-eof-variance", "unit": "dimensionless", "lower": 0.75, "upper": 0.85}
+% (HFC-236fa is also the only CFC12-like gas for which the first latitudinal gradient EOF explains less than 90\% of the variance,
+% Section~\ref{sssec:methods-cfc12-like-pca}).
+Scaling the components down is a crude fix which future work should look to improve on.
+
 % ZNTODO: vertical resolution
 % ZNTODO: note about gathering more data sources e.g. Nevado Huascar\'an ice core which suggests an equitorial maximum for CH4,
 % very different to current data

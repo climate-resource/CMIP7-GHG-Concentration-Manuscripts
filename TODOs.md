@@ -544,9 +544,13 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 
 ## 6. Abstract, introduction, output requirements, discussion, conclusion, statements
 
-- [ ] Discussion: add the inconsistencies behind the negative-value reductions in CFC12-like/C_4F_10-like Step 5
+- [x] Discussion: add the inconsistencies behind the negative-value reductions in CFC12-like/C_4F_10-like Step 5
       (pre-industrial values vs. the emissions-driven latitudinal gradient; HFC-152a's latitudinal gradient scaled down 1991-2023;
       HFC-236fa's seasonality capped every year 1996-2023; see the `ZNTODO` in CFC12-like Step 5 and the Section 4 notes)
+    - [x] added as the sixth point in the discussion (2026-10-09), with the Step 5 value-checks repeated next to each number.
+          The `ZNTODO` in CFC12-like Step 5 is removed.
+          The explanations of the HFC-152a and HFC-236fa cases (the observation-derived gradient is too strong for the global-mean;
+          the seasonality is most likely measurement noise) are interpretation, not something we have checked in the data.
 - [ ] Abstract: fill all [TODO X/Y/Z] numbers from `results.tex` (`abstract.tex:6-20`).
       Most already exist in results (e.g. CO_2 4.4 ppm around year 200, 2 ppm since 1850, <0.5 ppm since 1981).
       Ideally drive them from the same value-checks.
