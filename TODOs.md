@@ -563,7 +563,13 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           CH_4 max deviation 20 ppb around 1920 (0.008 W/m2) is 24.5 ppb in 1923 (0.0095 W/m2), now "approximately 25 ppb in the early 1920s" (0.01 W/m2);
           CFC12 5 ppt around 1980 is 4.3 ppt in 1985, now "approximately 4 ppt in the mid-1980s";
           CO_2 0.05 W/m2 is 0.058 W/m2, now 0.06 W/m2.
-- [ ] Use either "radiative forcing" or "radiative effect" consistently (`abstract.tex:12`).
+- [x] Use either "radiative forcing" or "radiative effect" consistently (`abstract.tex:12`).
+    - [x] done (2026-10-09): our linear conversion (concentration times AR6 radiative efficiency) is the "approximate radiative effect"
+          everywhere (abstract, results text and captions, conclusion), matching the figure axis labels and the code.
+          The results note defines the term. "Radiative forcing" is only used for the true quantity
+          (the results note's contrast, the discussion's general statements, the "use all GHGs" option in the methods).
+          The abstract no longer says "effective" or "ERF".
+          The label `ssec:results-radiative-forcing-comparisons-note` is unchanged.
 - [ ] Discussion claims all differences are "less than 0.03 W/m2" (`discussion.tex:7-8`),
       but results give about 0.05 W/m2 (CO_2, full period) and about 0.04 W/m2 (N_2O, full period). Reconcile.
 - [ ] Check the end year: the abstract says datasets end in 2022, the obs networks run to 2023 (`methods.tex:346,549,768,837`),

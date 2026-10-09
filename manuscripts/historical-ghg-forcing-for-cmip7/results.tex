@@ -15,21 +15,23 @@ Here we focus on the values and features of the dataset.
 For people who are interested in how to use the datasets,
 we refer to the dedicated user guide [TODO citation and ref. probably do this as a standalone zenodo doc to start, then can figure out other links/bundles as step 2].
 
-\subsection{A note on radiative forcing comparisons}
+\subsection{A note on radiative effect comparisons}
 \label{ssec:results-radiative-forcing-comparisons-note}
 
 Throughout this section, we provide comparisons between the output CMIP7 datasets and the CMIP6 datasets.
 We provide these comparisons both in units of concentration as well as in units of W/m2.
 It must be noted that the comparisons in units of W/m2 are an approximation.
-To approximately convert from atmospheric concentrations to radiative forcing
+To convert from atmospheric concentrations to W/m2,
 % ZNTODO: zalue-check here
-we use linear radiative efficiencies from \citet{IPCC_AR6-WG1-Ch-7-SM_2021}.
-This allows us to provide this conversion for all concentrations over all time,
+we multiply by linear radiative efficiencies from \citet{IPCC_AR6-WG1-Ch-7-SM_2021}.
+We call the result the approximate radiative effect,
+to distinguish it from (effective) radiative forcing.
+Using linear radiative efficiencies allows us to provide this conversion for all concentrations over all time,
 rather than having to arbitrarily pick a particular point in time as the reference point
-(and therefore arbitrarily setting radiative forcing differencs for that point in time to zero).
+(and therefore arbitrarily setting radiative effect differences for that point in time to zero).
 This approximation matches or overestimates the true (effective) radiative forcing,
 because true radiative forcing is reduced as each wavelength band saturates as greenhouse gas concentrations increase.
-As a result, the approximate radiative forcing differences shown here are the `worst case' differences
+As a result, the approximate radiative effect differences shown here are the `worst case' differences
 i.e. the most conservative choice when considering differences.
 Users, particularly modelling teams, should note that they may see smaller effects than this
 when they use more accurate conversions from concentrations to (effective) radiative forcing
@@ -70,7 +72,7 @@ and that the method we have used allows us to reproduce the key spatial and temp
 The dataset has changed relatively little from the CMIP6 dataset, despite the completely new implementation of the methods.
 % value-check: {"tag": "co2-diff-from-cmip6-1850-on", "unit": "ppm", "upper": 2, "lower": -2}
 % value-check: {"tag": "co2-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.04, "lower": 0.015}
-Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 2~ppm, which is approximately 0.025~W/m2 in radiative forcing terms.
+Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 2~ppm, which is approximately 0.025~W/m2 in radiative effect terms.
 % value-check: {"tag": "co2-diff-from-cmip6-all", "unit": "ppm", "upper": 4.4, "lower": -4.4}
 % value-check: {"tag": "co2-diff-from-cmip6-all-year", "unit": "yr", "upper": 250, "lower": 150}
 % value-check: {"tag": "co2-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.065, "lower": 0.055}
@@ -99,7 +101,7 @@ and a \textasciitilde{}2~ppm spike in the CMIP6 dataset around 1970.
     In panels b) to f), the observation network values used as input data (Figure~\ref{fig:methods-co2}a)
     are shown for context, coloured by latitude.
     g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
-    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section~\ref{ssec:results-radiative-forcing-comparisons-note}).
+    The right-hand axis shows the approximate difference in radiative effect (for details, see Section~\ref{ssec:results-radiative-forcing-comparisons-note}).
 }
 \label{fig:results-co2}
 \end{figure}
@@ -175,7 +177,7 @@ The dataset has changed relatively little from the CMIP6 dataset.
 % value-check: {"tag": "ch4-diff-from-cmip6-all-year", "unit": "yr", "upper": 1924, "lower": 1920}
 % value-check: {"tag": "ch4-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.0125, "lower": 0.0075}
 Over the length of the dataset, the maximum deviation is approximately 25~ppb in the early 1920s,
-which is approximately 0.01~W/m2 in radiative forcing terms.
+which is approximately 0.01~W/m2 in radiative effect terms.
 % value-check: {"tag": "ch4-obs-network-start", "unit": "yr", "upper": 1984, "lower": 1984}
 % value-check: {"tag": "ch4-diff-from-cmip6-obs-network", "unit": "ppb", "upper": 5, "lower": -5}
 The changes over the period where we use the observation network, i.e. from 1984 onwards, are less than 5~ppb.
@@ -197,7 +199,7 @@ relative to what was available when \citet{meinshausen_historical-ghgs_2017} was
     In panels b) to f), the observation network values used as input data (Figure~\ref{fig:methods-ch4}a)
     are shown for context, and coloured by latitude.
     g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
-    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section~\ref{ssec:results-radiative-forcing-comparisons-note}).
+    The right-hand axis shows the approximate difference in radiative effect (for details, see Section~\ref{ssec:results-radiative-forcing-comparisons-note}).
 }
 \label{fig:results-ch4}
 \end{figure}
@@ -226,7 +228,7 @@ and c) that the resulting values are reasonable.
 The dataset has changed relatively little from the CMIP6 dataset.
 % value-check: {"tag": "n2o-diff-from-cmip6-1850-on", "unit": "ppb", "upper": 3.75, "lower": 2.25}
 % value-check: {"tag": "n2o-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.009, "lower": 0.006}
-Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 3~ppb, which is approximately 0.008~W/m2 in radiative forcing terms.
+Over the period used for CMIP modelling, 1850 onwards, the maximum deviation is 3~ppb, which is approximately 0.008~W/m2 in radiative effect terms.
 % value-check: {"tag": "n2o-diff-from-cmip6-all", "unit": "ppb", "upper": 12.5, "lower": 7.5}
 % value-check: {"tag": "n2o-diff-from-cmip6-all-year", "unit": "yr", "upper": 950, "lower": 850}
 % value-check: {"tag": "n2o-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.05, "lower": 0.03}
@@ -253,7 +255,7 @@ These datasets produce different results, most notably removing an increase in t
     In panels b) to f), the observation network values used as input data (Figure~\ref{fig:methods-n2o}a)
     are shown for context, and coloured by latitude.
     g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
-    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section~\ref{ssec:results-radiative-forcing-comparisons-note}).
+    The right-hand axis shows the approximate difference in radiative effect (for details, see Section~\ref{ssec:results-radiative-forcing-comparisons-note}).
 }
 \label{fig:results-n2o}
 \end{figure}
@@ -303,7 +305,7 @@ which are based on an updated assessment by the World Meteorological Organisatio
     In panels b) to f), the observation network values used as input data (Figure~\ref{fig:methods-cfc12}a)
     are shown for context, and coloured by latitude.
     g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
-    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section~\ref{ssec:results-radiative-forcing-comparisons-note}).
+    The right-hand axis shows the approximate difference in radiative effect (for details, see Section~\ref{ssec:results-radiative-forcing-comparisons-note}).
 }
 \label{fig:results-cfc12}
 \end{figure}
@@ -342,7 +344,7 @@ This is a key takeaway for users of these equivalent species:
 their definition and calculation methodology matters
 and the IGCC products are not calculated in the same way as our CMIP forcing datasets.
 % value-check: {"tag": "cfc12eq-diff-from-igcc-max-radiative-effect", "unit": "W/m^2", "upper": 0.02, "lower": 0.01}
-Nonetheless, in approximate radiative forcing terms the difference is about 0.015~W/m2
+Nonetheless, in approximate radiative effect terms the difference is about 0.015~W/m2
 so the distinction may not always be a crucial one to recognise.
 
 The dataset has changed from the CMIP6 dataset.
@@ -371,7 +373,7 @@ demonstrating that the underlying concentration estimates are very similar.
     These are based on a different group of gases and different radiative efficiencies to our dataset,
     so are not directly comparable (see Section~\ref{sssec:results-equivalence-datasets-cfc12eq}).
     g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
-    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section~\ref{ssec:results-radiative-forcing-comparisons-note}).
+    The right-hand axis shows the approximate difference in radiative effect (for details, see Section~\ref{ssec:results-radiative-forcing-comparisons-note}).
 }
 \label{fig:results-cfc12eq}
 \end{figure}
@@ -399,7 +401,7 @@ As for CFC12-eq, the key takeaway is that
 the definition and calculation methodology for this equivalent species matters
 and the IGCC products are not calculated in the same way as our CMIP forcing datasets.
 % value-check: {"tag": "hfc134aeq-diff-from-igcc-max-radiative-effect", "unit": "W/m^2", "upper": 0.05}
-Nonetheless, in approximate radiative forcing terms the difference is less than 0.05~W/m2
+Nonetheless, in approximate radiative effect terms the difference is less than 0.05~W/m2
 so the distinction may not always be a crucial one to recognise.
 
 The dataset has changed minorly from the CMIP6 dataset.
@@ -423,7 +425,7 @@ and the radiative efficiencies used in the calculation of the equivalent concent
     These are based on a different group of gases and different radiative efficiencies to our dataset,
     so are not directly comparable (see Section~\ref{sssec:results-equivalence-datasets-hfc134aeq}).
     g) The difference between the output CMIP7 dataset's global-, annual-mean and the CMIP6 global-, annual-mean.
-    The right-hand axis shows the approximate difference in radiative forcing (for details, see Section~\ref{ssec:results-radiative-forcing-comparisons-note}).
+    The right-hand axis shows the approximate difference in radiative effect (for details, see Section~\ref{ssec:results-radiative-forcing-comparisons-note}).
 }
 \label{fig:results-hfc134aeq}
 \end{figure}
