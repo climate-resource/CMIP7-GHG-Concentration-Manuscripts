@@ -114,8 +114,8 @@ or by considering the consistency between the emissions estimates and concentrat
 % and of the C_4F_10-like gases in some months between 1934 and 2001.
 The second is specific to HFC-152a,
 % value-check: {"tag": "hfc152a-lat-gradient-capped-years-first", "unit": "yr", "lower": 1991, "upper": 1991}
-% value-check: {"tag": "hfc152a-lat-gradient-capped-years-last", "unit": "yr", "lower": 2023, "upper": 2023}
-for which we scale down the latitudinal gradient in some months between 1991 and 2023.
+% value-check: {"tag": "hfc152a-lat-gradient-capped-years-last", "unit": "yr", "lower": 2020, "upper": 2020}
+for which we scale down the latitudinal gradient in some months between 1991 and 2020.
 This period includes the years in which we have observations,
 so the extension back in time cannot be the only cause:
 the latitudinal gradient we derive from the observations is itself too strong for the global-mean in these months.
@@ -123,10 +123,10 @@ This suggests that we need to consider how we handle the input data more careful
 for example removing outliers or pollution events (Figure~\ref{fig:methods-hfc152a}) before performing PCA.
 The third is specific to HFC-236fa,
 % value-check: {"tag": "hfc236fa-seasonality-capped-years-first", "unit": "yr", "lower": 1996, "upper": 1996}
-% value-check: {"tag": "hfc236fa-seasonality-capped-years-last", "unit": "yr", "lower": 2023, "upper": 2023}
+% value-check: {"tag": "hfc236fa-seasonality-capped-years-last", "unit": "yr", "lower": 2022, "upper": 2022}
 % value-check: {"tag": "max-seasonality-fraction", "unit": "dimensionless", "lower": 0.35, "upper": 0.35}
 for which the seasonality we derive from the observations is more than 35\% of the global-, annual-mean
-in every year from 1996 to 2023.
+in every year from 1996 to 2022.
 A seasonal cycle of this size is not plausible for such a long-lived gas
 and most likely reflects noise in the measurements of its very low concentrations (Figure~\ref{fig:methods-hfc236fa}).
 As for HFC-152a, a more careful handling of the input data would likely solve this issue.

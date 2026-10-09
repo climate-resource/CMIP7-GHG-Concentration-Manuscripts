@@ -1209,8 +1209,8 @@ we scale down the latitudinal gradient.
 % value-check: {"tag": "cfc12-like-lat-gradient-capped-years-after-pre-industrial", "unit": "yr", "lower": 44, "upper": 44}
 % For all gases except HFC-152a, this only affects years within 44 years of the gas' pre-industrial year.
 % value-check: {"tag": "hfc152a-lat-gradient-capped-years-first", "unit": "yr", "lower": 1991, "upper": 1991}
-% value-check: {"tag": "hfc152a-lat-gradient-capped-years-last", "unit": "yr", "lower": 2023, "upper": 2023}
-% For HFC-152a, the latitudinal gradient is scaled down in some months in the period from 1991 to 2023.
+% value-check: {"tag": "hfc152a-lat-gradient-capped-years-last", "unit": "yr", "lower": 2020, "upper": 2020}
+% For HFC-152a, the latitudinal gradient is scaled down in some months in the period from 1991 to 2020.
 Similarly, when combining the seasonality and the global-, annual-mean
 (and the latitudinal gradient) would lead to negative values, we scale it down.
 % value-check: {"tag": "max-seasonality-fraction", "unit": "dimensionless", "lower": 0.35, "upper": 0.35}
@@ -1220,8 +1220,8 @@ Similarly, when combining the seasonality and the global-, annual-mean
 % (or set it to zero where the global-, annual-mean is zero).
 % value-check: {"tag": "cfc12-like-seasonality-capped-gases"}
 % value-check: {"tag": "hfc236fa-seasonality-capped-years-first", "unit": "yr", "lower": 1996, "upper": 1996}
-% value-check: {"tag": "hfc236fa-seasonality-capped-years-last", "unit": "yr", "lower": 2023, "upper": 2023}
-% This affects HFC-236fa in every year from 1996 to 2023
+% value-check: {"tag": "hfc236fa-seasonality-capped-years-last", "unit": "yr", "lower": 2022, "upper": 2022}
+% This affects HFC-236fa in every year from 1996 to 2022
 % and HFC-32, HFC-152a and HFC-365mfc in a single year each.
 % Because we scale the latitudinal gradient by a single factor in each month
 % and the seasonality by a single factor in each year,
@@ -1481,6 +1481,21 @@ We provide data at three different spatial resolutions:
 15\textdegree~latitudinal grid i.e. our native resolution (\texttt{grid\_label} attribute in the directory path, filename and file attributes set to `gnz'),
 hemispheric-means (`gr1z')
 and global-mean (`gm').
+
+% value-check: {"tag": "output-first-year", "unit": "yr", "lower": 1, "upper": 1}
+% value-check: {"tag": "output-last-year", "unit": "yr", "lower": 2022, "upper": 2022}
+For every gas, the data covers the same time period: from year 1 to the end of 2022.
+% value-check: {"tag": "co2-obs-network-end", "unit": "yr", "lower": 2023, "upper": 2023}
+% value-check: {"tag": "ch4-obs-network-end", "unit": "yr", "lower": 2023, "upper": 2023}
+% value-check: {"tag": "n2o-obs-network-end", "unit": "yr", "lower": 2023, "upper": 2023}
+% value-check: {"tag": "cfc12-obs-network-end", "unit": "yr", "lower": 2023, "upper": 2023}
+For some gases, the steps above produce values for 2023 too
+(e.g. the observation networks for CO_2, CH_4, N_2O and CFC12 run to 2023).
+We do not publish these,
+because not all of our data sources are updated at the same rate
+and we want all gases to cover the same time period.
+The dataset therefore extends one year beyond 2021, which is the last year of the CMIP7 historical experiment
+(\citealp{dunne_cmip7_2025}, Section~\ref{sec:output-dataset-requirements}).
 
 % Leave reviewers to poke on anything else they want explained in full detail,
 % it's hard to predict what they might want repeated rather than being ok with references to other sources.

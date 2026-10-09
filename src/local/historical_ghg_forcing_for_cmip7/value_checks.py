@@ -169,6 +169,39 @@ def get_last_year(gas: str, *, bundle_dir: Path) -> pint.Quantity:
     return Q(int(get_output(gas, bundle_dir=bundle_dir)[1]["year"].max()), "yr")
 
 
+def get_written_year(
+    key: Literal["start_year", "end_year"], *, bundle_dir: Path
+) -> pint.Quantity:
+    """
+    Get the first or last year for which the original run wrote its output
+
+    Parameters
+    ----------
+    key
+        Which year to get
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        The year, which is the same for every gas
+
+    Raises
+    ------
+    AssertionError
+        The year is not the same for every gas
+    """
+    config = yaml.safe_load((bundle_dir / BUNDLE_CONFIG_FILE).read_text())
+    years = {step_config[key] for step_config in config["write_input4mips"]}
+    if len(years) != 1:
+        msg = f"{key} is not the same for every gas: {sorted(years)}"
+        raise AssertionError(msg)
+
+    return Q(int(years.pop()), "yr")
+
+
 def get_global_annual_mean(
     gas: str, year: int | None = None, *, bundle_dir: Path
 ) -> pint.Quantity:
@@ -1510,11 +1543,13 @@ def load_monthly_pieces(
     :
         Global-, annual-mean (interpolated to monthly steps),
         latitudinal gradient and seasonality,
-        over the years they all cover
+        over the years they all cover and which are in the published output
+        (the pieces can run beyond the last year which is written)
     """
     gas_dir = interim_dir(gas, bundle_dir)
+    last_year = int(get_written_year("end_year", bundle_dir=bundle_dir).m)
 
-    return xr.align(  # type: ignore[return-value]
+    pieces = xr.align(
         xr.load_dataarray(gas_dir / f"{gas}_global-annual-mean_allyears-monthly.nc"),
         xr.load_dataarray(
             gas_dir / f"{gas}_latitudinal-gradient_fifteen-degree_allyears-monthly.nc"
@@ -1524,6 +1559,8 @@ def load_monthly_pieces(
         ),
         join="inner",
     )
+
+    return tuple(piece.sel(year=slice(None, last_year)) for piece in pieces)  # type: ignore[return-value]
 
 
 def get_lat_gradient_capped_years(gas: str, *, bundle_dir: Path) -> np.ndarray:
@@ -2518,6 +2555,16 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
             "max abs difference from CMIP6 global-, annual-mean, 1850 onwards",
         )
 
+    add(
+        "output-first-year",
+        partial(get_written_year, "start_year", bundle_dir=bundle_dir),
+        "first year for which the output is written (the same for every gas)",
+    )
+    add(
+        "output-last-year",
+        partial(get_written_year, "end_year", bundle_dir=bundle_dir),
+        "last year for which the output is written (the same for every gas)",
+    )
     for gas in ("co2", "ch4", "n2o", "cfc12"):
         add(
             f"{gas}-last-year",

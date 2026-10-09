@@ -579,8 +579,20 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           The differences from the inputs and other networks are still called small, but without a number:
           0.03 W/m2 doesn't hold for all of them (e.g. CO_2 is within 3 ppm of IGCC, about 0.04 W/m2;
           HFC-134a-eq's difference from IGCC is only checked to be less than 0.05 W/m2).
-- [ ] Check the end year: the abstract says datasets end in 2022, the obs networks run to 2023 (`methods.tex:346,549,768,837`),
+- [x] Check the end year: the abstract says datasets end in 2022, the obs networks run to 2023 (`methods.tex:346,549,768,837`),
       historical ends 2021-12 (`output-requirements.tex:31`).
+    - [x] all three are right (2026-10-09). The original run writes every gas for year 1 to 2022
+          (`start_year` / `end_year` of `write_input4mips` in the bundle's config, the same for all 46 entries),
+          "to ensure that all data goes over the same time period because some data providers update faster than others"
+          (`src/local/config/write_input4mips.py` in the bundle). Values for 2023 are produced for some gases but not written.
+    - [x] the methods' "Preparation for publication on ESGF" section now says this and why,
+          and the output requirements point to it next to "ends in 2021-12".
+          Value-checks `output-first-year` and `output-last-year` (from the config).
+    - [x] the discussion's and CFC12-like Step 5's capped years (HFC-152a 1991-2023, HFC-236fa 1996-2023)
+          are detected from the components, so include 2023, which is not in the published output.
+          Fixed (2026-10-09): `load_monthly_pieces` in `value_checks.py` drops years after `output-last-year`.
+          Now HFC-152a 1991-2020 (not scaled down in 2021 or 2022), HFC-236fa 1996-2022.
+          The other capped-year checks (44 years after pre-industrial, C_4F_10-like 1934-2001, the single-year gases) are unchanged.
 - [ ] Introduction: cite Vaishali's paper (`introduction.tex:9`); find papers on how forcing generation evolved / the forcings task team
       (`introduction.tex:15-18`); cite other forcing papers and an overview of model inputs (`introduction.tex:22`).
 - [ ] Output requirements: Funke et al. solar ref (`output-requirements.tex:16`); scenario paper cite (`:29`);
@@ -839,7 +851,8 @@ https://gmd.copernicus.org/articles/10/2057/2017/gmd-10-2057-2017.pdf
 - Content
     - [ ] Mole fraction in dry air vs. mole fraction in the real atmosphere
     - [x] Different scales (ignored this time, noise in the scheme of things)
-    - [ ] Historical experiment ends in 2021 even though this dataset goes to 2022 (and we hope to extend further in future).
+    - [x] Historical experiment ends in 2021 even though this dataset goes to 2022 (and we hope to extend further in future).
+          Done with the "Check the end year" item in section 6.
           Go through the whole manuscript and fix this up wherever end years are mentioned:
           the output requirements say historical ends 2021-12 and the abstract says the datasets end in 2022,
           but nothing connects the two (see also the "Check the end year" item in section 6).
