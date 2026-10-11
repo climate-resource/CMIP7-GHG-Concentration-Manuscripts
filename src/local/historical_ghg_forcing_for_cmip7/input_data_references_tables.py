@@ -181,10 +181,13 @@ SOURCE_BIBKEYS: dict[str, tuple[str, ...]] = {
     "Ryu et al., 2020": ("ryu_n2o_2020",),
     "Schilt et al., 2010": ("schilt_n2o_2010",),
     # The references the record's file header asks for
-    # (the original run only recorded the first)
+    # (the original run only recorded the first),
+    # plus the ice core references the current version of the file credits
     "Scripps - Law Dome merged CO2 record": (
         "keeling_co2-exchanges_2001",
         "rubino_law-dome-dataset_2019",
+        "etheridge_law-dome-co2_1996",
+        "macfarling-meure_law-dome_2006",
     ),
     "Trudinger et al., 2016": ("trudinger_pfcs_2016",),
     "Velders et al., 2022": ("velders_hfcs_2022",),

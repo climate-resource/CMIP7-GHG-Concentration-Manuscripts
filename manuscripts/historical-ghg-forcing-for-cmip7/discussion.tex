@@ -7,6 +7,16 @@
 %   (methods, general approach, "More robust interpolation methods are an area for future work")
 % - harmonisation of ice core data to the observation network is crude
 %   (methods, N_2O and CO_2 Step 4, "This is crude and a clear area for further investigation")
+%   - it depends on a single year (the first observation network year, 1981 for CO_2).
+%     For CO_2, 1981 is a high year: the merged Law Dome - Mauna Loa record is a smooth spline of the
+%     Mauna Loa and South Pole average, so it sits below the global-mean by 0.8 ppm on average (1979-2022),
+%     but by -0.05 to 2.0 ppm in individual years (1.2 ppm in 1981 vs NOAA's global-mean),
+%     and our 1981 observation network global-mean is a further 0.3 ppm above NOAA's.
+%     Hence the 1.5 ppm offset, which makes our CO_2 ~1 ppm higher than CMIP6 and the merged record in the 1960s
+%     and our CO_2 growth in 1982 only 0.47 ppm (NOAA: 0.74 ppm). Checked 2026-10-09.
+%   - the offset declines linearly over 100 years, whereas the difference between the Mauna Loa - South Pole average
+%     and the global-mean presumably scales with the interhemispheric gradient (i.e. with emissions).
+%   - possible improvements: harmonise on a multi-year average, or use an offset which follows the gradient.
 % - the configuration error which means we don't use the Menking et al. (2025) CH_4 data,
 %   and the resulting care needed when using the dataset for pre-1850 studies
 %   (methods, CH_4 Step 4; output requirements, "we didn't use Menking dataset for pre-1850")

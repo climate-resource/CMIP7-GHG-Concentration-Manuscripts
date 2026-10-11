@@ -519,10 +519,34 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       AR6 * 1.00079 - 0.142 ppm (X2007 to X2019) for 1750-1978 and exactly NOAA's `co2_annmean_gl.txt` for 1979-2025.
       AR6's CO_2 before 1980 is CMIP6 plus an offset tapering linearly from 1.18 ppm (1850) to zero (1980),
       so the text now also says it is the CMIP6 dataset adjusted to match AR6's assessed 1850 value.
-- [ ] Go through all value-checks (`results.tex:41`) and fix the disabled ones:
+- [x] Go through all value-checks (`results.tex:41`) and fix the disabled ones:
       `co2-monthly-diff-from-maunoa-loa` (the difference is bigger than stated, `results.tex:49-50`),
       the 1940 dip / 1970 spike checks (`results.tex:80,82`), `cfc12-monthly-diff-from-noaa/agage` (`results.tex:237-238`),
       and the sign of the CFC-12 lat. gradient weakening check (`results.tex:246`).
+      Done (2026-10-09):
+    - [x] Mauna Loa: monthly differences are up to 3.7 ppm, mostly seasonal. Text now says: seasonal cycle 6.4 ppm (ours) vs 5.8 ppm,
+          Mauna Loa lags by ~1 month (maybe altitude); annual means within 1 ppm from 1982, 1-2 ppm higher before
+          (the harmonisation offset). The merged Law Dome - Mauna Loa input is 1.2 ppm below Mauna Loa's annual-mean in 1981.
+    - [x] 1940s / 1970s: now measured within CMIP6 (the features in the CMIP7 - CMIP6 panel come from CMIP6, CMIP7 is smooth).
+          1940s is a flattening (CMIP6 +0.13 ppm 1943-1948 vs +1.22 ppm ours),
+          1973 a spike (1.8 ppm above the 1971-1975 straight line, ours 0).
+    - [x] CFC-12: ours - NOAA +1.37 ppt, ours - AGAGE -1.36 ppt, networks differ by ~2.7 ppt (text said 5).
+    - [x] lat. gradient: now the (signed) trend in the gradient's size, negative if weakening (input -0.00067 ppt/degree/yr),
+          plus a new check on our output (-0.00044 ppt/degree/yr).
+    - [ ] (found while checking) our CO_2 global-mean growth in 1982 is only 0.47 ppm (NOAA: 0.74 ppm),
+          because our 1981 observation-network global-mean is 0.3 ppm above NOAA's.
+          No step in the merged Law Dome - Mauna Loa record: it is a smooth spline of the Mauna Loa - South Pole average,
+          0.8 ppm below NOAA's global-mean on average, so harmonising on the single (high) year 1981 overcorrects (1.5 ppm).
+          To be discussed with the crude harmonisation (details in the ZNTODO list at the top of `discussion.tex`).
+    - [x] Merged Law Dome - Mauna Loa record citations: checked, Keeling et al. (2001) and Rubino et al. (2019) are right.
+          The original run's copy of `spline_merged_ice_core_yearly.csv` (matches its `known_hash`) asks for exactly these.
+          Scripps has since replaced the file (now at https://keelinglabsites.ucsd.edu/websitedataco2/),
+          the new version credits Etheridge et al. (1996) and MacFarling Meure et al. (2006) instead.
+          We cite all four wherever we cite the merged record (`methods.tex:199,686`, `results.tex:122`)
+          and in the input data references table (`input_data_references_tables.py`).
+          Keeling et al. (2001)'s URL updated (old Scripps page is a 404).
+    - [x] The original file asks for v2 of the CSIRO Law Dome data collection, our bib entry `rubino_law-dome-dataset_2019` says v3
+          (same DOI). ZN: keep v3.
 - [ ] Add the missing checks: CO_2/CH_4/N_2O vs IGCC over the NOAA period (`results.tex:54,117,185`),
       the HFC-134a-eq lat. gradient (`results.tex:350`), the radiative efficiency source (`results.tex:25`).
 - [ ] CH_4: update the IGCC comparison to treat the non-NOAA period properly (`results.tex:115`);

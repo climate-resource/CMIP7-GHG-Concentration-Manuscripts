@@ -68,6 +68,16 @@ Q = openscm_units.unit_registry.Quantity
 LAST_N_YEARS = 10
 """Number of years the statements about 'the last ten years' cover"""
 
+N_MONTHS_PER_YEAR = 12
+"""Number of months in a year"""
+
+MAUNA_LOA_CLOSE_THRESHOLD = 1.0
+"""
+Annual-mean difference from Mauna Loa (ppm) which counts as close
+
+As stated in the results section of the manuscript.
+"""
+
 CMIP6_LAST_YEAR = 2014
 """
 Last year of CMIP6's historical dataset
@@ -609,6 +619,123 @@ def get_cmip6_feature_size(
     return Q(float(size), get_units(gas, bundle_dir=bundle_dir))
 
 
+def get_dataset_global_annual_mean(
+    gas: str, dataset: Literal["CMIP6", "CMIP7"], *, bundle_dir: Path
+) -> pd.Series[float]:
+    """
+    Get a dataset's global-, annual-mean
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    dataset
+        Dataset of interest ("CMIP7" is our output)
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Global-, annual-mean, by year, in our units
+    """
+    if dataset == "CMIP6":
+        (cmip6,) = get_cmip6_comparisons(gas, "yr")
+        return comparison_to_series(
+            cmip6, get_units(gas, bundle_dir=bundle_dir), yearly=True
+        )
+
+    return get_output(gas, bundle_dir=bundle_dir)[1].to_series()
+
+
+def get_increase(
+    gas: str,
+    start: int,
+    end: int,
+    dataset: Literal["CMIP6", "CMIP7"],
+    *,
+    bundle_dir: Path,
+) -> pint.Quantity:
+    """
+    Get how much a dataset's global-, annual-mean increases between two years
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    start
+        First year
+
+    end
+        Last year
+
+    dataset
+        Dataset of interest ("CMIP7" is our output)
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Value in `end` minus value in `start`
+    """
+    values = get_dataset_global_annual_mean(gas, dataset, bundle_dir=bundle_dir)
+
+    return Q(
+        float(values.loc[end] - values.loc[start]),
+        get_units(gas, bundle_dir=bundle_dir),
+    )
+
+
+def get_bump_size(
+    gas: str,
+    start: int,
+    end: int,
+    dataset: Literal["CMIP6", "CMIP7"],
+    *,
+    bundle_dir: Path,
+) -> pint.Quantity:
+    """
+    Get the size of a bump (or spike) in a dataset's global-, annual-mean
+
+    The size is how far the dataset rises above the straight line
+    joining its values in `start` and `end`,
+    i.e. it only depends on the dataset itself.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    start
+        First year of the window
+
+    end
+        Last year of the window
+
+    dataset
+        Dataset of interest ("CMIP7" is our output)
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Maximum height above the straight line
+        (zero if the dataset never rises above it)
+    """
+    values = get_dataset_global_annual_mean(gas, dataset, bundle_dir=bundle_dir)
+    window = values.loc[start:end]
+    line = np.interp(window.index, [start, end], [values.loc[start], values.loc[end]])
+
+    return Q(float((window - line).max()), get_units(gas, bundle_dir=bundle_dir))
+
+
 def get_native_grid_lat_band_width(*, bundle_dir: Path) -> pint.Quantity:
     """
     Get the width of the latitudinal bands on our native grid
@@ -921,6 +1048,125 @@ def get_diff_from_mauna_loa(*, bundle_dir: Path) -> pd.Series[float]:
             mauna_loa, get_units(gas, bundle_dir=bundle_dir), yearly=False
         )
     ).dropna()
+
+
+def get_annual_diff_from_mauna_loa(*, bundle_dir: Path) -> pd.Series[float]:
+    """
+    Get the annual-mean difference between our CO2 and NOAA's Mauna Loa record
+
+    Only years with all twelve months are included.
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Annual-mean difference, by year
+    """
+    diff = get_diff_from_mauna_loa(bundle_dir=bundle_dir)
+    grouped = diff.groupby(np.floor(diff.index).astype(int))
+
+    return grouped.mean()[grouped.count() == N_MONTHS_PER_YEAR]
+
+
+def get_mauna_loa_close_start_year(threshold: float, *, bundle_dir: Path) -> int:
+    """
+    Get the year from which our CO2 stays close to NOAA's Mauna Loa record
+
+    Parameters
+    ----------
+    threshold
+        Annual-mean difference (in our units) which counts as close
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        First year from which every annual-mean difference
+        is no bigger than `threshold`
+    """
+    diff = get_annual_diff_from_mauna_loa(bundle_dir=bundle_dir)
+    not_close = diff.index[diff.abs() > threshold]
+
+    return int(not_close.max()) + 1
+
+
+@cache
+def get_mauna_loa_seasonal_cycles(*, bundle_dir: Path) -> pd.DataFrame:
+    """
+    Get the average seasonal cycle of our CO2 and NOAA's Mauna Loa record
+
+    Our native resolution output is linearly interpolated to Mauna Loa's latitude.
+    The average is over the years in which we use the observation network.
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Average deviation from each year's mean, by month (1 to 12),
+        with columns "ours" and "mauna_loa"
+    """
+    gas = "co2"
+    units = get_units(gas, bundle_dir=bundle_dir)
+    (mauna_loa,) = (
+        c for c in get_noaa_comparisons(gas, deseasonalised=False) if c.is_spatial
+    )
+    start = get_obs_network_years(gas, bundle_dir=bundle_dir)[0]
+
+    def seasonal_cycle(values: pd.Series[float]) -> pd.Series[float]:
+        values = values[values.index >= start]
+        year = np.floor(values.index).astype(int)
+        month = np.round((values.index - year) * N_MONTHS_PER_YEAR + 0.5).astype(int)
+        anomaly = values - values.groupby(year).transform("mean")
+
+        return anomaly.groupby(month).mean()
+
+    ours = monthly_to_series(
+        get_output(gas, bundle_dir=bundle_dir)[0].interp(lat=MAUNA_LOA_LATITUDE)
+    )
+    mauna_loa_values = comparison_to_series(mauna_loa, units, yearly=False)
+    # Only the months both cover
+    common = ours.index.intersection(mauna_loa_values.index)
+
+    return pd.DataFrame(
+        {
+            "ours": seasonal_cycle(ours.loc[common]),
+            "mauna_loa": seasonal_cycle(mauna_loa_values.loc[common]),
+        }
+    )
+
+
+def get_mauna_loa_seasonal_cycle_lag(*, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get how far NOAA's Mauna Loa seasonal cycle lags ours
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Shift (in months) of our average seasonal cycle
+        which best matches (highest correlation) Mauna Loa's
+    """
+    cycles = get_mauna_loa_seasonal_cycles(bundle_dir=bundle_dir)
+    correlations = {
+        lag: np.corrcoef(np.roll(cycles["ours"], lag), cycles["mauna_loa"])[0, 1]
+        for lag in range(-N_MONTHS_PER_YEAR // 2, N_MONTHS_PER_YEAR // 2)
+    }
+
+    return Q(max(correlations, key=correlations.__getitem__), "month")
 
 
 def get_diff_from_igcc(
@@ -2174,15 +2420,15 @@ def get_ch4_law_dome_smoothing_config(*, bundle_dir: Path) -> dict[str, Any]:
     raise AssertionError(msg)
 
 
-def get_input_lat_gradient_weakening(gas: str, *, bundle_dir: Path) -> pint.Quantity:
+def get_input_lat_gradient_trend(gas: str, *, bundle_dir: Path) -> pint.Quantity:
     """
-    Get how fast the latitudinal gradient in the input data is weakening
+    Get the trend in the size of the input data's latitudinal gradient
 
     For each year, the latitudinal gradient is the gradient of a linear fit
     of the observations' annual-mean at each latitude against latitude.
-    The rate of weakening is the trend in this gradient's magnitude
-    over the last ten years of our output, with the sign flipped,
-    i.e. positive if the gradient is weakening.
+    The trend is the trend in this gradient's magnitude
+    over the last ten years of our output,
+    i.e. negative if the gradient is weakening.
 
     Parameters
     ----------
@@ -2195,7 +2441,7 @@ def get_input_lat_gradient_weakening(gas: str, *, bundle_dir: Path) -> pint.Quan
     Returns
     -------
     :
-        Rate of weakening of the latitudinal gradient
+        Trend in the size of the latitudinal gradient
     """
     obs = get_cfc12_like_all_data_with_bins(gas, bundle_dir)
     years = get_last_n_years(gas, bundle_dir=bundle_dir)
@@ -2213,7 +2459,48 @@ def get_input_lat_gradient_weakening(gas: str, *, bundle_dir: Path) -> pint.Quan
     )
     trend = np.polyfit(gradients.index, gradients.abs().to_numpy(), 1)[0]
 
-    return Q(-trend, f"{get_units(gas, bundle_dir=bundle_dir)} / degree / yr")
+    return Q(trend, f"{get_units(gas, bundle_dir=bundle_dir)} / degree / yr")
+
+
+def get_last_n_years_lat_gradient_trend(gas: str, *, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the trend in the size of our output's latitudinal gradient
+
+    For each year, the latitudinal gradient is the gradient of a linear fit
+    of our native resolution output's annual-mean against latitude.
+    The trend is the trend in this gradient's magnitude
+    over the last ten years,
+    i.e. negative if the gradient is weakening.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Trend in the size of the latitudinal gradient
+    """
+    annual_mean = (
+        get_output(gas, bundle_dir=bundle_dir)[0]
+        .sel(year=get_last_n_years(gas, bundle_dir=bundle_dir))
+        .mean("month")
+    )
+    gradients = pd.Series(
+        {
+            int(year): np.polyfit(
+                annual_mean["lat"].values, annual_mean.sel(year=year).values, 1
+            )[0]
+            for year in annual_mean["year"].values
+        }
+    )
+    trend = np.polyfit(gradients.index, gradients.abs().to_numpy(), 1)[0]
+
+    return Q(trend, f"{get_units(gas, bundle_dir=bundle_dir)} / degree / yr")
 
 
 REPRODUCTION_TOLERANCES = {"CMIP7": 1e-9, "CMIP6": 1e-3, "IGCC": 1e-9}
@@ -3049,30 +3336,84 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
         )
 
     # CO2
+    co2_units = get_units("co2", bundle_dir=bundle_dir)
     add(
-        # Typo kept, to match the latex
-        "co2-monthly-diff-from-maunoa-loa",
+        "co2-seasonal-cycle-at-mauna-loa",
+        lambda: Q(
+            float(np.ptp(get_mauna_loa_seasonal_cycles(bundle_dir=bundle_dir)["ours"])),
+            co2_units,
+        ),
+        "peak-to-trough of our average seasonal cycle at Mauna Loa's latitude, "
+        "over the observation network years",
+    )
+    add(
+        "co2-mauna-loa-seasonal-cycle",
+        lambda: Q(
+            float(
+                np.ptp(
+                    get_mauna_loa_seasonal_cycles(bundle_dir=bundle_dir)["mauna_loa"]
+                )
+            ),
+            co2_units,
+        ),
+        "peak-to-trough of NOAA's Mauna Loa average seasonal cycle, "
+        "over the observation network years",
+    )
+    add(
+        "co2-mauna-loa-seasonal-cycle-lag",
+        partial(get_mauna_loa_seasonal_cycle_lag, bundle_dir=bundle_dir),
+        "how far NOAA's Mauna Loa average seasonal cycle lags ours",
+    )
+
+    def mauna_loa_close_start() -> int:
+        return get_mauna_loa_close_start_year(
+            MAUNA_LOA_CLOSE_THRESHOLD, bundle_dir=bundle_dir
+        )
+
+    add(
+        "co2-annual-diff-from-mauna-loa-close-start",
+        lambda: Q(mauna_loa_close_start(), "yr"),
+        "first year from which our annual-mean at Mauna Loa's latitude stays within "
+        f"{MAUNA_LOA_CLOSE_THRESHOLD} ppm of NOAA's Mauna Loa annual-mean",
+    )
+    add(
+        "co2-annual-diff-from-mauna-loa-after-close-start",
         lambda: max_abs(
-            get_diff_from_mauna_loa(bundle_dir=bundle_dir),
-            get_units("co2", bundle_dir=bundle_dir),
+            get_annual_diff_from_mauna_loa(bundle_dir=bundle_dir).loc[
+                mauna_loa_close_start() :
+            ],
+            co2_units,
         ),
-        "max abs difference from NOAA's Mauna Loa monthly record "
-        "(our output interpolated to Mauna Loa's latitude)",
+        "max abs annual-mean difference from NOAA's Mauna Loa record, "
+        "from the year it stays close",
     )
-    add(
-        "co2-diff-from-cmip6-obs-network-1940-dip",
-        partial(
-            get_cmip6_feature_size, "co2", 1935, 1945, "dip", bundle_dir=bundle_dir
-        ),
-        "how far CMIP6 global-, annual-mean dips below ours, 1935 to 1945",
-    )
-    add(
-        "co2-diff-from-cmip6-obs-network-1970-spike",
-        partial(
-            get_cmip6_feature_size, "co2", 1965, 1975, "spike", bundle_dir=bundle_dir
-        ),
-        "how far CMIP6 global-, annual-mean spikes above ours, 1965 to 1975",
-    )
+    for stat in ("min", "max"):
+        add(
+            f"co2-annual-diff-from-mauna-loa-before-close-start-{stat}",
+            lambda stat=stat: Q(
+                float(
+                    get_annual_diff_from_mauna_loa(bundle_dir=bundle_dir)
+                    .loc[: mauna_loa_close_start() - 1]
+                    .agg(stat)
+                ),
+                co2_units,
+            ),
+            f"{stat} annual-mean difference from NOAA's Mauna Loa record, "
+            "before the year it stays close",
+        )
+
+    for dataset, prefix in (("CMIP6", "co2-cmip6"), ("CMIP7", "co2")):
+        add(
+            f"{prefix}-1943-1948-increase",
+            partial(get_increase, "co2", 1943, 1948, dataset, bundle_dir=bundle_dir),
+            f"increase in {dataset}'s global-, annual-mean from 1943 to 1948",
+        )
+        add(
+            f"{prefix}-1973-spike",
+            partial(get_bump_size, "co2", 1971, 1975, dataset, bundle_dir=bundle_dir),
+            f"how far {dataset}'s global-, annual-mean rises above the straight line "
+            "joining its 1971 and 1975 values",
+        )
 
     # CH4
     add(
@@ -3114,6 +3455,15 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
             f"mean difference from the {network} network's monthly observations "
             "(our output interpolated to each observation's latitude)",
         )
+    add(
+        "cfc12-agage-minus-noaa",
+        lambda: (
+            get_mean_diff_from_network("cfc12", "NOAA", bundle_dir=bundle_dir)
+            - get_mean_diff_from_network("cfc12", "AGAGE", bundle_dir=bundle_dir)
+        ),
+        "how much higher the AGAGE network's observations are than NOAA's "
+        "(difference of our mean differences from each)",
+    )
 
     add(
         "daniel-et-al-is-cfc12-global-override",
@@ -3136,9 +3486,15 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
     )
     add(
         "cfc12-input-datasets-weakening-lat-gradient",
-        partial(get_input_lat_gradient_weakening, "cfc12", bundle_dir=bundle_dir),
-        "rate of weakening of the input data's latitudinal gradient "
-        "over the last ten years",
+        partial(get_input_lat_gradient_trend, "cfc12", bundle_dir=bundle_dir),
+        "trend in the size of the input data's latitudinal gradient "
+        "over the last ten years (negative if weakening)",
+    )
+    add(
+        "cfc12-weakening-lat-gradient",
+        partial(get_last_n_years_lat_gradient_trend, "cfc12", bundle_dir=bundle_dir),
+        "trend in the size of our output's latitudinal gradient "
+        "over the last ten years (negative if weakening)",
     )
 
     # Equivalent species

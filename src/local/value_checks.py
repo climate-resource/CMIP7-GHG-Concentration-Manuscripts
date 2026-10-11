@@ -16,6 +16,9 @@ just has a tag, e.g. `% value-check: {"tag": "x-is-the-source-of-y"}`.
 The same tag can appear more than once
 (e.g. in the abstract and in the results),
 in which case each is checked against its own range.
+The comment can itself be commented out
+(e.g. `% % value-check: {...}`, for a statement which is commented out for now),
+in which case it is still checked.
 
 The checks themselves ([ValueCheck][]) are written in python
 and say which tag they calculate the value for.
@@ -40,8 +43,12 @@ import numpy as np
 import openscm_units
 import pint
 
-VALUE_CHECK_COMMENT = re.compile(r"^\s*%\s*value-check:(?P<raw>.*)$")
-"""Regular expression which matches a value check comment"""
+VALUE_CHECK_COMMENT = re.compile(r"^\s*(?:%\s*)+value-check:(?P<raw>.*)$")
+"""
+Regular expression which matches a value check comment
+
+Any number of `%` are allowed, so commented out comments are still checked.
+"""
 
 VALUE_CHECK_KEYS = ("tag", "unit", "lower", "upper")
 """Keys a value check comment's JSON can have"""
@@ -206,7 +213,8 @@ def extract_value_check_specs(text: str, file: Path) -> tuple[ValueCheckSpec, ..
             if "value-check" in line:
                 msg = (
                     f"{file}:{i + 1}: line mentions value-check "
-                    "but is not of the form `% value-check: {...}`"
+                    "but is not of the form `% value-check: {...}` "
+                    "(or `% % value-check: {...}`)"
                 )
                 raise ValueError(msg)
 
