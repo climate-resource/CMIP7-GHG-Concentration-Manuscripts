@@ -533,7 +533,7 @@ The build supports appendices (see Infrastructure), and most of the figures alre
     - [x] CFC-12: ours - NOAA +1.37 ppt, ours - AGAGE -1.36 ppt, networks differ by ~2.7 ppt (text said 5).
     - [x] lat. gradient: now the (signed) trend in the gradient's size, negative if weakening (input -0.00067 ppt/degree/yr),
           plus a new check on our output (-0.00044 ppt/degree/yr).
-    - [ ] (found while checking) our CO_2 global-mean growth in 1982 is only 0.47 ppm (NOAA: 0.74 ppm),
+    - [x] (found while checking) our CO_2 global-mean growth in 1982 is only 0.47 ppm (NOAA: 0.74 ppm),
           because our 1981 observation-network global-mean is 0.3 ppm above NOAA's.
           No step in the merged Law Dome - Mauna Loa record: it is a smooth spline of the Mauna Loa - South Pole average,
           0.8 ppm below NOAA's global-mean on average, so harmonising on the single (high) year 1981 overcorrects (1.5 ppm).
@@ -592,9 +592,14 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       Citations confirmed by ZN (Section 7); `get_igcc_comparison`'s docstring now describes IGCC's sources.
 - [x] Define AR6 once and cite it (`results.tex:301,357`); check "IGCC uses Hodnebrog" (`results.tex:302,358`).
       AR6 is defined on first use (Section 7). IGCC's `radeff` cites Hodnebrog et al. (2020); `[TODO check]`s removed.
-- [ ] Plain-text gas names that the replacements won't catch: "CO2" (`results.tex:43`), "CH4" (`results.tex:106,132,153`).
-- [ ] Heading vs text names: "CFC-12-eq"/"HFC-134a-eq" headings vs "CFC12-eq"/HFC134a in text. Check `replacements.yaml` covers all forms.
-- [ ] Specify that piControl should repeat the 1850 values (`output-requirements.tex:117`; probably in results).
+- [x] Plain-text gas names that the replacements won't catch: "CO2" (`results.tex:43`), "CH4" (`results.tex:106,132,153`).
+      Done (2026-10-11): the four in `results.tex` changed to CO_2/CH_4; no others outside comments in any section.
+- [x] Heading vs text names: "CFC-12-eq"/"HFC-134a-eq" headings vs "CFC12-eq"/HFC134a in text. Check `replacements.yaml` covers all forms.
+      Done (2026-10-11): added `CFC-12-eq`, `CFC-12`, `HFC-134a-eq`, `HFC-134a` to `replacements.yaml`,
+      so every form renders the same (checked; none of them appear in labels, refs, citation keys or URLs).
+- [x] Specify that piControl should repeat the 1850 values (`output-requirements.tex:117`; probably in results).
+      Done (2026-10-11): stated in the output requirements, straight after the piControl requirement;
+      the ZNTODOs in `output-requirements.tex` and `discussion.tex` removed.
 - [ ] Ask co-authors for other (ideally independent) comparison datasets (`results.tex:10-11`).
 
 ## 6. Abstract, introduction, output requirements, discussion, conclusion, statements
