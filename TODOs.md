@@ -562,10 +562,17 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           for the equivalent species; native = global-annual-mean monthly + lat. gradient + seasonality, checked to 1e-7).
           New values: CO_2 NH 9.85 ppm, CH_4 36.7/15.7 ppb, N_2O 0.41/0.39 ppb, CFC-12 2.0/1.4 ppt
           (ranges changed: CFC-12 [2, 4] -> [1, 3] ppt, CO_2 [4, 10] -> [8, 12] ppm, N_2O [0, 1.5] -> [0, 0.5] ppb).
-- [ ] CH_4: update the IGCC comparison to treat the non-NOAA period properly (`results.tex:115`);
+- [x] CH_4: update the IGCC comparison to treat the non-NOAA period properly (`results.tex:115`);
       UCI: check what the UCI timeseries is exactly (spatial region, averaging; it's probably not a global-mean)
       and make sure it's described correctly, its latitude bounds and where the data was retrieved from (`results.tex:122-126`).
       ("Summit" ice core outlier: done, see Section 7.)
+      Done (2026-10-11): before 1984 IGCC's CH_4 is AR6's, which is CMIP6 adjusted by < 1 ppb (0.65 ppb max),
+      so the pre-1983 differences from IGCC are essentially our differences from CMIP6; text now says so
+      (`AR6_NETWORK_START_YEARS` records when AR6 switches to the networks: CO_2 1980, CH_4 1984, N_2O 1980).
+      New check that IGCC is within 3 ppb of NOAA's annual-mean (2.9 ppb max, 1984-2025).
+      UCI: already handled (ZN). The "our dataset also includes AGAGE" explanation: already updated (ZN).
+      N_2O: same explanation added (AR6 before 1980 is CMIP6 adjusted by < 1 ppb, 0.92 ppb max),
+      "largely" because the adjustment is a sizeable part of the 1.7 ppb (ours - CMIP6: 2.4 ppb).
 - [x] Check "IGCC is also based on NOAA data" (`results.tex:60,120,188`) and "the same source is used by IGCC" (`results.tex:244`).
       Done (2026-10-09), checked against IGCC's `notebooks/01_trace-gas-global-mean.py` (v6.4.0) and Sect. 3 of Forster et al. (2026).
       IGCC is the AR6 timeseries, extended with: NOAA's global-mean alone for CO_2 (X2019 scale, like our inputs);
@@ -579,8 +586,8 @@ The build supports appendices (see Infrastructure), and most of the figures alre
     - [x] discussion (uncertainties paragraph): IGCC's reported uncertainties (0.4 ppm CO_2, 3.3 ppb CH_4, 0.4 ppb N_2O,
           carried over from AR6) look too small given the networks' lack of global coverage,
           i.e. they miss the leading (methodological) uncertainty. ZN to review the wording (ZNTODO in `discussion.tex`)
-    - [ ] CH_4: the "our dataset also includes AGAGE" explanation for the ~10 ppb difference from NOAA
-          applies less to IGCC, which includes AGAGE too (ZNTODO in `results.tex`)
+    - [x] CH_4: the "our dataset also includes AGAGE" explanation for the ~10 ppb difference from NOAA
+          applies less to IGCC, which includes AGAGE too (ZNTODO in `results.tex`). Done by ZN.
 - [x] Check IGCC citations and processing (`results.tex:388`, `src/local/historical_ghg_forcing_for_cmip7/comparison_data.py:826`).
       Citations confirmed by ZN (Section 7); `get_igcc_comparison`'s docstring now describes IGCC's sources.
 - [x] Define AR6 once and cite it (`results.tex:301,357`); check "IGCC uses Hodnebrog" (`results.tex:302,358`).

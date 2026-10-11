@@ -163,7 +163,6 @@ with a notable seasonal cycle in both hemispheres and a strong latitudinal gradi
 The output dataset is in line with NOAA's global-mean monthly and trend timeseries \citep{lan_ch4-n2o-sf6-trends_2026}
 % value-check: {"tag": "ch4-monthly-diff-from-noaa", "unit": "ppb", "upper": 15, "lower": 5}
 but is generally approximately 10~ppb higher.
-% ZNTODO: update to consider period not covered by NOAA data properly
 % value-check: {"tag": "ch4-noaa-global-mean-start", "unit": "yr", "upper": 1983, "lower": 1983}
 % value-check: {"tag": "ch4-diff-from-igcc-noaa-era-mean", "unit": "ppb", "upper": 12.5, "lower": 7.5}
 % value-check: {"tag": "ch4-diff-from-igcc-noaa-era", "unit": "ppb", "upper": 15, "lower": 0}
@@ -171,6 +170,13 @@ A similar difference (approximately 10~ppb on average from 1983 onwards)
 is seen from the IGCC's annual timeseries \citep{forster_igcc_2026,smith_igcc-forcings_2026},
 % value-check: {"tag": "ch4-diff-from-igcc-before-noaa-era", "unit": "ppb", "upper": 27.5, "lower": 22.5}
 with the bigger differences (up to approximately 25~ppb) coming over the period which the NOAA data does not cover.
+% AR6's CH_4 before 1984 is "updated from Meinshausen et al. (2017) by Jinho Ahn" (AR6 spreadsheet cell colours),
+% numerically CMIP6 plus an offset tapering from -0.65 ppb in 1850 to zero in 1983 (checked 2026-10-11).
+% IGCC's CH_4 equals AR6's exactly before 2019.
+% value-check: {"tag": "ch4-ar6-network-start", "unit": "yr", "upper": 1984, "lower": 1984}
+% value-check: {"tag": "ch4-igcc-diff-from-cmip6-before-ar6-network", "unit": "ppb", "upper": 1, "lower": 0}
+Over this period, IGCC uses the AR6 timeseries, which for CH_4 before 1984 is the CMIP6 dataset adjusted by less than 1~ppb,
+so these differences are explained by the same reasoning as our differences from the CMIP6 dataset (discussed below).
 % Checked (2026-10-09), see the comment in the CO_2 section:
 % IGCC's CH_4 and N_2O are the average of NOAA and AGAGE from 2019 on, AR6 before.
 As for CO_2 (Section~\ref{ssec:results-co2}), the agreement over the period that the NOAA and AGAGE data covers
@@ -187,15 +193,26 @@ The output dataset is also in line with UCI's quarterly timeseries \citep{simpso
 which we retrieved from the data supplement of \citet{saunois_methane-budget_2025},
 but is generally approximately 15~ppb higher.
 The difference from the UCI dataset is partly explained by the fact that the UCI dataset is not based on a global sampling,
-rather only atmospheric samples from the Pacific basin between approximately 71\textdegree N and 47\textdegree S \citep{blake_uci-network-readme_2010}.
+% Latitude range from the README's introduction ("an approximate latitudinal range of ~ -47 to 71 degrees, spanning 45 sampling locations").
+% The README doesn't say the samples are from the Pacific basin, only UCI's 2011 slides do
+% (https://gml.noaa.gov/publications/annual_meetings/2011/slides/70-110415-A.pdf), so we don't say it.
+rather only atmospheric samples from between approximately 71\textdegree N and 47\textdegree S \citep{blake_uci-network-readme_2010}.
 The difference from the NOAA dataset is not completely unexpected.
 While the NOAA dataset is not totally independent of our dataset (NOAA's network is used as an input),
 our dataset also includes the AGAGE \citep{prinn_ale-gage-agage_2000,prinn_agage_2018} network data as an input
 and we would thus expect differences (and similar differences appear in the CMIP6 dataset too).
 The difference from the IGCC data is more interesting, given that IGCC also uses a both NOAA and AGAGE as input.
-The IGCC data is, in the annual-mean, very close to the NOAA data.
+% value-check: {"tag": "ch4-igcc-diff-from-noaa", "unit": "ppb", "upper": 3, "lower": 0}
+The IGCC data is, in the annual-mean, very close to the NOAA data (within 3~ppb).
+% We may need to add explanations like this, but haven't done so now as it might just make things more confusing:
+% "This is because IGCC is based on the global-means published by NOAA and AGAGE
+% (merged in AR6 up to 2018, averaged from 2019), which agree closely,
+% whereas we derive our global-mean from the station data ourselves."
+% (2019-2022, AGAGE is 0.2-1.6 ppb below NOAA, inferred from IGCC's average, not checked against AGAGE's own file.)
 % Given that the NOAA and AGAGE scales are negligible in their differences, we rule out scale as the source of this difference.
-Our best estimate is that this points to a difference in how global-means are calculated from the sparse observation network.
+Our best estimate is that this points to a difference in how global-means are calculated from the sparse observation network
+(which mean that our global-mean notably differs from NOAA's,
+while IGCC's inclusion of AGAGE data does not have such a strong effect).
 This is definitely an area for further investigation
 and may indicate that the method to go from raw observations to an estimate of the global-mean
 is a key source of uncertainty/differences between datasets (Section~\ref{sec:discussion}).
@@ -264,8 +281,20 @@ The output dataset matches NOAA's global-mean monthly and trend timeseries \cite
 % value-check: {"tag": "n2o-diff-from-igcc-noaa-era", "unit": "ppb", "upper": 0.5, "lower": 0}
 A similar difference (less than 0.5~ppb from 2001 onwards)
 is seen from the IGCC's annual timeseries \citep{forster_igcc_2026,smith_igcc-forcings_2026},
-% value-check: {"tag": "n2o-diff-from-igcc-before-noaa-era", "unit": "ppb", "upper": 1.8, "lower": 1.6}
-with the bigger differences (up to approximately 1.7~ppb) coming over the period which the NOAA and AGAGE data does not cover.
+% AR6's N_2O before 1980 is "updated from Meinshausen et al. (2017) by Jinho Ahn" (AR6 spreadsheet cell colours),
+% numerically CMIP6 plus an offset tapering from -0.92 ppb in 1850 to zero in 1979 (checked 2026-10-11).
+% IGCC's N_2O equals AR6's before 2019.
+% Before 1980, ours - IGCC is at most 1.67 ppb (1881), ours - CMIP6 2.38 ppb (1880),
+% hence "largely" (the AR6 adjustment is not negligible relative to these differences).
+% 1980-2000 (AR6 uses the networks, but NOAA's global-mean hasn't started), ours - IGCC is at most 0.71 ppb.
+% value-check: {"tag": "n2o-ar6-network-start", "unit": "yr", "upper": 1980, "lower": 1980}
+% value-check: {"tag": "n2o-diff-from-igcc-before-ar6-network", "unit": "ppb", "upper": 1.8, "lower": 1.6}
+with the bigger differences (up to approximately 1.7~ppb) coming over the period which the NOAA and AGAGE data does not cover,
+i.e. before 1980.
+% value-check: {"tag": "n2o-igcc-diff-from-cmip6-before-ar6-network", "unit": "ppb", "upper": 1, "lower": 0}
+Over this period, IGCC uses the AR6 timeseries, which for N_2O before 1980 is the CMIP6 dataset adjusted by less than 1~ppb,
+so these differences are largely explained by the same reasoning as our differences from the CMIP6 dataset
+(with updated ice core data also playing a large role, discussed below).
 The agreement over the period that the NOAA and AGAGE data covers
 is unsurprising given that the IGCC timeseries is also based on NOAA and AGAGE data.
 % (for N_2O, IGCC uses the average of NOAA's and AGAGE's global-means).

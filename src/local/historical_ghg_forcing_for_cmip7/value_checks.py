@@ -1402,6 +1402,76 @@ def get_max_abs_diff_from_igcc_before_noaa_era(
     )
 
 
+AR6_NETWORK_START_YEARS = {"co2": 1980, "ch4": 1984, "n2o": 1980}
+"""
+First year in which AR6's concentrations come from the observation networks
+
+Before this, AR6's values are updated from Meinshausen et al. (2017), i.e. CMIP6.
+From the cell colours of the `mixing_ratios` tab of AR6's spreadsheet
+(https://github.com/chrisroadmap/ar6/blob/main/data_input/observations/LLGHG_history_AR6_v9_for_archive.xlsx,
+the electronic supplement to AR6 WG1 Annex III), checked 2026-10-11.
+IGCC uses AR6's values before 2019 for CH4 and N2O (and before 1979 for CO2).
+"""
+
+
+def get_max_abs_igcc_diff_from_cmip6_before_ar6_network(
+    gas: str, *, bundle_dir: Path
+) -> pint.Quantity:
+    """
+    Get the max absolute difference between IGCC and CMIP6 before AR6 uses the networks
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Maximum absolute difference between IGCC's and CMIP6's
+        global-, annual-mean, before [AR6_NETWORK_START_YEARS][]
+    """
+    units = get_units(gas, bundle_dir=bundle_dir)
+    igcc = comparison_to_series(get_igcc_comparison(gas), units, yearly=True)
+    cmip6 = get_dataset_global_annual_mean(gas, "CMIP6", bundle_dir=bundle_dir)
+
+    return max_abs(
+        (igcc - cmip6).dropna().loc[: AR6_NETWORK_START_YEARS[gas] - 1], units
+    )
+
+
+def get_max_abs_igcc_diff_from_noaa(gas: str, *, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the max absolute difference between IGCC's and NOAA's global-, annual-mean
+
+    NOAA's annual-mean is the mean of its monthly global-mean,
+    for the years with all twelve months.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Maximum absolute difference, over all the years both cover
+    """
+    units = get_units(gas, bundle_dir=bundle_dir)
+    igcc = comparison_to_series(get_igcc_comparison(gas), units, yearly=True)
+    noaa = comparison_to_series(get_noaa_global_mean(gas), units, yearly=False)
+    grouped = noaa.groupby(np.floor(noaa.index).astype(int))
+    noaa_annual = grouped.mean()[grouped.count() == N_MONTHS_PER_YEAR]
+
+    return max_abs((igcc - noaa_annual).dropna(), units)
+
+
 def get_mean_diff_from_igcc_noaa_era(gas: str, *, bundle_dir: Path) -> pint.Quantity:
     """
     Get the mean difference from IGCC over the years NOAA's global-mean covers
@@ -3613,6 +3683,41 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
         partial(get_mean_diff_from_igcc_noaa_era, "ch4", bundle_dir=bundle_dir),
         "mean difference from IGCC global-, annual-mean, "
         "over the years NOAA's global-mean covers",
+    )
+    for gas in ("ch4", "n2o"):
+        add(
+            f"{gas}-igcc-diff-from-cmip6-before-ar6-network",
+            partial(
+                get_max_abs_igcc_diff_from_cmip6_before_ar6_network,
+                gas,
+                bundle_dir=bundle_dir,
+            ),
+            "max abs difference between IGCC's and CMIP6's global-, annual-mean "
+            f"before {AR6_NETWORK_START_YEARS[gas]} "
+            "(when AR6, which IGCC uses, switches to the observation networks)",
+        )
+        add(
+            f"{gas}-diff-from-igcc-before-ar6-network",
+            lambda gas=gas: max_abs(
+                get_diff_from_igcc(gas, bundle_dir=bundle_dir).loc[
+                    : AR6_NETWORK_START_YEARS[gas] - 1
+                ],
+                get_units(gas, bundle_dir=bundle_dir),
+            ),
+            "max abs difference from IGCC global-, annual-mean "
+            f"before {AR6_NETWORK_START_YEARS[gas]} "
+            "(when AR6, which IGCC uses, switches to the observation networks)",
+        )
+        add(
+            f"{gas}-ar6-network-start",
+            lambda gas=gas: Q(AR6_NETWORK_START_YEARS[gas], "yr"),
+            f"first year AR6's {gas} comes from the observation networks "
+            "(recorded by hand from AR6's spreadsheet)",
+        )
+    add(
+        "ch4-igcc-diff-from-noaa",
+        partial(get_max_abs_igcc_diff_from_noaa, "ch4", bundle_dir=bundle_dir),
+        "max abs difference between IGCC's and NOAA's global-, annual-mean",
     )
     add(
         "ch4-monthly-diff-from-uci",
