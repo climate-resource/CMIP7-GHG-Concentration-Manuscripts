@@ -22,7 +22,9 @@ Throughout this section, we provide comparisons between the output CMIP7 dataset
 We provide these comparisons both in units of concentration as well as in units of W/m2.
 It must be noted that the comparisons in units of W/m2 are an approximation.
 To convert from atmospheric concentrations to W/m2,
-% ZNTODO: zalue-check here
+% Checked manually (2026-10-08), not with a value check (the values are hard-coded):
+% `RADIATIVE_EFFICIENCIES` in `src/local/historical_ghg_forcing_for_cmip7/comparison_data.py`
+% matches Table 7.SM.7 of the AR6 WG1 Ch. 7 SM.
 we multiply by linear radiative efficiencies from \citet{IPCC_AR6-WG1-Ch-7-SM_2021}.
 We call the result the approximate radiative effect,
 to distinguish it from (effective) radiative forcing.
@@ -43,7 +45,7 @@ or apply these concentrations in their own radiative balance calculations.
 % ZNTODO: go through all these value checks
 % value-check: {"tag": "co2-last-10-years-trend", "unit": "ppm/yr", "upper": 3, "lower": 0}
 Atmospheric CO2 concentrations continue to trend upwards approximately linearly
-% value-check: {"tag": "co2-last-10-years-seasonal-cycle", "unit": "ppm", "upper": 10, "lower": 4}
+% value-check: {"tag": "co2-last-10-years-seasonal-cycle", "unit": "ppm", "upper": 12, "lower": 8}
 with a strong seasonal cycle in the northern hemisphere (Figure~\ref{fig:results-co2}).
 % value-check: {"tag": "co2-monthly-diff-from-noaa", "unit": "ppm", "upper": 2, "lower": -2}
 The output dataset matches NOAA's global-mean monthly and trend timeseries \citep{lan_co2-trends_2026} to within approximately 1~ppm.
@@ -161,11 +163,14 @@ with a notable seasonal cycle in both hemispheres and a strong latitudinal gradi
 The output dataset is in line with NOAA's global-mean monthly and trend timeseries \citep{lan_ch4-n2o-sf6-trends_2026}
 % value-check: {"tag": "ch4-monthly-diff-from-noaa", "unit": "ppb", "upper": 15, "lower": 5}
 but is generally approximately 10~ppb higher.
-% value-check: {"tag": "ch4-diff-from-igcc", "unit": "ppb", "upper": 25, "lower": 5}
 % ZNTODO: update to consider period not covered by NOAA data properly
-A similar difference is seen from the IGCC's annual timeseries \citep{forster_igcc_2026,smith_igcc-forcings_2026},
-% ZNTODO: add check here.
-with the bigger differences coming over the period which the NOAA data does not cover.
+% value-check: {"tag": "ch4-noaa-global-mean-start", "unit": "yr", "upper": 1983, "lower": 1983}
+% value-check: {"tag": "ch4-diff-from-igcc-noaa-era-mean", "unit": "ppb", "upper": 12.5, "lower": 7.5}
+% value-check: {"tag": "ch4-diff-from-igcc-noaa-era", "unit": "ppb", "upper": 15, "lower": 0}
+A similar difference (approximately 10~ppb on average from 1983 onwards)
+is seen from the IGCC's annual timeseries \citep{forster_igcc_2026,smith_igcc-forcings_2026},
+% value-check: {"tag": "ch4-diff-from-igcc-before-noaa-era", "unit": "ppb", "upper": 27.5, "lower": 22.5}
+with the bigger differences (up to approximately 25~ppb) coming over the period which the NOAA data does not cover.
 % Checked (2026-10-09), see the comment in the CO_2 section:
 % IGCC's CH_4 and N_2O are the average of NOAA and AGAGE from 2019 on, AR6 before.
 As for CO_2 (Section~\ref{ssec:results-co2}), the agreement over the period that the NOAA and AGAGE data covers
@@ -251,14 +256,16 @@ relative to what was available when \citet{meinshausen_historical-ghgs_2017} was
 \label{ssec:results-n2o}
 
 % value-check: {"tag": "n2o-last-10-years-trend", "unit": "ppb/yr", "upper": 2.0, "lower": 1.0}
-% value-check: {"tag": "n2o-last-10-years-seasonal-cycle", "unit": "ppb", "upper": 1.5, "lower": 0}
+% value-check: {"tag": "n2o-last-10-years-seasonal-cycle", "unit": "ppb", "upper": 0.5, "lower": 0}
 Atmospheric N_2O concentrations continue on their steady upward trend (Figure~\ref{fig:results-n2o}).
 % value-check: {"tag": "n2o-monthly-diff-from-noaa", "unit": "ppb", "upper": 1, "lower": -1}
 The output dataset matches NOAA's global-mean monthly and trend timeseries \citep{lan_ch4-n2o-sf6-trends_2026} to within approximately 0.5~ppb.
-% value-check: {"tag": "n2o-diff-from-igcc-noaa-era", "unit": "ppb", "upper": 1, "lower": -1}
-A similar difference is seen from the IGCC's annual timeseries \citep{forster_igcc_2026,smith_igcc-forcings_2026},
-% ZNTODO: add check here.
-with the bigger differences coming over the period which the NOAA and AGAGE data does not cover.
+% value-check: {"tag": "n2o-noaa-global-mean-start", "unit": "yr", "upper": 2001, "lower": 2001}
+% value-check: {"tag": "n2o-diff-from-igcc-noaa-era", "unit": "ppb", "upper": 0.5, "lower": 0}
+A similar difference (less than 0.5~ppb from 2001 onwards)
+is seen from the IGCC's annual timeseries \citep{forster_igcc_2026,smith_igcc-forcings_2026},
+% value-check: {"tag": "n2o-diff-from-igcc-before-noaa-era", "unit": "ppb", "upper": 1.8, "lower": 1.6}
+with the bigger differences (up to approximately 1.7~ppb) coming over the period which the NOAA and AGAGE data does not cover.
 The agreement over the period that the NOAA and AGAGE data covers
 is unsurprising given that the IGCC timeseries is also based on NOAA and AGAGE data.
 % (for N_2O, IGCC uses the average of NOAA's and AGAGE's global-means).
@@ -308,7 +315,7 @@ These datasets produce different results, most notably removing an increase in t
 
 % value-check: {"tag": "cfc12-last-10-years-second-derivative", "unit": "ppt/yr/yr", "upper": -0.05, "lower": -0.20}
 Atmospheric CFC12 concentrations continue to drop at an accelerating rate
-% value-check: {"tag": "cfc12-last-10-years-seasonal-cycle", "unit": "ppt", "upper": 4.0, "lower": 2.0}
+% value-check: {"tag": "cfc12-last-10-years-seasonal-cycle", "unit": "ppt", "upper": 3.0, "lower": 1.0}
 with a clear seasonal cycle (Figure~\ref{fig:results-cfc12}).
 % value-check: {"tag": "cfc12-monthly-diff-from-noaa", "unit": "ppt", "upper": 2, "lower": 1}
 % value-check: {"tag": "cfc12-monthly-diff-from-agage", "unit": "ppt", "upper": -1, "lower": -2}
@@ -427,9 +434,12 @@ demonstrating that the underlying concentration estimates are very similar.
 
 % value-check: {"tag": "hfc134aeq-last-10-years-trend", "unit": "ppt/yr", "lower": 0}
 % value-check: {"tag": "hfc134aeq-last-10-years-second-derivative", "unit": "ppt/yr/yr", "lower": 0}
-% ZNTODO: add check of lat. gradient
 HFC-134a-eq has continued to rise at an accelerating rate (Figure~\ref{fig:results-hfc134aeq}).
-The latitudinal gradient is notable for this equivalence species while there is almost no seasonal cycle.
+% Relative to the global-mean, the range across latitudes is the largest of the species in this section
+% (checked 2026-10-11: HFC-134a-eq 12.7%, CH_4 7.5%, CFC-12-eq 2.7%, CO_2 1.6%, CFC-12 0.4%, N_2O 0.4%).
+% value-check: {"tag": "hfc134aeq-last-10-years-relative-lat-range", "unit": "dimensionless", "upper": 0.15, "lower": 0.1}
+% value-check: {"tag": "hfc134aeq-last-10-years-relative-seasonal-cycle", "unit": "dimensionless", "upper": 0.02, "lower": 0}
+The latitudinal gradient is notable for this equivalence species while there is a small seasonal cycle.
 % value-check: {"tag": "hfc134aeq-diff-from-igcc-last-year", "unit": "ppt", "upper": 135, "lower": 115}
 % value-check: {"tag": "hfc134aeq-diff-from-igcc-last-year-radiative-effect", "unit": "W/m^2", "upper": 0.025, "lower": 0.015}
 Our dataset is around 125~ppt higher than the IGCC dataset (\textasciitilde{}0.02~W/m2).

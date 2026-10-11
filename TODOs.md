@@ -547,8 +547,21 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           Keeling et al. (2001)'s URL updated (old Scripps page is a 404).
     - [x] The original file asks for v2 of the CSIRO Law Dome data collection, our bib entry `rubino_law-dome-dataset_2019` says v3
           (same DOI). ZN: keep v3.
-- [ ] Add the missing checks: CO_2/CH_4/N_2O vs IGCC over the NOAA period (`results.tex:54,117,185`),
+- [x] Add the missing checks: CO_2/CH_4/N_2O vs IGCC over the NOAA period (`results.tex:54,117,185`),
       the HFC-134a-eq lat. gradient (`results.tex:350`), the radiative efficiency source (`results.tex:25`).
+      Done (2026-10-11):
+    - [x] IGCC: new tags `{gas}-diff-from-igcc-before-noaa-era` (and `-noaa-era`, `{gas}-noaa-global-mean-start`) for CO_2, CH_4, N_2O.
+          CH_4 (NOAA from 1983): ~10 ppb on average from 1983 (8.7), up to ~25 ppb before (24, 1923);
+          `ch4-diff-from-igcc` renamed `ch4-diff-from-igcc-noaa-era-mean`.
+          N_2O (NOAA from 2001): < 0.5 ppb from 2001 (0.29), up to ~1.7 ppb before (1.67, 1881). Text now gives these numbers.
+    - [x] HFC-134a-eq: "almost no seasonal cycle" -> "a small seasonal cycle", with ratio checks:
+          range across latitudes 12.7% of the global-mean (largest of the species), seasonal cycle 0.8% (each hemisphere).
+    - [x] radiative efficiency source: no value check (values are hard-coded), comment records the manual check (2026-10-08).
+    - [x] `get_last_n_years_seasonal_cycle` included the growth within each year. It now uses the seasonality term
+          saved in the bundle (`{gas}_seasonality_fifteen-degree_allyears-monthly.nc`, weighted sum of the components
+          for the equivalent species; native = global-annual-mean monthly + lat. gradient + seasonality, checked to 1e-7).
+          New values: CO_2 NH 9.85 ppm, CH_4 36.7/15.7 ppb, N_2O 0.41/0.39 ppb, CFC-12 2.0/1.4 ppt
+          (ranges changed: CFC-12 [2, 4] -> [1, 3] ppt, CO_2 [4, 10] -> [8, 12] ppm, N_2O [0, 1.5] -> [0, 0.5] ppb).
 - [ ] CH_4: update the IGCC comparison to treat the non-NOAA period properly (`results.tex:115`);
       UCI: check what the UCI timeseries is exactly (spatial region, averaging; it's probably not a global-mean)
       and make sure it's described correctly, its latitude bounds and where the data was retrieved from (`results.tex:122-126`).

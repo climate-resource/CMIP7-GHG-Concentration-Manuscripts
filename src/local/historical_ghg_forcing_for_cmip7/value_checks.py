@@ -47,9 +47,11 @@ from local.historical_ghg_forcing_for_cmip7.comparison_data import (
     get_uci_ch4_comparison,
 )
 from local.historical_ghg_forcing_for_cmip7.equivalent_species import (
+    CMIP7_DEFINITION,
     EquivalenceDataset,
     check_reproduction,
     decompose_difference,
+    get_weight,
     load_cmip6,
     load_cmip7,
     load_igcc,
@@ -429,14 +431,58 @@ def get_last_n_years_second_derivative(gas: str, *, bundle_dir: Path) -> pint.Qu
     )
 
 
+def load_seasonality(gas: str, *, bundle_dir: Path) -> xr.DataArray:
+    """
+    Load the seasonality term of our output
+
+    Our native resolution output is the sum of the global-, annual-mean
+    (interpolated to monthly values), the latitudinal gradient
+    and this seasonality term.
+    The equivalent species have no seasonality file of their own,
+    so theirs is the weighted sum of their components' seasonality.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Seasonality, by year, month and latitude, in our units
+    """
+    units = get_units(gas, bundle_dir=bundle_dir)
+    if gas in CMIP7_DEFINITION.components:
+        return sum(
+            get_weight(component, gas, CMIP7_DEFINITION)
+            * float(Q(1, get_units(component, bundle_dir=bundle_dir)).to(units).m)
+            * load_seasonality(component, bundle_dir=bundle_dir)
+            for component in CMIP7_DEFINITION.components[gas]
+        )
+
+    seasonality = xr.load_dataarray(
+        interim_dir(gas, bundle_dir)
+        / f"{gas}_seasonality_fifteen-degree_allyears-monthly.nc"
+    )
+    conversion = float(Q(1, seasonality.attrs["units"]).to(units).m)
+
+    return seasonality * conversion
+
+
 def get_last_n_years_seasonal_cycle(
     gas: str, regions: tuple[str, ...], *, bundle_dir: Path
 ) -> pint.Quantity:
     """
     Get the size of the seasonal cycle over the last ten years
 
-    The size is the peak-to-trough amplitude of the monthly hemispheric-mean
+    The size is the peak-to-trough amplitude of the hemispheric-mean
+    of the seasonality term of our output (see [load_seasonality][])
     in each year, averaged over the years.
+    Using the seasonality term means the size doesn't include
+    the growth (or latitudinal gradient changes) within each year.
 
     Parameters
     ----------
@@ -454,12 +500,92 @@ def get_last_n_years_seasonal_cycle(
     :
         Size of the seasonal cycle in each of `regions`
     """
-    hm_monthly = get_output(gas, bundle_dir=bundle_dir)[3].sel(
-        year=get_last_n_years(gas, bundle_dir=bundle_dir), lat=list(regions)
+    seasonality = load_seasonality(gas, bundle_dir=bundle_dir).sel(
+        year=get_last_n_years(gas, bundle_dir=bundle_dir)
     )
-    amplitude = (hm_monthly.max("month") - hm_monthly.min("month")).mean("year")
+    # Same weighting as the hemispheric-means in the original run's output
+    weights = np.cos(np.deg2rad(seasonality["lat"]))
+    in_region = {
+        NORTHERN_HEMISPHERE: seasonality["lat"] > 0,
+        SOUTHERN_HEMISPHERE: seasonality["lat"] < 0,
+    }
+    amplitude = []
+    for region in regions:
+        hemispheric_mean = (
+            seasonality.where(in_region[region]).weighted(weights).mean("lat")
+        )
+        amplitude.append(
+            float(
+                (hemispheric_mean.max("month") - hemispheric_mean.min("month")).mean(
+                    "year"
+                )
+            )
+        )
 
-    return Q(amplitude.values, get_units(gas, bundle_dir=bundle_dir))
+    return Q(np.array(amplitude), get_units(gas, bundle_dir=bundle_dir))
+
+
+def get_last_n_years_relative_seasonal_cycle(
+    gas: str, regions: tuple[str, ...], *, bundle_dir: Path
+) -> pint.Quantity:
+    """
+    Get the size of the seasonal cycle over the last ten years, relative to the mean
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    regions
+        Hemispheres to get it for
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Size of the seasonal cycle in each of `regions`
+        (see [get_last_n_years_seasonal_cycle][])
+        divided by the global-, annual-mean over the last ten years
+    """
+    mean = get_output(gas, bundle_dir=bundle_dir)[1].sel(
+        year=get_last_n_years(gas, bundle_dir=bundle_dir)
+    )
+
+    return (
+        get_last_n_years_seasonal_cycle(gas, regions, bundle_dir=bundle_dir)
+        / Q(float(mean.mean()), get_units(gas, bundle_dir=bundle_dir))
+    ).to("dimensionless")
+
+
+def get_last_n_years_relative_lat_range(gas: str, *, bundle_dir: Path) -> pint.Quantity:
+    """
+    Get the range across latitudes over the last ten years, relative to the mean
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Highest minus lowest value of our native resolution output,
+        averaged over the last ten years, across latitudes,
+        divided by the global-, annual-mean over the last ten years
+    """
+    output = get_output(gas, bundle_dir=bundle_dir)
+    years = get_last_n_years(gas, bundle_dir=bundle_dir)
+    by_lat = output[0].sel(year=years).mean(["year", "month"])
+
+    return Q(
+        float((by_lat.max() - by_lat.min()) / output[1].sel(year=years).mean()),
+        "dimensionless",
+    )
 
 
 def get_last_n_years_lat_gradient(gas: str, *, bundle_dir: Path) -> pint.Quantity:
@@ -1222,8 +1348,10 @@ def get_max_abs_diff_from_igcc_noaa_era(gas: str, *, bundle_dir: Path) -> pint.Q
     """
     Get the max absolute difference from IGCC over the years NOAA's global-mean covers
 
-    IGCC's record is based on NOAA's over these years
-    (alone for CO2, averaged with AGAGE for CH4 and N2O from 2019 on),
+    IGCC's record is based on the observation networks over these years
+    (NOAA alone for CO2; for CH4 and N2O, the average of NOAA and AGAGE from 2019 on
+    and AR6 before, which is itself merged NOAA and AGAGE data
+    from 1984 for CH4 and 1980 for N2O),
     which is what the statements about IGCC are about.
 
     Parameters
@@ -1243,6 +1371,33 @@ def get_max_abs_diff_from_igcc_noaa_era(gas: str, *, bundle_dir: Path) -> pint.Q
 
     return max_abs(
         get_diff_from_igcc(gas, start=noaa_start, bundle_dir=bundle_dir),
+        get_units(gas, bundle_dir=bundle_dir),
+    )
+
+
+def get_max_abs_diff_from_igcc_before_noaa_era(
+    gas: str, *, bundle_dir: Path
+) -> pint.Quantity:
+    """
+    Get the max absolute difference from IGCC before NOAA's global-mean starts
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Maximum absolute difference from IGCC
+    """
+    noaa_start = get_noaa_global_mean_start_year(gas)
+
+    return max_abs(
+        get_diff_from_igcc(gas, bundle_dir=bundle_dir).loc[: noaa_start - 1],
         get_units(gas, bundle_dir=bundle_dir),
     )
 
@@ -3305,6 +3460,25 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
             f"{source} latitude",
         )
 
+    add(
+        "hfc134aeq-last-10-years-relative-lat-range",
+        partial(
+            get_last_n_years_relative_lat_range, "hfc134aeq", bundle_dir=bundle_dir
+        ),
+        "range across latitudes over the last ten years, relative to the global-mean",
+    )
+    add(
+        "hfc134aeq-last-10-years-relative-seasonal-cycle",
+        partial(
+            get_last_n_years_relative_seasonal_cycle,
+            "hfc134aeq",
+            (NORTHERN_HEMISPHERE, SOUTHERN_HEMISPHERE),
+            bundle_dir=bundle_dir,
+        ),
+        "mean peak-to-trough seasonal cycle over the last ten years "
+        "(northern hemisphere, southern hemisphere), relative to the global-mean",
+    )
+
     for gas in ("co2", "n2o"):
         add(
             f"{gas}-monthly-diff-from-noaa",
@@ -3323,11 +3497,21 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
             "max abs difference from IGCC global-, annual-mean, "
             "over all the years both cover",
         )
+
+    for gas in ("co2", "ch4", "n2o"):
         add(
             f"{gas}-diff-from-igcc-noaa-era",
             partial(get_max_abs_diff_from_igcc_noaa_era, gas, bundle_dir=bundle_dir),
             "max abs difference from IGCC global-, annual-mean, "
             "over the years NOAA's global-mean covers",
+        )
+        add(
+            f"{gas}-diff-from-igcc-before-noaa-era",
+            partial(
+                get_max_abs_diff_from_igcc_before_noaa_era, gas, bundle_dir=bundle_dir
+            ),
+            "max abs difference from IGCC global-, annual-mean, "
+            "before NOAA's global-mean starts",
         )
         add(
             f"{gas}-noaa-global-mean-start",
@@ -3425,7 +3609,7 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
         "mean difference from NOAA global-mean monthly",
     )
     add(
-        "ch4-diff-from-igcc",
+        "ch4-diff-from-igcc-noaa-era-mean",
         partial(get_mean_diff_from_igcc_noaa_era, "ch4", bundle_dir=bundle_dir),
         "mean difference from IGCC global-, annual-mean, "
         "over the years NOAA's global-mean covers",
