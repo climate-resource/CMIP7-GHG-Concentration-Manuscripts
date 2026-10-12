@@ -11,7 +11,6 @@ Paths are relative to `manuscripts/historical-ghg-forcing-for-cmip7/` unless sta
 
 The section each item came from is in parentheses (see Done for the context).
 
-- [ ] (Section 6) write text for all remaining items in discussion.tex
 - [ ] (Sections 6 and 7) User guide citation and link.
       Blocked: the user guide hasn't been published, so there is nothing to cite yet (no Zenodo record/DOI;
       checked again 2026-10-12, Zenodo only has the dataset bundle, https://doi.org/10.5281/zenodo.14892947).
@@ -715,7 +714,17 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       (optimise the existing lat. gradient/seasonality change against new network data rather than re-deriving or regressing PCs)
     - vertical resolution (`discussion.tex:60`)
     - [x] listed as comments at the top of `discussion.tex` (2026-10-09), with where each is flagged.
-          Text still to write, see "write text for all remaining items in discussion.tex" under Outstanding.
+          Text still to write, see the next item.
+- [x] Write text for all remaining items in `discussion.tex`.
+    - [x] written (2026-10-12) and the list of points at the top of `discussion.tex` removed.
+          Deliberately left out: Halon-1202 (and its `replacements.yaml` mapping),
+          the emissions regression / complete-dataset-back-to-year-1 point and the Nevado Huascar\'an ice core.
+    - [x] review fixes: IGCC CH_4 difference is now ~10 ppb from 1983 on (value-check `ch4-diff-from-igcc-noaa-era-mean`;
+          before 1983 IGCC's CH_4 is CMIP6-based, so not like-for-like), the Menking configuration error is said to be CH_4 only,
+          CH_4 seasonality points to `ssec:results-ch4`, typos and wording.
+    - [x] the placeholders pointing to the discussion are now `Sect.~\ref{sec:discussion}`
+          (`methods.tex` interpolation, harmonisation x2, Menking, constant extrapolation; `results.tex` CH_4 seasonality)
+          and the ZNTODOs in `abstract.tex` and `output-requirements.tex` are removed.
 - [x] Conclusion: user guide link (`conclusion.tex:3-4`); fill the maximum-difference numbers and years (`conclusion.tex:15-18`);
       QUICCA full name / C3S paragraph if confirmed (`conclusion.tex:28-31`).
       Done apart from the user guide link (merged into the user guide item under Outstanding)
@@ -1082,3 +1091,22 @@ https://gmd.copernicus.org/articles/10/2057/2017/gmd-10-2057-2017.pdf
     - [x] ESGF: not in `code-and-data-availability.tex` (only described in the methods' output format section)
           Done: `code-and-data-availability.tex` (after the Zenodo DOI; Metagrid link plus the guidance pages)
     - [x] Zenodo. Done: the Zenodo DOI (and the GitHub repositories) are in `code-and-data-availability.tex`
+
+### 11. Remaining TODOs found in the latex (2026-10-12)
+
+Found by searching the manuscript sources for TODOs not already in Outstanding (line numbers as of 2026-10-12).
+
+- [x] C_4F_10-like Step 3: two "[TODO Droste et al]" citation placeholders (`methods.tex:298,301`).
+      The bib entry exists (`droste_pfcs_2020`, already cited in the C_4F_10 results caption in `appendices.tex`).
+    - [x] done (2026-10-12): both now `\citet{droste_pfcs_2020}`.
+- [x] Calibration scales ZNTODO (`output-requirements.tex:103-107`):
+      "add notes in relevant places where we don't consider different scales of observations
+      and ideally quantify the effect", plus that `true' resolution would need the scale every ESM expects (out of scope).
+      The notes are in (methods general approach Step 1 and the calibration scales paragraph in the discussion).
+    - [x] done (2026-10-12): ZNTODO removed, nothing added to the text.
+          An upper-bound CH_4 value check and the ESM-scale point were tried in the discussion and removed.
+- [x] Stale TODO comments to remove, their work is done:
+    - [x] `results.tex:45` "ZNTODO: go through all these value checks" (done 2026-10-09, see Section 5)
+    - [x] `metadata.toml:10` "TODO: the contributions below are placeholders"
+          (confirmed correct as they are 2026-10-09, see Section 6)
+    - [x] done (2026-10-12): both removed.

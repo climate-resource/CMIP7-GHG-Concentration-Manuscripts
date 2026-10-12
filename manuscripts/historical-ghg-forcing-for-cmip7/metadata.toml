@@ -7,7 +7,6 @@ running_title = "GHG forcing for CMIP7 DECK experiments"
 # The tags, and the text each is written as, are `CONTRIBUTIONS`
 # in `src/local/historical_ghg_forcing_for_cmip7/author_contributions.py`.
 # `contributions_initials` is how the author is written in that statement.
-# TODO: the contributions below are placeholders, every author's still have to be filled in properly.
 
 [[authors]]
 given_name = "Zebedee"
