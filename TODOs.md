@@ -866,6 +866,20 @@ Still to do:
       (https://publications.copernicus.org/for_authors/manuscript_preparation.html) for the rules.
       Leave maths minus signs (equations) and hyphenated compounds (e.g. "global-, annual-mean") alone.
       Consider whether `replacements.yaml` or a check in the build can enforce it.
+      Draft (2026-10-12), awaiting ZN's confirmation. Copernicus rules (manuscript preparation page, English guidelines):
+      ranges with an unspaced en dash; spaced en dashes (not em dashes) for breaks in a sentence;
+      en dashes for relationships/links between names (e.g. "ocean–atmosphere"); Latin phrases not hyphenated ("in situ").
+    - ranges: "2015--2022", "1850--1880", "2000--2010" (methods), "1--2~ppm" (results);
+      "d)--f)" and "Eqs.~(9)--(13)" already en dashes. Left: "2021-12" (an ISO year-month, not a range), "SSP2-4.5" (a name).
+    - breaks in a sentence: "agree in 1989 -- the earliest year", "agree in 1981 -- their first overlap year".
+    - relationships: "Law Dome--Mauna Loa record" (15 places, comments too), "temperature--CO_2 concentration composite"
+      (appendix caption; the CO_2 appendix figure's panel e label now uses an en dash too, figure regenerated).
+    - "in-situ" → "in situ" (methods, CO_2 and CH_4 Step 1).
+    - Not changed: differences in figure labels ("Yearly CMIP7 - CMIP6", "ours - other"), which are minus signs;
+      the `dependencies.db` source name "Scripps - Law Dome merged CO2 record" (a lookup key, not rendered).
+    - Enforced: `check_copernicus_style` in `scripts/compile-gmd-template-based-latex.py` runs on the assembled text
+      (outside comments and maths) and fails the build on a spaced hyphen or a hyphenated range of years
+      (plus the reference rules in the next item). Checked that it flags the old text and passes the new.
 
 - [ ] Check that references to equations follow the Copernicus style ("Equation" vs "Eq." vs "Eqn",
       and whether the number goes in parentheses).
@@ -877,10 +891,25 @@ Still to do:
       (`methods.tex:430,506,694,1083,1107,1268`).
       If the rule is confirmed, check whether the same applies to "Figure"/"Fig." and "Section"/"Sect."
       and consider enforcing it in the build (e.g. a macro or a check).
+      Draft (2026-10-12), awaiting ZN's confirmation. Confirmed on the manuscript preparation page:
+      "Eq. (14)" in running text, "Equation (14)" at the start of a sentence (LaTeX: `Eq.~(\ref{...})`);
+      "Fig." and "Sect." in running text, full word at the start of a sentence; "Table" never abbreviated.
+      Plurals ("Eqs.", "Figs.", "Sects.") aren't covered, we use them.
+    - All 145 lines with `Figure(s)/Section(s)/Equation(s)~\ref` converted to `Fig(s).`/`Sect(s).`/`Eq.~(\ref{...})`;
+      none were at the start of a sentence. Commented-out text converted too.
+      Generated "Like Figure~\ref" caption (`appendix_figures.py`) → "Like Fig.~\ref".
+      M17 references: "Eq.~(7) of", "Sect.~4 (Eqs.~(9)--(13) and Table~11) of" (that line also had a non-breaking space).
+    - Enforced by `check_copernicus_style` (see the item above): full word mid-sentence,
+      abbreviation at the start of a sentence, and equation numbers without parentheses fail the build.
 
 - [ ] Decide CFC12 vs CFC-12 in the source (abstract asks "[TODO check nomenclature]").
       `replacements.yaml` maps CFC12 → CFC-12 so the output is fine, but the source mixes both.
       Same for HFC134a vs HFC-134a.
+      Draft (2026-10-12), awaiting ZN's confirmation. Decided on the hyphenated forms, like every other halocarbon in the source
+      (CFC-11, HFC-125, ...): CFC-12, CFC-12-eq, CFC-12-like, HFC-134a, HFC-134a-eq,
+      in the `.tex` files and the generated tables (`MANUSCRIPT_GAS_NAMES`, `input_data_references_tables.py`).
+      The unhyphenated keys are gone from `replacements.yaml`. Labels, tags and bib keys (lowercase `cfc12`) unchanged.
+      (The abstract's "[TODO check nomenclature]" was already gone.)
 - [x] `replacements.yaml` is applied in file order (`apply_replacements` in `scripts/compile-gmd-template-based-latex.py`),
       so a key that starts with an earlier key never matches:
       e.g. `HFC134a` is replaced before `HFC134a-eq`, `CFC12` before `CFC12-eq`, `CFC-11` before `CFC-11-eq`,
@@ -892,10 +921,21 @@ Still to do:
       (The `HFC134a-eq`/`HFC134aeq` entries also had `-\nobreakdash-`, i.e. an en dash; fixed.)
 - [ ] `replacements.yaml`: double check the mappings for minor species (`:4`);
       add the Halon (1202?) that is in the scenarios but not the historical data (`:31`).
+      Draft (2026-10-12), awaiting ZN's confirmation. All gas names in the source and generated tables have a mapping
+      and the formulae are right. HFC-4310mee → HFC-43-10mee (the standard name, already used in the figure labels).
+      Halon-1202: it isn't in the scenario dataset either, it is only an input to MAGICC in the scenario workflow (ZN).
+      Per ZN, a note in the commented-out list at the top of `discussion.tex` instead:
+      IGCC has no estimate (not in its concentrations or ERF output; its NOAA 2019--2023 update file has 0.013 ppt,
+      but the gas is dropped), so the note uses AR6's radiative efficiency (0.272 W m^-2 ppb^-1, Table 7.SM.7)
+      and the WMO 2022 concentrations the scenario workflow uses (peak 0.05 ppt around 2000): at most ~1.4e-5 W/m^2.
+      A `Halon-1202` mapping was added in case it makes it into the text.
 - [ ] Typos: "accomodate" (`methods.tex:500,904`), "that that" (`:460`), "for for" (`:773,1025`),
       "PCA analysis" (`:773,1025,1154`), "to not source" (`:1072`), "it not all" (`:1299`), "Next we consider CH_4" missing full stop (`:722`),
       "differencs" (`results.tex:29`), "minorly" (`results.tex:371`), "radiative focing" (`conclusion.tex:16`), "foward" (`conclusion.tex:27`),
       "a key criteria" (`conclusion.tex:24`), "betwen" (`output-requirements.tex:53`), "than an another" (`output-requirements.tex:86`).
+      Draft (2026-10-12), awaiting ZN's confirmation. Fixed those still present: "so that that", "minorly" (→ "only slightly"),
+      "foward", "a key criteria" (→ "criterion"), "betwen", "than an another".
+      The others were already gone. Also from a codespell pass: "equitorial" (x2), "re-use".
 
 ## 9. `src/local`
 

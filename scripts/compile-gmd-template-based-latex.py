@@ -490,6 +490,174 @@ def check_no_unreplaced_tags(text: str) -> None:
         raise AssertionError(msg)
 
 
+NOT_PROSE = re.compile(
+    r"\$[^$]*\$"
+    r"|\\(url|texttt|cite\w*|ref|label|href|includegraphics|input)"
+    r"(\[[^\]]*\])?\{[^}]*\}"
+)
+"""
+Parts of a line which aren't prose (maths, references, URLs, code, file names)
+"""
+
+DISPLAY_MATHS_ENVIRONMENT = re.compile(r"\\(begin|end)\{(equation|align|eqnarray)\*?\}")
+"""
+The start or end of a display maths environment
+"""
+
+FULL_WORD_REFERENCE = re.compile(r"\b(Figures?|Sections?|Equations?)~\(?\\ref\b")
+"""
+A reference which uses the full word (only right at the start of a sentence)
+"""
+
+ABBREVIATED_REFERENCE = re.compile(r"\b(Figs?|Sects?|Eqs?)\.~\(?\\ref\b")
+"""
+A reference which uses the abbreviation (everywhere except the start of a sentence)
+"""
+
+EQUATION_REFERENCE_WITHOUT_PARENTHESES = re.compile(r"\b(Eqs?\.|Equations?)~\\ref\b")
+"""
+A reference to an equation whose number isn't in parentheses
+"""
+
+SPACED_HYPHEN = re.compile(r"\S - \S")
+"""
+A hyphen used as a dash (a dash is `--`, spaced for a break in a sentence)
+"""
+
+HYPHENATED_YEAR_RANGE = re.compile(r"\b(1[0-9]{3}|20[0-9]{2})-(1[0-9]{3}|20[0-9]{2})\b")
+"""
+A range of years written with a hyphen (a range is written with `--`)
+"""
+
+NOT_SENTENCE_ENDS = ("e.g.", "i.e.", "et al.", "cf.", "Fig.", "Figs.", "Eq.", "Eqs.")
+"""
+Text which ends in a full stop without ending a sentence
+"""
+
+
+def is_sentence_start(before: str) -> bool:
+    """
+    Check whether the text that comes before something means it starts a sentence
+
+    Parameters
+    ----------
+    before
+        Prose before the thing of interest,
+        empty if it starts a paragraph
+
+    Returns
+    -------
+    :
+        Whether the thing of interest starts a sentence
+    """
+    before = before.rstrip()
+    if not before or before.endswith(("{", r"\item")):
+        return True
+
+    return before.endswith((".", "?", "!")) and not before.endswith(NOT_SENTENCE_ENDS)
+
+
+def get_reference_style_problems(code: str, previous: str) -> list[str]:
+    """
+    Get the ways in which a line's references don't follow the Copernicus style
+
+    Parameters
+    ----------
+    code
+        Line to check, without its comment
+
+    previous
+        The previous line of prose, empty if `code` starts a paragraph
+
+    Returns
+    -------
+    :
+        Description of each problem
+    """
+    problems = []
+    for match in FULL_WORD_REFERENCE.finditer(code):
+        if not is_sentence_start(code[: match.start()] or previous):
+            problems.append(f"{match.group(1)} mid-sentence")
+
+    for match in ABBREVIATED_REFERENCE.finditer(code):
+        if is_sentence_start(code[: match.start()] or previous):
+            problems.append(f"{match.group(1)}. starts a sentence")
+
+    if EQUATION_REFERENCE_WITHOUT_PARENTHESES.search(code):
+        problems.append("equation number without parentheses")
+
+    return problems
+
+
+def check_copernicus_style(text: str) -> None:
+    """
+    Check that references and dashes follow the Copernicus style
+
+    The rules are from Copernicus' manuscript preparation guidelines
+    (https://publications.copernicus.org/for_authors/manuscript_preparation.html):
+
+    - "Fig.", "Sect." and "Eq." in running text,
+      "Figure", "Section" and "Equation" at the start of a sentence
+    - equation numbers in parentheses, e.g. "Eq. (1)"
+    - ranges with an unspaced en dash (`--`), e.g. "2000--2010"
+    - spaced en dashes (` -- `) for breaks in a sentence, not hyphens
+
+    Maths, comments, references, URLs and code are not checked.
+
+    Parameters
+    ----------
+    text
+        Text to check
+
+    Raises
+    ------
+    AssertionError
+        `text` doesn't follow the Copernicus style
+    """
+    problems = []
+    previous = ""
+    in_display_maths = False
+    for line in text.splitlines():
+        code = split_comment(line)[0]
+        if not line.strip():
+            # A new paragraph
+            previous = ""
+            continue
+
+        if not code.strip():
+            # A comment line, which doesn't end a paragraph
+            continue
+
+        environment = DISPLAY_MATHS_ENVIRONMENT.search(code)
+        if environment is not None:
+            in_display_maths = environment.group(1) == "begin"
+            previous = code
+            continue
+
+        if in_display_maths:
+            continue
+
+        problems.extend(
+            f"{problem}: {line.strip()}"
+            for problem in get_reference_style_problems(code, previous)
+        )
+
+        prose = NOT_PROSE.sub(" ", code)
+        if SPACED_HYPHEN.search(prose):
+            problems.append(f"hyphen used as a dash: {line.strip()}")
+
+        if HYPHENATED_YEAR_RANGE.search(prose):
+            problems.append(f"range of years with a hyphen: {line.strip()}")
+
+        previous = code
+
+    if problems:
+        msg = "The text doesn't follow the Copernicus style:\n" + "\n".join(
+            f"- {p}" for p in problems
+        )
+        raise AssertionError(msg)
+
+
 def inline_files(
     in_text: str, files: list[tuple[str, Path]], collector: ValueCheckCollector
 ) -> str:
@@ -911,6 +1079,7 @@ def main(  # noqa: PLR0913, PLR0915
     # The figure check first, as its message is more specific
     check_no_unreplaced_figure_tags(res)
     check_no_unreplaced_tags(res)
+    check_copernicus_style(res)
 
     replacements_map = yaml.safe_load(replacements.read_text())
     res = apply_replacements(res, replacements_map)

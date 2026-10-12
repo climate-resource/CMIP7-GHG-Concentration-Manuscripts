@@ -1027,8 +1027,9 @@ def generate_co2_methods_figure(  # noqa: PLR0915
     plot_pc_timeseries_regression(
         seasonality_change_from_obs_network,
         co2_seasonality_change_composite,
-        # Over two lines, so it is no wider than the panel above it
-        timeseries_name=label_name("Temperature - co2 concentration\ncomposite"),
+        # Over two lines, so it is no wider than the panel above it.
+        # An en dash, as in the text (Copernicus style for a relationship).
+        timeseries_name=label_name("Temperature\u2013co2 concentration\ncomposite"),
         regression_info=regression_info_seasonality_change,
         ax=axes["seasonality-pc-composite"],
         x_unit="dimensionless",

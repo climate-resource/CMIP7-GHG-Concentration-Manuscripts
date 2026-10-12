@@ -9,7 +9,7 @@ and write the tables here.
 The build inlines them in the appendices in place of their tag.
 
 The gas names are written the way the manuscript's source text writes them
-(e.g. `C_2F_6`, `CFC12`), so the manuscript's replacements
+(e.g. `C_2F_6`, `CFC-12`), so the manuscript's replacements
 format them exactly as they are formatted in the text around them.
 """
 
@@ -242,7 +242,7 @@ GAS_GROUPS = (
     ),
     GasGroup(
         name="cfc12-like",
-        description="the gases processed like CFC12",
+        description="the gases processed like CFC-12",
         gases=CFC12_LIKE_GASES,
         n_tables=2,
     ),

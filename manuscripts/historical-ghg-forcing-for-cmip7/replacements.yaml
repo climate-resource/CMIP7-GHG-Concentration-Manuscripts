@@ -3,7 +3,8 @@
 # otherwise the longer key never matches.
 # Every command is \protect-ed, so the replacements also work in moving arguments
 # (section headings, captions), where fragile commands like \nobreakdash otherwise break the build.
-# TODO: double check these mappings, particularly for minor species
+# The source writes halocarbons in their hyphenated form (CFC-12, HFC-134a-eq, HFC-43-10mee),
+# so there are no entries for the unhyphenated forms (CFC12, HFC134a).
 CO_2: CO\protect\textsubscript{2}
 CO2: CO\protect\textsubscript{2}
 CH_4: CH\protect\textsubscript{4}
@@ -26,9 +27,6 @@ CFC-113: CFC\protect\nobreakdash-113
 CFC-114: CFC\protect\nobreakdash-114
 CFC-115: CFC\protect\nobreakdash-115
 CFC-11: CFC\protect\nobreakdash-11
-CFC12-eq: CFC\protect\nobreakdash-12\protect\nobreakdash-eq
-CFC12: CFC\protect\nobreakdash-12
-# The forms used in headings, so they render the same as the forms used in the text
 CFC-12-eq: CFC\protect\nobreakdash-12\protect\nobreakdash-eq
 CFC-12: CFC\protect\nobreakdash-12
 CH_2Cl_2: CH\protect\textsubscript{2}Cl\protect\textsubscript{2}
@@ -36,7 +34,8 @@ CH_3Br: CH\protect\textsubscript{3}Br
 CH_3CCl_3: CH\protect\textsubscript{3}CCl\protect\textsubscript{3}
 CH_3Cl: CH\protect\textsubscript{3}Cl
 CHCl_3: CHCl\protect\textsubscript{3}
-# TODO: Halon 1202 or whatever it is that is in scenarios but not historical
+# Not in our dataset (see the notes at the top of discussion.tex), only mentioned
+Halon-1202: Halon\protect\nobreakdash-1202
 Halon-1211: Halon\protect\nobreakdash-1211
 Halon-1301: Halon\protect\nobreakdash-1301
 Halon-2402: Halon\protect\nobreakdash-2402
@@ -44,9 +43,6 @@ HCFC-141b: HCFC\protect\nobreakdash-141b
 HCFC-142b: HCFC\protect\nobreakdash-142b
 HCFC-22: HCFC\protect\nobreakdash-22
 HFC-125: HFC\protect\nobreakdash-125
-HFC134aeq: HFC\protect\nobreakdash-134a\protect\nobreakdash-eq
-HFC134a-eq: HFC\protect\nobreakdash-134a\protect\nobreakdash-eq
-HFC134a: HFC\protect\nobreakdash-134a
 HFC-134a-eq: HFC\protect\nobreakdash-134a\protect\nobreakdash-eq
 HFC-134a: HFC\protect\nobreakdash-134a
 HFC-143a: HFC\protect\nobreakdash-143a
@@ -57,7 +53,7 @@ HFC-23: HFC\protect\nobreakdash-23
 HFC-245fa: HFC\protect\nobreakdash-245fa
 HFC-32: HFC\protect\nobreakdash-32
 HFC-365mfc: HFC\protect\nobreakdash-365mfc
-HFC-4310mee: HFC\protect\nobreakdash-4310mee
+HFC-43-10mee: HFC\protect\nobreakdash-43\protect\nobreakdash-10mee
 NF_3: NF\protect\textsubscript{3}
 SO_2F_2: SO\protect\textsubscript{2}F\protect\textsubscript{2}
 W/m^2: W/m\protect\textsuperscript{2}

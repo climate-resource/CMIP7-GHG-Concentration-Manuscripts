@@ -2314,7 +2314,7 @@ def get_min_lat_gradient_first_eof_variance(
     exclude: tuple[str, ...], *, bundle_dir: Path
 ) -> pint.Quantity:
     """
-    Get the smallest variance explained by the first EOF over the CFC12-like gases
+    Get the smallest variance explained by the first EOF over the CFC-12-like gases
 
     Parameters
     ----------
@@ -3295,7 +3295,7 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
             bundle_dir=bundle_dir,
         ),
         "largest number of years after the pre-industrial year in which "
-        "the latitudinal gradient is scaled down (CFC12-like gases except HFC-152a)",
+        "the latitudinal gradient is scaled down (CFC-12-like gases except HFC-152a)",
     )
     add(
         "cfc12-like-seasonality-capped-gases",
@@ -3368,7 +3368,7 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
             bundle_dir=bundle_dir,
         ),
         "smallest fraction of the variance explained by the first latitudinal "
-        "gradient EOF (CFC12-like gases except CFC12 and HFC-236fa)",
+        "gradient EOF (CFC-12-like gases except CFC-12 and HFC-236fa)",
     )
     add(
         "n2o-menking-offset",

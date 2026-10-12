@@ -10,7 +10,7 @@ we pull them out of the original run's bundle
 and write them into tex which the manuscript's text refers to.
 
 The gas names are written the way the manuscript's source text writes them
-(e.g. `C_2F_6`, `CFC12`), so the manuscript's replacements
+(e.g. `C_2F_6`, `CFC-12`), so the manuscript's replacements
 format them exactly as they are formatted in the text around them.
 """
 
@@ -42,7 +42,7 @@ MANUSCRIPT_GAS_NAMES = {
     "cfc113": "CFC-113",
     "cfc114": "CFC-114",
     "cfc115": "CFC-115",
-    "cfc12": "CFC12",
+    "cfc12": "CFC-12",
     "ch2cl2": "CH_2Cl_2",
     "ch3br": "CH_3Br",
     "ch3ccl3": "CH_3CCl_3",
@@ -64,7 +64,7 @@ MANUSCRIPT_GAS_NAMES = {
     "hfc245fa": "HFC-245fa",
     "hfc32": "HFC-32",
     "hfc365mfc": "HFC-365mfc",
-    "hfc4310mee": "HFC-4310mee",
+    "hfc4310mee": "HFC-43-10mee",
     "nf3": "NF_3",
     "sf6": "SF_6",
     "so2f2": "SO_2F_2",

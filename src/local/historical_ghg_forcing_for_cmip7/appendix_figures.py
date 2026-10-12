@@ -11,7 +11,7 @@ which is in the text (e.g. the CFC-12 methods figure),
 rather than repeat its caption.
 
 The gas names are written the way the manuscript's source text writes them
-(e.g. `C_2F_6`, `CFC12`), so the manuscript's replacements
+(e.g. `C_2F_6`, `CFC-12`), so the manuscript's replacements
 format them exactly as they are formatted in the text around them.
 """
 
@@ -120,7 +120,7 @@ def get_like_caption(reference_label: str, gas: str) -> str:
         The caption
     """
     return (
-        rf"Like Figure~\ref{{{reference_label}}}, "
+        rf"Like Fig.~\ref{{{reference_label}}}, "
         f"except for {MANUSCRIPT_GAS_NAMES[gas]}."
     )
 
