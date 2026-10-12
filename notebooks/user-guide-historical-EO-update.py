@@ -27,7 +27,7 @@
 # :format: latex
 # ```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
 # # Overview
 #
 # Here we provide a short description of the historical dataset of concentrations for CO{raw-latex}`\textsubscript{2}` and CH{raw-latex}`\textsubscript{4}` updated with satellite data
@@ -36,7 +36,7 @@
 # its construction, key features, metadata
 # and relationship to CMIP6 and CMIP7 forcing data.
 #
-# The dataset is an extension on the forcings for CMIP7 datasets for CO{raw-latex}`\textsubscript{2}` and CH{raw-latex}`\textsubscript{4}`, achieved by pre-processing and including satellite data to the GHG concentration generation pipeline. In this document, we will describe both the original dataset and the updated verssion, to have a complete and self-contained description. This means this document contains duplicated information from the user guide: 'CMIP7 Greenhouse Gas (GHG)
+# The dataset is an extension on the forcings for CMIP7 datasets for CO{raw-latex}`\textsubscript{2}` and CH{raw-latex}`\textsubscript{4}`, achieved by pre-processing and including satellite data to the GHG concentration generation pipeline. In this document, we will describe both the original dataset and the updated version, to have a complete and self-contained description. This means this document contains duplicated information from the user guide: 'CMIP7 Greenhouse Gas (GHG)
 # Concentration Forcing Historical
 # Dataset'.
 
@@ -268,7 +268,6 @@ def get_eo_update_local_files(ghg, time_sampling, grid):
 #
 # The species provided are:
 #
-# <!-- Note: scripts/generate-ghg-listing.py cannot produce this subset (see below), so this list is maintained by hand --->
 # - CH{raw-latex}`\textsubscript{4}`, in ppb
 # - CO{raw-latex}`\textsubscript{2}`, in ppm
 #

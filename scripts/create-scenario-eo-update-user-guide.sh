@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+# Create the scenario (EO update) user guide
+
+bash scripts/create-pdf-from-single-notebook.sh \
+    -s notebooks/user-guide-scenarios-EO-update.py \
+    -t "Adding Earth Observation data to the generation of CMIP7 CO₂ and CH₄ Concentration Forcing Scenarios Dataset: Data Description and User Guide" \
+    -d "User guide for the CMIP7 greenhouse gas (GHG) concentration forcing scenarios dataset, updated with EO extensions." \
+    --toc
