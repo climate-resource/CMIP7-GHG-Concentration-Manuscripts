@@ -940,7 +940,7 @@ General tooling (low priority, not manuscript-blocking, skip all of these for no
 Moved from `manuscript-planning.md`. Notes are from reading Meinshausen et al. 2017 (M17):
 https://gmd.copernicus.org/articles/10/2057/2017/gmd-10-2057-2017.pdf
 
-- [ ] Invite all the data producers to be co-authors
+- [ ] Invite all the data producers to be co-authors (ZN to do, not a manuscript edit)
 - Abstract
     - [x] GHGs are a major driver of past climate change, therefore key for model simulations. Not needed
     - [x] Updated GHG concentrations for CMIP7
@@ -948,7 +948,9 @@ https://gmd.copernicus.org/articles/10/2057/2017/gmd-10-2057-2017.pdf
     - [x] Put ERF due to GHGs in; note 'highest ever' or whatever, and the largest increases in recent times. Not needed.
     - [x] Available for modelling teams to use: "Finally, we describe where to access the data and provide a summary of key data changes compared to CMIP6." Not needed/already done
 - Content
-    - [ ] Mole fraction in dry air vs. mole fraction in the real atmosphere
+    - [x] Mole fraction in dry air vs. mole fraction in the real atmosphere.
+          Done: `methods.tex`, General approach (cites M17 Sect. 2 and CF, notes the potential `_in_air` vs. `_in_dry_air` mismatch).
+          Updating the file metadata is a commented-out point in `discussion.tex`
     - [x] Different scales (ignored this time, noise in the scheme of things)
     - [x] Historical experiment ends in 2021 even though this dataset goes to 2022 (and we hope to extend further in future).
           Done with the "Check the end year" item in section 6.

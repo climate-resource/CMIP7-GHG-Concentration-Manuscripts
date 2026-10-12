@@ -45,6 +45,10 @@
 % - vertical resolution (see the `ZNTODO` at the end of this section; methods, Vertical dimension)
 % - gathering more data sources, e.g. the Nevado Huascar\'an ice core (see the `ZNTODO` at the end of this section)
 % - going from station data to global-means, motivated by the fact that both us and IGCC use NOAA and AGAGE as inputs, yet end up with 25ppb different global-means
+% - updating the file metadata to make clear that the values are dry-air mole fractions,
+%   e.g. switching to the CF \texttt{mole\_fraction\_of\_X\_in\_dry\_air} standard names
+%   where they exist (currently CO_2, CH_4 and N_2O; the \texttt{\_in\_air} names we use don't say whether water vapour is included)
+%   (methods, general approach, "Regardless of the standard name in the file metadata")
 
 The output dataset shows differences from its inputs, other observation networks and the CMIP6 dataset
 that are small in the context of earth system modelling (Section~\ref{sec:results}).

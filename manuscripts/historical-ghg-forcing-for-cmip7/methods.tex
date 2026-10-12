@@ -10,6 +10,21 @@ for reasons of clarity and accuracy, we describe the method in full.
 
 In line with \citet{meinshausen_historical-ghgs_2017},
 we provide datasets of atmospheric concentrations for a wide selection of greenhouse gases.
+Throughout, we use `concentration' as shorthand.
+Strictly, all of our values are mole fractions in dry air
+(the quantity reported by the observation networks and ice core records that we use,
+as in Section~2 of \citealp{meinshausen_historical-ghgs_2017}),
+rather than mole fractions in the real, i.e. humid, atmosphere.
+Our output files use CF standard names of the form \texttt{mole\_fraction\_of\_X\_in\_air}
+(e.g. \texttt{mole\_fraction\_of\_carbon\_dioxide\_in\_air}, \citealp{eaton_cf-conventions_2026}).
+The CF standard names do not state whether these \texttt{\_in\_air} names include the effect of water vapour.
+For CO_2, CH_4 and N_2O, there are standard names of the form \texttt{mole\_fraction\_of\_X\_in\_dry\_air},
+which are explicit so there is likely a metadata error here (see Section~\ref{sec:discussion}).
+Regardless of any error, our values are dry-air mole fractions.
+% The two differ by the water vapour content of the air,
+% which can be up to a few percent near the surface.
+% Whether and how to convert these values to mole fractions in humid air
+% is a model-specific implementation choice that we leave to modelling teams.
 We provide the data at monthly resolution and include latitudinal variations.
 No dependency on longitude is provided.
 For a brief discussion on how add a vertical dimension to these datasets, see Section~\ref{ssec:methods-vertical}.
