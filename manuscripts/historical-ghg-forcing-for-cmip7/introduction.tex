@@ -12,6 +12,15 @@ because they drive the model's response
 (and play a role analogous to the role that force plays in Newton's second law
 i.e. if one thinks e.g. in terms of a force and response model).
 
+The forcings described in this work are provided in mole fractions in dry air, and will be referred to as
+concentrations, adhering to historical CMIP conventions. They are
+gridded datasets on from year 1 to end of 2022 ('present-day'for CMIP7),
+on a 15\textdegree~latitudinal (spatial), monthly (temporal)
+resolution grid. We also provide lower resolution products,
+ as described in  Sect. ~\ref{ssec:methods-derived-grids}.
+ The GHGs made available in this release match \citet{meinshausen_historical-ghgs_2017}
+ and include equivalent species.
+
 The process of generating forcings has evolved over multiple phases of CMIP.
 There is now an explicit task team dedicated to the production, standardisation and documentation of these forcings datasets,
 % Note to self: still to find (if wanted): other papers which give more context on how this process has been handled over time.
@@ -27,7 +36,7 @@ we document the atmospheric greenhouse gas concentration forcings to be used for
 We do not document how to use these forcings in the experiment.
 Such documentation is best left to the CMIP7 guidance pages, which are kept up to date in real time
 (see \newline \mbox{\url{https://wcrp-cmip.github.io/cmip7-guidance/docs/CMIP7/Experiment_set_up_and_Forcings/}})
-or papers describing the epxeriments themselves
+or papers describing the experiments themselves
 (which are scientific documents, but cannot be updated as easily in case of small errors being spotted post-publication,
 hence our recommendation is still to rely on the guidance pages as they are the most reliable source of up-to-date information).
 These forcings will also be used in a number of other experiments that we do not enumerate here.
@@ -40,6 +49,7 @@ How to record which forcings were used in a simulation
 is not yet settled.
 Users should consult the introduction of the guidance pages,
 check back for updates frequently and use these pages as the primary source of information.
+If still unclear or not defined, we encourage the teams to throughly document their 'f' mapping.
 Following \newline \mbox{\url{https://github.com/PCMDI/input4MIPs_CVs/issues/415}}
 may also help track discussions based on a concrete use case.
 Recommendations that appear in papers, including this one,
