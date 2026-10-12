@@ -34,8 +34,6 @@ CH_3Br: CH\protect\textsubscript{3}Br
 CH_3CCl_3: CH\protect\textsubscript{3}CCl\protect\textsubscript{3}
 CH_3Cl: CH\protect\textsubscript{3}Cl
 CHCl_3: CHCl\protect\textsubscript{3}
-# Not in our dataset (see the notes at the top of discussion.tex), only mentioned
-Halon-1202: Halon\protect\nobreakdash-1202
 Halon-1211: Halon\protect\nobreakdash-1211
 Halon-1301: Halon\protect\nobreakdash-1301
 Halon-2402: Halon\protect\nobreakdash-2402

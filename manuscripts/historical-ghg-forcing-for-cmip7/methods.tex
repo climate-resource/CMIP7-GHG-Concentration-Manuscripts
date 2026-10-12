@@ -94,8 +94,7 @@ be broken down as follows:
          and we must have data points in both the most northern and most southern latitudinal box.
          This is clearly a relatively low data requirement,
          but higher thresholds result in a significant amount of the observational record being discarded.
-         % ZNTODO: check discussion of this in future work i.e. discussion
-         More robust interpolation methods are an area for future work [TODO: forward ref].
+         More robust interpolation methods are an area for future work (Sect.~\ref{sec:discussion}).
 
          We use 2D interpolation, specifically linear barycentric interpolation,
          as implemented in scipy's \texttt{scipy.interpolate.griddata} function \citep{virtanen_scipy_2020}.
@@ -550,8 +549,7 @@ i.e. add a declining offset (with the decline set to reach zero over 100 years)
 to ensure that the \citet{menking_law-dome_2025} data and the observation network-derived
 % value-check: {"tag": "n2o-obs-network-start", "unit": "yr", "lower": 1989, "upper": 1989}
 global-, annual-mean agree in 1989 -- the earliest year in our observation network-derived global-, annual-mean.
-% ZNTODO: add discussion of harmonisation into discussion
-This is crude and a clear area for further investigation in future work ([TODO forward ref discussion]).
+This is crude and a clear area for further investigation in future work (Sect.~\ref{sec:discussion}).
 
 \textbf{Seasonality.}
 No further processing of the seasonality is required to extend it in time.
@@ -727,8 +725,7 @@ we harmonise the merged Law Dome--Mauna Loa record data to the observation netwo
 i.e. add a declining offset (with the decline set to reach zero over 100 years)
 to ensure that the merged Law Dome--Mauna Loa record data and the observation network-derived
 global-, annual-mean agree in 1981 -- their first overlap year.
-% ZNTODO: ensure that there is a discussion of harmonisation in the discussion
-This is crude and a clear area for further investigation in future work ([TODO forward ref discussion]).
+This is crude and a clear area for further investigation in future work (Sect.~\ref{sec:discussion}).
 
 We then use data from \citet{menking_law-dome_2025} to extend back to year 1.
 We use the spline-interpolated data from \citet{menking_law-dome_2025},
@@ -862,11 +859,7 @@ For the period including and before 1948, we use ice core information to optimis
 We use ice core values from Law Dome \citep{rubino_law-dome-dataset_2019} for the southern hemisphere
 and NEEM \citep{rhodes-brook_neem-ch4-dataset_2019,rhodes_neem-ch4_2013} for the northern hemisphere.
 We do not use the values from \citet{menking_law-dome_2025} because of a configuration error
-% ZNTODO: ensure that this discussion appears in the discussion
-([TODO forward ref discussion of this, basically say that it was an error,
-but doesn't affect CMIP datasets in a material way
-because of how similar the Law Dome and Menking data is,
-but users of CH_4 data before 1850 should be aware and may wish to make other choices]).
+(Sect.~\ref{sec:discussion}).
 We smooth the ice core data from Law Dome following the method used in \citet{meinshausen_historical-ghgs_2017}.
 To each data point in the Law Dome dataset,
 we add random noise.
@@ -1046,8 +1039,8 @@ except that, due to a lack of data,
 we do not require data in the most northern and most southern latitudinal boxes.
 Instead, we allow for extrapolation to these boxes.
 In order to avoid spurious effects due to extrapolation,
-we use constant extrapolation rather than linear or smoother extrapolations such as cubic
-[TODO note this as a clear weakness in discussion].
+we use constant extrapolation rather than linear or smoother extrapolations such as cubic.
+This is a clear weakness of our method (Sect.~\ref{sec:discussion}).
 For some gases (Table~\ref{tab:cfc12-like-per-gas}), the observation network is so sparse
 that, even with this extrapolation, latitudinal bins near the poles cannot be filled in some months.
 For these gases, we permit even further extension:
@@ -1118,16 +1111,8 @@ we depart slightly from the choices made in \citet{meinshausen_historical-ghgs_2
 We extend the latitudinal gradient PC (as we retain only one, see Step 3)
 back in time by using a regression against total emissions
 from the SSP2-4.5 scenario (which includes the historical period) in the RCMIP v5.1.0 emissions dataset \citep{nicholls_rcmip_2020} (Fig.~\ref{fig:methods-appendix-cfc12}e)).
-% ZNTODO: include more discussion of this in discussion.
-% The point is that we need more rapidly updated historical emissions estimates
-% to feed this, or to create a new approach that doesn't require this regression.
-% ZNTODO: somewhere (if not already there) make clear that we need a method of creating a complete dataset
-% that can get us back to year 1 and also project forward in time based on emissions and MAGICC modelling alone
-% (that is all we have at the time when we create scenario forcings).
-% This massively constraints our available options and is why the approach of decomposing into global-, annual-mean,
-% relative seasonality and lat. gradient EOFs with PCs scaled with emissions or basic extrapolation is where we land:
-% it is imperfect but it means we can cover the full time period we need to,
-% rather than hitting a dead-end for one time period or another.
+Using a more up-to-date historical dataset would clearly be an improvement,
+but this did not happen in time for the CMIP7 data release.
 Using a scenario for the period from 2015 to 2023, rather than a historical based estimate is imperfect
 however it is an acceptable imperfection because historical emissions have approximately followed SSP2-4.5 for these gases.
 Using this regression, we then extend the PC back to 1750,
