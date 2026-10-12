@@ -1016,5 +1016,6 @@ https://gmd.copernicus.org/articles/10/2057/2017/gmd-10-2057-2017.pdf
     - [x] Forcings TT panel. Done, see the acknowledgements item in section 6
     - [x] Direct funding acknowledgements (ESA). Done: CMIP IPO/ESA and the ESA CCI contract are in `acknowledgements.tex`
 - Data access
-    - [ ] ESGF: not in `code-and-data-availability.tex` (only described in the methods' output format section)
+    - [x] ESGF: not in `code-and-data-availability.tex` (only described in the methods' output format section)
+          Done: `code-and-data-availability.tex` (after the Zenodo DOI; Metagrid link plus the guidance pages)
     - [x] Zenodo. Done: the Zenodo DOI (and the GitHub repositories) are in `code-and-data-availability.tex`
