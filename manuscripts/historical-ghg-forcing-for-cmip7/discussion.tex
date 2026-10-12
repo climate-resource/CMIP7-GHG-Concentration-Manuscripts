@@ -42,13 +42,20 @@
 %   NOTES.md's "How to do extensions" sketches the approach:
 %   optimise the existing latitudinal gradient/seasonality change against new network data
 %   rather than re-deriving or regressing PCs.
-% - vertical resolution (see the `ZNTODO` at the end of this section; methods, Vertical dimension)
+% - no vertical or longitudinal resolution (see the `ZNTODO` at the end of this section; methods, General approach and Vertical dimension).
+%   Cf. \citet{meinshausen_historical-ghgs_2017}, Section~6.2: e.g. column CO_2 shows roughly half the surface latitudinal gradient
+%   and seasonal variation, and CO_2 is systematically higher over land than over the ocean.
 % - gathering more data sources, e.g. the Nevado Huascar\'an ice core (see the `ZNTODO` at the end of this section)
 % - going from station data to global-means, motivated by the fact that both us and IGCC use NOAA and AGAGE as inputs, yet end up with 25ppb different global-means
 % - updating the file metadata to make clear that the values are dry-air mole fractions,
 %   e.g. switching to the CF \texttt{mole\_fraction\_of\_X\_in\_dry\_air} standard names
 %   where they exist (currently CO_2, CH_4 and N_2O; the \texttt{\_in\_air} names we use don't say whether water vapour is included)
 %   (methods, general approach, "Regardless of the standard name in the file metadata")
+% - limitations on use: the dataset is focussed on CMIP and is not designed as a starting point for e.g. inversion studies
+%   or studies of biogeochemical processes, which need the observations themselves or products with appropriate uncertainty information,
+%   rather than a composite, interpolated product. Also the pre-1850 period has been checked far less carefully.
+%   Cf. \citet{meinshausen_historical-ghgs_2017}, Section~6.1
+%   (output requirements, the last two paragraphs, "inversion studies")
 % - treatment of pollution events: our concentrations are meant to be representative of real atmospheric conditions,
 %   so pollution events should be included, but they should not have an outsized effect on our monthly- and spatial-means.
 %   For data sources without their own monthly means (NOAA's HATS flask data, used for some CFC12-like gases),

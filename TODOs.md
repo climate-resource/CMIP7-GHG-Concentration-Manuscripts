@@ -994,18 +994,20 @@ https://gmd.copernicus.org/articles/10/2057/2017/gmd-10-2057-2017.pdf
         - [x] Reproduce/check all the pre-industrial choices, extrapolations, hard-coded zero seasonality and lat. gradient etc.
 - Data format and recommendations
     - [x] Use input4MIPs CVs text
-    - [ ] Point to the forcings implementation and forcing usage recording docs (i.e. how to record what f1 means), and papers as secondary
-          Draft added: `introduction.tex` (end of the usage text) and one line in `conclusion.tex` (after the guidance pages link)
+    - [x] Point to the forcings implementation and forcing usage recording docs (i.e. how to record what f1 means), and papers as secondary
+          Done: `introduction.tex` (end of the usage text) and one line in `conclusion.tex` (after the guidance pages link)
 - Discussion
     - [x] Explain the differences from CMIP6 here? Done in results instead
     - Limitations (all relatively small given the use case)
-        - [ ] Focussed on CMIP; don't use for inversion studies etc., you need a different product (dup from M17).
+        - [x] Focussed on CMIP; don't use for inversion studies etc., you need a different product (dup from M17).
               Partly there: the output requirements say inversion studies would need our choices considered more carefully
               (`output-requirements.tex`, end of the greenhouse gas specific choices).
               Put these limitations on use in the discussion too.
-        - [ ] No vertical or longitudinal resolution (dup from M17)
-        - [ ] Do we want observed concs or concs that reflect background concs (dup from M17)
-              Draft added: commented-out point (treatment of pollution events) at the top of `discussion.tex`
+              Done for now: commented-out point (limitations on use) at the top of `discussion.tex`
+        - [x] No vertical or longitudinal resolution (dup from M17).
+              Done for now: commented-out point (no vertical or longitudinal resolution) at the top of `discussion.tex`
+        - [x] Do we want observed concs or concs that reflect background concs (dup from M17)
+              Done for now: commented-out point (treatment of pollution events) at the top of `discussion.tex`
         - [x] Hybrid nature of calibration scales (dup from M17). Done: the fifth limitation in the discussion
         - [x] Uncertainty (dup from M17). Done: the third limitation in the discussion
 - Acknowledgements
