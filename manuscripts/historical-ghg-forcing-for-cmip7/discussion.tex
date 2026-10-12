@@ -49,6 +49,13 @@
 %   e.g. switching to the CF \texttt{mole\_fraction\_of\_X\_in\_dry\_air} standard names
 %   where they exist (currently CO_2, CH_4 and N_2O; the \texttt{\_in\_air} names we use don't say whether water vapour is included)
 %   (methods, general approach, "Regardless of the standard name in the file metadata")
+% - treatment of pollution events: our concentrations are meant to be representative of real atmospheric conditions,
+%   so pollution events should be included, but they should not have an outsized effect on our monthly- and spatial-means.
+%   For data sources without their own monthly means (NOAA's HATS flask data, used for some CFC12-like gases),
+%   our simple monthly averaging (no filtering) likely gives pollution events an outsized effect.
+%   Updating the methods for such sources, or reconsidering the inclusion of pollution events, would be an improvement.
+%   Cf. \citet{meinshausen_historical-ghgs_2017}, Section~6.3 (limited filtering of station measurements).
+%   (methods, general approach, Step 1, "Our concentrations are meant to be representative of real atmospheric conditions")
 
 The output dataset shows differences from its inputs, other observation networks and the CMIP6 dataset
 that are small in the context of earth system modelling (Section~\ref{sec:results}).

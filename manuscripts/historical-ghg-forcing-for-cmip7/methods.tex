@@ -47,11 +47,23 @@ be broken down as follows:
         The first step is collecting surface observations from available observation networks.
         These networks provide surface concentrations at different locations and times around the world.
 
-        Where we have a choice, we use data that has already been aggregated to a monthly temporal resolution, rather than raw data.
-        We make this choice because we believe that the raw data providers are best placed to produce monthly aggregations from the raw data,
-        including making subjective choices such as which measurements are appropriate to include in such an aggregation,
-        how to weight measurements and how to treat raw measurements taken at different points within each month.
-        This is different to \citet{meinshausen_historical-ghgs_2017}, which used the raw data directly and performed their own aggregation.
+        Our concentrations are intended to be representative of real atmospheric conditions.
+        This is not straightforward in practice.
+        Pollution events, i.e. measurements influenced by nearby sources, do happen,
+        but they should not have an outsized effect on the monthly- and spatial-means that we provide.
+        Where data providers produce monthly aggregations,
+        we trust them to take pollution events into account in a more sophisticated way than we could
+        and to make subjective choices such as which measurements are appropriate to include in such an aggregation.
+        % (for the AGAGE and NOAA monthly values that we use, by only including measurements
+        % that are representative of background, also called baseline, conditions).
+        Where data providers do not produce monthly aggregations,
+        % (NOAA's HATS flask data, used for some of the gases processed like CFC12,
+        % Section~\ref{sssec:methods-cfc12-like-collect-observations}),
+        we calculate each site's monthly value as the mean of all samples in that month,
+        without filtering out pollution events following \citet{meinshausen_historical-ghgs_2017}.
+        For these gases, pollution events are likely to have an outsized effect on our monthly values.
+        % This is also a difference from \citet{meinshausen_historical-ghgs_2017},
+        % who used AGAGE monthly means that include pollution events (their Section~2.1.1).
 
         We use the observations on the calibration scales on which they are reported,
         i.e. we do not convert between the calibration scales of different observation networks.

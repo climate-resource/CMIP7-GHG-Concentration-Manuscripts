@@ -972,8 +972,9 @@ https://gmd.copernicus.org/articles/10/2057/2017/gmd-10-2057-2017.pdf
           Maybe a table too, or just text given how big the tables are in M17
           (see `tmp-figure-scribbles/hist-methodology-figure-*.jpeg` and the table decision in section 1)
     - [x] Build out based on notebooks
-    - [ ] Say whether the concentrations are meant to be observed concentrations
+    - [x] Say whether the concentrations are meant to be observed concentrations
           or concentrations that reflect background conditions (M17 discusses this; nothing in our text does yet).
+          Done: `methods.tex`, General approach, Step 1 ("Our concentrations are meant to be representative of real atmospheric conditions")
     - Compared to the CMIP6 workflow
         - [x] Removed optimisation step. Not removed: we kept it for CH_4
               (the latitudinal gradient PC is optimised against ice cores, CH_4 Step 4), so there is nothing to note.
@@ -1003,6 +1004,7 @@ https://gmd.copernicus.org/articles/10/2057/2017/gmd-10-2057-2017.pdf
               Put these limitations on use in the discussion too.
         - [ ] No vertical or longitudinal resolution (dup from M17)
         - [ ] Do we want observed concs or concs that reflect background concs (dup from M17)
+              Draft added: commented-out point (treatment of pollution events) at the top of `discussion.tex`
         - [x] Hybrid nature of calibration scales (dup from M17). Done: the fifth limitation in the discussion
         - [x] Uncertainty (dup from M17). Done: the third limitation in the discussion
 - Acknowledgements
