@@ -11,6 +11,7 @@ Paths are relative to `manuscripts/historical-ghg-forcing-for-cmip7/` unless sta
 
 The section each item came from is in parentheses (see Done for the context).
 
+- [ ] add compilation instructions to the README
 - [ ] (Sections 6 and 7) User guide citation and link.
       Blocked: the user guide hasn't been published, so there is nothing to cite yet (no Zenodo record/DOI;
       checked again 2026-10-12, Zenodo only has the dataset bundle, https://doi.org/10.5281/zenodo.14892947).
