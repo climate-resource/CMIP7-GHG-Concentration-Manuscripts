@@ -995,6 +995,7 @@ https://gmd.copernicus.org/articles/10/2057/2017/gmd-10-2057-2017.pdf
 - Data format and recommendations
     - [x] Use input4MIPs CVs text
     - [ ] Point to the forcings implementation and forcing usage recording docs (i.e. how to record what f1 means), and papers as secondary
+          Draft added: `introduction.tex` (end of the usage text) and one line in `conclusion.tex` (after the guidance pages link)
 - Discussion
     - [x] Explain the differences from CMIP6 here? Done in results instead
     - Limitations (all relatively small given the use case)
