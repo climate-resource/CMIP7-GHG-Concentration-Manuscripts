@@ -7,7 +7,51 @@ and the methods TODOs from `NOTES.md` (moved into section 1).
 Line numbers are as of commit `bdf36a4`.
 Paths are relative to `manuscripts/historical-ghg-forcing-for-cmip7/` unless stated otherwise.
 
-## 1. Methods: step labelling consistency
+## Outstanding
+
+The section each item came from is in parentheses (see Done for the context).
+
+- [ ] (Section 6) write text for all remaining items in discussion.tex
+- [ ] (Sections 6 and 7) User guide citation and link.
+      Blocked: the user guide hasn't been published, so there is nothing to cite yet (no Zenodo record/DOI;
+      checked again 2026-10-12, Zenodo only has the dataset bundle, https://doi.org/10.5281/zenodo.14892947).
+      It is built from this repo (`scripts/create-historical-user-guide.sh`, `notebooks/user-guide-historical.py`).
+      Once it is published (as a standalone Zenodo record to start, then other links/bundles as a second step),
+      add the bib entry and replace the four placeholders:
+    - [ ] `results.tex` intro: "we refer to the dedicated user guide [TODO citation and ref. ...]"
+    - [ ] `methods.tex` output format section (x2): "the user guide [TODO ref user guide]"
+    - [ ] `conclusion.tex`: "A full user guide can be found at [TODO link]." (and its ZNTODO)
+
+### To ask co-authors
+
+- [ ] (Section 10) Invite all the data producers to be co-authors (ZN to do, not a manuscript edit)
+- [ ] (Section 5) Ask co-authors for other (ideally independent) comparison datasets (`results.tex:10-11`).
+
+### Waiting on others
+
+- [ ] (Section 6) The C3S paragraph at the end of `conclusion.tex` stays commented out until C3S is resolved
+      (it also needs the C3S project name).
+
+### Needs editor or reviewer feedback
+
+- [ ] (Section 3) "Float too large for page by 10pt": this is the CFC-12-like per-gas `table*` (`methods.tex:995-1020`).
+      Being too tall is why it was pushed to the end of the document.
+      A `\clearpage` at the end of `methods.tex` now flushes it there instead (and one around each appendix section
+      keeps the appendix figures in their own appendix), but the warning remains.
+      Leaving the warning for now: check with the editor whether they want this long table
+      or for us to split it over multiple pages (ZNTODO next to the table in `methods.tex`).
+
+### Optional
+
+Low priority, not manuscript-blocking (skip the `src/local` tooling items for now).
+
+- [ ] (Section 2) CH_4 Law Dome smoothing figure (noise, windows, regression; `methods.tex:821-823`, "if requested by reviewers").
+- [ ] (Section 9) `data_loading.py:140,298,333,337,353,461,494,498,520`: ESGF result checking, loading logic, hard-coded paths.
+- [ ] (Section 9) `esgf/` TODOs: uniqueness constraints, process count, mapping organisation, node handling, URL sorting, chunk sizes, retry logic.
+
+## Done
+
+### 1. Methods: step labelling consistency
 
 The general approach (`methods.tex:26-154`) defines six steps.
 Everything else should use exactly these names:
@@ -145,11 +189,11 @@ Everything else should use exactly these names:
     - Docstrings, comments and value-check descriptions in `src/local/` and `scripts/` updated to "observation network" too
       (identifiers and file names such as `observational_network_global_annual_mean_file` untouched).
 
-## 2. Appendices
+### 2. Appendices
 
 The build supports appendices (see Infrastructure), and most of the figures already exist.
 
-### Infrastructure
+#### Infrastructure
 
 - [x] Add an appendix option to `scripts/compile-gmd-template-based-latex.py`
       (the Copernicus template has a commented `\appendix ... \noappendix` block
@@ -187,7 +231,7 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       (this is the reasoning to put in the latex comment, see the first item under "Methods appendix figures").
       Revisit if the per-gas figures make the PDF unwieldy, e.g. if the editor asks us to move them.
 
-### Methods appendix figures (already generated)
+#### Methods appendix figures (already generated)
 
 - [x] Put a note as a comment in the latex that we use appendices based on copernicus's
       distinction between appendices ("all material required to understand the essential aspects of the paper")
@@ -247,9 +291,8 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       builds from the RCMIP v5.1.0 SSP2-4.5 World emissions, so it matches the method.
       Panel e) now says "Regression between the first latitudinal gradient PC and total CFC12 emissions."
       (the text has the detail). The generated captions point to the CFC-12 one, so don't repeat it.
-- [ ] Optional: CH_4 Law Dome smoothing figure (noise, windows, regression; `methods.tex:821-823`, "if requested by reviewers").
 
-### Results appendix figures (already generated)
+#### Results appendix figures (already generated)
 
 - [x] Results figures exist for all 43 gases plus the equivalent species,
       but only CO_2, CH_4, N_2O, CFC-12, CFC-12-eq and HFC-134a-eq are in the text.
@@ -267,7 +310,7 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       Its caption notes that IGCC has no CFC-11-eq.
       The results text only points to it (no discussion of it yet).
 
-### References from the main text into the appendix
+#### References from the main text into the appendix
 
 - [x] Review the test cross-refs, each marked with
       "% TODO: review this cross-ref, this is just here to test the linking between main and appendices e.g. numbering."
@@ -311,19 +354,13 @@ The build supports appendices (see Infrastructure), and most of the figures alre
     - Not resolved: CO_2 Step 4 gives no reason for taking the second lat. gradient PC linearly to zero in 1850
       (N_2O and CH_4 keep it constant). Find the reason (M17?) and add it.
 
-## 3. Broken references and build issues
+### 3. Broken references and build issues
 
 - [x] `\ref{ssec:methods-c8f18-like}` is undefined (`methods.tex:1262`). It should be `ssec:methods-c8f18`.
 - [x] `\ref{sssec:methods-co2-pca-derived-components}` is undefined (`methods.tex:572,582`).
       These sentences mean "same as N_2O", so they should point to `sssec:methods-n2o-pca`.
 - [x] CFC-12 results caption refers to `Figure \ref{fig:results-cfc12}a` (itself) for the obs. network (`results.tex:271`).
       It should be `fig:methods-cfc12`.
-- [ ] "Float too large for page by 10pt": this is the CFC-12-like per-gas `table*` (`methods.tex:995-1020`).
-      Being too tall is why it was pushed to the end of the document.
-      A `\clearpage` at the end of `methods.tex` now flushes it there instead (and one around each appendix section
-      keeps the appendix figures in their own appendix), but the warning remains.
-      Leaving the warning for now: check with the editor whether they want this long table
-      or for us to split it over multiple pages (ZNTODO next to the table in `methods.tex`).
 - [x] `caption` package "Unknown document class" warning (`main.log:2926`). Check that captions render as intended.
       Harmless: `copernicus.cls` loads `caption` itself, then immediately restores its own `\@makecaption`.
       Checked in the PDF (2026-10-07): captions render in the Copernicus style ("**Figure 7.** ...").
@@ -337,7 +374,7 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       Fixed by a third pdflatex pass after bibtex (`compile_latex` in `scripts/compile-gmd-template-based-latex.py`),
       which now also warns if latex still wants a rerun. LaTeX output goes to stderr.
 
-## 4. Methods: content and correctness
+### 4. Methods: content and correctness
 
 - [x] General Step 2 and CFC-12-like Step 2 say "at least five data points are required" for spatial interpolation
       (`methods.tex:49,980`), but the original run uses `MIN_POINTS_FOR_SPATIAL_INTERPOLATION = 4`
@@ -505,7 +542,7 @@ The build supports appendices (see Infrastructure), and most of the figures alre
     - [x] the "both most northern and southern box" requirement in general Step 2 isn't an explicit rule
           (it follows from linear griddata not extrapolating and gappy months being dropped); comment added saying so
 
-## 5. Results
+### 5. Results
 
 - [x] Uncommented placeholder text: "Differences over the period A-B are less than X~ppm." (`results.tex:58-59`).
       Done (2026-10-09): "From 1979 onwards, the differences are less than 0.7~ppm" (max 0.65 ppm, in 1979).
@@ -600,9 +637,8 @@ The build supports appendices (see Infrastructure), and most of the figures alre
 - [x] Specify that piControl should repeat the 1850 values (`output-requirements.tex:117`; probably in results).
       Done (2026-10-11): stated in the output requirements, straight after the piControl requirement;
       the ZNTODOs in `output-requirements.tex` and `discussion.tex` removed.
-- [ ] Ask co-authors for other (ideally independent) comparison datasets (`results.tex:10-11`).
 
-## 6. Abstract, introduction, output requirements, discussion, conclusion, statements
+### 6. Abstract, introduction, output requirements, discussion, conclusion, statements
 
 - [x] Discussion: add the inconsistencies behind the negative-value reductions in CFC12-like/C_4F_10-like Step 5
       (pre-industrial values vs. the emissions-driven latitudinal gradient; HFC-152a's latitudinal gradient scaled down 1991-2023;
@@ -679,16 +715,16 @@ The build supports appendices (see Infrastructure), and most of the figures alre
       (optimise the existing lat. gradient/seasonality change against new network data rather than re-deriving or regressing PCs)
     - vertical resolution (`discussion.tex:60`)
     - [x] listed as comments at the top of `discussion.tex` (2026-10-09), with where each is flagged.
-          Text still to write, see the last item of this section.
-- [ ] Conclusion: user guide link (`conclusion.tex:3-4`); fill the maximum-difference numbers and years (`conclusion.tex:15-18`);
+          Text still to write, see "write text for all remaining items in discussion.tex" under Outstanding.
+- [x] Conclusion: user guide link (`conclusion.tex:3-4`); fill the maximum-difference numbers and years (`conclusion.tex:15-18`);
       QUICCA full name / C3S paragraph if confirmed (`conclusion.tex:28-31`).
+      Done apart from the user guide link (merged into the user guide item under Outstanding)
+      and the C3S paragraph (under Outstanding, Waiting on others).
     - [x] maximum differences filled (2026-10-09): about 0.06 W/m2 (CO_2, around year 200) and,
           from 1850 on, about 0.025 W/m2 (CO_2, 1969), each with value-checks, plus checks that every other gas'
           difference is smaller (so CO_2's is the maximum). New check `{gas}-diff-from-cmip6-1850-on-year`.
     - [x] QUICCA's full name added to the commented-out paragraph
           (Quality-assured Updates of forcing Information for Climate Change Assessments).
-    - [ ] the C3S paragraph stays commented out until C3S is confirmed (it also needs the C3S project name).
-    - [ ] user guide link: same as the results intro item below.
 - [x] Author contribution is a placeholder (`author-contribution.tex`); maybe auto-generate from `metadata.toml`.
     - [x] auto-generation (2026-10-09): each author in `metadata.toml` has `contributions` (a list of tags)
           and `contributions_initials`. `src/local/historical_ghg_forcing_for_cmip7/author_contributions.py`
@@ -708,10 +744,8 @@ The build supports appendices (see Infrastructure), and most of the figures alre
           the CMIP Forcings Task Team and the CMIP Panel, CMIP IPO, WCRP and all others involved in CMIP7.
           No placeholders left.
 - [x] Competing interests: add a statement about the funding being sought (`competing-interests.tex:1`).
-- [ ] Results intro: user guide citation (standalone Zenodo doc to start, `results.tex:16`).
-- [ ] write text for all remaining items in discussion.tex
 
-## 7. Citations
+### 7. Citations
 
 Source of truth for the input-data references: the original run's
 `../CMIP-GHG-Concentration-Generation/output-bundles/v1.0.0/data/processed/dependencies.db`
@@ -764,7 +798,7 @@ Wired in (2026-10-08; build has no undefined citations):
 - [x] Funke et al. solar → `funke_solar_2024`; scenario in-prep paper → `nicholls_scenario-ghgs_2026`;
       Vaishali's paper → `naik_input-data-releases_2025`; forcing process over time / task team → `durack_forcing_2025`
 
-Still to do:
+Done after that:
 
 - [x] BUG: "Summit" in the CH_4 ice-core supplement is Huascarán Summit Core A (9.122S, 77.605W, 6768 m; Lamantia et al., 2026),
       not Summit, Greenland. `CH4_ICE_CORE_SUPPLEMENT_SITES` in `comparison_data.py` put it at 72.58N.
@@ -798,11 +832,6 @@ Still to do:
       swap for NOAA's version string (e.g. "Version 2026-09") once confirmed on the Trends pages.
       Done (2026-10-09): both Trends pages (https://gml.noaa.gov/ccgg/trends/gl_data.html, https://gml.noaa.gov/ccgg/trends_ch4/)
       ask for "Version 2026-09", which matches our files' creation date (5 September 2026). Notes updated.
-- [ ] User guide citation (`results.tex:16`, `methods.tex` output format section: `[TODO ref user guide]`), see Section 6.
-      Blocked (2026-10-09): there is nothing to cite yet. The user guide is built from this repo
-      (`scripts/create-historical-user-guide.sh`) but has no Zenodo record/DOI.
-      Once it has one, add the bib entry and replace the four placeholders
-      (`results.tex` intro, `methods.tex` output format section x2, `conclusion.tex`).
 - [x] Check "IGCC uses Hodnebrog" and "the same source is used by the IGCC" (`[TODO check]`s in `results.tex`), see Section 5.
 - [x] Clean-up: bib entries marked "Is this reference correct or needed?" / "rename to ..." (`references/references.bib`).
       Done (2026-10-09), no such markers left:
@@ -854,9 +883,9 @@ Still to do:
           `\bibliographystyle` in `copernicus-latex-package/template_clean.tex`. Not fixed
           (the a/b/c order is bibtex's, which the table generator doesn't know).
 
-## 8. Nomenclature and typos
+### 8. Nomenclature and typos
 
-- [ ] Check hyphens and dashes throughout (all `.tex` files, plus the generated captions/tables in `src/local/`).
+- [x] Check hyphens and dashes throughout (all `.tex` files, plus the generated captions/tables in `src/local/`).
       We mix `-` and `--`: e.g. ranges are written both ways ("2015-2022" in the C_8F_18 summary vs "d)--f)" in methods),
       and a spaced hyphen is used as a dash ("agree in 1984 - the earliest year", "1981 - their first overlap year")
       and as a separator ("Law Dome - Mauna Loa record", "temperature - CO_2 concentration composite").
@@ -866,7 +895,7 @@ Still to do:
       (https://publications.copernicus.org/for_authors/manuscript_preparation.html) for the rules.
       Leave maths minus signs (equations) and hyphenated compounds (e.g. "global-, annual-mean") alone.
       Consider whether `replacements.yaml` or a check in the build can enforce it.
-      Draft (2026-10-12), awaiting ZN's confirmation. Copernicus rules (manuscript preparation page, English guidelines):
+      Done (2026-10-12). Copernicus rules (manuscript preparation page, English guidelines):
       ranges with an unspaced en dash; spaced en dashes (not em dashes) for breaks in a sentence;
       en dashes for relationships/links between names (e.g. "ocean–atmosphere"); Latin phrases not hyphenated ("in situ").
     - ranges: "2015--2022", "1850--1880", "2000--2010" (methods), "1--2~ppm" (results);
@@ -881,7 +910,7 @@ Still to do:
       (outside comments and maths) and fails the build on a spaced hyphen or a hyphenated range of years
       (plus the reference rules in the next item). Checked that it flags the old text and passes the new.
 
-- [ ] Check that references to equations follow the Copernicus style ("Equation" vs "Eq." vs "Eqn",
+- [x] Check that references to equations follow the Copernicus style ("Equation" vs "Eq." vs "Eqn",
       and whether the number goes in parentheses).
       The template files in `copernicus-latex-package/` only have equation examples, not the referencing rule,
       so check the manuscript preparation / English guidelines pages (link in the item above).
@@ -891,7 +920,7 @@ Still to do:
       (`methods.tex:430,506,694,1083,1107,1268`).
       If the rule is confirmed, check whether the same applies to "Figure"/"Fig." and "Section"/"Sect."
       and consider enforcing it in the build (e.g. a macro or a check).
-      Draft (2026-10-12), awaiting ZN's confirmation. Confirmed on the manuscript preparation page:
+      Done (2026-10-12). Confirmed on the manuscript preparation page:
       "Eq. (14)" in running text, "Equation (14)" at the start of a sentence (LaTeX: `Eq.~(\ref{...})`);
       "Fig." and "Sect." in running text, full word at the start of a sentence; "Table" never abbreviated.
       Plurals ("Eqs.", "Figs.", "Sects.") aren't covered, we use them.
@@ -902,10 +931,10 @@ Still to do:
     - Enforced by `check_copernicus_style` (see the item above): full word mid-sentence,
       abbreviation at the start of a sentence, and equation numbers without parentheses fail the build.
 
-- [ ] Decide CFC12 vs CFC-12 in the source (abstract asks "[TODO check nomenclature]").
+- [x] Decide CFC12 vs CFC-12 in the source (abstract asks "[TODO check nomenclature]").
       `replacements.yaml` maps CFC12 → CFC-12 so the output is fine, but the source mixes both.
       Same for HFC134a vs HFC-134a.
-      Draft (2026-10-12), awaiting ZN's confirmation. Decided on the hyphenated forms, like every other halocarbon in the source
+      Done (2026-10-12). Decided on the hyphenated forms, like every other halocarbon in the source
       (CFC-11, HFC-125, ...): CFC-12, CFC-12-eq, CFC-12-like, HFC-134a, HFC-134a-eq,
       in the `.tex` files and the generated tables (`MANUSCRIPT_GAS_NAMES`, `input_data_references_tables.py`).
       The unhyphenated keys are gone from `replacements.yaml`. Labels, tags and bib keys (lowercase `cfc12`) unchanged.
@@ -919,9 +948,9 @@ Still to do:
       which happened to render the same anyway), with a comment at the top of the file.
       The only change to the rendered text is that the `-eq` names now use `\nobreakdash`
       (The `HFC134a-eq`/`HFC134aeq` entries also had `-\nobreakdash-`, i.e. an en dash; fixed.)
-- [ ] `replacements.yaml`: double check the mappings for minor species (`:4`);
+- [x] `replacements.yaml`: double check the mappings for minor species (`:4`);
       add the Halon (1202?) that is in the scenarios but not the historical data (`:31`).
-      Draft (2026-10-12), awaiting ZN's confirmation. All gas names in the source and generated tables have a mapping
+      Done (2026-10-12). All gas names in the source and generated tables have a mapping
       and the formulae are right. HFC-4310mee → HFC-43-10mee (the standard name, already used in the figure labels).
       Halon-1202: it isn't in the scenario dataset either, it is only an input to MAGICC in the scenario workflow (ZN).
       Per ZN, a note in the commented-out list at the top of `discussion.tex` instead:
@@ -929,15 +958,15 @@ Still to do:
       but the gas is dropped), so the note uses AR6's radiative efficiency (0.272 W m^-2 ppb^-1, Table 7.SM.7)
       and the WMO 2022 concentrations the scenario workflow uses (peak 0.05 ppt around 2000): at most ~1.4e-5 W/m^2.
       A `Halon-1202` mapping was added in case it makes it into the text.
-- [ ] Typos: "accomodate" (`methods.tex:500,904`), "that that" (`:460`), "for for" (`:773,1025`),
+- [x] Typos: "accomodate" (`methods.tex:500,904`), "that that" (`:460`), "for for" (`:773,1025`),
       "PCA analysis" (`:773,1025,1154`), "to not source" (`:1072`), "it not all" (`:1299`), "Next we consider CH_4" missing full stop (`:722`),
       "differencs" (`results.tex:29`), "minorly" (`results.tex:371`), "radiative focing" (`conclusion.tex:16`), "foward" (`conclusion.tex:27`),
       "a key criteria" (`conclusion.tex:24`), "betwen" (`output-requirements.tex:53`), "than an another" (`output-requirements.tex:86`).
-      Draft (2026-10-12), awaiting ZN's confirmation. Fixed those still present: "so that that", "minorly" (→ "only slightly"),
+      Done (2026-10-12). Fixed those still present: "so that that", "minorly" (→ "only slightly"),
       "foward", "a key criteria" (→ "criterion"), "betwen", "than an another".
       The others were already gone. Also from a codespell pass: "equitorial" (x2), "re-use".
 
-## 9. `src/local`
+### 9. `src/local`
 
 Manuscript-relevant:
 
@@ -970,17 +999,11 @@ Manuscript-relevant:
 - [x] `src/local/historical_ghg_forcing_for_cmip7/__pycache__` has a stale `sf6_like_methods_figure` .pyc (module now `cfc12_like_methods_figure`). Clean up.
       Deleted (it is gitignored, so nothing to commit).
 
-General tooling (low priority, not manuscript-blocking, skip all of these for now):
-
-- [ ] `data_loading.py:140,298,333,337,353,461,494,498,520`: ESGF result checking, loading logic, hard-coded paths.
-- [ ] `esgf/` TODOs: uniqueness constraints, process count, mapping organisation, node handling, URL sorting, chunk sizes, retry logic.
-
-## 10. From `manuscript-planning.md` (historical manuscript)
+### 10. From `manuscript-planning.md` (historical manuscript)
 
 Moved from `manuscript-planning.md`. Notes are from reading Meinshausen et al. 2017 (M17):
 https://gmd.copernicus.org/articles/10/2057/2017/gmd-10-2057-2017.pdf
 
-- [ ] Invite all the data producers to be co-authors (ZN to do, not a manuscript edit)
 - Abstract
     - [x] GHGs are a major driver of past climate change, therefore key for model simulations. Not needed
     - [x] Updated GHG concentrations for CMIP7
