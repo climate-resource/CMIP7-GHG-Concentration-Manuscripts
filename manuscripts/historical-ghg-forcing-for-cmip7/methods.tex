@@ -19,7 +19,7 @@ Our output files use CF standard names of the form \texttt{mole\_fraction\_of\_X
 (e.g. \texttt{mole\_fraction\_of\_carbon\_dioxide\_in\_air}, \citealp{eaton_cf-conventions_2026}).
 The CF standard names do not state whether these \texttt{\_in\_air} names include the effect of water vapour.
 For CO_2, CH_4 and N_2O, there are standard names of the form \texttt{mole\_fraction\_of\_X\_in\_dry\_air},
-which are explicit so there is likely a metadata error here (see Sect.~\ref{sec:discussion}).
+which are explicit, so there is likely a metadata error here (see Sect.~\ref{sec:discussion}).
 Regardless of any error, our values are dry-air mole fractions.
 % The two differ by the water vapour content of the air,
 % which can be up to a few percent near the surface.
@@ -97,7 +97,7 @@ be broken down as follows:
          More robust interpolation methods are an area for future work (Sect.~\ref{sec:discussion}).
 
          We use 2D interpolation, specifically linear barycentric interpolation,
-         as implemented in scipy's \texttt{scipy.interpolate.griddata} function \citep{virtanen_scipy_2020}.
+         as implemented in scipy's \newline  \texttt{scipy.interpolate.griddata} function \citep{virtanen_scipy_2020}.
          Before interpolating, we put the data on a grid that is `wrapped around' to avoid edge effects.
          In practice, this means that we duplicate the data three times
          and place these three copies next to each other in the longitudinal direction.
@@ -289,7 +289,7 @@ Full references for the generation of each gas are given in Appendix~\ref{app:in
             }
             \item {
                 \textbf{Step 2: Bin and interpolate observations}
-                Our method means that we do not perform this step.
+                As a consequence of Step 1 described above, we do not perform this step.
             }
             \item {
                 \textbf{Step 3: Principal component analysis}
@@ -573,8 +573,8 @@ We do this using the Lai-Kaplan algorithm \citep{lai-kaplan_algorithm_2022}.
 We additionally use the Rymes-Myers algorithm \citep{rymes-myers_algorithm_2001}
 when we need to ensure that interpolated values remain within specified bounds
 (e.g. avoid negative values).
-(Even with these algorithms,
-the mean-preserving interpolation remains one of the most computationally expensive steps in the whole process.)
+Even with these algorithms,
+the mean-preserving interpolation remains one of the most computationally expensive steps in the whole process.
 
 \textbf{Seasonality.}
 Next we calculate the seasonality term, $s(y, m, l)$.
@@ -666,14 +666,16 @@ as they explain almost all of the variance (Fig.~\ref{fig:methods-appendix-co2}f
 The retained EOFs and PCs are shown in Figs.~\ref{fig:methods-co2}f) and~\ref{fig:methods-appendix-co2}g) respectively.
 
 \textbf{Seasonality.}
+CO_2's seasonality is influenced by absolute values of CO_2, so a more sophisticated approach is needed.
+
 The (absolute) seasonality is calculated as for N_2O (Sect.~\ref{sssec:methods-n2o-pca}, Fig.~\ref{fig:methods-co2}e)).
 On top of this seasonality, we also calculate EOFs and PCs for the change in seasonality over time.
 These are calculated by taking the seasonality and the residuals from which the seasonality was derived.
 We then calculate the difference between these two, which we call `seasonality anomalies'.
-We then perform singular value decomposition on these seasonality anomalies
-(this is done by stacking the data so it has one dimension which is year
+We then perform singular value decomposition on these seasonality anomalies.
+This is done by stacking the data so it has one dimension which is 'year'
 while the other dimension combines latitude and month
-so that the singular value decomposition has a 2D dataset to work with).
+so that the singular value decomposition has a 2D dataset to work with.
 As for the latitudinal gradient, we convert the singular value decomposition results into EOFs and PCs.
 
 However, in the case of seasonality, while the PCs are still only a function of year,
@@ -962,7 +964,7 @@ This step is the same as for N_2O (Sect.~\ref{sssec:methods-n2o-generate-native-
 CFC-12 follows the base case (N_2O, Sect.~\ref{ssec:methods-n2o}),
 except in Step 2 (Bin and interpolate observations), Step 4 (Extend) and Step 5 (Prepare the components to be combined).
 These differences accommodate some gases' sparse observation networks,
-allow some specific data sources take priority over our observation network-based method,
+allow some specific data sources to take priority over our observation network-based method,
 recognise the need to interpolate between observation network values and pre-industrial values from the literature,
 and avoid negative values in the output.
 
@@ -1113,8 +1115,8 @@ back in time by using a regression against total emissions
 from the SSP2-4.5 scenario (which includes the historical period) in the RCMIP v5.1.0 emissions dataset \citep{nicholls_rcmip_2020} (Fig.~\ref{fig:methods-appendix-cfc12}e)).
 Using a more up-to-date historical dataset would clearly be an improvement,
 but this did not happen in time for the CMIP7 data release.
-Using a scenario for the period from 2015 to 2023, rather than a historical based estimate is imperfect
-however it is an acceptable imperfection because historical emissions have approximately followed SSP2-4.5 for these gases.
+Using a scenario for the period from 2015 to 2023, rather than a historical based estimate, is not the ideal approach.
+It is however acceptable because historical emissions have approximately followed SSP2-4.5 for these gases.
 Using this regression, we then extend the PC back to 1750,
 the first year reported in the RCMIP v5.1.0 emissions dataset.
 Before 1750, we keep the PC constant (Fig.~\ref{fig:methods-cfc12}h)).

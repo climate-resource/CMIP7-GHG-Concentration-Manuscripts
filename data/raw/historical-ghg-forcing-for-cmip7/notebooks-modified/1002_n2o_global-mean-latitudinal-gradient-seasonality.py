@@ -256,7 +256,9 @@ import pandas as pd
 # orthonormal, which makes the principal components uncorrelated:
 # the principal components' cross-product is `diag(D) ** 2`,
 # i.e. the singular values squared with nothing off the diagonal.
-pcs = full_eofs_pcs["principal-components"].transpose("year", "eof").data.m
+# Bound to a name of our own, so nothing here can shadow the notebook's.
+manuscript_eofs_pcs = full_eofs_pcs
+pcs = manuscript_eofs_pcs["principal-components"].transpose("year", "eof").data.m
 singular_values_squared = pcs.T @ pcs
 
 off_diagonal = singular_values_squared - np.diag(np.diag(singular_values_squared))
@@ -270,13 +272,25 @@ variance_explained = np.diag(singular_values_squared) / np.trace(
 
 full_eofs_pcs_out_file = Path("manuscript-outputs/n2o_lat-gradient-full-eofs-pcs.nc")
 full_eofs_pcs_out_file.parent.mkdir(exist_ok=True, parents=True)
-full_eofs_pcs.pint.dequantify().to_netcdf(full_eofs_pcs_out_file)
+to_save = manuscript_eofs_pcs.pint.dequantify()
+# A decomposition can be over a stacked dimension -- CO2's seasonality change
+# is over latitude and month together -- and netCDF cannot hold a MultiIndex.
+# Unstacking it into its levels keeps everything, in a form netCDF can write.
+multi_indexes = [
+    name
+    for name, index in to_save.indexes.items()
+    if isinstance(index, pd.MultiIndex)
+]
+if multi_indexes:
+    to_save = to_save.reset_index(multi_indexes)
+
+to_save.to_netcdf(full_eofs_pcs_out_file)
 
 manuscript_out_file = Path("manuscript-outputs/n2o_lat-gradient-variance-explained.csv")
 manuscript_out_file.parent.mkdir(exist_ok=True, parents=True)
 pd.DataFrame(
     {
-        "eof": full_eofs_pcs["eof"].values,
+        "eof": manuscript_eofs_pcs["eof"].values,
         "variance_explained_fraction": variance_explained,
     }
 ).to_csv(manuscript_out_file, index=False)

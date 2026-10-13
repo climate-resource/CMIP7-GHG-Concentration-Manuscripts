@@ -54,15 +54,15 @@ As a result, this threshold can be used to identify higher priority areas or cho
 when constructing the dataset
 (if a choice changes the dataset in a way that alters the energy balance by less than 0.01~W/m^2,
 it is usually not a critical choice because the difference between the options is effectively zero).
+On the other hand, choices which alter the implied energy balance by more than 0.01~W / m2,
+% value-check: {"tag": "co2-for-energy-balance-threshold", "unit": "ppm", "lower": 0.7, "upper": 0.8}
+i.e. around 0.75~ppm CO_2 (Sect.~\ref{ssec:results-radiative-forcing-comparisons-note}),
+should be more carefully considered and documented.
 
 Taken together, these considerations define the output requirements for this study:
 a temporally (at least from 1850 to end of 2021),
 spatially (global coverage) complete dataset
-that is appropriate for ESM simulations
-(choices which alter the implied energy balance by more than 0.01~W / m2,
-% value-check: {"tag": "co2-for-energy-balance-threshold", "unit": "ppm", "lower": 0.7, "upper": 0.8}
-i.e. around 0.75~ppm CO_2 (Sect.~\ref{ssec:results-radiative-forcing-comparisons-note}),
-should be more carefully considered and documented).
+that is appropriate for ESM simulations.
 
 These requirements have some key implications.
 Firstly, the requirement of completeness means that
@@ -98,8 +98,8 @@ In any given forcing dataset, there are likely to be underlying choices which,
 were the forcings to be produced for a different context, would be different.
 For the greenhouse gas forcings specifically, there are two key choices to flag.
 The first is that the key application is for simulations that start in 1850.
-While our dataset begins in year 1, the period from year 1 to year 1849 has been checked far less carefully
+While our dataset begins in year 1, the period from year 1 to year 1849 has been checked in far less details
 and therefore should be considered carefully before being used for studies that focus on the pre-1850 period.
 The second is that we combine multiple data sources in a relatively crude way.
 For studies that required greater precision or specificity, e.g. inversion studies,
-these choices would likely need to be considered much more carefully.
+these choices might result to be inadequate.
