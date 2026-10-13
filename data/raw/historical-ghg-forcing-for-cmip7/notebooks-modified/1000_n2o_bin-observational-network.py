@@ -172,7 +172,7 @@ bin_averages
 # %%
 # Added for the CMIP7 GHG manuscript.
 # The original run never saved `all_data_with_bins` out,
-# but we need it to show the observational network in the manuscript.
+# but we need it to show the observation network in the manuscript.
 from pathlib import Path
 
 manuscript_out_file = Path("manuscript-outputs/n2o_all-data-with-bins.csv")
