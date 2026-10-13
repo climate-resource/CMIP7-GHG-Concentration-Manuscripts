@@ -11,7 +11,7 @@ Paths are relative to `manuscripts/historical-ghg-forcing-for-cmip7/` unless sta
 
 The section each item came from is in parentheses (see Done for the context).
 
-- [ ] add compilation instructions to the README
+- [x] add compilation instructions to the README
 - [ ] recompile in full with the force flag
 - [ ] label seasonality as 'relative seasonality' in the places where that is what it is
 - [ ] check subplots g) and h) of all plots
