@@ -8,27 +8,6 @@ for reasons of clarity and accuracy, we describe the method in full.
 \subsection{General approach}
 \label{ssec:methods-general-approach}
 
-In line with \citet{meinshausen_historical-ghgs_2017},
-we provide datasets of atmospheric concentrations for a wide selection of greenhouse gases.
-Throughout, we use `concentration' as shorthand.
-Strictly, all of our values are mole fractions in dry air
-(the quantity reported by the observation networks and ice core records that we use,
-as in Section~2 of \citealp{meinshausen_historical-ghgs_2017}),
-rather than mole fractions in the real, i.e. humid, atmosphere.
-Our output files use CF standard names of the form \texttt{mole\_fraction\_of\_X\_in\_air}
-(e.g. \texttt{mole\_fraction\_of\_carbon\_dioxide\_in\_air}, \citealp{eaton_cf-conventions_2026}).
-The CF standard names do not state whether these \texttt{\_in\_air} names include the effect of water vapour.
-For CO_2, CH_4 and N_2O, there are standard names of the form \texttt{mole\_fraction\_of\_X\_in\_dry\_air},
-which are explicit, so there is likely a metadata error here (see Sect.~\ref{sec:discussion}).
-Regardless of any error, our values are dry-air mole fractions.
-% The two differ by the water vapour content of the air,
-% which can be up to a few percent near the surface.
-% Whether and how to convert these values to mole fractions in humid air
-% is a model-specific implementation choice that we leave to modelling teams.
-We provide the data at monthly resolution and include latitudinal variations.
-No dependency on longitude is provided.
-For a brief discussion on how add a vertical dimension to these datasets, see Sect.~\ref{ssec:methods-vertical}.
-
 For all greenhouse gases, the first dataset
 % value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
 that we generate has monthly temporal resolution and 15\textdegree~latitudinal spatial resolution.
@@ -666,14 +645,14 @@ as they explain almost all of the variance (Fig.~\ref{fig:methods-appendix-co2}f
 The retained EOFs and PCs are shown in Figs.~\ref{fig:methods-co2}f) and~\ref{fig:methods-appendix-co2}g) respectively.
 
 \textbf{Seasonality.}
-CO_2's seasonality is influenced by absolute values of CO_2, so a more sophisticated approach is needed.
 
 The (absolute) seasonality is calculated as for N_2O (Sect.~\ref{sssec:methods-n2o-pca}, Fig.~\ref{fig:methods-co2}e)).
-On top of this seasonality, we also calculate EOFs and PCs for the change in seasonality over time.
+Following \citet{meinshausen_historical-ghgs_2017}, on top of this `base' seasonality,
+we also calculate EOFs and PCs for the change in seasonality over time.
 These are calculated by taking the seasonality and the residuals from which the seasonality was derived.
 We then calculate the difference between these two, which we call `seasonality anomalies'.
 We then perform singular value decomposition on these seasonality anomalies.
-This is done by stacking the data so it has one dimension which is 'year'
+This is done by stacking the data so it has one dimension which is `year'
 while the other dimension combines latitude and month
 so that the singular value decomposition has a 2D dataset to work with.
 As for the latitudinal gradient, we convert the singular value decomposition results into EOFs and PCs.
@@ -1116,7 +1095,11 @@ from the SSP2-4.5 scenario (which includes the historical period) in the RCMIP v
 Using a more up-to-date historical dataset would clearly be an improvement,
 but this did not happen in time for the CMIP7 data release.
 Using a scenario for the period from 2015 to 2023, rather than a historical based estimate, is not the ideal approach.
-It is however acceptable because historical emissions have approximately followed SSP2-4.5 for these gases.
+It is however acceptable because historical emissions have approximately followed SSP2-4.5 for these gases
+and the emissions estimates are only used to derive the dependence of the latitudinal gradient on emissions,
+rather than directly influencing the global-mean
+(with \citealp{meinshausen_historical-ghgs_2017} showing that the latitudinal gradient
+has only a relatively small effect on CMIP-style ESM simulations).
 Using this regression, we then extend the PC back to 1750,
 the first year reported in the RCMIP v5.1.0 emissions dataset.
 Before 1750, we keep the PC constant (Fig.~\ref{fig:methods-cfc12}h)).
