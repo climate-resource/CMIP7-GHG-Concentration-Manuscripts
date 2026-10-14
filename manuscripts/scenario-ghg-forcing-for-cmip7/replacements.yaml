@@ -1,0 +1,62 @@
+# Applied in order (see `apply_replacements` in src/local/gmd_latex.py),
+# so a key must come before any key it contains (e.g. CFC-11-eq before CFC-11),
+# otherwise the longer key never matches.
+# Every command is \protect-ed, so the replacements also work in moving arguments
+# (section headings, captions), where fragile commands like \nobreakdash otherwise break the build.
+# The source writes halocarbons in their hyphenated form (CFC-12, HFC-134a-eq, HFC-43-10mee),
+# so there are no entries for the unhyphenated forms (CFC12, HFC134a).
+CO_2: CO\protect\textsubscript{2}
+CO2: CO\protect\textsubscript{2}
+CH_4: CH\protect\textsubscript{4}
+CH4: CH\protect\textsubscript{4}
+N_2O: N\protect\textsubscript{2}O
+N2O: N\protect\textsubscript{2}O
+SF_6: SF\protect\textsubscript{6}
+CF_4: CF\protect\textsubscript{4}
+C_2F_6: C\protect\textsubscript{2}F\protect\textsubscript{6}
+C_3F_8: C\protect\textsubscript{3}F\protect\textsubscript{8}
+C_4F_10: C\protect\textsubscript{4}F\protect\textsubscript{10}
+cC_4F_8: c-C\protect\textsubscript{4}F\protect\textsubscript{8}
+C_5F_12: C\protect\textsubscript{5}F\protect\textsubscript{12}
+C_6F_14: C\protect\textsubscript{6}F\protect\textsubscript{14}
+C_7F_16: C\protect\textsubscript{7}F\protect\textsubscript{16}
+C_8F_18: C\protect\textsubscript{8}F\protect\textsubscript{18}
+CCl_4: CCl\protect\textsubscript{4}
+CFC-11-eq: CFC\protect\nobreakdash-11\protect\nobreakdash-eq
+CFC-113: CFC\protect\nobreakdash-113
+CFC-114: CFC\protect\nobreakdash-114
+CFC-115: CFC\protect\nobreakdash-115
+CFC-11: CFC\protect\nobreakdash-11
+CFC-12-eq: CFC\protect\nobreakdash-12\protect\nobreakdash-eq
+CFC-12: CFC\protect\nobreakdash-12
+CH_2Cl_2: CH\protect\textsubscript{2}Cl\protect\textsubscript{2}
+CH_3Br: CH\protect\textsubscript{3}Br
+CH_3CCl_3: CH\protect\textsubscript{3}CCl\protect\textsubscript{3}
+CH_3Cl: CH\protect\textsubscript{3}Cl
+CHCl_3: CHCl\protect\textsubscript{3}
+Halon-1211: Halon\protect\nobreakdash-1211
+Halon-1301: Halon\protect\nobreakdash-1301
+Halon-2402: Halon\protect\nobreakdash-2402
+HCFC-141b: HCFC\protect\nobreakdash-141b
+HCFC-142b: HCFC\protect\nobreakdash-142b
+HCFC-22: HCFC\protect\nobreakdash-22
+HFC-125: HFC\protect\nobreakdash-125
+HFC-134a-eq: HFC\protect\nobreakdash-134a\protect\nobreakdash-eq
+HFC-134a: HFC\protect\nobreakdash-134a
+HFC-143a: HFC\protect\nobreakdash-143a
+HFC-152a: HFC\protect\nobreakdash-152a
+HFC-227ea: HFC\protect\nobreakdash-227ea
+HFC-236fa: HFC\protect\nobreakdash-236fa
+HFC-23: HFC\protect\nobreakdash-23
+HFC-245fa: HFC\protect\nobreakdash-245fa
+HFC-32: HFC\protect\nobreakdash-32
+HFC-365mfc: HFC\protect\nobreakdash-365mfc
+HFC-43-10mee: HFC\protect\nobreakdash-43\protect\nobreakdash-10mee
+NF_3: NF\protect\textsubscript{3}
+SO_2F_2: SO\protect\textsubscript{2}F\protect\textsubscript{2}
+W/m^2: W/m\protect\textsuperscript{2}
+W/m2: W/m\protect\textsuperscript{2}
+W / m^2: W/m\protect\textsuperscript{2}
+W / m2: W/m\protect\textsuperscript{2}
+<: \protect\textless
+global-, annual-mean: global\protect\nobreakdash-, annual\protect\nobreakdash-mean

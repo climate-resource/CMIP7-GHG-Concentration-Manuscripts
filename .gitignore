@@ -31,6 +31,11 @@ __pycache__/
 # Jupyter cache
 .jupyter_cache
 
+# pytask's database and lock file
+# (they record what was built on this machine, so mean nothing anywhere else)
+.pytask/
+pytask.lock
+
 # Notebooks (track as .py via jupytext instead)
 *.ipynb
 
@@ -174,6 +179,9 @@ dmypy.json
 # These negations must come last, so they beat the *.ipynb rule above.
 !data/raw/historical-ghg-forcing-for-cmip7/
 !data/raw/historical-ghg-forcing-for-cmip7/**
+# Likewise for the scenario run (https://zenodo.org/records/21501391).
+!data/raw/scenario-ghg-forcing-for-cmip7/
+!data/raw/scenario-ghg-forcing-for-cmip7/**
 
 # Comparison data which its providers revise in place
 # (NOAA's trends data every month, the Global Methane Budget's supplement),

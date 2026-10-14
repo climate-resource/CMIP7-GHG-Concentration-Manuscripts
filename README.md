@@ -77,6 +77,12 @@ Using `nbconvert` for converting notebooks to PDF requires the following install
 bash scripts/create-cmip7-historical-ghgs-manuscript.sh
 ```
 
+### Scenario forcings manuscript
+
+```sh
+bash scripts/create-cmip7-scenario-ghgs-manuscript.sh
+```
+
 ### Historical data user guide
 
 ```sh

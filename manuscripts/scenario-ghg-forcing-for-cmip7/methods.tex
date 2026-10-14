@@ -1,0 +1,30 @@
+\section{Methods}
+\label{sec:methods}
+
+% Placeholder. See manuscript-planning.md for the plan.
+For gases whose concentrations are the same in every scenario, like CCl_4,
+we infer the emissions which are consistent with the concentrations
+by inverting a one-box model (Fig.~\ref{fig:ccl4-inverse-emissions}).
+In 2100, the inferred CCl_4 emissions are around 52~kt~yr$^{-1}$
+% value-check: {"tag": "ccl4-inverse-emissions-2100", "unit": "kt CCl4 / yr", "lower": 51.5, "upper": 52.5}
+(Table~\ref{tab:ccl4-summary}).
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@ccl4-inverse-emissions-figure@}
+\caption{
+    Inversion of the CCl_4 concentrations.
+    a) Monthly-mean concentrations and the concentrations from running the inferred emissions
+    back through the one-box model.
+    b) Inferred (inverse) emissions.
+}
+\label{fig:ccl4-inverse-emissions}
+\end{figure}
+
+\begin{table}[t]
+\caption{
+    CCl_4 concentrations (from the one-box model)
+    and inverse emissions in selected years.
+}
+\label{tab:ccl4-summary}
+@ccl4-summary-table@
+\end{table}

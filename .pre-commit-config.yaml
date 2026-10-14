@@ -13,13 +13,13 @@ repos:
       - id: debug-statements
       - id: detect-private-key
       - id: end-of-file-fixer
-        exclude: "^data/raw/historical-ghg-forcing-for-cmip7/notebooks-executed/"
+        exclude: "^data/raw/(historical|scenario)-ghg-forcing-for-cmip7/notebooks-executed/"
       - id: fix-byte-order-marker
-        exclude: "^data/raw/historical-ghg-forcing-for-cmip7/notebooks-executed/"
+        exclude: "^data/raw/(historical|scenario)-ghg-forcing-for-cmip7/notebooks-executed/"
       - id: mixed-line-ending
-        exclude: "^data/raw/historical-ghg-forcing-for-cmip7/notebooks-executed/"
+        exclude: "^data/raw/(historical|scenario)-ghg-forcing-for-cmip7/notebooks-executed/"
       - id: trailing-whitespace
-        exclude: "^data/raw/historical-ghg-forcing-for-cmip7/notebooks-executed/"
+        exclude: "^data/raw/(historical|scenario)-ghg-forcing-for-cmip7/notebooks-executed/"
   - repo: local
     hooks:
       # Prevent committing .rej files
