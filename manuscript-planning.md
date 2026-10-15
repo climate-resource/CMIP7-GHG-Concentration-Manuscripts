@@ -6,6 +6,7 @@ Notes from reading Meinshausen at al 2020 (M20): https://gmd.copernicus.org/arti
 - abstract
     - ScenarioMIP overarching exercise for scenario projections, exploring range of future climates to inform mitigation decisions and adaptation planning
     - Here we provide the GHG concentrations to use in both the 'main' experiment and their extensions, based on a smooth harmonisation with the historical timeseries
+    - also used for other experiments. We show PolMIP vl-cf concentrations here as illustration of this
     - some key numbers: range of CO2 concentrations and CH4 concentrations ? GHG ERF range too ?
     - Speed required, which means tradeoffs: "Results will inevitably differ from ESM outputs for same input emissions, but the need for speed means that we cannot use ESMs to produce these boundary conditions instead."
     - available for modelling teams to use.
@@ -26,7 +27,7 @@ Notes from reading Meinshausen at al 2020 (M20): https://gmd.copernicus.org/arti
     - one box model for some gases for clarity and simplicity and consistency with underlying lifetime assessments
     - roll straight off the end of historical, to ensure consistency with scenario emissions (which are harmonised to 2023 values) [find a better way to word and explain this]
     - lean on M20 for methods re extending seasonality and lat. gradients
-    - refer to other papers for emissions harmonisation and infilling (use emissions-driven for everything for running MAGICC, slight inconsistency from prescribing the concentrations that are generated in other ways, but ok, minor and these are sensible boundary conditions, not the only answer)
+    - refer to other papers for emissions harmonisation and infilling that doesn't belong here (use emissions-driven for everything for running MAGICC, slight inconsistency from prescribing the concentrations that are generated in other ways, but ok, minor and these are sensible boundary conditions, not the only answer)
     - extensions based on extended emissions (refer to other paper, again slight inconsistency as above, ok)
     - harmonisation of concentrations: gradient preserving
 
@@ -35,16 +36,16 @@ Notes from reading Meinshausen at al 2020 (M20): https://gmd.copernicus.org/arti
     - radiative forcing
     - don't repeat tables of output
     - comparison with CMIP6
+    - plot comparison series so we can talk about difference compared to last three years (2023, 2024, 2025) already
 
 - discussion
     - reasons for differences with CMIP6
-    - don't discuss recent obs, save that for extension paper
     - changes in context of long-term records
     - no ESM simluations for lat. gradients and seasonality
     - harmonisation still not perfect
 
 - limitations (can also blend with discussion)
-    - limited number of scenarios, relative to 'full range' (use non-markers and maybe AR6 db for 'full range')
+    - limited number of scenarios, relative to theoretical 'full range'
     - sequential scenario generation process i.e. best-estimate after CMIP7 will certainly differ from the 'pre CMIP7 ESM runs' we provide here. Can't be avoided, don't @ us
 
 - climate paper abstract
