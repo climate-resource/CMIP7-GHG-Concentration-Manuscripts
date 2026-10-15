@@ -3,13 +3,6 @@ Scenarios manuscript:
 Notes from reading Meinshausen at al 2020 (M20): https://gmd.copernicus.org/articles/13/3571/2020/gmd-13-3571-2020.pdf
 
 - invite all input data people to be co-authors
-- abstract
-    - ScenarioMIP overarching exercise for scenario projections, exploring range of future climates to inform mitigation decisions and adaptation planning
-    - Here we provide the GHG concentrations to use in both the 'main' experiment and their extensions, based on a smooth harmonisation with the historical timeseries
-    - also used for other experiments. We show PolMIP vl-cf concentrations here as illustration of this
-    - some key numbers: range of CO2 concentrations and CH4 concentrations ? GHG ERF range too ?
-    - Speed required, which means tradeoffs: "Results will inevitably differ from ESM outputs for same input emissions, but the need for speed means that we cannot use ESMs to produce these boundary conditions instead."
-    - available for modelling teams to use.
 
 - introduction
     - ScenarioMIP exists, part of wider infrastructure/effort
