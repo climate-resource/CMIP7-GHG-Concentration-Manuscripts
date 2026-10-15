@@ -1,5 +1,110 @@
-% Placeholder. See manuscript-planning.md for the plan.
-The Scenario Model Intercomparison Project for CMIP7 \citep{van-vuuren_scenariomip_2025}
-provides the scenarios which climate models run into the future.
-Many of these models need the greenhouse gas concentrations of each scenario as an input,
-which is what we provide here.
+% ZNTODO:
+% - consider adding paragraphs about need for standardisation, production of forcings, harmonisation etc.
+
+% ZNTODO: this paragraph is a bit of a mess and probably trying to say too much. Come back to it
+The seventh phase of the Coupled Model Intercomparison Project (CMIP7) is in progress \citep{dunne_cmip7_2025}.
+Within CMIP7, there are a range of experiments.
+Here we consider experiments which explore future climate change.
+These experiments provide insights into the future climate change that is consistent with the forcings that define each experiment.
+However, they have applications beyond this.
+As discussed in [TODO cite SSP paper], there can be more than one way,
+specifically set of underlying socioeconomic assumptions,
+to produce forcings consistent with each experiment.
+As a result, these experiments not only provide information about future climate change under the specific assumptions made in their underlying scenario,
+but also future climate change in any other scenario which results in forcings that are consistent with the experiment's forcings
+(where consistency is not defined here and what meets the requirements of conistency will depend on the intended use case).
+This means that they are a key link point between various socioeconomic explorations
+and the resulting future climate change
+(this link is extremely valuable because of the cost of running an ESM: we cannot run an ESM for every set of forcings of interest,
+so having ESM output for a range of forcing sets, which covers many potential variations, is key to allow for an at least approximate estimate of future climate change under any set of underlying assumptions).
+
+Within CMIP7's exploration of possible futures, the most well known effort is ScenarioMIP [TODO other citations] \citep{van-vuuren_scenariomip_2025}.
+ScenarioMIP's remit is to explore future climate change under a selected range of possible boundary conditions
+(with the question of what to select being the key choice for the ScenarioMIP team to make,
+given that not all possible boundary conditions can be run by ESMs).
+In CMIP7, ScenarioMIP explores scenarios
+% ZNTODO: add reference to underlying papers for each scenario here
+that range from very low future emissions (the VL scenario) to high emissions (the H scenario),
+stepping through
+low followed by (very) negative emissions (LN);
+low emissions (L), approximately at the top of the range that could be considered consistent with the Paris Agreement [TODO cite];
+medium followed by low emissions (ML);
+medium emissions (M), approximately in line with countries' current Nationally Determined Contributions (NDCs) [TODO cite PA];
+and high followed by low (and then negative) emissions (HL) \citep[for full details see ][]{van-vuuren_scenariomip_2025} [TODO add Riahi citation here].
+Beyond ScenarioMIP, other efforts are also being setup.
+Here we illustrate our support for such efforts by also presenting the GHG forcings for PolMIP's [TODO check citation] VL-CF experiment.
+VL-CF is a counterfactural experiment in which emissions are reduced from the start of 2016 onwards (i.e. just after the signing of The Paris Agreement)
+such that global-mean temperatures peak at around 1.5~\textdegree C (according to AR6 science).
+
+There is an increasing move towards emissions-driven capability in ESMs.
+At this stage, CO_2 emissions-driven capability is close to mainstream,
+while some early adopters also have CH_4 and N_2O emissions-driven capability.
+For these teams, the CO_2, CH_4 and N_2O concentrations provided here are not needed.
+However, for all other teams, there is still a reliance on our provided concentrations.
+For species other than CO_2, CH_4 and N_2O, all models will rely on our provided GHG concentration forcings as far as we are aware.
+The production of GHG concentration forcings for all species also facilitates concentration-driven experiments,
+which can be key to understanding uncertainties in modelling of Earth's carbon cycle.
+
+Here we describe how the GHG concentration forcings are produced for CMIP7's future-focussed experiments.
+We present the datasets which are already available (specifically ScenarioMIP's experiments and PolMIP's VL-CF experiment)
+and note that the production of any other dataset used in CMIP7's future-focussed experiments is likely to follow the same methodology.
+
+% The rest of this isn't really introduction.
+% We could split out a separate section, let's see what feedback we get.
+We do not document how to use these forcings in each experiment.
+As noted in [TODO ref to historical paper], such documentation is best left to the CMIP7 guidance pages
+because these pages are kept up to date in real time
+(see \newline \mbox{\url{https://wcrp-cmip.github.io/cmip7-guidance/docs/CMIP7/Experiment_set_up_and_Forcings/}})
+or papers describing the experiments themselves
+(although these are scientific documents so cannot be easily updated
+so our recommendation is still to treat the guidance pages as the most reliable source of up-to-date information).
+The GHG forcings described here will also be used in a number of other experiments that we do not enumerate here.
+As above, please see the guidance pages at
+\newline \mbox{\url{https://wcrp-cmip.github.io/cmip7-guidance/docs/CMIP7/Experiment_set_up_and_Forcings/}}
+or the papers describing the experiments for details about which forcings to use
+and how to implement them in your model.
+
+As is also noted in [TODO ref to historical paper], how to record which forcings were used in a simulation
+(e.g. how to choose the forcing index, i.e. the `f' in variant labels like `r1i1p1f1')
+is not yet settled.
+Users should consult the introduction of the guidance pages \newline
+(\mbox{\url{https://wcrp-cmip.github.io/cmip7-guidance/docs/CMIP7/Experiment_set_up_and_Forcings/}}),
+check back for updates frequently and use the guidance pages as the primary source of information.
+Following \newline \mbox{\url{https://github.com/PCMDI/input4MIPs_CVs/issues/415}}
+may also help track discussions based on a concrete use case.
+Recommendations that appear in papers, including this one,
+should only be used as a secondary source, because they can quickly become outdated.
+If the recommendations are still unclear or not defined when users are producing their model output files,
+we encourage the teams to throughly document their `f' mapping so that this information
+can be provided to users once an agreed communication format has been agreed.
+
+In line with the historical concentrations [CITE historical paper],
+all of our values are mole fractions in dry air.
+However, throughout, we use `concentration' as shorthand.
+As noted in [TODO ref historical paper],
+our output files use CF standard names of the form \texttt{mole\_fraction\_of\_X\_in\_air}
+(e.g. \texttt{mole\_fraction\_of\_carbon\_dioxide\_in\_air}, \citealp{eaton_cf-conventions_2026}).
+The CF standard names do not state whether these \texttt{\_in\_air} names include the effect of water vapour.
+For CO_2, CH_4 and N_2O, there are standard names of the form \texttt{mole\_fraction\_of\_X\_in\_dry\_air},
+which are explicit, so there is likely a metadata error here (see Sect.~\ref{sec:discussion}).
+Regardless of any metadata error, our values are dry-air mole fractions, consistent with the historical dataset.
+
+The output datasets are provided at different spatial and temporal resolutions.
+We provide both monthly and yearly datasets,
+as well as global-means, hemispheric-means and datasets that include latitudinal variations.
+No dependency on longitude is provided.
+For a brief discussion on how add a vertical dimension to these datasets, see Sect.~[TODO number] of [TODO cite historical paper].
+
+The output datasets extend from year 2022 to the end of 2500.
+The CMIP7 historical experiment runs to the end of 2021,
+so this means that users can use the scenario datasets from the end of their historical simulations
+(2022 is also included in the historical datasets, but users should use the scenario datasets for 2022 values where they can
+although the difference between the two is negligible).
+The output data is split by experiment
+and into `main' (up until the end of 2100) and extensions (2101 to the end of 2025).
+As above, see the guidance pages \newline
+(\mbox{\url{https://wcrp-cmip.github.io/cmip7-guidance/docs/CMIP7/Experiment_set_up_and_Forcings/}})
+for specific information about how to find and use the datasets needed for each experiment.
+The set of GHGs made available matches the historical set [TODO cite historical paper]
+and the set provided for CMIP6's ScenarioMIP experiments \citep{meinshausen_ssp-ghgs_2020},
+including the same set of equivalent species.

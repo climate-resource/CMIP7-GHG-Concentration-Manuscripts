@@ -4,17 +4,12 @@ Notes from reading Meinshausen at al 2020 (M20): https://gmd.copernicus.org/arti
 
 - invite all input data people to be co-authors
 
-- introduction
-    - ScenarioMIP exists, part of wider infrastructure/effort
-    - provide data for the ScenarioMIP scenarios, which range from X to Y via (one para description of scenarios, then reference overview paper for the rest of the info, tier information etc.)
-    - in terms of technical details/requirements, within ScenarioMIP, range of climate models participate. Increasingly CO2 and CH4 emissions-driven capability, but still requirement for consistent GHG concentrations for other spcecies and to support models without this capability
-    - want consistency with underlying emissions/scenarios (to facilitate later cross WG analysis), hence need to produce concentrations with a model that is emissions-driven. Model also needs to be fast, hence use SCMs, specifically MAGICC for its demonstrated ESM-emulation ability and use in IPCC reports.
-    - also require harmonisation with historical dataset to avoid spurious jumps in the transition from history to scenario. Build on historical data.
-
 - requirements
     - need to be informed by history, but able to project into the future based on what comes out of IAMs alone: this is limiting and is why our simple approach is used - it allows us to get all the way back to year 1 and all the way forward to 2500
 
 - methods [break down more like historical. Describe general idea, then specific implementation for various gases]
+    - want consistency with underlying emissions/scenarios (to facilitate later cross WG analysis), hence need to produce concentrations with a model that is emissions-driven. Model also needs to be fast, hence use SCMs, specifically MAGICC for its demonstrated ESM-emulation ability and use in IPCC reports.
+    - also require harmonisation with historical dataset to avoid spurious jumps in the transition from history to scenario. Build on historical data.
     - MAGICC (same model used for CMIP5 and CMIP6). In this case, we use an interim version of MAGICC, MAGICC v7.6.0a3. Given time constraints etc., provides estimate aligned with AR6, but also including key update to methane natural feedbacks (see Trevor's paper).
     - WMO 2022 and Western for some sources
     - one box model for some gases for clarity and simplicity and consistency with underlying lifetime assessments
