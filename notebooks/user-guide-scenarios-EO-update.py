@@ -41,8 +41,7 @@
 # generation pipeline, and then using those concentrations in the CMIP7 scenario concentration
 # generation pipeline.
 #
-# In this document, we will describe both the
-# original dataset and the updated version, to have a complete and self-contained description. This means this document contains
+# In this document, to have a complete and self-contained description, we include
 # duplicated information from the user guide: ‘CMIP7 Greenhouse Gas (GHG) Concentration Forcing Scenarios Dataset’
 
 # %% [markdown] editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
@@ -111,7 +110,7 @@ EO_UPDATE_DATA_ROOT = (
     / "ScenarioMIP"
     / "CR"
 )
-EO_UPDATE_DATA_VERSION = "v20261001"
+EO_UPDATE_DATA_VERSION = "v20261014"
 EO_UPDATE_GASES = ("co2", "ch4")
 
 # Historical data: the EO-updated historical dataset ("EO-CMIP7"),
@@ -196,6 +195,7 @@ def load_eo_update_scenarios(ghg, time_sampling, grid, include_ext=True):
 
 
 # %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# (dataset-construction)=
 # # Dataset construction
 #
 # The original CMIP7 scenarios GHG concentration dataset (produced without using satellite data)
@@ -224,7 +224,8 @@ def load_eo_update_scenarios(ghg, time_sampling, grid, include_ext=True):
 #          almost by definition, produce different concentrations
 #          than those outputed by the ESMs run in emissions-driven mode.
 #     1. harmonise the global-mean concentrations to the historical
-#        concentrations using gradient-aware harmonisation[^gah] to ensure a smooth
+#        concentrations,
+#        using gradient-aware harmonisation[^gah] to ensure a smooth
 #        transition in both the absolute values and the gradient, improving on the
 #        CMIP6 data which had an abrupt jump in the gradient (most notable for
 #        methane, further details below)
@@ -254,14 +255,14 @@ def load_eo_update_scenarios(ghg, time_sampling, grid, include_ext=True):
 # The updated dataset (produced by adding satellite data information, hereafter referred to as EO-Scenarios) is produced with the same methodology, save from the fact that the historical global means, seasonality, and latitudinal gradients of the historical period are taken from the EO-CMIP7 dataset, described in the user guide: 'Adding Earth Observation data to the generation of CMIP7 CO₂ and CH₄ Concentration Historical Dataset'. In short, it is a concentration dataset produced with the same methods as the GHG CMIP7 concentrations, but with an added observation dataset coprised of satellite observations pre-processed to be consistent with ground based observations.
 #
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
 # # Finding and accessing the data
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Zenodo
 #
-# In order to provide more
-# reliable, citable access to the data, we also provide it on Zenodo {raw-latex}`\parencite{zenodo}`. The data, as well as all the source code
+# In order to provide
+# reliable, citable access to the data, we provide it on Zenodo {raw-latex}`\parencite{zenodo}`. The data, as well as all the source code
 # and input data used to process it, can be found at
 #
 # [TODO: add data on zenodo, put link here]
@@ -977,9 +978,108 @@ plt.show()
 # name: "ds-co2-monthly-lat-fig"
 # ---
 #
-# Illustration of the spatial mean nature of the latitudinally-resolved datasets
-# (here shown for the year 2022 for CO{raw-latex}`\textsubscript{2}`
-# but the same idea applies to all latitudinally-resolved datasets).
+# Illustration of the spatial mean nature of the latitudinally-resolved datasets,
+# here shown for the year 2022 for CO{raw-latex}`\textsubscript{2}`.
+# Each value represents the average over its latitude bounds, not point values.
+# As a result, they should be plotted with steps or scatters
+# rather than an interpolated line.
+# ```
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# CH4 example files (EO-updated), analogous to the CO2 ones above
+ch4_monthly_lat_fps = get_eo_update_local_files(
+    ghg="ch4", time_sampling="mon", grid="gnz"
+)
+ch4_monthly_global_fps = get_eo_update_local_files(
+    ghg="ch4", time_sampling="mon", grid="gm"
+)
+
+ds_example_ch4_monthly_lat = xr.open_mfdataset(
+    next(v for v in ch4_monthly_lat_fps if "ext" not in str(v)),
+    decode_times=time_coder,
+    data_vars=None,
+    compat="no_conflicts",
+).compute()
+ds_example_ch4_monthly_global = xr.open_mfdataset(
+    next(v for v in ch4_monthly_global_fps if "ext" not in str(v)),
+    decode_times=time_coder,
+).compute()
+ds_example_ch4_yearly_global = xr.open_dataset(
+    next(v for v in ch4_yearly_global_fps if "ext" not in str(v)),
+    decode_times=time_coder,
+).compute()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# The same plot for CH{raw-latex}`\textsubscript{4}` is shown in {numref}`Figure %s <ds-ch4-monthly-lat-fig>`.
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+ds_plt = ds_example_ch4_monthly_lat.isel(time=slice(None, 12))
+
+
+def get_label_for_month(inds: xr.Dataset) -> str:
+    """
+    Get the label for a given month of data
+    """
+    year = int(inds["time"].dt.year)
+    month_name = calendar.month_name[int(inds["time"].dt.month)]
+
+    return f"{year} - {month_name}"
+
+
+mosaic_flat = [get_label_for_month(ds_plt.sel(time=time)) for time in ds_plt["time"]]
+
+mosaic = [mosaic_flat[3 * i : 3 * (i + 1)] for i in range(len(mosaic_flat) // 3)]
+
+fig, axes_d = plt.subplot_mosaic(mosaic, figsize=(8, 9), sharey=True, sharex=True)
+
+for time in ds_plt["time"]:
+    ds_plt_time = ds_plt.sel(time=time)
+    label = get_label_for_month(ds_plt_time)
+
+    axes_d[label].scatter(
+        x=ds_plt_time["ch4"].values,
+        y=ds_plt_time["lat"].values,
+        s=10,
+        label=label,
+    )
+
+    for bounds, val in zip(ds_plt_time["lat_bnds"].values, ds_plt_time["ch4"].values):
+        axes_d[label].plot(
+            [val, val], bounds, color="tab:blue", linewidth=1.0, alpha=0.7
+        )
+
+    yticks = np.arange(-90, 91, 15.0)
+    axes_d[label].set_yticks(yticks)
+    axes_d[label].set_ylim(yticks[0], yticks[-1])
+    # axes_d[label].set_ylabel("Latitude (degrees north)")
+
+    # axes_d[label].set_xlabel("ch4 [ppb]")
+    axes_d[label].grid()
+    axes_d[label].set_title(label, fontsize="small")
+
+for month in [1, 4, 7, 10]:
+    axes_d[f"2022 - {calendar.month_name[month]}"].set_ylabel(
+        "Latitude (degrees north)"
+    )
+
+for month in range(10, 13):
+    axes_d[f"2022 - {calendar.month_name[month]}"].set_xlabel("ch4 [ppb]")
+# ax.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
+
+plt.tight_layout()
+
+glue("ds-ch4-monthly-lat-fig", fig, display=False)
+plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-ch4-monthly-lat-fig
+# ---
+# width: 600px
+# name: "ds-ch4-monthly-lat-fig"
+# ---
+#
+# Illustration of the spatial mean nature of the latitudinally-resolved datasets,
+# here shown for the year 2022 for CH{raw-latex}`\textsubscript{4}`.
 # Each value represents the average over its latitude bounds, not point values.
 # As a result, they should be plotted with steps or scatters
 # rather than an interpolated line.
@@ -1042,6 +1142,59 @@ plt.show()
 # ```
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
+# The same plot for CH{raw-latex}`\textsubscript{4}` is shown in {numref}`Figure %s <ds-ch4-monthly-lat-v-global-fig>`.
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+fig, ax = plt.subplots(figsize=(8, 4))
+
+time_slice = slice(None, 5 * 12)
+
+ds_plt = ds_example_ch4_monthly_global.isel(time=time_slice)
+ds_plt["ch4"].plot.scatter(
+    ax=ax, label="global-mean", color="tab:blue", s=30, zorder=10.0
+)
+
+for bounds, val in zip(ds_plt["time_bnds"].values, ds_plt["ch4"].values):
+    ax.plot(bounds, [val, val], color="tab:blue", linewidth=1.0, alpha=0.7)
+
+ds_all_lats = ds_example_ch4_monthly_lat.isel(time=time_slice)
+
+for i, lat in enumerate(sorted(ds_all_lats["lat"])[::-1]):
+    ds_plt = ds_all_lats.sel(lat=lat)
+    colour = matplotlib.colormaps["magma"](i / len(ds_all_lats["lat"]))
+
+    ds_plt["ch4"].plot.scatter(
+        ax=ax, label=f"{float(lat)}", color=colour, marker="x", s=10
+    )
+
+    for bounds, val in zip(ds_plt["time_bnds"].values, ds_plt["ch4"].values):
+        ax.plot(bounds, [val, val], color=colour, linewidth=1.0, alpha=0.7)
+
+ax.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
+
+xticks = [cftime.DatetimeGregorian(y, 1, 1) for y in range(2022, 2028)]
+ax.set_xticks(xticks)
+ax.set_xlim(xticks[0], xticks[-1])
+ax.grid()
+ax.set_title("")
+
+glue("ds-ch4-monthly-lat-v-global-fig", fig, display=False)
+plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-ch4-monthly-lat-v-global-fig
+# ---
+# width: 550px
+# name: "ds-ch4-monthly-lat-v-global-fig"
+# ---
+#
+# Comparison of global-, monthly-mean data with latitudinally-resolved, monthly-mean data
+# for CH{raw-latex}`\textsubscript{4}`.
+# The latitudinal variation, particularly the strong difference in amplitude depending on latitude,
+# is a notable feature of the dataset.
+# ```
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # The data can also be plotted in a so-called "magic carpet"
 # to see the variation in space and time simultaneously
 # ({numref}`Figure %s <ds-co2-magic-carpet-fig>`).
@@ -1097,11 +1250,64 @@ plt.show()
 # ```
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
+# The same plot for CH{raw-latex}`\textsubscript{4}` is shown in {numref}`Figure %s <ds-ch4-magic-carpet-fig>`.
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+fig = plt.figure(figsize=(8, 6))
+ax = fig.add_subplot(projection="3d")
+
+tmp = ds_example_ch4_monthly_lat["ch4"].isel(time=range(10 * 12)).copy()
+tmp = tmp.assign_coords(time=tmp["time"].dt.year + tmp["time"].dt.month / 12)
+# Interpolate so the plot shows the step nature
+tmp = tmp.interp(
+    coords=dict(
+        time=np.linspace(
+            tmp["time"].values[0], tmp["time"].values[-1], tmp["time"].size * 10
+        )
+    ),
+    method="nearest",
+).interp(
+    coords=dict(
+        lat=np.linspace(
+            tmp["lat"].values[0], tmp["lat"].values[-1], tmp["lat"].size * 10
+        )
+    ),
+    method="nearest",
+)
+
+tmp.plot.surface(
+    x="time",
+    y="lat",
+    ax=ax,
+    cmap="magma_r",
+    levels=30,
+    # alpha=0.7,
+)
+
+ax.view_init(15, -135, 0)
+
+plt.tight_layout()
+glue("ds-ch4-magic-carpet-fig", fig, display=False)
+plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-ch4-magic-carpet-fig
+# ---
+# width: 500px
+# name: "ds-ch4-magic-carpet-fig"
+# ---
+#
+# So-called 'magic carpet' plot.
+# This illustrates the variation in time and space simultaneously.
+# Here this is illustrated with the CH{raw-latex}`\textsubscript{4}` dataset.
+# ```
+
+# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
 # ## Transition from history
 #
 # Just like for the baseline CMIP7 Scenarios forcings datasets and their respective CMIP7 historical forcings, each dataset of EO-Scenarios transitions smoothly from the historical data updated with EO observations, EO-CMIP7.
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Annual-, global-mean data
 #
 # We start with the annual- , global-mean data
@@ -1177,12 +1383,80 @@ plt.show()
 # The transition is smooth, preserving both the absolute value and gradient
 # at the transition point (also known as the 'harmonisation point').
 # Here this is illustrated with the CO{raw-latex}`\textsubscript{2}` dataset
-# for a single scenario, but the same applies to methane and all scenarios.
+# for a single scenario, but the same applies to all scenarios.
 # ```
 #
 # {raw-latex}`\newpage`
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# The same plot for CH{raw-latex}`\textsubscript{4}` is shown in {numref}`Figure %s <ds-ch4-transition-from-history-yearly-fig>`.
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+query_kwargs_ch4_yearly_global_history = {
+    **query_kwargs_ch4_yearly_global,
+    "cmip_era": "CMIP7",
+    "target_mip": "CMIP",
+}
+
+ds_history_ch4_yearly_global = fetch_and_load_history(
+    **query_kwargs_ch4_yearly_global_history
+).compute()
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+fig, ax = plt.subplots()
+
+
+def time_sel_func(
+    da: xr.DataArray, start_year: int, end_year: int
+) -> npt.NDArray[bool]:
+    """
+    Select times of interest
+    """
+    return (da.dt.year >= start_year) & (da.dt.year <= end_year)
+
+
+ds_history_ch4_yearly_global["ch4"].sel(
+    time=time_sel_func(
+        ds_history_ch4_yearly_global["time"], start_year=2010, end_year=2030
+    )
+).plot.scatter(
+    ax=ax,
+    edgecolors="none",
+    label=f"{ds_history_ch4_yearly_global.attrs['source_id']} (history)",
+)
+ds_example_ch4_yearly_global["ch4"].sel(
+    time=time_sel_func(
+        ds_example_ch4_yearly_global["time"], start_year=2010, end_year=2030
+    )
+).plot.scatter(
+    ax=ax,
+    edgecolors="none",
+    label=f"{ds_example_ch4_yearly_global.attrs['source_id']} (scenario)",
+)
+
+ax.set_xlim(cftime.DatetimeGregorian(2010, 1, 1), cftime.DatetimeGregorian(2030, 1, 1))
+ax.legend()
+glue("ds-ch4-transition-from-history-yearly-fig", fig, display=False)
+plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-ch4-transition-from-history-yearly-fig
+# ---
+# width: 500px
+# name: "ds-ch4-transition-from-history-yearly-fig"
+# ---
+#
+# Transition from the historical dataset to the future
+# in the global-, annual-mean dataset.
+# The transition is smooth, preserving both the absolute value and gradient
+# at the transition point (also known as the 'harmonisation point').
+# Here this is illustrated with the CH{raw-latex}`\textsubscript{4}` dataset
+# for a single scenario, but the same applies to all scenarios.
+# ```
+#
+# {raw-latex}`\newpage`
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Monthly-, global-mean data
 #
 # Next we consider the monthly, global-mean data
@@ -1249,12 +1523,81 @@ plt.show()
 # at the transition point (also known as the 'harmonisation point').
 # Here this is illustrated with the CO{raw-latex}`\textsubscript{2}` dataset
 # for a single scenario.
-# The same idea applies to methane and all scenarios.
+# The same idea applies to all other scenarios.
 # ```
 #
 # {raw-latex}`\newpage`
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# The same plot for CH{raw-latex}`\textsubscript{4}` is shown in {numref}`Figure %s <ds-ch4-transition-from-history-monthly-fig>`.
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+query_kwargs_ch4_monthly_global_history = {
+    **query_kwargs_ch4_yearly_global_history,
+    "time_sampling": "mon",
+}
+
+ds_history_ch4_monthly_global = fetch_and_load_history(
+    **query_kwargs_ch4_monthly_global_history
+).compute()
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+fig, ax = plt.subplots()
+
+
+def time_sel_func(
+    da: xr.DataArray, start_year: int, end_year: int
+) -> npt.NDArray[bool]:
+    """
+    Select times of interest
+    """
+    return (da.dt.year >= start_year) & (da.dt.year <= end_year)
+
+
+ds_history_ch4_monthly_global["ch4"].sel(
+    time=time_sel_func(
+        ds_history_ch4_monthly_global["time"], start_year=2010, end_year=2030
+    )
+).plot.scatter(
+    ax=ax,
+    edgecolors="none",
+    label=f"{ds_history_ch4_yearly_global.attrs['source_id']} (history)",
+)
+ds_example_ch4_monthly_global["ch4"].sel(
+    time=time_sel_func(
+        ds_example_ch4_monthly_global["time"], start_year=2010, end_year=2030
+    )
+).plot.scatter(
+    ax=ax,
+    edgecolors="none",
+    label=f"{ds_example_ch4_yearly_global.attrs['source_id']} (scenario)",
+)
+
+ax.set_xlim(cftime.DatetimeGregorian(2010, 1, 1), cftime.DatetimeGregorian(2030, 1, 1))
+ax.legend()
+glue("ds-ch4-transition-from-history-monthly-fig", fig, display=False)
+plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-ch4-transition-from-history-monthly-fig
+# ---
+# width: 500px
+# name: "ds-ch4-transition-from-history-monthly-fig"
+# ---
+#
+# Transition from the historical dataset to the future
+# in the global-, monthly-mean dataset.
+# The transition is smooth,
+# preserving both the absolute value and gradient
+# at the transition point (also known as the 'harmonisation point').
+# Here this is illustrated with the CH{raw-latex}`\textsubscript{4}` dataset
+# for a single scenario.
+# The same idea applies to all scenarios.
+# ```
+#
+# {raw-latex}`\newpage`
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Monthly-, 15-degree latitudinally binned data
 #
 # Next we consider the monthly, latitudinally-resolved data
@@ -1354,7 +1697,7 @@ plt.show()
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ```{glue:figure} ds-co2-transition-from-history-monthly-lat-fig
 # ---
-# width: 600px
+# width: 520px
 # name: "ds-co2-transition-from-history-monthly-lat-fig"
 # ---
 #
@@ -1365,12 +1708,95 @@ plt.show()
 # at the transition point (also known as the 'harmonisation point').
 # Here this is illustrated with the CO{raw-latex}`\textsubscript{2}` dataset
 # for a single scenario.
-# The same idea applies to methane and all scenarios.
+# The same idea applies to all scenarios.
 # ```
 #
 # {raw-latex}`\newpage`
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
+# The same plot for CH{raw-latex}`\textsubscript{4}` is shown in {numref}`Figure %s <ds-ch4-transition-from-history-monthly-lat-fig>`.
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+# Get file paths
+query_kwargs_ch4_monthly_lat_history = {
+    **query_kwargs_ch4_monthly_global_history,
+    "grid": "gnz",
+}
+
+ds_history_ch4_monthly_lat_history = fetch_and_load_history(
+    **query_kwargs_ch4_monthly_lat_history
+).compute()
+
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+pdf_l = [
+    to_data_frame(
+        ds_example_ch4_monthly_lat,
+        unstack_col="time",
+        assign_metadata={"experiment": "scenario"},
+    ),
+    to_data_frame(
+        ds_history_ch4_monthly_lat_history,
+        unstack_col="time",
+        assign_metadata={"experiment": "historical"},
+    ),
+]
+
+pdf = pd.concat([v.reorder_levels(pdf_l[0].index.names) for v in pdf_l]).sort_index(
+    axis="columns"
+)
+pdf.columns = [v.year + (v.month * 2 - 1) / 24 for v in pdf.columns]
+# pdf
+
+# %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
+start_year = 2015
+end_year = 2030
+
+fg = sns.relplot(
+    data=pdf.loc[:, start_year:end_year].openscm.to_long_data(),
+    x="time",
+    y="value",
+    col="lat",
+    col_wrap=3,
+    col_order=sorted(pdf.index.get_level_values("lat").unique())[::-1],
+    kind="scatter",
+    hue="experiment",
+    height=2.5,
+    aspect=1.0,
+)
+
+unit_l = pdf.index.get_level_values("unit").unique()
+if len(unit_l) > 1:
+    raise AssertionError(unit_l)
+unit = unit_l[0]
+for ax in fg.axes.flatten():
+    if ax.get_ylabel():
+        ax.set_ylabel(unit)
+
+
+glue("ds-ch4-transition-from-history-monthly-lat-fig", fg.fig, display=False)
+plt.show()
+
+# %% [markdown] editable=true slideshow={"slide_type": ""}
+# ```{glue:figure} ds-ch4-transition-from-history-monthly-lat-fig
+# ---
+# width: 520px
+# name: "ds-ch4-transition-from-history-monthly-lat-fig"
+# ---
+#
+# Transition from the historical dataset to the future
+# in the global-, latitudinally-resolved dataset.
+# The transition is smooth,
+# preserving both the absolute value and gradient
+# at the transition point (also known as the 'harmonisation point').
+# Here this is illustrated with the CH{raw-latex}`\textsubscript{4}` dataset
+# for a single scenario.
+# The same idea applies to all scenarios.
+# ```
+#
+# {raw-latex}`\newpage`
+
+# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
 # ## Full scenario set
 #
 # Having seen the transition for a single scenario,
@@ -1827,10 +2253,6 @@ plt.show()
 #
 # {raw-latex}`\newpage`
 
-# %% [markdown]
-# One thing to note is that for methane, when looking at the high latitude plot, we see a mismatch of seasonality oscillation between the historical data with the EO-update and the scenario projections. This is weird and we should look into it [TODO: look into it]
-#
-
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Differences from the baseline CMIP7 Scenario datasets
 
@@ -1839,8 +2261,8 @@ plt.show()
 #
 # Comparing the data from EO-Scenarios and the baseline CMIP7 Scenarios shows the following changes:
 #
-# 1. Most obviously, the onlu gases provided here are CO{raw-latex}`\textsubscript{2}` and CH{raw-latex}`\textsubscript{4}`
-# [TODO: add analysis]
+# 1. Most obviously, the only gases provided here are CO{raw-latex}`\textsubscript{2}` and CH{raw-latex}`\textsubscript{4}`
+# 2. [TODO: add analysis]
 #
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -2070,10 +2492,7 @@ pdf
 ds_baseline_cmip7_yearly_d = {}
 for gas in gases_to_show:
     ds_baseline_cmip7_yearly_d[gas] = {}
-    for key, target_mip, source_version in (
-        ("history", "CMIP", "1.0.0"),
-        ("scenarios", "ScenarioMIP", "1.1.0"),
-    ):
+    for key, target_mip, source_version in (("scenarios", "ScenarioMIP", "1.1.0"),):
         ds = fetch_and_load(
             ghg=gas,
             time_sampling="yr",
@@ -2103,8 +2522,7 @@ for gas in gases_to_show:
 
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-def get_history_plus_scenario_series(  # noqa: PLR0913
-    ds_history: xr.Dataset,
+def get_scenario_series(  # noqa: PLR0913
     ds_scenarios: xr.Dataset,
     gas: str,
     scenario: str,
@@ -2113,27 +2531,18 @@ def get_history_plus_scenario_series(  # noqa: PLR0913
     monthly: bool,
 ) -> pd.Series:
     """
-    Get the history followed by the scenario as one series
+    Get the scenario data as a series
 
     The index is the year (annual data) or the fractional year (monthly data).
-    The scenario takes over from the history in the first time step of the scenario
-    (the two overlap in 2022).
     """
-
-    def get_index(da: xr.DataArray) -> np.ndarray:
-        if monthly:
-            return (da["time"].dt.year + (da["time"].dt.month - 0.5) / 12).values
-
-        return da["time"].dt.year.values
-
-    history = ds_history[gas].isel(scenario=0).dropna("time")
     scen = ds_scenarios[gas].sel(scenario=scenario).dropna("time")
 
-    history_s = pd.Series(history.values, index=get_index(history))
-    scen_s = pd.Series(scen.values, index=get_index(scen))
+    if monthly:
+        index = (scen["time"].dt.year + (scen["time"].dt.month - 0.5) / 12).values
+    else:
+        index = scen["time"].dt.year.values
 
-    history_s = history_s[history_s.index < scen_s.index.min()]
-    res = pd.concat([history_s, scen_s]).sort_index()
+    res = pd.Series(scen.values, index=index)
 
     return res[(res.index >= start_year) & (res.index <= end_year + 1)]
 
@@ -2145,30 +2554,44 @@ def plot_eo_vs_baseline(  # noqa: PLR0913
     start_year: int,
     end_year: int,
     monthly: bool,
+    zoom_years: int | None = None,
 ) -> matplotlib.figure.Figure:
     """
-    Plot EO-updated vs baseline CMIP7 data (left) and their difference (right)
+    Plot EO-updated vs baseline CMIP7 scenario data (left) and their difference (right)
 
     One row per scenario.
     The left-hand y-axes are free, the right-hand (difference) y-axes are shared.
+
+    If `zoom_years` is supplied, a column is added in the middle
+    which zooms in on the first `zoom_years` years of the left-hand plot
+    (with free y-axes).
     """
     scenarios = [
         v for v in hue_order if v in ds_baseline_d[gas]["scenarios"]["scenario"].values
     ]
     unit = ds_baseline_d[gas]["scenarios"][gas].attrs["units"]
 
+    n_cols = 2 if zoom_years is None else 3
+    diff_col = n_cols - 1
+
     fig, axes = plt.subplots(
         len(scenarios),
-        2,
-        figsize=(8.0, 1.35 * len(scenarios) + 0.8),
-        sharex=True,
+        n_cols,
+        figsize=(
+            8.0 if zoom_years is None else 10.0,
+            (1.35 if zoom_years is None else 1.5) * len(scenarios) + 0.8,
+        ),
+        sharex="col",
         squeeze=False,
-        gridspec_kw=dict(width_ratios=[1.4, 1.0]),
+        gridspec_kw=dict(
+            width_ratios=[1.4, 1.0] if zoom_years is None else [1.2, 1.0, 1.0]
+        ),
     )
-    for ax in axes[1:, 1]:
-        ax.sharey(axes[0, 1])
+    for ax in axes[1:, diff_col]:
+        ax.sharey(axes[0, diff_col])
 
-    for (ax_levels, ax_diff), scenario in zip(axes, scenarios):
+    for row_axes, scenario in zip(axes, scenarios):
+        ax_levels, ax_diff = row_axes[0], row_axes[diff_col]
         series_kwargs = dict(
             gas=gas,
             scenario=scenario,
@@ -2176,16 +2599,8 @@ def plot_eo_vs_baseline(  # noqa: PLR0913
             end_year=end_year,
             monthly=monthly,
         )
-        eo = get_history_plus_scenario_series(
-            ds_eo_d[gas]["history-cmip7"],
-            ds_eo_d[gas]["scenarios-cmip7"],
-            **series_kwargs,
-        )
-        baseline = get_history_plus_scenario_series(
-            ds_baseline_d[gas]["history"],
-            ds_baseline_d[gas]["scenarios"],
-            **series_kwargs,
-        )
+        eo = get_scenario_series(ds_eo_d[gas]["scenarios-cmip7"], **series_kwargs)
+        baseline = get_scenario_series(ds_baseline_d[gas]["scenarios"], **series_kwargs)
         colour = palette[scenario]
 
         ax_levels.plot(
@@ -2195,14 +2610,34 @@ def plot_eo_vs_baseline(  # noqa: PLR0913
         ax_levels.set_ylabel(unit)
         ax_levels.set_title(f"scenario = {scenario}", loc="left", fontsize=9)
 
+        if zoom_years is not None:
+            ax_zoom = row_axes[1]
+            zoom_end = start_year + zoom_years
+            baseline_zoom = baseline[baseline.index <= zoom_end]
+            eo_zoom = eo[eo.index <= zoom_end]
+
+            ax_zoom.plot(
+                baseline_zoom.index,
+                baseline_zoom.values,
+                color=colour,
+                lw=3.0,
+                alpha=0.35,
+            )
+            ax_zoom.plot(
+                eo_zoom.index, eo_zoom.values, color=colour, lw=0, marker="o", ms=3.5
+            )
+            ax_zoom.set_xlim(start_year, zoom_end)
+            ax_zoom.set_ylabel(unit)
+            ax_zoom.set_title(f"first {zoom_years} years", loc="left", fontsize=9)
+
         diff = (eo - baseline).dropna()
         ax_diff.axhline(0.0, color="0.5", lw=0.8)
         ax_diff.plot(diff.index, diff.values, color=colour, lw=1.5)
         ax_diff.set_title("EO-update minus baseline", loc="left", fontsize=9)
         ax_diff.set_ylabel(unit)
 
-    axes[-1, 0].set_xlabel("time")
-    axes[-1, 1].set_xlabel("time")
+    for ax in axes[-1, :]:
+        ax.set_xlabel("time")
 
     legend_handles = [
         matplotlib.lines.Line2D(
@@ -2223,9 +2658,10 @@ fig = plot_eo_vs_baseline(
     "co2",
     ds_eo_d=ds_gases_full_yearly_multi_phase_d,
     ds_baseline_d=ds_baseline_cmip7_yearly_d,
-    start_year=2000,
+    start_year=2022,
     end_year=2100,
     monthly=False,
+    zoom_years=10,
 )
 glue("scenarios-cmip-comparison-yearly-co2-fig", fig, display=False)
 plt.show()
@@ -2235,9 +2671,10 @@ fig = plot_eo_vs_baseline(
     "ch4",
     ds_eo_d=ds_gases_full_yearly_multi_phase_d,
     ds_baseline_d=ds_baseline_cmip7_yearly_d,
-    start_year=2000,
+    start_year=2022,
     end_year=2100,
     monthly=False,
+    zoom_years=10,
 )
 glue("scenarios-cmip-comparison-yearly-ch4-fig", fig, display=False)
 plt.show()
@@ -2245,34 +2682,43 @@ plt.show()
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ```{glue:figure} scenarios-cmip-comparison-yearly-co2-fig
 # ---
-# width: 560px
+# width: 600px
 # name: "scenarios-cmip-comparison-yearly-co2-fig"
 # ---
 #
-# Comparison of the EO-updated and the baseline CMIP7 history and scenarios
-# in the global-, annual-mean CO{raw-latex}`\textsubscript{2}` datasets.
+# Comparison of the EO-updated and the baseline CMIP7 scenarios
+# in the global-, annual-mean CO{raw-latex}`\textsubscript{2}` datasets
+# (2022 to 2100).
 # Left: the EO-updated data (markers) and the baseline CMIP7 data (line),
-# one row per scenario (free y-axes).
-# Right: the difference between the two (EO-updated minus baseline),
-# on a common y-axis across scenarios.
+# one row per scenario.
+# Middle: zoom in on the first 10 years of the scenarios, until 2032.
+# Right: the difference between the two (EO-updated minus baseline) across scenarios.
 # ```
 #
 # ```{glue:figure} scenarios-cmip-comparison-yearly-ch4-fig
 # ---
-# width: 560px
+# width: 600px
 # name: "scenarios-cmip-comparison-yearly-ch4-fig"
 # ---
-#
-# As {numref}`Figure %s <scenarios-cmip-comparison-yearly-co2-fig>`,
-# but for CH{raw-latex}`\textsubscript{4}`.
+# Comparison of the EO-updated and the baseline CMIP7 scenarios
+# in the global-, annual-mean CH{raw-latex}`\textsubscript{4}` datasets
+# (2022 to 2100).
+# Left: the EO-updated data (markers) and the baseline CMIP7 data (line),
+# one row per scenario.
+# Middle: zoom in on the first 10 years of the scenarios, until 2032.
+# Right: the difference between the two (EO-updated minus baseline) across scenarios.
 # ```
 #
 # {raw-latex}`\newpage`
 
+# %% [markdown]
+# For both gases, we see a gradual relaxation to baseline, happening faster for CO{raw-latex}`\textsubscript{2}` (before 2040).
+# For CO{raw-latex}`\textsubscript{2}`, the maximual difference between global-, annual-means is less than 0.2 ppm, and for CH{raw-latex}`\textsubscript{4}` this difference is below 2 ppb.
+
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Monthly-, global-mean data
 #
-# Finally, we consider the monthly-, global-mean data
+# We consider the monthly-, global-mean data
 # ({numref}`Figure %s <scenarios-cmip-comparison-monthly-co2-fig>` for CO{raw-latex}`\textsubscript{2}`
 # and {numref}`Figure %s <scenarios-cmip-comparison-monthly-ch4-fig>` for CH{raw-latex}`\textsubscript{4}`).
 
@@ -2444,10 +2890,7 @@ pdf
 ds_baseline_cmip7_monthly_d = {}
 for gas in gases_to_show:
     ds_baseline_cmip7_monthly_d[gas] = {}
-    for key, target_mip, source_version in (
-        ("history", "CMIP", "1.0.0"),
-        ("scenarios", "ScenarioMIP", "1.1.0"),
-    ):
+    for key, target_mip, source_version in (("scenarios", "ScenarioMIP", "1.1.0"),):
         ds = fetch_and_load(
             ghg=gas,
             time_sampling="mon",
@@ -2480,9 +2923,10 @@ fig = plot_eo_vs_baseline(
     "co2",
     ds_eo_d=ds_gases_full_monthly_multi_phase_d,
     ds_baseline_d=ds_baseline_cmip7_monthly_d,
-    start_year=2012,
-    end_year=2025,
+    start_year=2022,
+    end_year=2100,
     monthly=True,
+    zoom_years=10,
 )
 glue("scenarios-cmip-comparison-monthly-co2-fig", fig, display=False)
 plt.show()
@@ -2492,9 +2936,10 @@ fig = plot_eo_vs_baseline(
     "ch4",
     ds_eo_d=ds_gases_full_monthly_multi_phase_d,
     ds_baseline_d=ds_baseline_cmip7_monthly_d,
-    start_year=2012,
-    end_year=2025,
+    start_year=2022,
+    end_year=2100,
     monthly=True,
+    zoom_years=10,
 )
 glue("scenarios-cmip-comparison-monthly-ch4-fig", fig, display=False)
 plt.show()
@@ -2502,28 +2947,40 @@ plt.show()
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ```{glue:figure} scenarios-cmip-comparison-monthly-co2-fig
 # ---
-# width: 560px
+# width: 600px
 # name: "scenarios-cmip-comparison-monthly-co2-fig"
 # ---
 #
-# Comparison of the EO-updated and the baseline CMIP7 history and scenarios
+# Comparison of the EO-updated and the baseline CMIP7 scenarios
 # in the global-, monthly-mean CO{raw-latex}`\textsubscript{2}` datasets
-# over the time period from 2012 to 2025.
+# (2022 to 2100).
 # Left: the EO-updated data (markers) and the baseline CMIP7 data (line),
-# one row per scenario (free y-axes).
-# Right: the difference between the two (EO-updated minus baseline),
-# on a common y-axis across scenarios.
+# one row per scenario.
+# Middle: zoom in on the first 10 years of the scenarios, until 2032.
+# Right: the difference between the two (EO-updated minus baseline) across scenarios.
 # ```
 #
 # ```{glue:figure} scenarios-cmip-comparison-monthly-ch4-fig
 # ---
-# width: 560px
+# width: 600px
 # name: "scenarios-cmip-comparison-monthly-ch4-fig"
 # ---
+# Comparison of the EO-updated and the baseline CMIP7 scenarios
+# in the global-, monthly-mean CH{raw-latex}`\textsubscript{4}` datasets
+# (2022 to 2100).
+# Left: the EO-updated data (markers) and the baseline CMIP7 data (line),
+# one row per scenario.
+# Middle: zoom in on the first 10 years of the scenarios, until 2032.
+# Right: the difference between the two (EO-updated minus baseline) across scenarios.
 #
-# As {numref}`Figure %s <scenarios-cmip-comparison-monthly-co2-fig>`,
-# but for CH{raw-latex}`\textsubscript{4}`.
 # ```
+
+# %% [markdown]
+# The difference in the seasonal amplitude for both gases is higher than the difference in global-, annual-means, as expected from the methodology explained in {numref}`Chapter %s <dataset-construction>`. In short the historical concentrations and the output from running magic on the scenario-specific emissions are harmonized, and therefore the effect of changes in the final product is the most visible at the start of the time period. On the other hand, the seasonality and the latitudinal gradients are taken from the outputs of the principal component analysis performed on the historical period.
+#
+# For CO{raw-latex}`\textsubscript{2}`, we notice that the difference in seasonality between EO-scenario and the baseline dataset grows with the total global concentration on a given scenario. This is not unexpected given the dependency of CO{raw-latex}`\textsubscript{2}`'s seasonality on absolute values. The difference remains under or slightly above 1 ppm.
+#
+# For CH{raw-latex}`\textsubscript{4}`, we notice a similar but less pronounced trend. The maximum difference between the two datasets remains well below 3 ppb.
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ### Monthly-, 15-degree latitudinally binned data
@@ -2665,3 +3122,10 @@ plt.show()
 # As {numref}`Figure %s <scenarios-cmip-comparison-monthly-lat-ch4-fig>`,
 # but averaged to annual means.
 # ```
+
+# %% [markdown]
+# As expected due to the methodology used to generate these datasets, we see the biggest difference between the baseline products and EO-Scenario data in the monthly-,  15-degree latitudinally binned data for both gasses. We can therefore say that the strongest impact on the scenario products from adding satellite information to the historical concentrations is found in the summer values at latitudes above 60 degrees North. For CO{raw-latex}`\textsubscript{2}`, these differences are up to 6 ppm, and for CH{raw-latex}`\textsubscript{h}` up to 40 ppb.
+#
+# Although an evaluation of this product is not possible with observational data, this gives us an idea of the impact that such a correction would have on the final product.
+
+# %%
