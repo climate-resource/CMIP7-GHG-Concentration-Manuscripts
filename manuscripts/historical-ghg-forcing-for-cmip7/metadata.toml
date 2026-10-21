@@ -27,7 +27,7 @@ contributions = [
 [[authors]]
 given_name = "Malte"
 surname = "Meinshausen"
-email = "malte.meinshausen@unimelb.edu.au"
+email = "malte.meinshausen@climate-resource.com"
 affiliations = ["cr", "uom-sgeas"]
 contributions_initials = "MM"
 contributions = [
@@ -61,16 +61,26 @@ contributions = [
 ]
 
 [[authors]]
-given_name = "Florence"
-surname = 'Bockting'
-email = "tbd@invalid.com"
-# TBD current affiliation
-affiliations = ["crs"]
-contributions_initials = "FB"
+given_name = "Jared"
+surname = "Lewis"
+email = "jared.lewis@climate-resource.com"
+affiliations = ["cr"]
+contributions_initials = "JL"
 contributions = [
-    "dataset-contributed",
-    "review-and-editing",
+    "dataset-production",
 ]
+
+# [[authors]]
+# given_name = "Florence"
+# surname = 'Bockting'
+# email = "tbd@invalid.com"
+# # TBD current affiliation
+# affiliations = ["crs"]
+# contributions_initials = "FB"
+# contributions = [
+#     "dataset-contributed",
+#     "review-and-editing",
+# ]
 
 [affiliations]
 crs = "Climate Resource S, Berlin, Germany"
