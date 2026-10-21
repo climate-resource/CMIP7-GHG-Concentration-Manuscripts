@@ -27,7 +27,7 @@
 # :format: latex
 # ```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true jp-MarkdownHeadingCollapsed=true slideshow={"slide_type": ""}
 # # Overview
 #
 # Here we provide a short description of the historical dataset of concentrations for CO{raw-latex}`\textsubscript{2}` and CH{raw-latex}`\textsubscript{4}` updated with satellite data
@@ -106,7 +106,7 @@ def get_eo_update_local_files(ghg, time_sampling, grid):
 # # Dataset construction
 #
 # The original CMIP7 GHG concentration dataset (produced without using satellite data) is constructed following the methodology of
-# {raw-latex}`\textcite{meinshausen_historical_2017}`.
+# {raw-latex}`\textcite{meinshausen_historical-ghgs_2017}`.
 # The methods are described in full in that paper
 # and will be clarified and described again
 # in the forthcoming manuscript describing this dataset's construction.
@@ -117,9 +117,9 @@ def get_eo_update_local_files(ghg, time_sampling, grid):
 # )[^gh-code]:
 #
 # 1. collect as many ground-based observations as possible from ground-based networks such as the NOAA
-#    {raw-latex}`\parencite{lan_atmospheric_co2_2025,lan_atmospheric_ch4_2025}`
+#    {raw-latex}`\parencite{lan_co2-flask_2024,lan_ch4-flask_2024}`
 #    and AGAGE
-#    {raw-latex}`\parencite{prinn_history_2000,prinn2018history,rigby2008renewed,rigby2017role}`
+#    {raw-latex}`\parencite{prinn_ale-gage-agage_2000,prinn_agage_2018,rigby_methane-growth_2008,rigby_methane-oxidation_2017}`
 #    networks
 #    (the full set of input sources are documented in the `references*`
 #    global attributes of the output files
@@ -131,10 +131,10 @@ def get_eo_update_local_files(ghg, time_sampling, grid):
 #       (at most, usually around 30, often far fewer)
 # 4. bin the ground-based observations in space and time
 #    {raw-latex}`\parencite[15-degree latitudinal bins, 60-degree longitudinal bins, monthly time bins,
-#    following][]{meinshausen_historical_2017}`,
+#    following][]{meinshausen_historical-ghgs_2017}`,
 #    averaging over input stations and observations that fall in the same cell
 # 5. interpolate the binned data in space using a standard 2D linear interpolation
-#    as in {raw-latex}`\textcite{meinshausen_historical_2017}`,
+#    as in {raw-latex}`\textcite{meinshausen_historical-ghgs_2017}`,
 #    to derive a dataset with spatial coverage
 # 6. use the interpolated, ground-based data
 #    to derive a statistical model for seasonal variation and latitudinal gradients
@@ -189,7 +189,6 @@ def get_eo_update_local_files(ghg, time_sampling, grid):
 #
 #
 # ## Satellite data preprocessing
-# [TODO: update references]
 #
 # The satellite data used in this work is taken from OBS4MIPs L3 total column (XCH4/XCO2) product. This consists in a harmonized gridded multi-satellite merged product using EMMA, calibrated using the TCCON network, using an a-priori profile generated with SLIM. This means that observations from multiple satellites have been combined to create an internally consistent, composite dataset with maximal spatial and temporal coverage from the underlying raw data products, on a lon-lat grid. This dataset was chosen as it is the most temporally and spatially complete output product available based on satellite observations, and it brings improvements, especially for the spatial coverage, compared to the ground-based network.
 #
@@ -200,7 +199,7 @@ def get_eo_update_local_files(ghg, time_sampling, grid):
 # To choose the scaling function, we perform a series of fits between matching (in space and time) datapoints for satellite and ground-based data. These fits include dependencies on concentrations, latitude, and seasonality, since those variables are identified as the key components for the PC decomposition performed in the GHG concentrations generation pipeline. Implicitly, we are assuming that we can derive a fit that allows us to translate satellite based values into their ground-based equivalent via basic modelling alone. We examine the validity of this assumption later on. Satellite data is then scaled using the function given by the best fit for each gas, which is respectively:
 #
 # - CO{raw-latex}`\textsubscript{2}`: linear dependency on concentration, latitude, seasonality, using inverse variance weighting
-# - CH{raw-latex}`\textsubscript{4}`: non-linear (quadratic) dependency on concentration, linear dependency on latitude, using inverce variance weighting.
+# - CH{raw-latex}`\textsubscript{4}`: non-linear (quadratic) dependency on concentration, linear dependency on latitude, using inverse variance weighting.
 #
 # An uncertainty estimation is then performed combining a Monte Carlo approach and fit uncertainty. We first run the fit 200 times perturbing the satellite and ground data within their error bars, taking then the variance of the distribution for each gridpoint and time. We then multiply all resulting uncertainty values by the squared root of the reduced {raw-latex}`\ensuremath{\chi^2}` (aka the standard error of the regression) wherever the reduced {raw-latex}`\ensuremath{\chi^2}` is > 1.
 #
@@ -218,7 +217,7 @@ def get_eo_update_local_files(ghg, time_sampling, grid):
 # ## Zenodo
 #
 # In order to provide reliable, citable access to the data,
-# we provide it on **Zenodo** {raw-latex}`\parencite{zenodo}`.
+# we provide it on **Zenodo** {raw-latex}`\parencite{zenodo_zenodo_2025}`.
 # The data, as well as all the source code and input data used to process it,
 # can be found at [TODO: add data on zenodo, put link here]
 #
@@ -230,7 +229,7 @@ def get_eo_update_local_files(ghg, time_sampling, grid):
 # %% [markdown]
 # ## Format
 #
-# The data is provided in **netCDF format** {raw-latex}`\parencite{zenodo}`.
+# The data is provided in **netCDF format** {raw-latex}`\parencite{zenodo_zenodo_2025}`.
 # This self-describing format allows the data
 # to be placed in the same file as metadata
 # (in the so-called "file header").
@@ -278,13 +277,19 @@ def get_eo_update_local_files(ghg, time_sampling, grid):
 # %% [markdown]
 # ## Uncertainty
 #
-# At present, we provide no analysis of the uncertainty associated with these datasets.
-# In radiative forcing terms, the uncertainty in these concentrations
-# is very likely to be small compared to other uncertainties in the climate system,
-# but this statement is not based on any robust analysis
-# (rather it is based on expert judgement).
-# It is also worth noting that the uncertainty increases as we go further back in time,
-# particularly as we shift from using surface flasks to relying on ice cores instead.
+# At present, there is no uncertainty value assigned to the final historical concentrations product.
+#
+# We have performed an uncertainty assessment for the scaled satellite product. The uncertainty is composed of 3 types of uncertainty: the underlying measurement uncertainty of the quantity measured by EO, the uncertainty of translating (scaling) the EO measured quantity to surface quantities within our model, and the uncertainty associated with selecting our translation model.
+# 1. The uncertainty of the quantity measured by EO is readily available in the source datasets.
+# 2. To propagate the measurement uncertainty and quantify the uncertainty of the translation to surface quantities within our model, we used Monte Carlo evaluation: we perturbed input satellite and ground-based data within their respective reported uncertainties, run the same fit 200 times, and then took the standard deviation of the posterior distribution.
+# 3. Estimating the model selection uncertainty is especially challenging. As a first step, we estimate the uncertainty by quantifying if the measured values we use for the fit are adequately explained by the model with deviations expected from the measured and fitted uncertainties. For this, we calculate the reduced 𝜒2 of the fit, and multiply our uncertainties by it when it is larger than 1.
+#
+# As a result we find that the uncertainty introduced by translating the total columns concentrations as measured by EO into quantities that are compatible with the ground concentrations is at least a factor of ~3 higher than the uncertainty reported for the EO and surface concentrations data products.
+#
+# For the actual application of forcings, an even more relevant uncertainty analysis would be to derive the uncertainty of the global (annual or monthly) mean concentrations. The impact of the uncertainty of the inter-annual and spatial variations are likely dwarfed by the impact of the uncertainty of the mean concentration in climate simulations. To quantify this uncertainty, the modelling uncertainty that arises when estimating the mean from spatially sparse and diverse data sources will need to be estimated. An analysis then also needs to consider the increasing uncertainty as we go further back in time and have to rely on ice core measurements or other proxies.
+#
+# Regardless, in radiative forcing terms, the uncertainty in these concentrations is very likely to be small compared to other uncertainties in the climate system; however, so far this statement is based on expert judgement, not rigorous analysis.
+#
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Differences compared to CMIP6 and original
@@ -1034,14 +1039,14 @@ plt.show()
 # As in CMIP6, we do not provide any vertical profiles.
 # For users who require such profiles,
 # we refer to the 'The vertical dimension' sub-header
-# in Section 4 of {raw-latex}`\textcite{meinshausen_historical_2017}`.
+# in Section 4 of {raw-latex}`\textcite{meinshausen_historical-ghgs_2017}`.
 # There are three key changes:
 #
 # 1. we have split the global-mean and hemispheric-mean data into separate files.
 #    In CMIP6, this data was in the same file (with a grid label of `GMNHSH`).
 #    We have split this for two reasons:
 #    a) `GMNHSH` is not a grid label recognised in the CMIP CVs
-#       {raw-latex}`\parencite{wcrp_cmip_cvs_mip}` and
+#       {raw-latex}`\parencite{wcrp-cmip_cvs-mip-tables_2025}` and
 #    b) having global-mean and hemispheric-mean data in the same file
 #       required us to introduce a 'sector' coordinate,
 #       which was confusing and does not follow the CF-conventions.
@@ -1074,7 +1079,7 @@ plt.show()
 #
 # {raw-latex}`\newpage`
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true jp-MarkdownHeadingCollapsed=true slideshow={"slide_type": ""}
 # ### Data comparisons with CMIP6
 #
 # Comparing the data from CMIP6 and from this data (CMIP7-like, with adedd EO information, referred to from now on as EO-CMIP7) shows minor changes
@@ -1124,7 +1129,7 @@ for gas in gases_to_show:
     ds_gases_full_d[gas]["CMIP6"] = ds.compute()
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
-from typing import Callable
+from collections.abc import Callable
 
 import numpy.typing as npt
 
@@ -1353,7 +1358,7 @@ plt.show()
 # %% [markdown]
 # Values below come from Table 7.SM.7 of
 # IPCC AR6 WG1 Ch. 7 Supplementary Material
-# {raw-latex}`\parencite{IPCC_2021_WGI_Ch_7_SM}`.
+# {raw-latex}`\parencite{IPCC_AR6-WG1-Ch-7-SM_2021}`.
 
 # %% editable=true slideshow={"slide_type": ""}
 from openscm_units import unit_registry
@@ -1556,7 +1561,7 @@ plt.show()
 # In summary, in ERF terms, the differences from CMIP6 are very small.
 # For all gases, they are less than around 0.03 W / m{raw-latex}`\textsuperscript{2}`.
 # Compared to the estimated total greenhouse gas forcing and uncertainty in IPCC AR6
-# {raw-latex}`\parencite[see Section 7.3.5.2 of AR6 WG1 Chapter 7,][]{IPCC_2021_WGI_Ch_7}`
+# {raw-latex}`\parencite[see Section 7.3.5.2 of AR6 WG1 Chapter 7,][]{IPCC_AR6-WG1-Ch-7_2021}`
 # estimated to be 3.84 W / m{raw-latex}`\textsuperscript{2}`
 # (very likely range of 3.46 to 4.22 W / m{raw-latex}`\textsuperscript{2}`),
 # such differences are particularly small.
@@ -1812,7 +1817,7 @@ plt.show()
 # %% [markdown]
 # Values below come from Table 7.SM.7 of
 # IPCC AR6 WG1 Ch. 7 Supplementary Material
-# {raw-latex}`\parencite{IPCC_2021_WGI_Ch_7_SM}`.
+# {raw-latex}`\parencite{IPCC_AR6-WG1-Ch-7-SM_2021}`.
 
 # %% editable=true slideshow={"slide_type": ""} tags=["remove_cell"]
 ds_gases_full_cmip7_radiative_effect_d = {}
@@ -2006,7 +2011,7 @@ plt.show()
 # In summary, in ERF terms, the differences from original CMIP7 are very small.
 # For all gases, they are less than around 0.04 W / m{raw-latex}`\textsuperscript{2}`.
 # Compared to the estimated total greenhouse gas forcing and uncertainty in IPCC AR6
-# {raw-latex}`\parencite[see Section 7.3.5.2 of AR6 WG1 Chapter 7,][]{IPCC_2021_WGI_Ch_7}`
+# {raw-latex}`\parencite[see Section 7.3.5.2 of AR6 WG1 Chapter 7,][]{IPCC_AR6-WG1-Ch-7_2021}`
 # estimated to be 3.84 W / m{raw-latex}`\textsuperscript{2}`
 # (very likely range of 3.46 to 4.22 W / m{raw-latex}`\textsuperscript{2}`),
 # such differences are particularly small.

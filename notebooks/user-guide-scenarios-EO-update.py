@@ -26,7 +26,7 @@
 # :format: latex
 # ```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true jp-MarkdownHeadingCollapsed=true slideshow={"slide_type": ""}
 # # Overview
 #
 # Here we provide a short description of the scenario dataset of concentrations
@@ -194,8 +194,7 @@ def load_eo_update_scenarios(ghg, time_sampling, grid, include_ext=True):
     return xr.concat(res_l, "scenario", join="outer")
 
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
-# (dataset-construction)=
+# %% [markdown] editable=true jp-MarkdownHeadingCollapsed=true slideshow={"slide_type": ""}
 # # Dataset construction
 #
 # The original CMIP7 scenarios GHG concentration dataset (produced without using satellite data)
@@ -255,7 +254,7 @@ def load_eo_update_scenarios(ghg, time_sampling, grid, include_ext=True):
 # The updated dataset (produced by adding satellite data information, hereafter referred to as EO-Scenarios) is produced with the same methodology, save from the fact that the historical global means, seasonality, and latitudinal gradients of the historical period are taken from the EO-CMIP7 dataset, described in the user guide: 'Adding Earth Observation data to the generation of CMIP7 CO₂ and CH₄ Concentration Historical Dataset'. In short, it is a concentration dataset produced with the same methods as the GHG CMIP7 concentrations, but with an added observation dataset coprised of satellite observations pre-processed to be consistent with ground based observations.
 #
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true jp-MarkdownHeadingCollapsed=true slideshow={"slide_type": ""}
 # # Finding and accessing the data
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -269,7 +268,7 @@ def load_eo_update_scenarios(ghg, time_sampling, grid, include_ext=True):
 #
 # There is no current plan to store data on ESGF, but it can be done in case this dataset is of high importance for enough users
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Data description
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -387,7 +386,7 @@ print(f"{extract_scenario_id('CR-l-1-1-0')=}")
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Uncertainty
 #
-# At present, we provide no analysis of the uncertainty associated with these datasets.
+# At present, there is no final uncertainty assessment on the final product.
 #
 # On top of the uncertainties in the historical data
 # (which are, in radiative forcing terms, small),
@@ -459,14 +458,14 @@ print(f"{extract_scenario_id('CR-l-1-1-0')=}")
 # }
 # ```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
 # # User guide
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # Having downloaded the data, using it is relatively straightforward
 # (scenario identification issue discussed above notwithstanding).
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true jp-MarkdownHeadingCollapsed=true slideshow={"slide_type": ""}
 # ## Annual-, global-mean data
 #
 # We start with the annual-, global-mean data.
@@ -633,7 +632,7 @@ plt.show()
 # in one of our future forcing datasets.
 # ```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true jp-MarkdownHeadingCollapsed=true slideshow={"slide_type": ""}
 # ## Space- and time-average nature of the data
 #
 # All of our data represents the mean over each cell.
@@ -700,7 +699,7 @@ plt.show()
 # rather than an interpolated line.
 # ```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true jp-MarkdownHeadingCollapsed=true slideshow={"slide_type": ""}
 # ## Monthly-, global-mean data
 #
 # If you want to have information at a finer level
@@ -838,7 +837,7 @@ plt.show()
 # but the same idea applies to methane.
 # ```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true jp-MarkdownHeadingCollapsed=true slideshow={"slide_type": ""}
 # ## Monthly-, latitudinally-resolved data
 #
 # We also provide data with spatial,
@@ -1302,7 +1301,7 @@ plt.show()
 # Here this is illustrated with the CH{raw-latex}`\textsubscript{4}` dataset.
 # ```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true jp-MarkdownHeadingCollapsed=true slideshow={"slide_type": ""}
 # ## Transition from history
 #
 # Just like for the baseline CMIP7 Scenarios forcings datasets and their respective CMIP7 historical forcings, each dataset of EO-Scenarios transitions smoothly from the historical data updated with EO observations, EO-CMIP7.
@@ -1796,7 +1795,7 @@ plt.show()
 #
 # {raw-latex}`\newpage`
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true jp-MarkdownHeadingCollapsed=true slideshow={"slide_type": ""}
 # ## Full scenario set
 #
 # Having seen the transition for a single scenario,
@@ -2976,7 +2975,7 @@ plt.show()
 # ```
 
 # %% [markdown]
-# The difference in the seasonal amplitude for both gases is higher than the difference in global-, annual-means, as expected from the methodology explained in {numref}`Chapter %s <dataset-construction>`. In short the historical concentrations and the output from running magic on the scenario-specific emissions are harmonized, and therefore the effect of changes in the final product is the most visible at the start of the time period. On the other hand, the seasonality and the latitudinal gradients are taken from the outputs of the principal component analysis performed on the historical period.
+# The difference in the seasonal amplitude for both gases is higher than the difference in global-, annual-means, as expected from the methodology explained in \ref{chapter2}. In short the historical concentrations and the output from running magic on the scenario-specific emissions are harmonized, and therefore the effect of changes in the final product is the most visible at the start of the time period. On the other hand, the seasonality and the latitudinal gradients are taken from the outputs of the principal component analysis performed on the historical period.
 #
 # For CO{raw-latex}`\textsubscript{2}`, we notice that the difference in seasonality between EO-scenario and the baseline dataset grows with the total global concentration on a given scenario. This is not unexpected given the dependency of CO{raw-latex}`\textsubscript{2}`'s seasonality on absolute values. The difference remains under or slightly above 1 ppm.
 #
