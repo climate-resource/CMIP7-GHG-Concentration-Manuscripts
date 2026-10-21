@@ -1,6 +1,31 @@
 \section{Methods}
 \label{sec:methods}
 
+% My notes
+
+General steps:
+
+1. Get your projected global- annual-mean. That either means a) using WMO directly b) running one-box model directly from emissions from [TODO ref Kikstra et al.] and [TODO ref Sandsted et al.] (then harmonising? I can't remember, please check) or c) running MAGICCv7.6.0a3 (using the prob. distribution from Sloughter et al., other MAGICC refs are standard ones or just put a TODO and I'll add them in, it's basically Malte's 2009 paper, Malte's 2011 paper, RCMIP2 paper) using emissions from [TODO ref Kikstra et al.] and [TODO ref Sandsted et al.] then harmonising to historical concs. We use a) where available, b) where there are no significant lifetime feedbacks and we want to do an isolated update of lifetimes without otherwise affecting MAGICC and c) otherwise.
+1. Project lat. gradient and seasonality components forward in time. There are only two cases here: a) CO2 - which requires MAGICC's GPP output (in line with Meinshausen 2020) to scale the seasonality change PC forward in time and b) everything else which scales seasonality with global-mean or keeps it constant and scales lat. gradient PCs with future emissions (either total or fossil only) or keeps PCs constant
+1. Prepare to combine (can give brief description here and refer to historical paper for full details)
+1. Generate native resolution (can give brief description here and refer to historical paper for full details)
+
+Looking at the cases above, we probably need to have a section for:
+
+1. CO2 (special)
+1. CH4 (important and worthy of its own section)
+1. N2O and other MAGICC-based gases (covers off everything else MAGICC-based)
+1. WMO-based gases (CFC12?) (important and worthy of its own section, also illustrates the WMO based approach)
+1. One-box based gases (HFC23? (or whatever HFC has the highest radiative forcing in 2022 in the historical dataset and uses the one-box method, so we have an illustration of this))
+
+Derived output grids section can be very thin and just refer to the historical manuscript for details
+
+Equivalent species section can be very thin and just refer to the historical manuscript for details
+
+Preparation for publication on ESGF section can be very thin and just refer to the historical manuscript for details. Here we also need to cover the source ID and the fact that you have to parse the scenario out of the source ID and how to use this. Also refer to the input4MIPs CVs pages guidance pages for further/more up to date details of how to do this (with the same reasoning as used in the historical manuscript about papers becoming out of date while these web pages should not).
+
+Vertical dimension section can be very thin and just refer to historical manuscript (and Meinshausen 2020 if they have anything more to add on this that isn't already referred to in the historical manuscript)
+
 % Placeholder. See manuscript-planning.md for the plan.
 For gases whose concentrations are the same in every scenario, like CCl_4,
 we infer the emissions which are consistent with the concentrations

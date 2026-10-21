@@ -52,7 +52,10 @@ MANUSCRIPT_DIR = REPO_ROOT / "manuscripts" / MANUSCRIPT_NAME
 
 ABSTRACT = MANUSCRIPT_DIR / "abstract.tex"
 INTRODUCTION = MANUSCRIPT_DIR / "introduction.tex"
-SECTIONS = (MANUSCRIPT_DIR / "methods.tex",)
+SECTIONS = (
+    MANUSCRIPT_DIR / "output-requirements.tex",
+    MANUSCRIPT_DIR / "methods.tex",
+)
 """Body sections, in the order they appear"""
 
 CONCLUSION = MANUSCRIPT_DIR / "conclusion.tex"
