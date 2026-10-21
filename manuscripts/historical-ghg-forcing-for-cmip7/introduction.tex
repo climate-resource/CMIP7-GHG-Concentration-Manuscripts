@@ -1,0 +1,86 @@
+The seventh phase of the Coupled Model Intercomparison Project (CMIP7),
+the world's major contemporary project for running and comparing Earth System Models (ESMs),
+is underway \citep{dunne_cmip7_2025}.
+A key part of model intercomparison is standardisation:
+ensuring that assumptions which should be common across models are indeed common
+so that the differences which emerge are isolated to factors of interest.
+To support this standardisation,
+a significant effort is invested in standardisation of model boundary conditions
+and the importance of this standardisation is increasingly being recognised \citep{naik_input-data-releases_2025}.
+These boundary conditions are referred to as forcings,
+because they drive the model's response
+(and play a role analogous to the role that force plays in Newton's second law
+i.e. if one thinks e.g. in terms of a force and response model).
+
+The process of generating forcings has evolved over multiple phases of CMIP.
+There is now an explicit task team dedicated to the production, standardisation and documentation of these forcings datasets,
+% Note to self: still to find (if wanted): other papers which give more context on how this process has been handled over time.
+including papers like this one \citep{durack_input4mips_2018,durack_forcing_2025}.
+
+For the world's most comprehensive climate models,
+there are a large range of input forcings
+% Note to self: add others here if needed/have time/requested by reviewers
+% e.g. the volcanic papers, CEDS papers
+\citep[e.g. solar forcing,][]{funke_solar_2024}.
+In this paper,
+we document the atmospheric greenhouse gas concentration forcings to be used for the CMIP7 pre-industrial control (piControl) and historical experiments.
+
+% The rest of this isn't really introduction.
+% We could split out a separate section, let's see what feedback we get.
+We do not document how to use these forcings in each experiment.
+Such documentation is best left to the CMIP7 guidance pages, which are kept up to date in real time
+(see \newline \mbox{\url{https://wcrp-cmip.github.io/cmip7-guidance/docs/CMIP7/Experiment_set_up_and_Forcings/}})
+or papers describing the experiments themselves
+(which are scientific documents, but cannot be updated as easily in case of small errors being spotted post-publication,
+hence our recommendation is still to rely on the guidance pages as they are the most reliable source of up-to-date information).
+These forcings will also be used in a number of other experiments that we do not enumerate here.
+As above, please see the guidance pages at
+\newline \mbox{\url{https://wcrp-cmip.github.io/cmip7-guidance/docs/CMIP7/Experiment_set_up_and_Forcings/}}
+or the papers describing the experiments for details about which forcings to use
+and how to implement them in your model.
+
+How to record which forcings were used in a simulation
+(e.g. how to choose the forcing index, i.e. the `f' in variant labels like `r1i1p1f1')
+is not yet settled.
+Users should consult the introduction of the guidance pages,
+check back for updates frequently and use these pages as the primary source of information.
+Following \newline \mbox{\url{https://github.com/PCMDI/input4MIPs_CVs/issues/415}}
+may also help track discussions based on a concrete use case.
+Recommendations that appear in papers, including this one,
+should only be used as a secondary source, because they can quickly become outdated.
+If the recommendations are still unclear or not defined when users are producing their model output files,
+we encourage the teams to throughly document their `f' mapping so that this information
+can be provided to users once an agreed communication format has been agreed.
+
+In line with \citet{meinshausen_historical-ghgs_2017},
+all of our values are mole fractions in dry air.
+However, throughout, we use `concentration' as shorthand.
+
+Mole fractions in dry air are also the quantity reported by the observation networks and ice core records that we use.
+% (as in Section~2 of \citealp{meinshausen_historical-ghgs_2017}),
+These differ from mole fractions in the real, i.e. humid, atmosphere.
+% The two differ by the water vapour content of the air,
+% which can be up to a few percent near the surface.
+% Whether and how to convert these values to mole fractions in humid air
+% is a model-specific implementation choice that we leave to modelling teams.
+Having said this, our output files use CF standard names of the form \texttt{mole\_fraction\_of\_X\_in\_air}
+(e.g. \texttt{mole\_fraction\_of\_carbon\_dioxide\_in\_air}, \citealp{eaton_cf-conventions_2026}).
+The CF standard names do not state whether these \texttt{\_in\_air} names include the effect of water vapour.
+For CO_2, CH_4 and N_2O, there are standard names of the form \texttt{mole\_fraction\_of\_X\_in\_dry\_air},
+which are explicit, so there is likely a metadata error here (see Sect.~\ref{sec:discussion}).
+Regardless of any metadata error, our values are dry-air mole fractions.
+
+The output datasets are provided at different spatial and temporal resolutions.
+We provide both monthly and yearly datasets,
+as well as global-means, hemispheric-means and datasets that include latitudinal variations.
+No dependency on longitude is provided.
+For a brief discussion on how add a vertical dimension to these datasets, see Sect.~\ref{ssec:methods-vertical}.
+
+The output datasets cover the a timespan from year 1 to the end of 2022.
+The CMIP7 historical experiment runs to the end of 2021,
+so this means that users have one more year of data than they strictly need,
+but this extra year can help for users who need to interpolate the forcings in order to produce model inputs
+or users who wish to to use this dataset for work beyond CMIP
+(noting the caveats on such use, see Sects.~\ref{sec:output-dataset-requirements} and \ref{sec:discussion}).
+The set of GHGs made available for CMIP7 match these provided for CMIP6,
+including the same set of equivalent species \citep{meinshausen_historical-ghgs_2017}.

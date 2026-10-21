@@ -1,0 +1,221 @@
+\section{Discussion}
+\label{sec:discussion}
+
+The output dataset shows differences from its inputs, other observation networks and the CMIP6 dataset
+that are small in the context of earth system modelling (Sect.~\ref{sec:results}).
+% value-check: {"tag": "co2-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0}
+% value-check: {"tag": "ch4-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0}
+% value-check: {"tag": "n2o-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0}
+% value-check: {"tag": "cfc12-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0}
+% value-check: {"tag": "cfc12eq-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0}
+% value-check: {"tag": "hfc134aeq-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0}
+For example, in approximate radiative effect terms, the differences from the CMIP6 dataset are less than 0.06~W/m2 over the length of the dataset
+% value-check: {"tag": "co2-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.03, "lower": 0}
+% value-check: {"tag": "ch4-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.03, "lower": 0}
+% value-check: {"tag": "n2o-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.03, "lower": 0}
+% value-check: {"tag": "cfc12-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.03, "lower": 0}
+% value-check: {"tag": "cfc12eq-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.03, "lower": 0}
+% value-check: {"tag": "hfc134aeq-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.03, "lower": 0}
+and less than 0.03~W/m2 over the period used for CMIP modelling (1850 onwards).
+There are nonetheless a number of points to discuss and areas for potential improvement.
+
+The first reiterates a point from Sect.~\ref{sec:output-dataset-requirements}:
+this dataset is primarily produced for use in CMIP and has been evaluated by us and users within that lens.
+While it may be suitable in other contexts, that is not guaranteed.
+For example, for inversion studies, the raw observations themselves with appropriate uncertainty information
+are likely a better source.
+Similarly, the pre-1850 period has been evaluated much less carefully than the post-1850 period.
+As a result, paleoclimate studies should consider whether the dataset is appropriate for their use
+and whether issues like the use of Law Dome data \citep{rubino_law-dome-dataset_2019}
+rather than the smoothed \citet{menking_law-dome_2025} dataset for CH_4 matter for their use case
+(this is because of a configuration error, which only affects CH_4, Sect.~\ref{sssec:methods-ch4-extend}).
+
+The second is that we are producing the forcings, and not the teams that run the observation networks.
+As we understand it, to date, the observation networks and earth system modelling communities have had relatively little direct contact.
+Instead, teams that produce forcings (like us) have acted as `bridges' between the two:
+translating observation products into the spatiotemporally complete datasets required for use as model inputs (i.e. forcings).
+While we have developed expertise in acting as this bridge,
+we are not experts in either the raw observations or earth system modelling.
+There is scope for investigating whether better outcomes would be achieved if the observation and earth system modelling communities worked more closely.
+As a readily available example, the AGAGE community already produces a model-based reanalysis
+that provides global coverage with spatial and temporal variation.
+This could make our analysis redundant and the earth system modelling community could use this AGAGE product (or a variation thereof) directly.
+It would also mean that decisions about pollution events could be made based on more careful considerations:
+observation networks could provide insight into what these pollution events are,
+modelling teams could provide insight into what the input is meant to represent
+and between the two groups they could figure out which data points to include and which to exclude.
+In our dataset, the inclusion of pollution events when we use NOAA's HATS flask data directly (Sect.~\ref{sssec:methods-cfc12-like-collect-observations})
+is likely giving too much weight to these pollution events.
+% Our understanding: input concentrations are meant to be representative of real atmospheric conditions,
+%   so pollution events should be included, but they should not have an outsized effect on our monthly- and spatial-means.
+%   For data sources without their own monthly means (NOAA's HATS flask data, used for some CFC-12-like gases),
+%   our simple monthly averaging (no filtering) likely gives pollution events an outsized effect.
+%   Updating the methods for such sources, or reconsidering the inclusion of pollution events, would be an improvement.
+%   Cf. \citet{meinshausen_historical-ghgs_2017}, Section~6.3 (limited filtering of station measurements).
+%   (methods, general approach, Step 1, "Our concentrations are meant to be representative of real atmospheric conditions")
+To date, no investigation has been done into the pros and cons of having observation networks become forcing providers
+and the resources to do such an investigation have not been available.
+Nonetheless, our suspicion is that we would get a better result if the AGAGE team produced a product that matched ESM needs directly,
+rather than having us act as an intermediary.
+Such an investigation would have to consider a number of questions,
+for example whether modelling-based or statistical approaches to interpolation are better for the intended use cases
+(given that modelling-based approaches are generally more grounded in physics, but are also more prone to producing extreme results),
+how observation providers could expand their data products to provide the required temporal coverage
+and which observation networks/data sources should be used given that there can be more than one provider
+but, to date, only one set of forcing data has been produced,
+so a choice has to be made about `preferred' providers or how to make the composite.
+
+The use of crude scalings to avoid unphysical values is a clear area for improvement.
+This is most visible for the CFC-12-like and C_4F_10-like gases,
+where we have to scale down the latitudinal gradient and the seasonality to avoid negative values in the output
+(Sects.~\ref{sssec:methods-cfc12-like-prepare-components} and \ref{sssec:methods-c4f10-like-prepare-components}).
+The need for this points to three inconsistencies.
+The first is between our pre-industrial values and the emissions used to extend the latitudinal gradient.
+The global-, annual-mean is held at its pre-industrial value until the pre-industrial year and only rises slowly after it,
+whereas the latitudinal gradient follows emissions, which can already be well above zero in these years.
+A better approach would derive the components in a way that guarantees their consistency,
+for example by constraining the latitudinal gradient and the seasonality relative to the global-mean when they are derived and extended
+or by considering the consistency between the emissions estimates and concentration changes.
+% % zalue-check: {"tag": "cfc12-like-lat-gradient-capped-years-after-pre-industrial", "unit": "yr", "lower": 44, "upper": 44}
+% % zalue-check: {"tag": "c4f10-like-lat-gradient-capped-years-first", "unit": "yr", "lower": 1934, "upper": 1934}
+% % zalue-check: {"tag": "c4f10-like-lat-gradient-capped-years-last", "unit": "yr", "lower": 2001, "upper": 2001}
+% As a result, we scale down the latitudinal gradient of nearly every CFC-12-like gas
+% in the (up to 44) years after its pre-industrial year
+% and of the C_4F_10-like gases in some months between 1934 and 2001.
+The second is specific to HFC-152a,
+% value-check: {"tag": "hfc152a-lat-gradient-capped-years-first", "unit": "yr", "lower": 1991, "upper": 1991}
+% value-check: {"tag": "hfc152a-lat-gradient-capped-years-last", "unit": "yr", "lower": 2020, "upper": 2020}
+for which we scale down the latitudinal gradient in some months between 1991 and 2020.
+This period includes the years in which we have data points from the observation networks,
+so the extension back in time cannot be the only cause:
+the latitudinal gradient we derive from the observations is itself too strong for the global-mean in these months.
+This suggests that we need to consider how we handle the input data more carefully,
+for example removing outliers or pollution events (Fig.~\ref{fig:methods-hfc152a}) before performing PCA.
+The third is specific to HFC-236fa,
+% value-check: {"tag": "hfc236fa-seasonality-capped-years-first", "unit": "yr", "lower": 1996, "upper": 1996}
+% value-check: {"tag": "hfc236fa-seasonality-capped-years-last", "unit": "yr", "lower": 2022, "upper": 2022}
+% value-check: {"tag": "max-seasonality-fraction", "unit": "dimensionless", "lower": 0.35, "upper": 0.35}
+for which the seasonality we derive from the observations is more than 35\% of the global-, annual-mean
+in every year from 1996 to 2022.
+A seasonal cycle of this size is not plausible for such a long-lived gas
+and most likely reflects noise in the measurements of its very low concentrations (Fig.~\ref{fig:methods-hfc236fa}).
+As for HFC-152a, a more careful handling of the input data would likely solve this issue.
+% % zalue-check: {"tag": "hfc236fa-lat-gradient-first-eof-variance", "unit": "dimensionless", "lower": 0.75, "upper": 0.85}
+% (HFC-236fa is also the only CFC-12-like gas for which the first latitudinal gradient EOF explains less than 90\% of the variance,
+% Sect.~\ref{sssec:methods-cfc12-like-pca}).
+
+Including uncertainty estimates in our output would also represent another major improvement.
+The value of this improvement would come less from the quantification of uncertainty itself
+(we do not expect these uncertainties to be large in the context of earth system modelling)
+than from the context it would provide for the dataset, which is currently lacking.
+For example, the inclusion of uncertainties would help identify the leading uncertainty.
+We suspect that the leading uncertainty is not related to measurement error.
+Instead, it is methodological: the current method requires a number of modelling steps/assumptions
+to go from the sparse observation networks we have available to a spatially and temporally complete dataset
+over the entire earth's surface from year 1 to approximately present-day.
+The error in this term will have specific characteristics.
+For example, it will vary strongly over time:
+far less modelling is required to make a spatially complete estimate in the period where we have observation networks
+than when our only estimates come from one or two ice core records.
+% IGCC's values: Sect. 3 of Forster et al. (2026), which carries over the AR6 uncertainties (checked 2026-10-09).
+% Our CH_4 difference from IGCC: checked in the results (tags below).
+% Only from 1983 on: before then, IGCC's (AR6's) CH_4 is based on CMIP6 rather than the observation networks
+% (see the note in the results), so the bigger differences then (up to approximately 25 ppb) aren't a like-for-like comparison.
+It is also not clear that the uncertainties which are reported elsewhere consider this methodological uncertainty.
+For example, IGCC \citep{forster_igcc_2026} reports uncertainties in global-mean surface concentrations
+of 0.4~ppm for CO_2, 3.3~ppb for CH_4 and 0.4~ppb for N_2O.
+% NOAA only option in case reviewers ask
+% % value-check: {"tag": "ch4-monthly-diff-from-noaa", "unit": "ppb", "upper": 15, "lower": 5}
+% Given that our CH_4 global-mean differs from NOAA's by around 10~ppb (Sect.~\ref{ssec:results-ch4}),
+% despite both being based on largely the same observations,
+% value-check: {"tag": "ch4-noaa-global-mean-start", "unit": "yr", "upper": 1983, "lower": 1983}
+% value-check: {"tag": "ch4-diff-from-igcc-noaa-era-mean", "unit": "ppb", "upper": 12.5, "lower": 7.5}
+Given that our CH_4 global-mean differs from IGCC's by around 10~ppb on average from 1983 onwards (Sect.~\ref{ssec:results-ch4}),
+despite both being based on the same NOAA and AGAGE observations,
+it seems that the reported uncertainty estimates exclude this methodological uncertainty.
+The importance of this component will vary by gas.
+It is likely particularly important for CH_4,
+given that concentrations of CH_4 vary strongly in space and the underlying observation networks do not have global coverage.
+In our experience, consideration of the question of methodological uncertainty is generally missing
+and quantified uncertainties would help a) inform users of the origin of uncertainty,
+b) encourage observation networks to engage more directly with the question of how to reduce the error
+that is introduced between raw observations and an estimate of spatially and temporally complete values
+and c) identify where effort should be directed to reduce uncertainty in greenhouse gas forcing datasets.
+
+More robust methods would help reduce the methodological uncertainty.
+One key example of this is our interpolation methods.
+These are very simple: linear interpolation between available data points
+with constant poleward extensions as needed.
+Such methods clearly do not capture any more complex physics or chemistry.
+Another example is our representation of the latitudinal gradient and seasonal cycles.
+While our simple method produces results that largely agree with other data sources (Sect.~\ref{sec:results}),
+more carefully considered methods could lead to improvements,
+such as addressing our slightly too strong CH_4 seasonality (Sect.~\ref{ssec:results-ch4}).
+
+Another option to address the interpolation uncertainty would be to use satellite observations as an input dataset.
+While satellite information is only available for a limited number of gases and a limited time period,
+it provides a completely different set of spatiotemporal characteristics than the ground-based network.
+The inclusion of information from satellite data could therefore enhance the available input dataset
+and improve the output data product.
+
+The use of relatively crude harmonisation is also worth consideration.
+Harmonisation is necessary to avoid jumps in our composite output dataset.
+However, currently we use simple methods that align datasets based on a single year of data
+with a declining influence of harmonisation as we move further away from the harmonisation year.
+This is crude and prone to over-corrections: if the year is anomalously high or low,
+that anomaly is included in every year of the harmonised dataset.
+%     For CO_2, 1981 is a high year: the merged Law Dome--Mauna Loa record is a smooth spline of the
+%     Mauna Loa and South Pole average, so it sits below the global-mean by 0.8 ppm on average (1979-2022),
+%     but by -0.05 to 2.0 ppm in individual years (1.2 ppm in 1981 vs NOAA's global-mean),
+%     and our 1981 observation network global-mean is a further 0.3 ppm above NOAA's.
+%     Hence the 1.5 ppm offset, which makes our CO_2 ~1 ppm higher than CMIP6 and the merged record in the 1960s
+%     and our CO_2 growth in 1982 only 0.47 ppm (NOAA: 0.74 ppm). Checked 2026-10-09.
+While harmonisation is difficult, especially automated harmonisation,
+the use of a multi-year average or offsets that follow the interhemispheric gradient
+could guard against some of these potential problems.
+
+The assumed latitudinal gradient for C_4F_10-like gases and C_8F_18 may also need to be reconsidered.
+At present, it is set such that the EOF value is proportional to latitude,
+once the area-weight of the latitudinal band is taken into account.
+While this makes the maths of aligning the EOF with the available data sources simple,
+it also means that there is a rapid increase in the output concentrations towards the poles.
+It is not clear that there is a physical basis for this rapid increase,
+which means that the deviation from global-mean values in the most poleward latitudinal bands
+is more than double what it is in the neighbouring latitudinal bands.
+
+Another issue, albeit a relatively minor one,
+is that we do not convert between the calibration scales of the different observation networks,
+nor have we explored the differences between them in depth.
+For the gases with the largest radiative forcing, the effect is negligible:
+we only use data from NOAA for CO_2,
+the difference between the AGAGE and NOAA scales for CH_4 is less than 0.1\%
+(\citealp{meinshausen_historical-ghgs_2017} converted AGAGE CH_4 to the NOAA scale by multiplying by 1.0003)
+and the AGAGE and NOAA scales for N_2O are compatible without conversion
+\citep{meinshausen_historical-ghgs_2017}.
+For halocarbons, the differences between calibration scales are small
+and these gases have smaller radiative forcings.
+Nonetheless, a more careful treatment of calibration scales,
+ideally developed together with the observation networks,
+would be an improvement.
+
+To complete consideration of issues, we list other minor issues that have not been mentioned yet.
+The first is that, like \citet{meinshausen_historical-ghgs_2017}, we do not provide any information on the vertical dimension.
+In addition, like \citet{meinshausen_historical-ghgs_2017}, we do not provide any information on the longitudinal dimension
+despite the possibility for variations in this dimension.
+Finally, our files use CF standard names \citep{eaton_cf-conventions_2026}
+of the form \texttt{mole\_fraction\_of\_X\_in\_air}
+rather than the more explicit \texttt{mole\_fraction\_of\_X\_in\_dry\_air}.
+
+In future, we would like to produce annual updates of this forcing dataset.
+Such annual updates would ameliorate the time pressure to deliver for a specific CMIP cycle:
+there would always be the most recent annual update available.
+This delivery could also be coupled to more regular and automated validation of the datasets,
+such as via a Rapid Evaluation Framework for forcings (REF for forcings)
+that would apply the ideas from the Rapid Evaluation Framework \citep{climate-ref_docs_2026,hassler_ref_2026,hoffman_ref_2026} to forcings datasets.
+If we were to produce annual updates, this may encourage inclusion of more data sources as inputs or validation sources.
+It would also prompt consideration
+of how best to handle gases which do not have regularly updated observations, such as C_8F_18,
+and which gases exactly should be included in our dataset
+given that there is a balance to be struck between coverage, effort,
+impact on output data (given that many gases have small, or even negligible radiative forcings)
+and availability of recent observations.
