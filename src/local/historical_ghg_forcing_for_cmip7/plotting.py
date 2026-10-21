@@ -235,7 +235,7 @@ because the full name of all three is wider
 than the panel whose legend has to carry it.
 """
 
-MOVING_SUFFIX = " (moving)"
+MOVING_SUFFIX = " (non-stationary)"
 """Suffix which marks a network group whose stations move
 
 Some networks report from ships as well as from fixed sites.
@@ -246,7 +246,7 @@ so it is shown as its own group rather than folded in with the fixed sites.
 
 NETWORK_GROUP_COLOURS = {
     "NOAA": OKABE_ITO["blue"],
-    "NOAA (moving)": "#3a3b3a",
+    "NOAA (non-stationary)": "#3a3b3a",
     "AGAGE": OKABE_ITO["vermillion"],
 }
 """Colour to use for each group of observation networks
@@ -263,7 +263,7 @@ simply never asks for the moving group.
 
 NETWORK_GROUP_MARKERS = {
     "NOAA": "o",
-    "NOAA (moving)": ".",
+    "NOAA (non-stationary)": "s",
     "AGAGE": "^",
 }
 """Marker to use for each group of observation networks
@@ -274,7 +274,7 @@ so the figure still works in greyscale.
 
 NETWORK_GROUP_MARKER_SIZES = {
     "NOAA": 14.0,
-    "NOAA (moving)": 3.0,
+    "NOAA (non-stationary)": 1.0,
     "AGAGE": 7.0,
 }
 """Marker size to use for each group of observation networks on the map
@@ -282,6 +282,21 @@ NETWORK_GROUP_MARKER_SIZES = {
 Several sites host both groups, so the markers are drawn
 as concentric outlines, largest first, to keep both visible.
 """
+
+NETWORK_GROUP_ALPHA = {
+    "NOAA": 1.0,
+    "NOAA (non-stationary)": 0.2,
+    "AGAGE": 1.0,
+}
+"""Alpha to use for each group of observation networks"""
+
+NETWORK_GROUP_ZORDER = {
+    "NOAA": 3.5,
+    "NOAA (non-stationary)": 2.0,
+    "AGAGE": 3.0,
+}
+"""Alpha to use for each group of observation networks"""
+
 
 NETWORK_GROUP_COLUMN = "network_group"
 """Column we add to hold the network group"""
@@ -1593,9 +1608,10 @@ def plot_station_locations(
             edgecolors=NETWORK_GROUP_COLOURS[group],
             marker=NETWORK_GROUP_MARKERS[group],
             s=NETWORK_GROUP_MARKER_SIZES[group],
+            alpha=NETWORK_GROUP_ALPHA[group],
+            zorder=NETWORK_GROUP_ZORDER[group],
             linewidths=0.6,
             label=group,
-            zorder=3,
             # Cartopy clips to the projection boundary,
             # which would cut the South Pole station in half
             clip_on=False,
@@ -1887,6 +1903,15 @@ def plot_seasonality_from_obs_network(
     ax.set_xlabel("month", fontsize="small")
     ax.set_xticks(np.arange(1, 12 + 1, 3))
     ax.tick_params(labelsize="small")
+
+    # Set y limits so that the axes are symmetric around zero
+    ylim = ax.get_ylim()
+    ylim_max = max(np.abs(ylim[0]), np.abs(ylim[1]))
+    ax.set_ylim(-ylim_max, ylim_max)
+
+    # Add a line at zero to make clear where the middle is
+    ax.axhline(0.0, color="gray", zorder=1.0, linestyle="--", linewidth=0.5)
+
     # Beside the panel rather than on it: the points fill most of the panel,
     # so there is nowhere on it the legend would not cover some of them
     add_latitude_legend(ax, **get_beside_legend_kwargs(ax))
@@ -2030,6 +2055,15 @@ def plot_lat_gradient_eofs(
     ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
     ax.set_xlabel(f"[{da_eofs.attrs['units']}]", fontsize="small")
     ax.tick_params(labelsize="small")
+
+    # Set x limits so that the axes are symmetric around zero
+    xlim = ax.get_xlim()
+    xlim_max = max(np.abs(xlim[0]), np.abs(xlim[1]))
+    ax.set_xlim(-xlim_max, xlim_max)
+
+    # Add a line at zero to make clear where the middle is
+    ax.axvline(0.0, color="gray", zorder=1.0, linestyle="--", linewidth=0.5)
+
     compact_existing_legend(ax, loc="best")
 
     return ax

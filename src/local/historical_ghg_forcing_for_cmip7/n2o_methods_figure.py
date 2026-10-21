@@ -312,9 +312,9 @@ def generate_n2o_methods_figure(
     -------
         `outfile` and `appendix_outfile`
     """
-    # if outfile.exists() and appendix_outfile.exists() and not force_rerun:
-    #     logger.info(f"Using existing {outfile} and {appendix_outfile}")
-    #     return outfile, appendix_outfile
+    if outfile.exists() and appendix_outfile.exists() and not force_rerun:
+        logger.info(f"Using existing {outfile} and {appendix_outfile}")
+        return outfile, appendix_outfile
 
     all_data_with_bins = add_network_group(
         get_n2o_all_data_with_bins(

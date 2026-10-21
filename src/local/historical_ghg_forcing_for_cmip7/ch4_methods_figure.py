@@ -685,9 +685,9 @@ def generate_ch4_methods_figure(  # noqa: PLR0913, PLR0915
     -------
         `outfile` and `appendix_outfile`
     """
-    # if outfile.exists() and appendix_outfile.exists() and not force_rerun:
-    #     logger.info(f"Using existing {outfile} and {appendix_outfile}")
-    #     return outfile, appendix_outfile
+    if outfile.exists() and appendix_outfile.exists() and not force_rerun:
+        logger.info(f"Using existing {outfile} and {appendix_outfile}")
+        return outfile, appendix_outfile
 
     all_data_with_bins = add_network_group(
         get_ch4_all_data_with_bins(
