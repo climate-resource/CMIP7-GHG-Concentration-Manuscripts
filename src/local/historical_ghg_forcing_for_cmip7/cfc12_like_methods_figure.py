@@ -36,7 +36,6 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import yaml
-from loguru import logger
 
 from local.cmip_ghg_generation import (
     BUNDLE_CONFIG_FILE,
@@ -272,7 +271,7 @@ TITLES = {
     # see plot_station_locations
     "locations": "Obs. locations\n",
     "gm": "Obs. global-mean",
-    "seasonality": "Obs. seasonality",
+    "seasonality": "Obs. relative seasonality",
     "gm-ext": "Extended global-mean",
     "lat-grad-eof": "Obs. lat. gradient EOF",
     "lat-grad-pc-ext": "Extended lat. gradient PC",
@@ -664,9 +663,9 @@ def generate_cfc12_like_methods_figure(  # noqa: PLR0913, PLR0915
         `gas` is not processed like CFC-12,
         or its latitudinal gradient has more than one EOF
     """
-    if outfile.exists() and appendix_outfile.exists() and not force_rerun:
-        logger.info(f"Using existing {outfile} and {appendix_outfile}")
-        return outfile, appendix_outfile
+    # if outfile.exists() and appendix_outfile.exists() and not force_rerun:
+    #     logger.info(f"Using existing {outfile} and {appendix_outfile}")
+    #     return outfile, appendix_outfile
 
     if gas not in CFC12_LIKE_GASES:
         msg = f"{gas=} is not processed like CFC-12, expected one of {CFC12_LIKE_GASES}"

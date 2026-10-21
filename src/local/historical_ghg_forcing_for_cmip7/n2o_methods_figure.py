@@ -100,7 +100,7 @@ TITLES = {
     # see plot_station_locations
     "locations": "Obs. locations\n",
     "gm": "Obs. global-mean",
-    "seasonality": "Obs. seasonality",
+    "seasonality": "Obs. relative seasonality",
     "gm-ext": "Extended global-mean",
     "lat-grad-eof": "Obs. lat. gradient EOFs",
     "lat-grad-pc-ext": "Extended lat. gradient PCs",
@@ -312,9 +312,9 @@ def generate_n2o_methods_figure(
     -------
         `outfile` and `appendix_outfile`
     """
-    if outfile.exists() and appendix_outfile.exists() and not force_rerun:
-        logger.info(f"Using existing {outfile} and {appendix_outfile}")
-        return outfile, appendix_outfile
+    # if outfile.exists() and appendix_outfile.exists() and not force_rerun:
+    #     logger.info(f"Using existing {outfile} and {appendix_outfile}")
+    #     return outfile, appendix_outfile
 
     all_data_with_bins = add_network_group(
         get_n2o_all_data_with_bins(

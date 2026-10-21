@@ -61,6 +61,18 @@ contributions = [
 ]
 
 [[authors]]
+given_name = "Florence"
+surname = 'Bockting'
+email = "tbd@invalid.com"
+# TBD current affiliation
+affiliations = ["crs"]
+contributions_initials = "FB"
+contributions = [
+    "dataset-contributed",
+    "review-and-editing",
+]
+
+[[authors]]
 given_name = "Jared"
 surname = "Lewis"
 email = "jared.lewis@climate-resource.com"
@@ -70,17 +82,6 @@ contributions = [
     "dataset-production",
 ]
 
-# [[authors]]
-# given_name = "Florence"
-# surname = 'Bockting'
-# email = "tbd@invalid.com"
-# # TBD current affiliation
-# affiliations = ["crs"]
-# contributions_initials = "FB"
-# contributions = [
-#     "dataset-contributed",
-#     "review-and-editing",
-# ]
 
 [affiliations]
 crs = "Climate Resource S, Berlin, Germany"
