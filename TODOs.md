@@ -11,25 +11,6 @@ Paths are relative to `manuscripts/historical-ghg-forcing-for-cmip7/` unless sta
 
 The section each item came from is in parentheses (see Done for the context).
 
-- [x] add compilation instructions to the README
-- [x] recompile in full with the force flag
-- [x] Add Jared as a historical author
-- [x] label seasonality as 'relative seasonality' in the places where that is what it is
-- [x] check subplots g) and h) of all plots
-- [x] add zero line to lat. gradient and seasonality plots so it's easier to see that their means in the relevant axis is zero
-- [x] update 'NOAA (moving)' so it uses a more transparent symbol and therefore doesn't drown everything out. Relabel to 'NOAA (non-stationary)'
-- [x] plot lat. gradient stuff with an area-weighted axis so it's more obvious that the area-weighted mean is zero
-- [x] (Sections 6 and 7) User guide citation and link. (now published at https://zenodo.org/records/23521231)
-      Blocked: the user guide hasn't been published, so there is nothing to cite yet (no Zenodo record/DOI;
-      checked again 2026-10-12, Zenodo only has the dataset bundle, https://doi.org/10.5281/zenodo.14892947).
-      It is built from this repo (`scripts/create-historical-user-guide.sh`, `notebooks/user-guide-historical.py`).
-      Once it is published (as a standalone Zenodo record to start, then other links/bundles as a second step),
-      add the bib entry and replace the four placeholders:
-    - [x] `results.tex` intro: "we refer to the dedicated user guide [TODO citation and ref. ...]"
-    - [x] `methods.tex` output format section (x2): "the user guide [TODO ref user guide]"
-    - [x] `conclusion.tex`: "A full user guide can be found at [TODO link]." (and its ZNTODO)
-- [x] checked C4F10 lat grad EOF plotting
-
 ### To ask co-authors
 
 - [ ] (Section 10) Invite all the data producers to be co-authors (ZN to do, not a manuscript edit)
@@ -1119,3 +1100,24 @@ Found by searching the manuscript sources for TODOs not already in Outstanding (
     - [x] `metadata.toml:10` "TODO: the contributions below are placeholders"
           (confirmed correct as they are 2026-10-09, see Section 6)
     - [x] done (2026-10-12): both removed.
+
+### 12. Final fix ups
+
+- [x] add compilation instructions to the README
+- [x] recompile in full with the force flag
+- [x] Add Jared as a historical author
+- [x] label seasonality as 'relative seasonality' in the places where that is what it is
+- [x] check subplots g) and h) of all plots
+- [x] add zero line to lat. gradient and seasonality plots so it's easier to see that their means in the relevant axis is zero
+- [x] update 'NOAA (moving)' so it uses a more transparent symbol and therefore doesn't drown everything out. Relabel to 'NOAA (non-stationary)'
+- [x] plot lat. gradient stuff with an area-weighted axis so it's more obvious that the area-weighted mean is zero
+- [x] (Sections 6 and 7) User guide citation and link. (now published at https://zenodo.org/records/23521231)
+      Blocked: the user guide hasn't been published, so there is nothing to cite yet (no Zenodo record/DOI;
+      checked again 2026-10-12, Zenodo only has the dataset bundle, https://doi.org/10.5281/zenodo.14892947).
+      It is built from this repo (`scripts/create-historical-user-guide.sh`, `notebooks/user-guide-historical.py`).
+      Once it is published (as a standalone Zenodo record to start, then other links/bundles as a second step),
+      add the bib entry and replace the four placeholders:
+    - [x] `results.tex` intro: "we refer to the dedicated user guide [TODO citation and ref. ...]"
+    - [x] `methods.tex` output format section (x2): "the user guide [TODO ref user guide]"
+    - [x] `conclusion.tex`: "A full user guide can be found at [TODO link]." (and its ZNTODO)
+- [x] checked C4F10 lat grad EOF plotting
