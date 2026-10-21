@@ -13,21 +13,22 @@ The section each item came from is in parentheses (see Done for the context).
 
 - [x] add compilation instructions to the README
 - [x] recompile in full with the force flag
-- [ ] Add Jared as a historical author
-- [ ] label seasonality as 'relative seasonality' in the places where that is what it is
-- [ ] check subplots g) and h) of all plots
-- [ ] plot lat. gradient stuff with an area-weighted axis so it's more obvious that the area-weighted mean is zero
-- [ ] add zero line to lat. gradient and seasonality plots so it's easier to see that their means in the relevant axis is zero
-- [ ] update 'NOAA (moving)' so it uses a more transparent symbol and therefore doesn't drown everything out. Relabel to 'NOAA (ship or plane)' (and double check if this label is correct)
-- [ ] (Sections 6 and 7) User guide citation and link.
+- [x] Add Jared as a historical author
+- [x] label seasonality as 'relative seasonality' in the places where that is what it is
+- [x] check subplots g) and h) of all plots
+- [x] add zero line to lat. gradient and seasonality plots so it's easier to see that their means in the relevant axis is zero
+- [x] update 'NOAA (moving)' so it uses a more transparent symbol and therefore doesn't drown everything out. Relabel to 'NOAA (non-stationary)'
+- [x] plot lat. gradient stuff with an area-weighted axis so it's more obvious that the area-weighted mean is zero
+- [x] (Sections 6 and 7) User guide citation and link. (now published at https://zenodo.org/records/23521231)
       Blocked: the user guide hasn't been published, so there is nothing to cite yet (no Zenodo record/DOI;
       checked again 2026-10-12, Zenodo only has the dataset bundle, https://doi.org/10.5281/zenodo.14892947).
       It is built from this repo (`scripts/create-historical-user-guide.sh`, `notebooks/user-guide-historical.py`).
       Once it is published (as a standalone Zenodo record to start, then other links/bundles as a second step),
       add the bib entry and replace the four placeholders:
-    - [ ] `results.tex` intro: "we refer to the dedicated user guide [TODO citation and ref. ...]"
-    - [ ] `methods.tex` output format section (x2): "the user guide [TODO ref user guide]"
-    - [ ] `conclusion.tex`: "A full user guide can be found at [TODO link]." (and its ZNTODO)
+    - [x] `results.tex` intro: "we refer to the dedicated user guide [TODO citation and ref. ...]"
+    - [x] `methods.tex` output format section (x2): "the user guide [TODO ref user guide]"
+    - [x] `conclusion.tex`: "A full user guide can be found at [TODO link]." (and its ZNTODO)
+- [x] checked C4F10 lat grad EOF plotting
 
 ### To ask co-authors
 

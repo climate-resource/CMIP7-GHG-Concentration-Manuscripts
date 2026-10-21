@@ -27,7 +27,7 @@ contributions = [
 [[authors]]
 given_name = "Malte"
 surname = "Meinshausen"
-email = "malte.meinshausen@unimelb.edu.au"
+email = "malte.meinshausen@climate-resource.com"
 affiliations = ["cr", "uom-sgeas"]
 contributions_initials = "MM"
 contributions = [
@@ -70,6 +70,16 @@ contributions_initials = "FB"
 contributions = [
     "dataset-contributed",
     "review-and-editing",
+]
+
+[[authors]]
+given_name = "Jared"
+surname = "Lewis"
+email = "jared.lewis@climate-resource.com"
+affiliations = ["cr"]
+contributions_initials = "JL"
+contributions = [
+    "dataset-production",
 ]
 
 [affiliations]

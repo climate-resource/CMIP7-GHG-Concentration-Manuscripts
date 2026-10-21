@@ -152,16 +152,24 @@ LAT_GRADIENT_NOTEBOOK = (
 TITLES = {
     "timeseries": "Observation network values",
     "counts": "Obs. counts",
-    # The empty last line is where the map's legend goes,
-    # see plot_station_locations
-    "locations": "Obs. locations\n",
+    # The empty last lines are where the map's legend goes,
+    # one per legend row (see MAP_LEGEND_NCOLS and plot_station_locations)
+    "locations": "Obs. locations\n\n",
     "gm": "Obs. global-mean",
-    "seasonality": "Obs. seasonality",
+    "seasonality": "Obs. relative seasonality",
     "gm-ext": "Extended global-mean",
     "lat-grad-eof": "Obs. lat. gradient EOFs",
     "lat-grad-pc-ext": "Extended lat. gradient PCs",
 }
 """Title of each panel of the main figure"""
+
+MAP_LEGEND_NCOLS = 2
+"""Number of columns in the map's legend
+
+CH4 has all three network groups, and the non-stationary group's name is long,
+so the legend is wider than the map if they are all on one row.
+Two columns makes two rows, hence the two empty lines in the map's title.
+"""
 
 ROWS = (
     Row(
@@ -710,7 +718,9 @@ def generate_ch4_methods_figure(  # noqa: PLR0913, PLR0915
         # inset showing points the panel around it does not have.
         robust_y_limits=False,
     )
-    plot_station_locations(all_data_with_bins, axes["locations"])
+    plot_station_locations(
+        all_data_with_bins, axes["locations"], legend_ncols=MAP_LEGEND_NCOLS
+    )
     counts_mesh = plot_observation_counts(all_data_with_bins, axes["counts"])
 
     latitude_colour_bar = add_colour_bar(

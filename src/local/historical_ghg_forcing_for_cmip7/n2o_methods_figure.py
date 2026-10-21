@@ -100,7 +100,7 @@ TITLES = {
     # see plot_station_locations
     "locations": "Obs. locations\n",
     "gm": "Obs. global-mean",
-    "seasonality": "Obs. seasonality",
+    "seasonality": "Obs. relative seasonality",
     "gm-ext": "Extended global-mean",
     "lat-grad-eof": "Obs. lat. gradient EOFs",
     "lat-grad-pc-ext": "Extended lat. gradient PCs",
