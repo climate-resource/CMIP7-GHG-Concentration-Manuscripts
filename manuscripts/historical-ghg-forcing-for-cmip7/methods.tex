@@ -273,7 +273,9 @@ Full references for the generation of each gas are given in Appendix~\ref{app:in
             \item {
                 \textbf{Step 3: Principal component analysis}
                 We don't perform PCA.
-                Instead, we assume that the (area-weighted) latitudinal gradient is linear,
+                Instead, we assume a latitudinal gradient EOF which is proportional to latitude
+                once the area of each latitudinal band is taken into account
+                (Sect.~\ref{sssec:methods-c4f10-like-pca}),
                 then calculate the PC and the global-, annual-mean based on the data from \citet{droste_pfcs_2020}.
                 % value-check: {"tag": "droste-last-year", "unit": "yr", "lower": 2018, "upper": 2018}
                 % value-check: {"tag": "c4f10-like-last-year", "unit": "yr", "lower": 2022, "upper": 2022}
@@ -294,7 +296,10 @@ Full references for the generation of each gas are given in Appendix~\ref{app:in
         we use the global- and hemispheric-, annual-means from the CMIP6 dataset
         (taking the 2015--2022 time period from the SSP2-4.5 scenario, \citealp{meinshausen_ssp-ghgs_2020}).
         As in \citet{meinshausen_historical-ghgs_2017}, we assume zero seasonality
-        and a linear latitudinal gradient, scaled to reproduce the CMIP6 hemispheric-means.
+        and the same latitudinal gradient EOF as for C_4F_10
+        (proportional to latitude once the area of each latitudinal band is taken into account,
+        Sect.~\ref{sssec:methods-c4f10-like-pca}),
+        scaled to reproduce the CMIP6 hemispheric-means.
     }
 \end{enumerate}
 
@@ -1303,9 +1308,16 @@ Principal component analysis cannot be performed due to lack of observations.
 % \textbf{Zonal mean.}
 
 \textbf{Latitudinal gradient.}
-Instead, we assume a single linear EOF for the latitudinal gradient (Fig.~\ref{fig:methods-c4f10}b))
-(note that this linearity is present when considering the area of each latitudinal box,
-the EOF (and therefore the latitudinal gradient) does not appear linear if the differing area of each latitudinal box is not considered).
+Instead, we assume a single EOF for the latitudinal gradient (Fig.~\ref{fig:methods-c4f10}b)).
+The EOF's value in each latitudinal band, multiplied by the band's area weight,
+is proportional to the band's central latitude
+(i.e. the area-weighted values change by the same amount from one band to the next).
+% The EOF is normalised so that its area-weighted mean is zero
+% and its northern (southern) hemispheric mean is 0.5 (-0.5),
+% which makes the PC the difference between the hemispheric means.
+Without the area weighting, the EOF is strongly non-linear:
+its magnitude increases rapidly towards the poles, because the polar bands cover so little area.
+This assumption may be worth reconsidering (Sect.~\ref{sec:discussion}).
 We then set the PCs such that change in value between the
 Cape Grim and Tacolneston observations in each year
 is matched by our latitudinal gradient (i.e. the product of the EOF and the PC, Fig.~\ref{fig:methods-c4f10}c)).
@@ -1383,7 +1395,8 @@ Due to a lack of data, we instead take the global- and hemispheric-, annual-mean
 SSP2-4.5 from 2015 from \citealp{meinshausen_ssp-ghgs_2020};
 see Fig.~\ref{fig:methods-c8f18}a)).
 In line with \citet{meinshausen_historical-ghgs_2017},
-we assume zero seasonality and a linear latitudinal gradient (Fig.~\ref{fig:methods-c8f18}c))
+we assume zero seasonality and the same latitudinal gradient EOF as for C_4F_10
+(Sect.~\ref{sssec:methods-c4f10-like-pca}, Fig.~\ref{fig:methods-c8f18}c))
 that we scale to reproduce the CMIP6 hemispheric means (Fig.~\ref{fig:methods-c8f18}b)),
 then prepare and combine the components as is done for N_2O
 (Sects.~\ref{sssec:methods-n2o-prepare-components} and~\ref{sssec:methods-n2o-generate-native-resolution}).

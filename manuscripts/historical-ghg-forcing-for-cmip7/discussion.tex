@@ -174,6 +174,15 @@ While harmonisation is difficult, especially automated harmonisation,
 the use of a multi-year average or offsets that follow the interhemispheric gradient
 could guard against some of these potential problems.
 
+The assumed latitudinal gradient for C_4F_10-like gases and C_8F_18 may also need to be reconsidered.
+At present, it is set such that the EOF value is proportional to latitude,
+once the area-weight of the latitudinal band is taken into account.
+While this makes the maths of aligning the EOF with the available data sources simple,
+it also means that there is a rapid increase in the output concentrations towards the poles.
+It is not clear that there is a physical basis for this rapid increase,
+which means that the deviation from global-mean values in the most poleward latitudinal bands
+is more than double what it is in the neighbouring latitudinal bands.
+
 Another issue, albeit a relatively minor one,
 is that we do not convert between the calibration scales of the different observation networks,
 nor have we explored the differences between them in depth.
@@ -202,7 +211,7 @@ Such annual updates would ameliorate the time pressure to deliver for a specific
 there would always be the most recent annual update available.
 This delivery could also be coupled to more regular and automated validation of the datasets,
 such as via a Rapid Evaluation Framework for forcings (REF for forcings)
-that would apply the ideas from the REF \citep{climate-ref_docs_2026,hassler_ref_2026,hoffman_ref_2026} to forcings datasets.
+that would apply the ideas from the Rapid Evaluation Framework \citep{climate-ref_docs_2026,hassler_ref_2026,hoffman_ref_2026} to forcings datasets.
 If we were to produce annual updates, this may encourage inclusion of more data sources as inputs or validation sources.
 It would also prompt consideration
 of how best to handle gases which do not have regularly updated observations, such as C_8F_18,
