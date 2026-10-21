@@ -252,13 +252,13 @@ NETWORK_GROUP_COLOURS = {
 """Colour to use for each group of observation networks
 
 These are from the Okabe-Ito palette, i.e. they are colour-blind safe.
-The exception is the moving group, which is drawn in grey:
+The exception is the non-stationary group, which is drawn in grey:
 it is a qualifier on NOAA rather than a network in its own right,
 and there is no fourth Okabe-Ito colour left which reads as such.
 
 This covers every group either gas has.
 A gas whose data has no shipboard observations
-simply never asks for the moving group.
+simply never asks for the non-stationary group.
 """
 
 NETWORK_GROUP_MARKERS = {
@@ -295,7 +295,7 @@ NETWORK_GROUP_ZORDER = {
     "NOAA (non-stationary)": 2.0,
     "AGAGE": 3.0,
 }
-"""Alpha to use for each group of observation networks"""
+"""Z-order to use for each group of observation networks"""
 
 
 NETWORK_GROUP_COLUMN = "network_group"
@@ -1568,6 +1568,7 @@ def set_robust_y_limits(
 def plot_station_locations(
     indf: pd.DataFrame,
     ax: matplotlib.axes.Axes,
+    legend_ncols: int | None = None,
 ) -> None:
     """
     Plot the location of each station in the observation network
@@ -1581,6 +1582,13 @@ def plot_station_locations(
         Axes on which to plot
 
         This must have been created with a cartopy projection.
+
+    legend_ncols
+        Number of columns in the legend
+
+        If not supplied, every network group goes on one row.
+        Use fewer columns if one row is wider than the map,
+        and give the panel's title an empty line for each row of the legend.
     """
     ax.coastlines(linewidth=0.3, color="0.55")
     ax.set_global()
@@ -1638,9 +1646,13 @@ def plot_station_locations(
         fontsize=LEGEND_FONT_SIZE,
         loc="lower left",
         bbox_to_anchor=(0.0, 1.0),
-        # All on one row, and with no frame,
-        # so the legend is no taller than the line it sits in.
-        ncols=len(get_network_groups_largest_first(stations)),
+        # All on one row by default, and with no frame,
+        # so the legend is no taller than the lines it sits in.
+        ncols=(
+            len(get_network_groups_largest_first(stations))
+            if legend_ncols is None
+            else legend_ncols
+        ),
         frameon=False,
         borderpad=0.0,
         borderaxespad=0.1,
@@ -2024,11 +2036,101 @@ def plot_lat_gradient_pieces_from_obs_network(
     return axes
 
 
+def sine_latitude(latitude: np.typing.ArrayLike) -> np.typing.NDArray[np.floating]:
+    """
+    Get the sine of latitude, the forward transform of an area-weighted latitude axis
+
+    The area of the Earth's surface between the equator and a given latitude
+    is proportional to the sine of that latitude,
+    so equal distances in sine of latitude cover equal areas.
+
+    Parameters
+    ----------
+    latitude
+        Latitude [degrees north]
+
+    Returns
+    -------
+        Sine of `latitude`
+
+    Raises
+    ------
+    ValueError
+        Any of `latitude` is outside [-90, 90]
+    """
+    latitude = np.asarray(latitude)
+    if ((latitude < -90.0) | (latitude > 90.0)).any():  # noqa: PLR2004
+        msg = f"Latitude must be in [-90, 90], received {latitude=}"
+        raise ValueError(msg)
+
+    return np.sin(np.deg2rad(latitude))
+
+
+def sine_latitude_inverse(
+    sine: np.typing.ArrayLike,
+) -> np.typing.NDArray[np.floating]:
+    """
+    Get latitude from its sine, the inverse of [sine_latitude][]
+
+    Parameters
+    ----------
+    sine
+        Sine of latitude
+
+    Returns
+    -------
+        Latitude [degrees north]
+
+    Raises
+    ------
+    ValueError
+        Any of `sine` is outside [-1, 1]
+    """
+    sine = np.asarray(sine)
+    if ((sine < -1.0) | (sine > 1.0)).any():
+        msg = f"Sine of latitude must be in [-1, 1], received {sine=}"
+        raise ValueError(msg)
+
+    return np.rad2deg(np.arcsin(sine))
+
+
+def set_area_weighted_latitude_axis(ax: matplotlib.axes.Axes) -> None:
+    """
+    Space the y-axis of `ax` by area, rather than by degree of latitude
+
+    The axis is spaced by sine of latitude (see [sine_latitude][]),
+    so equal heights on it cover equal areas of the Earth's surface.
+    The ticks are still in degrees, at [LATITUDE_KEY][],
+    so it reads like the other latitude axes
+    (the captions say that the spacing is by sine of latitude).
+
+    The limits are fixed at the poles,
+    which also stops matplotlib adding margins past them
+    (where the transforms are undefined).
+
+    Parameters
+    ----------
+    ax
+        Axes whose y-axis is latitude [degrees north]
+    """
+    ax.set_yscale("function", functions=(sine_latitude, sine_latitude_inverse))
+    ax.set_ylim(-90.0, 90.0)
+    ax.set_yticks(LATITUDE_KEY)
+    ax.yaxis.set_minor_locator(matplotlib.ticker.NullLocator())
+
+
 def plot_lat_gradient_eofs(
     da_eofs: xr.DataArray, ax: matplotlib.axes.Axes
 ) -> matplotlib.axes.Axes:
     """
     Plot the latitudinal gradient's EOFs
+
+    The latitude axis is area-weighted (see [set_area_weighted_latitude_axis][]),
+    which makes it easier to see that each EOF's area-weighted mean is zero.
+    The polar bins cover so little area that their points sit
+    right against the ends of the axis, so they are not clipped to it
+    (nor counted when laying the figure out, as they never stray
+    more than a marker's width from the panel).
 
     Parameters
     ----------
@@ -2051,7 +2153,13 @@ def plot_lat_gradient_eofs(
         palette=eof_palette(pdf_eofs["eof"].unique()),
         ax=ax,
     )
-    ax.set_yticks(LATITUDE_KEY)
+    # Set on the points themselves rather than passed to seaborn,
+    # which would also pass it to the legend's handles
+    points = ax.collections[-1]
+    points.set_clip_on(False)
+    points.set_in_layout(False)
+
+    set_area_weighted_latitude_axis(ax)
     ax.set_ylabel(r"latitude [$^{\circ}$N]", fontsize="small")
     ax.set_xlabel(f"[{da_eofs.attrs['units']}]", fontsize="small")
     ax.tick_params(labelsize="small")

@@ -66,7 +66,7 @@ step_config_id: str = "ch2cl2"  # config ID to select for this branch
 # %% tags=["injected-parameters"]
 # Parameters
 config_file = "v1.0.0-config-raw.yaml"
-step_config_id = "c3f8"
+step_config_id = "so2f2"
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Load config
@@ -298,7 +298,7 @@ variance_explained = np.diag(singular_values_squared) / np.trace(
     singular_values_squared
 )
 
-full_eofs_pcs_out_file = Path("manuscript-outputs/c3f8_lat-gradient-full-eofs-pcs.nc")
+full_eofs_pcs_out_file = Path("manuscript-outputs/so2f2_lat-gradient-full-eofs-pcs.nc")
 full_eofs_pcs_out_file.parent.mkdir(exist_ok=True, parents=True)
 to_save = manuscript_eofs_pcs.pint.dequantify()
 # A decomposition can be over a stacked dimension -- CO2's seasonality change
@@ -314,7 +314,7 @@ if multi_indexes:
 
 to_save.to_netcdf(full_eofs_pcs_out_file)
 
-manuscript_out_file = Path("manuscript-outputs/c3f8_lat-gradient-variance-explained.csv")
+manuscript_out_file = Path("manuscript-outputs/so2f2_lat-gradient-variance-explained.csv")
 manuscript_out_file.parent.mkdir(exist_ok=True, parents=True)
 pd.DataFrame(
     {

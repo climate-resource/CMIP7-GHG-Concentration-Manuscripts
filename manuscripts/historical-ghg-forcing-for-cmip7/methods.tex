@@ -392,8 +392,10 @@ When referring to `AGAGE' data, we also mean data from the predecessor GAGE and 
     b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
     c) Location of each sampling site in the observation networks.
     d) Global-, annual-mean derived from the observation network values.
-    e) Seasonality derived from the observation network values.
-    f) Latitudinal gradient empirical orthogonal functions (EOFs) derived from the observation network values.
+    e) Relative seasonality derived from the observation network values.
+    f) Latitudinal gradient empirical orthogonal functions (EOFs) derived from the observation network values
+    (the latitude axis is spaced by the sine of latitude
+    so that the area between each EOF and the $x=0$ line represents the area-weighted mean, which is zero).
     g) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
     h) Latitudinal gradient principal components (PCs) for the entire output dataset timespan.
 }
@@ -607,7 +609,9 @@ For CO_2, we use surface flask \citep{lan_co2-flask_2024} and in situ \citep{tho
     c) Location of each sampling site in the observation networks.
     d) Global-, annual-mean derived from the observation network values.
     e) Seasonality derived from the observation network values.
-    f) Latitudinal gradient empirical orthogonal functions (EOFs) derived from the observation network values.
+    f) Latitudinal gradient empirical orthogonal functions (EOFs) derived from the observation network values
+    (the latitude axis is spaced by the sine of latitude
+    so that the area between each EOF and the $x=0$ line represents the area-weighted mean, which is zero).
     g) Seasonality change EOF derived from the observation network values.
     h) Seasonality change principal component (PC) for the entire output dataset timespan.
     i) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
@@ -798,8 +802,10 @@ and the AGAGE network's data \citep{prinn_ale-gage-agage_2000,prinn_agage_2018},
     b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
     c) Location of each sampling site in the observation networks.
     d) Global-, annual-mean derived from the observation network values.
-    e) Seasonality derived from the observation network values.
-    f) Latitudinal gradient empirical orthogonal functions (EOFs) derived from the observation network values.
+    e) Relative seasonality derived from the observation network values.
+    f) Latitudinal gradient empirical orthogonal functions (EOFs) derived from the observation network values
+    (the latitude axis is spaced by the sine of latitude
+    so that the area between each EOF and the $x=0$ line represents the area-weighted mean, which is zero).
     g) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
     h) Latitudinal gradient principal components (PCs) for the entire output dataset timespan.
 }
@@ -1003,8 +1009,10 @@ The networks used are:
     b) Number of observations that feed into each of our 15\textdegree~latitudinal bins in each month.
     c) Location of each sampling site in the observation networks.
     d) Global-, annual-mean derived from the observation network values.
-    e) Seasonality derived from the observation network values.
-    f) Latitudinal gradient empirical orthogonal functions (EOFs) derived from the observation network values.
+    e) Relative seasonality derived from the observation network values.
+    f) Latitudinal gradient empirical orthogonal functions (EOFs) derived from the observation network values
+    (the latitude axis is spaced by the sine of latitude
+    so that the area between each EOF and the $x=0$ line represents the area-weighted mean, which is zero).
     g) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
     h) Latitudinal gradient principal components (PCs) for the entire output dataset timespan.
 }
@@ -1269,7 +1277,9 @@ see Appendix~\ref{app:methods-figures-c4f10-like} for similar figures for all ot
 \caption{
     Production of the C_4F_10 datasets (for full details, see Sect.~\ref{ssec:methods-c4f10-like}).
     a) \citet{droste_pfcs_2020} data.
-    b) Assumed latitudinal gradient EOF.
+    b) Assumed latitudinal gradient EOF
+    (the latitude axis is spaced by the sine of latitude
+    so that the area between each EOF and the $x=0$ line represents the area-weighted mean, which is zero).
     c) Derived latitudinal gradient PC.
     d) Derived global-, annual-mean.
     e) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
@@ -1385,7 +1395,9 @@ This is clearly imperfect and should be considered for future iterations (Sect.~
     Production of the C_8F_18 datasets (for full details, see Sect.~\ref{ssec:methods-c8f18}).
     a) Global-, annual-mean values for the entire output dataset timespan alongside the input data sources used.
     b) Latitudinal gradient PCs for the entire output dataset timespan.
-    c) Latitudinal gradient EOF.
+    c) Latitudinal gradient EOF
+    (the latitude axis is spaced by the sine of latitude
+    so that the area between each EOF and the $x=0$ line represents the area-weighted mean, which is zero).
 }
 \label{fig:methods-c8f18}
 \end{figure}
@@ -1468,7 +1480,7 @@ in line with the formats and metadata that have been used previously (specifical
 
 We format the data according to the input4MIPs data reference syntax (DRS).
 We do not go into the full details of this here
-(for full details, see \citet{input4mips-cvs_docs_2026} and the user guide [TODO ref user guide]).
+(for full details, see \citet{input4mips-cvs_docs_2026} and the user guide, \citealp{nicholls_historical-user-guide_2026}).
 The key details for users are related to the frequency and grid label attributes.
 We provide data at two different frequencies:
 monthly-means (\texttt{frequency} attribute in the directory path, filename and file attributes set to `mon')
@@ -1511,7 +1523,7 @@ partially aided by input4mips-validation \citep{input4mips-validation_docs_2026}
 but this is by no means a robust standard
 and more work is required to achieve robustness and true standards (Sect.~\ref{sec:discussion}).
 For a more complete exploration of the data formats used across forcings,
-see \citet{input4mips-cvs_docs_2026} and the user guide [TODO ref user guide].
+see \citet{input4mips-cvs_docs_2026} and the user guide \citep{nicholls_historical-user-guide_2026}.
 
 \subsection{Vertical dimension}
 \label{ssec:methods-vertical}
