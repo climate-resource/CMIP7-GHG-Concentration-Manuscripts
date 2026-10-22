@@ -1,0 +1,74 @@
+\section{Output dataset requirements and implications thereof}
+\label{sec:output-dataset-requirements}
+
+The output dataset requirements are very similar to the requirements that apply to the historical dataset [TODO ref historical manuscript].
+
+As for the historical dataset, the first requirement is to work within CMIP's overall delivery timeline.
+The timeline for future forcing delivery, like historical forcing delivery, is relatively strict by scientific standards.
+As a result, we weigh the benefits of improvements against delays that would result from making improvements in all cases
+and some identified bugs are not fixed.
+
+As for the historical dataset, the second requirement is to meet CMIP's overall experiment design.
+For the future forcing experiments, this currently means that we need to produce concentrations in line with the emissions produced by the experiment designer.
+To date, we have only done this for ScenarioMIP [cite van Vuuren] and PolMIP's VL-CF scenario [cite Annika?].
+If we were to produce other future forcing datasets,
+they would either be produced on the same specified emissions-basis
+or we would need to work with the experiment provider to design a new method.
+Supporting ScenarioMIP's needs drives the temporal extent of our datasets.
+ScenarioMIP's experiments start in 2022 (immediately following the end of the historical experiment)
+and their extensions run until 2500-12.
+% value-check: {"tag": "output-first-year", "unit": "yr", "lower": 2022, "upper": 2022}
+% value-check: {"tag": "output-last-year", "unit": "yr", "lower": 2500, "upper": 2500}
+The dataset we present here meets these requirements, Sect.~\ref{ssec:prep-for-esgf}.
+In theory, other timespans could be produced if experiment designs required this
+(as above, we would have to work with experiment designers to support this if custom methods are needed).
+As for the historical dataset, there should only be one forcing dataset
+so forcing dataset producers must produce a single, best-estimate dataset,
+rather than being able to produce a number of versions that span the uncertainty in their forcing dataset.
+
+As for the historical dataset, the third requirement is that the data must support use as an input to ESM simulations.
+In addition, it must support use as an input to ESM simulations that branch from a historical simulation.
+As a result, the data must be complete i.e. not contain any missing values
+and it must be `harmonised' i.e. branch smoothly from the historical dataset. [TODO consider switching from historical dataset to dataset used for the historical experiment throughout as it is more explicit]
+The use within ESMs also has implications for the required accuracy of the data.
+As for the historical simulation, 0.01~W/m^2 is a tight, but justifiable threshold for identifying which methods need to be considered more carefully.
+This threshold should not be confused with the threshold for being able to distinguish between two future experiments,
+i.e. for a reasonable radiative forcing spacing between experiments, that is a different thing.
+
+Taken together, these considerations define the output requirements for this study:
+a temporally (at least from 2022 to end of 2500),
+spatially (global coverage) complete dataset
+that is appropriate for ESM simulations
+and consistent with the underlying future experiment design
+(in this paper this means consistent with the underlying future experiment emissions).
+
+The key implications of these requirements are as follows.
+Firstly, like for the historical dataset, the requirement to produce a single forcing estimate forces us to pick a single future projection.
+% we cannot produce a range.
+For future experiments, this will almost inevitably mean that the greenhouse gas forcing dataset we provide
+will differ from projections of greenhouse gas concentrations that are made based by one or more emissions-driven earth system models (ESMs).
+This is entirely expected.
+% If we awnt to labour the point
+% we have to produce forcings in advance of ESM runs
+% and we cannot use an ESM to produce the forcings, because that would be too slow.
+% As a result, the forcings we produce will, almost by definition, differ from those that are made by ESMs.
+
+Secondly, these forcing datasets are provided within the context of the wider experiment design.
+Hence, all the limitations that apply to that wider experiemnt design,
+for example the need to pick an illustrative set of experiments
+rather than being able to pick a set which covers thousands of experiments,
+also apply to this dataset.
+This is not an exhaustive set of possible future greenhouse gas concentrations.
+It is simply greenhouse gas concentrations in line with the experiments that are being run in CMIP7.
+% We are, essentially, only translators of the underlying experiment design in this regard.
+
+Finally, the requirement of harmonisation means that we need to use a method
+which can be smoothly and justifiably extended from the past to the future.
+In our case, this means that we need an underlying method that can justifiably be used to produce
+greenhouse gas concentration forcing for both year 1 and year 2500.
+This is a large driver behind our choice of method
+and there aren't easy answers (Sects.~\ref{sec:methods} and \ref{sec:discussion}).
+
+Given these requirements and their implications,
+potential users should carefully consider whether this dataset is appropriate for their use case.
+% Maybe mention other limits here, let's see
