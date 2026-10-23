@@ -103,11 +103,15 @@ A little after 2100 (where the extensions start),
 so that the 2100 tick and its label sit clear of the break marks.
 """
 
-CMIP7_SEGMENTS = ((2020.0, BREAK_YEAR), (BREAK_YEAR, 2500.0))
-"""Pieces the time axis of the CMIP7-only panel is broken into, as (start, end)"""
+YEARLY_SEGMENTS = ((2010.0, BREAK_YEAR), (BREAK_YEAR, 2500.0))
+"""Pieces the time axis of every yearly panel is broken into, as (start, end)
 
-CMIP7_TICKS = ((2020.0, 2040.0, 2060.0, 2080.0, 2100.0), (2300.0, 2500.0))
-"""Labelled ticks of each piece of [CMIP7_SEGMENTS][]
+Starts in 2010, so that CMIP6's history is shown too.
+The CMIP7-only panel uses the same time axis, so it can be read against the others.
+"""
+
+YEARLY_TICKS = ((2010.0, 2040.0, 2070.0, 2100.0), (2300.0, 2500.0))
+"""Labelled ticks of each piece of [YEARLY_SEGMENTS][]
 
 The second piece is too narrow to label every century
 (2200 runs into 2100 across the break), so the others get minor ticks,
@@ -116,15 +120,6 @@ see [EXTENSION_MINOR_TICKS][].
 
 EXTENSION_MINOR_TICKS = (2200.0, 2400.0)
 """Unlabelled ticks of the extensions' piece of the time axis"""
-
-COMPARISON_SEGMENTS = ((2010.0, BREAK_YEAR), (BREAK_YEAR, 2500.0))
-"""Pieces the time axis of the CMIP6 comparison panels is broken into
-
-Starts earlier than [CMIP7_SEGMENTS][], so that CMIP6's history is shown too.
-"""
-
-COMPARISON_TICKS = ((2010.0, 2040.0, 2070.0, 2100.0), CMIP7_TICKS[1])
-"""Ticks of each piece of [COMPARISON_SEGMENTS][]"""
 
 SEGMENT_SHARES = (0.6, 0.4)
 """Share of a panel's width each piece of its time axis gets
@@ -268,7 +263,7 @@ def get_scenario_frame(
     gas: str, scenario: Scenario, history: pd.DataFrame, units: str
 ) -> pd.DataFrame:
     """
-    Get a scenario's yearly global-mean, joined onto the end of its history
+    Get a scenario's yearly global-mean, joined onto its history
 
     Parameters
     ----------
@@ -281,8 +276,12 @@ def get_scenario_frame(
     history
         The scenario's history, as returned by [get_history_frame][]
 
-        Its last point is put in front of the scenario,
-        so the scenario's line carries on from where the history's stops.
+        The history's last point before the scenario starts
+        is put in front of the scenario,
+        so the scenario's line branches off the history's.
+        For most scenarios, that is the history's last point.
+        Some (e.g. VL-CF) start before the end of the history we show,
+        so they branch off it part way along.
 
     units
         Units to return the data in
@@ -290,15 +289,16 @@ def get_scenario_frame(
     Returns
     -------
     :
-        The scenario, starting from the last point of the history
+        The scenario, starting from the history's last point before it
     """
     da = convert_units(get_scenario_yearly_global_mean(gas, scenario), units)
     scenario_pdf = as_frame(da)
-    if scenario_pdf[TIME_COLUMN].min() <= history[TIME_COLUMN].max():
-        msg = f"{scenario.name} overlaps with the history we show"
+    branch_point = history[history[TIME_COLUMN] < scenario_pdf[TIME_COLUMN].min()]
+    if branch_point.empty:
+        msg = f"{scenario.name} starts before the history we have"
         raise AssertionError(msg)
 
-    return pd.concat([history.iloc[-1:], scenario_pdf], ignore_index=True)
+    return pd.concat([branch_point.iloc[-1:], scenario_pdf], ignore_index=True)
 
 
 def plot_yearly_panel(  # noqa: PLR0913
@@ -610,8 +610,8 @@ def generate_results_figure(gas: str, outfile: Path) -> Path:
     handles = plot_yearly_panel(
         gas,
         panel_axes("cmip7"),
-        CMIP7_SEGMENTS,
-        CMIP7_TICKS,
+        YEARLY_SEGMENTS,
+        YEARLY_TICKS,
         CMIP7_SCENARIOS,
         {"CMIP7": histories["CMIP7"]},
         units,
@@ -621,8 +621,8 @@ def generate_results_figure(gas: str, outfile: Path) -> Path:
             plot_yearly_panel(
                 gas,
                 panel_axes(group),
-                COMPARISON_SEGMENTS,
-                COMPARISON_TICKS,
+                YEARLY_SEGMENTS,
+                YEARLY_TICKS,
                 (
                     *get_scenarios_in_group(group, CMIP7_SCENARIOS),
                     *get_scenarios_in_group(group, CMIP6_SCENARIOS),

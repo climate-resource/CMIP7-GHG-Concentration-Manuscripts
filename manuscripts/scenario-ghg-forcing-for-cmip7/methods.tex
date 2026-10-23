@@ -611,32 +611,31 @@ We only keep values from 2022 onwards (see Sect.~\ref{ssec:prep-for-esgf}).
 
 % Figure plan (CO_2, scenario L, main text):
 % a) MAGICC ensemble (median and e.g. 5-95% range) alongside the historical dataset, 1990-2100.
-% b) Harmonisation: raw MAGICC median, harmonised, historical, 2010-2050 (15-year convergence, 2037 marked).
-% c) MAGICC median NPP, history and L.
+% b) Harmonisation: raw MAGICC median, harmonised, historical, 2010-2500 with axis split at 2100 (use this axis split for all gases). Don't mark convergence time.
+% c) MAGICC median NPP, history and L. x-axis: 1850 to 2500, split at 2100
 % d) Seasonality change PC: historical dataset and L projection
-%    (regression between the PC and NPP in the appendix).
-% e) Seasonal cycle (deviation from annual-mean) at a few latitudes (e.g. 82.5N, 37.5N, 7.5N, 37.5S)
+%    (regression between the PC and NPP in the appendix). x-axis: 1850 to 2500, split at 2100
+% e) [Don't include this] Seasonal cycle (deviation from annual-mean) at a few latitudes (e.g. 82.5N, 37.5N, 7.5N, 37.5S)
 %    in 2022, 2050 and 2100, to show how much the seasonal cycle changes.
-% f) Fossil CO_2 emissions (history and L) and the projected first latitudinal gradient PC
-%    (regression between the PC and emissions in the appendix).
+% f) Fossil CO_2 emissions (history and L) and the projected latitudinal gradient PCs
+%    (regression between the PC and emissions in the appendix). x-axis: 1850 to 2500, split at 2100
 
 \subsection{Generating concentrations for CH_4}
 \label{ssec:methods-ch4}
 
 CH_4 follows the same steps as CO_2 (Sect.~\ref{ssec:methods-co2}),
-except in Step 1 (Project the global-, annual-mean) and Step 2 (Project the seasonality and latitudinal gradient).
-In Step 1, MAGICC now includes a wetland CH_4 feedback
-and we use a different convergence time for the harmonisation.
+except in Step 2 (Project the seasonality and latitudinal gradient).
 In Step 2, the seasonality is simpler than for CO_2.
 
+% ZNTODO: put the v7.6.0a3 stuff into CO_2 then can remove here.
 \subsubsection{Step 1: Project the global-, annual-mean}
 \label{sssec:methods-ch4-project-global-mean}
 
-As for CO_2 (Sect.~\ref{sssec:methods-co2-project-global-mean}), except for the following.
-Unlike the version of MAGICC used in AR6 (v7.5.3),
-MAGICC v7.6.0a3 includes a probabilistic representation of the feedback between global-mean temperature and wetland CH_4 emissions
-[TODO cite Sloughter et al.] [TODO cite Zhang et al. (in prep)] [TODO cite Kleinen et al., 2021].
-This feedback is the key reason for using this interim version of MAGICC.
+% As for CO_2 (Sect.~\ref{sssec:methods-co2-project-global-mean}), except for the following.
+% Unlike the version of MAGICC used in AR6 (v7.5.3),
+% MAGICC v7.6.0a3 includes a probabilistic representation of the feedback between global-mean temperature and wetland CH_4 emissions
+% [TODO cite Sloughter et al.] [TODO cite Zhang et al. (in prep)] [TODO cite Kleinen et al., 2021].
+% This feedback is the key reason for using this interim version of MAGICC.
 % ZNTODO: add a sentence on the size of the effect (e.g. the difference in CH4 concentrations in 2100 in L between
 % MAGICC v7.6.0a3 and v7.5.3, both are run) and on the other CH4 feedbacks in MAGICC (OH lifetime, permafrost).
 The projected CH_4 concentrations also include MAGICC's representation of the dependence of CH_4's lifetime
@@ -682,10 +681,10 @@ This step is the same as for CO_2 (Sect.~\ref{sssec:methods-co2-generate-native-
 
 % Figure plan (CH_4, scenario L, main text):
 % a) CH_4 emissions, total and fossil, history and L.
-% b) MAGICC v7.6.0a3 vs. v7.5.3 median (and ranges), to show the effect of the wetland feedback.
-% c) Harmonisation: raw MAGICC median, harmonised, historical, 2010-2100 (convergence year 2082 marked).
+% b) MAGICC v7.6.0a3 vs. v7.5.3 to show the effect of the wetland feedback. Line plots for 2020 - 2100 and 2100 - 2500 for all scenarios. Bar plot on the edge with median concentrations and 5-95% range from both MAGICCv7.5.3 and MAGICCv7.6.0a3 for all scenarios (including VL-CF) for 2050, 2100, 2300 and 2500 (bar plot might have to go in its own row below)
+% c) Harmonisation: raw MAGICC median, harmonised, historical, 2010-2100 and 2100-2500 (split axis).
 % d) First latitudinal gradient PC: historical dataset and L projection.
-% e) Northern minus southern hemispheric-mean, history and L
+% e) [@Claude don't do this] Northern minus southern hemispheric-mean, history and L
 %    (the latitudinal gradient is a bigger deal for CH_4 than for the other gases, so worth showing directly).
 
 \subsection{Generating concentrations for N_2O and similarly processed species}
@@ -694,9 +693,6 @@ This step is the same as for CO_2 (Sect.~\ref{sssec:methods-co2-generate-native-
 N_2O follows the same steps as CH_4 (Sect.~\ref{ssec:methods-ch4}),
 except in Step 1 (Project the global-, annual-mean), where the convergence times differ,
 and Step 2 (Project the seasonality and latitudinal gradient), where the latitudinal gradient is driven by total, rather than fossil, emissions.
-N_2O also has no wetland feedback,
-although its concentrations still come from MAGICC because of MAGICC's representation of N_2O's lifetime feedbacks [TODO cite].
-% ZNTODO: check the claim about N2O lifetime feedbacks in MAGICC (it's the reason given for using MAGICC rather than one-box).
 
 The approach described in this section is also used for
 HFC-134a, HFC-152a, HFC-23, HFC-245fa, HFC-32 and HFC-365mfc.
@@ -710,7 +706,7 @@ For N_2O, the convergence time is
 75~years.
 For the other gases processed like N_2O, the convergence time is three times the gas' lifetime
 (Table A-5 of \citealp{wmo_ozone-ch7_2022}),
-i.e. it is longer for longer-lived gases.
+i.e. the effect of a divergence from the historical dataset persists for longer for longer-lived gases.
 % E.g. HFC-134a: 13.5 yr -> 40.5 yr; HFC-32: 5.27 yr -> ~16 yr; HFC-23: 228 yr -> 684 yr,
 % i.e. for HFC-23, the harmonised projection only converges to MAGICC after 2500.
 % ZNTODO: is this what we want for HFC-23 (it means the harmonisation offset persists for the whole dataset)?
@@ -732,13 +728,13 @@ except that the first PC is regressed against, and projected with, total N_2O em
 For the other gases processed like N_2O, only one EOF is retained (as in the historical dataset).
 We project its PC using Eq.~(\ref{eq:pc-projection}),
 with total emissions of the gas as the driver
-and the regression slope derived when producing the historical dataset
-(Sect.~[TODO number] of [TODO cite historical paper]).
+and the regression slope derived when producing the historical dataset [TODO cite historical paper].
 % `notebooks/1030_scale-latitudinal-gradient-based-on-emissions.py`,
 % reads `<gas>_pc0-total-emissions-regression.yaml` from the historical run's interim data.
 % Note: that historical regression is against RCMIP SSP2-4.5 emissions,
 % while here we apply it to the ScenarioMIP emissions.
 % Slight inconsistency, worth a line in the discussion?
+% ZNTODO: check this is in the discussion
 
 \subsubsection{Step 3: Prepare the components to be combined}
 \label{sssec:methods-n2o-like-prepare-components}
@@ -751,11 +747,11 @@ This step is the same as for CO_2 (Sect.~\ref{sssec:methods-co2-prepare-componen
 This step is the same as for CO_2 (Sect.~\ref{sssec:methods-co2-generate-native-resolution}).
 
 % Figure plan (N_2O, scenario L, main text, if we want one; could be appendix only given CO_2 and CH_4 cover the method):
-% a) Total N_2O emissions: history and L.
-% b) Harmonisation: raw MAGICC median, harmonised, historical, zoomed to 2010-2100, convergence year (2097) marked.
-% c) Latitudinal gradient PCs: historical dataset and L projection (1980-2100).
-% d) Output: concentrations at a few latitudes (or hemispheric-means) 2015-2100, historical dataset for reference.
-% Appendix version for the other N_2O-like gases (HFC-134a etc.): a)-d).
+% a) MAGICC ensemble (median and e.g. 5-95% range) alongside the historical dataset, 1990-2100.
+% b) Harmonisation: raw MAGICC median, harmonised, historical, 2010-2100 and 2100-2500 (split axis)
+% c) Total N_2O emissions (history and L) and the projected latitudinal gradient PCs
+%    (regression between the PC and emissions in the appendix). x-axis: 1850 to 2500, split at 2100
+% Appendix version for the other N_2O-like gases (HFC-134a etc.): a)-c).
 
 \subsection{Generating concentrations for CFC-12 and similarly processed species}
 \label{ssec:methods-cfc12-like}
@@ -772,6 +768,7 @@ CCl_4, CFC-11, CFC-113, CFC-114, CFC-115, CH_3Br, CH_3CCl_3, CH_3Cl, Halon-1211,
 all of which use projections from \citet{wmo_ozone-ch7_2022},
 and for HCFC-22, HCFC-141b and HCFC-142b,
 which use projections from \citet{western_hcfcs_2024}.
+% ZNTODO: Move this to section on running magicc
 We also process Halon-1202 in this way,
 but only to derive emissions with which to run MAGICC (Sect.~\ref{ssec:methods-input-emissions}).
 It is not part of our output because it is not part of the historical dataset.
@@ -786,16 +783,16 @@ we use the baseline scenario projections of \citet{wmo_ozone-ch7_2022}
 [TODO check whether to cite the data file provided for CMIP7 separately, \texttt{MixingRatiosCMIP7\_20250210.xlsx}].
 These projections are the same for all scenarios
 (i.e. we assume that all scenarios follow the Montreal Protocol and its amendments,
-as is also assumed in the scenarios' emissions, [TODO cite Kikstra et al.]).
+as is also assumed in the scenarios' emissions, [TODO cite Nicholls et al. ScenarioMIP]).
 The projections give values at the start of each year.
 We convert them to annual-means by taking the mean of the values at the start of each year and the start of the next year.
+% TODO VALUE-CHECK
 We fill the final year (2500) using linear extrapolation.
 
-We do not harmonise the projections to the historical dataset.
-Instead, we check that the projection and the historical dataset agree in 2022 to within
+We use the input data as is, we do not do any harmonisation to the historical dataset.
+To ensure this won't cause issues, we check that the projection and the historical dataset agree in 2022 to within
 % TODO-CHECK: {"tag": "cfc12-like-wmo-historical-agreement-2022", "unit": "dimensionless", "lower": 0, "upper": 0.002}
-0.2\%
-(which they do, given that both are based on similar observations).
+0.2\% (which they do, given that both are based on similar observations).
 % ZNTODO: give the largest difference (and the gas) rather than the tolerance.
 % Note there is no gradient matching here, so there can be a kink at 2022 in principle.
 The projections are used from 2022 onwards.
@@ -832,6 +829,7 @@ which is acceptable given that the concentrations of these gases are small by 21
 % ZNTODO: check "small by 2100" with numbers (value check).
 The extended projections are then processed as described above for the \citet{wmo_ozone-ch7_2022} projections.
 
+% ZNTODO: move this to the running MAGICC section
 \textbf{Inverse emissions.}
 % `notebooks/1020_calculate-inverse-emissions.py`
 To run MAGICC (for the other gases, Sect.~\ref{ssec:methods-input-emissions}) and to project the latitudinal gradient (Step 2),
@@ -844,6 +842,7 @@ and solve Eq.~(\ref{eq:one-box}) for emissions,
 before summing back to annual totals.
 We set small negative values (up to 10\% of the maximum emissions in magnitude) to zero.
 As a check, running the inverse emissions back through the one-box model reproduces the projected concentrations
+% ZNTODO: get rid of this plot
 (Fig.~\ref{fig:ccl4-inverse-emissions}, which shows the example of CCl_4).
 For CCl_4, for example, the inferred emissions in 2100 are around 52~kt~yr$^{-1}$
 % value-check: {"tag": "ccl4-inverse-emissions-2100", "unit": "kt CCl4 / yr", "lower": 51.5, "upper": 52.5}
@@ -851,6 +850,7 @@ For CCl_4, for example, the inferred emissions in 2100 are around 52~kt~yr$^{-1}
 % ZNTODO: the existing figure and table are for CCl4 (from the placeholder draft).
 % Either keep them as an example of the inversion (and swap the CFC-12 main text figure's inversion panel for them)
 % or regenerate for CFC-12 and move CCl4 to the appendix.
+% ZNTODO: remove all this, the inversion information doesn't need to be here in such detail
 
 \begin{figure}[tp]
 \includegraphics[width=12cm]{@ccl4-inverse-emissions-figure@}
@@ -881,8 +881,7 @@ Because the global-, annual-mean is the same in all scenarios, so is the seasona
 
 \textbf{Latitudinal gradient.}
 As for the gases processed like N_2O which retain one EOF (Sect.~\ref{sssec:methods-n2o-like-project-seasonality-lat-gradient}),
-except that the PC is projected with the inverse emissions,
-rather than the emissions in the scenarios.
+the PC is projected with the (inverse) emissions.
 As a result, the latitudinal gradient is also the same in all scenarios.
 
 \subsubsection{Step 3: Prepare the components to be combined}
@@ -901,13 +900,13 @@ but we publish it for each scenario so that each scenario has a complete set of 
 % Figure plan (CFC-12, main text; scenario-independent, so "L" is just the label on the files):
 % a) WMO (2022) values at the start of each year, the derived annual-means and the historical dataset, 2000-2050
 %    (shows the start-of-year to annual-mean conversion and the agreement in 2022).
-% b) Projected global-, annual-mean, 1950-2500 (historical dataset for reference).
-% c) Inverse emissions (and the historical emissions underpinning the scenarios, for reference).
-% d) Concentrations from running the inverse emissions back through the one-box model vs. the projection
+% b) Projected global-, annual-mean, 1950-2500 (historical dataset for reference). Split x-axis: 2010-2100 and 2100-2500.
+% c) Inverse emissions (don't show anything else).
+% d) [Drop this panel] Concentrations from running the inverse emissions back through the one-box model vs. the projection
 %    (or use the CCl4 figure for this).
 % e) Latitudinal gradient PC: historical dataset and projection.
-% Appendix: the same for every other gas in this group,
-% plus a figure of the Western et al. (2024) extensions for the three HCFCs.
+% Appendix: the same for every other gas in this group.
+% Label the Western et al. (2024) extensions for the three HCFCs on the relevant plots, don't add extra panels.
 
 \subsection{Generating concentrations for HFC-125 and similarly processed species}
 \label{ssec:methods-hfc125-like}
@@ -915,7 +914,9 @@ but we publish it for each scenario so that each scenario has a complete set of 
 HFC-125 follows the same steps as the gases processed like N_2O which retain one EOF (Sect.~\ref{ssec:methods-n2o-like}),
 except in Step 1 (Project the global-, annual-mean).
 This difference reflects the fact that, for these gases, there are no significant lifetime feedbacks,
-so a one-box model with an up-to-date lifetime is sufficient (and simpler).
+so a one-box model with an up-to-date lifetime is sufficient,
+simpler to make consistent with the latest lifetime estimates
+and avoids updating MAGICC in ways that introduce inconsistencies with its AR6 calibration.
 We illustrate this group with HFC-125 because,
 of the gases in this group,
 it has the largest effective radiative forcing in 2022 in the historical dataset
@@ -942,7 +943,9 @@ again using the lifetimes from Table A-5 of \citet{wmo_ozone-ch7_2022}
 We start the one-box model from the historical dataset's global-, annual-mean in 2022
 and run it forward with the emissions in each scenario (Sect.~\ref{ssec:methods-input-emissions}),
 using a forward Euler scheme with monthly timesteps
-(the emissions in year $y$ drive the change in concentrations from year $y$ to year $y+1$).
+(the emissions in year $y$ drive the change in concentrations from year $y$ to year $y+1$
+% ZNTODO: check constancy assumption
+and are assumed to be constant over the year).
 Because the one-box model starts from the historical dataset's value, no harmonisation is required.
 % ZNTODO: unlike the gradient-aware harmonisation, this doesn't guarantee that the growth rate is continuous at 2022
 % (the growth rate in 2023 is set by the scenario emissions and the lifetime, not the historical growth rate).
@@ -977,35 +980,34 @@ This step is the same as for CO_2 (Sect.~\ref{sssec:methods-co2-prepare-componen
 This step is the same as for CO_2 (Sect.~\ref{sssec:methods-co2-generate-native-resolution}).
 
 % Figure plan (HFC-125, scenario L, main text):
-% a) Total HFC-125 emissions, history and L.
-% b) One-box projection, MAGICC median (not used) and historical dataset, 2000-2100,
+% a) One-box projection, MAGICC median (not used) and historical dataset, 2000-2100 and 2100-2500 (split axis),
 %    to show how much the choice of model matters.
-% c) Zoom on 2015-2035 to show the join at 2022 (the growth rate question in the ZNTODO above).
-% d) Latitudinal gradient PC: historical dataset and L projection.
-% e) Hemispheric-means, historical dataset and L.
+% b) Total emissions (history and L) and the projected latitudinal gradient PC
+%    (regression between the PC and emissions in the appendix). x-axis: 1850 to 2500, split at 2100
 % Appendix: the same for every other gas in this group.
 
-\subsection{Generating concentrations for VL-CF}
-\label{ssec:methods-vl-cf}
-
-% ZNTODO: VL-CF was produced after the 1.1.0 bundle, with a later version of the code
-% (cmip7-scenariomip-ghg-concentrations commits from July 2026, e.g. `b5b46dc Get vl-cf running`,
-% notebook `1050_hack-vl-cf-inputs`). The description below is based on that code.
-% Confirm, and add the bundle/Zenodo reference for the VL-CF run.
-The VL-CF experiment's emissions diverge from history from 2016 onwards (see Sect.~[TODO introduction/output requirements]).
-Its concentrations are therefore produced in the same way as for the other scenarios,
-with the following differences.
-First, its datasets start in 2015 rather than 2022.
-Second, for the gases which use gradient-aware harmonisation
-(Sects.~\ref{ssec:methods-co2}--\ref{ssec:methods-n2o-like}),
-the MAGICC median is harmonised to the historical dataset in 2015, rather than 2022.
-Third, for all other gases,
-VL-CF's concentrations, seasonality and latitudinal gradient are taken
-from the historical dataset from 2015 to 2021
-and from the VL scenario from 2022 onwards.
-% ZNTODO: the third point means that VL-CF matches history (not a counterfactual) for these gases up to 2021.
-% That's presumably intentional (the counterfactual is about CO2, CH4, N2O and the MAGICC-based F-gases),
-% but worth stating why.
+% % ZNNOTE: not needed so commented out. We can bring it back in if needed
+% \subsection{Generating concentrations for VL-CF}
+% \label{ssec:methods-vl-cf}
+%
+% % ZNTODO: VL-CF was produced after the 1.1.0 bundle, with a later version of the code
+% % (cmip7-scenariomip-ghg-concentrations commits from July 2026, e.g. `b5b46dc Get vl-cf running`,
+% % notebook `1050_hack-vl-cf-inputs`). The description below is based on that code.
+% % Confirm, and add the bundle/Zenodo reference for the VL-CF run.
+% The VL-CF experiment's emissions diverge from history from 2016 onwards (see Sect.~[TODO introduction/output requirements]).
+% Its concentrations are therefore produced in the same way as for the other scenarios,
+% with the following differences.
+% First, its datasets start in 2015 rather than 2022.
+% % Second, for the gases which use gradient-aware harmonisation
+% % (Sects.~\ref{ssec:methods-co2}--\ref{ssec:methods-n2o-like}),
+% % the MAGICC median is harmonised to the historical dataset in 2015, rather than 2022.
+% % Third, for all other gases,
+% % VL-CF's concentrations, seasonality and latitudinal gradient are taken
+% % from the historical dataset from 2015 to 2021
+% % and from the VL scenario from 2022 onwards.
+% % ZNTODO: the third point means that VL-CF matches history (not a counterfactual) for these gases up to 2021.
+% % That's presumably intentional (the counterfactual is about CO2, CH4, N2O and the MAGICC-based F-gases),
+% % but worth stating why.
 
 \subsection{Derived output grids}
 \label{ssec:methods-derived-grids}
@@ -1013,9 +1015,21 @@ and from the VL scenario from 2022 onwards.
 As for the historical dataset (Sect.~[TODO number] of [TODO cite historical paper]),
 we derive the global-mean and hemispheric-means (area-weighted means)
 and annual-means from the native resolution dataset.
-% `notebooks/1100_create-esgf-files.py`
-We provide the following four derived products:
-monthly hemispheric-means, monthly global-means, annual hemispheric-means and annual global-means.
+
+From this native grid output, we then derive four other output products:
+
+\begin{enumerate}
+    \item hemispheric (spatial) monthly (temporal) grid
+    \item global-mean (spatial) monthly (temporal) grid
+    \item hemispheric (spatial) yearly (temporal) grid
+    \item global-mean (spatial) yearly (temporal) grid
+\end{enumerate}
+
+As for the historical dataset, due to the processing time, data storage requirements and lack of use in CMIP6,
+we have not produced the 0.5\textdegree~latitudinal grid product as part of our `standard' offering this time.
+%   See https://github.com/climate-resource/CMIP-GHG-Concentration-Generation/blob/v0.2.0/src/local/mean_preserving_interpolation.py
+%   if anyone ever needs these outputs.
+We can produce this upon request.
 
 \subsection{Equivalent species}
 \label{ssec:methods-equivalent-species}
@@ -1030,24 +1044,30 @@ and using the same radiative efficiencies
 % The historical manuscript checked that 7.SM.7 is the right table.
 % Check the scenario values match the historical ones (value check).
 % `notebooks/1101_create-esgf-files-equivalent-species.py`
-One difference is that, for the scenarios, we calculate the equivalent species on the native resolution grid
-and then derive the other grids from this,
-rather than calculating the equivalent species on each output grid.
-Because the equivalence calculation is linear in the concentrations of each species
-and the derived grids are calculated with (area-weighted) means,
-the results are the same either way.
+% One difference is that, for the scenarios, we calculate the equivalent species on the native resolution grid
+% and then derive the other grids from this,
+% rather than calculating the equivalent species on each output grid.
+% Because the equivalence calculation is linear in the concentrations of each species
+% and the derived grids are calculated with (area-weighted) means,
+% the results are the same either way.
 
 \subsection{Preparation for publication on ESGF}
 \label{ssec:prep-for-esgf}
 
 As for the historical dataset,
-we format the data according to the input4MIPs data reference syntax (DRS)
-\citep[for full details, see][]{input4mips-cvs_docs_2026}.
-We provide the same five combinations of frequency and grid
-as for the historical dataset (Sect.~[TODO number] of [TODO cite historical paper]):
-mon-gnz (our native resolution), mon-gr1z, mon-gm, yr-gr1z and yr-gm.
+we format the data in a standard way before publishing it.
 % TODO-CHECK: {"tag": "n-output-variables", "unit": "dimensionless", "lower": 46, "upper": 46}
-We provide 46 variables: the 43 greenhouse gases and the three equivalent species.
+We provide the same variable set and five combinations of frequency and grid
+as for the historical dataset (Sect.~[TODO number] of [TODO cite historical paper]):
+
+\begin{enumerate}
+    % TODO zalue-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
+    \item mon-gnz: Our native dataset (monthly-means on our native 15\textdegree~latitudinal grid)
+    \item mon-gr1z: Monthly-mean hemispheric-means
+    \item mon-gm: Monthly-mean global-mean
+    \item yr-gr1z: Annual-mean hemispheric-means
+    \item yr-gm: Annual-mean global-mean
+\end{enumerate}
 
 The key difference from the historical dataset is how the scenario is identified.
 The input4MIPs DRS does not have a separate attribute for the scenario.
@@ -1065,13 +1085,16 @@ e.g. \texttt{CR-l-ext-1-1-0}.
 For each scenario, the data from 2022 to 2100 is in a single file per variable, frequency and grid,
 while the extensions are split into files covering 100 years each (2101--2200, 2201--2300, 2301--2400 and 2401--2500).
 Users therefore have to parse the scenario out of the source ID
-in order to find the files for the scenario they want to run.
+in order to identify the files for the scenario they want to run.
 We do not go into further detail here.
 As for the historical dataset,
 the input4MIPs CVs pages \citep{input4mips-cvs_docs_2026},
 the user guide [TODO cite scenario user guide]
-and the CMIP7 guidance pages (see the introduction) are the best sources of information on how to find and use these files,
-because, unlike this paper, they are kept up to date.
+and the CMIP7 guidance pages
+% ZNTODO: repeat link here
+(see the introduction)
+are the best sources of information on how to find and use these files,
+because they can be updated over time.
 
 \subsection{Vertical dimension}
 \label{ssec:methods-vertical}
@@ -1080,5 +1103,5 @@ As for the historical dataset,
 we do not provide a vertical dimension.
 For modelling teams which do not have their own tracer transport and therefore require a vertical gradient,
 we suggest using the simplified parameterisations provided in \citet{meinshausen_historical-ghgs_2017}
-(see Sect.~[TODO number] of [TODO cite historical paper]).
+as discussed in [TODO cite historical paper].
 % ZNTODO: check whether M20 adds anything to this (as far as I know, M20 also points back to M17).

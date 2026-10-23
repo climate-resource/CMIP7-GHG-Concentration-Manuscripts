@@ -23,6 +23,7 @@ The CMIP7 historical files run to the end of 2022,
 but the scenario files start at the beginning of 2022
 (and differ slightly from the history in that year).
 The scenarios are what the models run from 2022, so we show those.
+VL-CF starts in 2015, so it is drawn over the end of the history we show.
 """
 
 CMIP6_HISTORY_LAST_YEAR = 2014
@@ -81,6 +82,17 @@ SCENARIO_GROUPS = ("high", "medium", "low")
 # (`notebooks/cci-2026-poster.py`, also the GHG viewer).
 # The CMIP6 ones are the IPCC AR6 SSP colours.
 CMIP7_SCENARIOS = (
+    # PolMIP's counterfactual to VL (emissions diverge from history from 2016).
+    # TODO: get an official colour for VL-CF.
+    # Grey, as a counterfactual, and to stay clear of the other low scenarios' colours.
+    Scenario(
+        "vl-cf",
+        "VL-CF",
+        "CMIP7",
+        "#8c8c8c",
+        "low",
+        ("CR-vl-cf-1-1-0", "CR-vl-cf-ext-1-1-0"),
+    ),
     Scenario("vl", "VL", "CMIP7", "#24a4ff", "low", ("CR-vl-1-1-0", "CR-vl-ext-1-1-0")),
     Scenario("ln", "LN", "CMIP7", "#4a0daf", "low", ("CR-ln-1-1-0", "CR-ln-ext-1-1-0")),
     Scenario("l", "L", "CMIP7", "#00cc69", "low", ("CR-l-1-1-0", "CR-l-ext-1-1-0")),
