@@ -148,14 +148,6 @@ From the native resolution datasets, we create lower resolution data products
 The scenario datasets are built from the same three components as the historical dataset:
 the global-, annual-mean, the seasonality and the latitudinal gradient [TODO cite historical paper].
 
-% TODO move this: belongs with harmonisation
-The historical dataset provides the starting point for all three.
-We project each component forward in time
-from the last year of the historical dataset,
-% TODO-CHECK: {"tag": "historical-last-year", "unit": "yr", "lower": 2022, "upper": 2022}
-2022,
-then combine them as for the historical dataset.
-
 The general approach can be broken down as follows:
 
 \begin{itemize}
@@ -179,14 +171,17 @@ The general approach can be broken down as follows:
                 we run a one-box model with the scenario's emissions.
                 This allows us to use up-to-date lifetimes \citep[Table A-5,][]{wmo_ozone-ch7_2022}
                 in a transparent way
-                (without altering the AR6-calibrated configuration of MAGICC [TODO citations]).
+                without altering the AR6-calibrated configuration of MAGICC [TODO citations].
             }
             \item {
                 \textbf{MAGICC plus harmonisation.}
                 % TODO: notes on MAGICCv7.6.0a3, why it's used etc. somewhere
-                For all other gases, we run MAGICC v7.6.0a3 with the scenario's emissions,
-                take the median of the probabilistic ensemble
-                and harmonise this median to the historical dataset.
+                For all other gases, we run MAGICC v7.6.0a3 with the scenario's emissions
+                because MAGICC captures key features like climate and concentration feedbacks [TODO cite papers again?].
+                From MAGICC's probabilistic output,
+                we take the median of the probabilistic ensemble
+                and harmonise this median to the historical dataset
+                to derive our forcing dataset.
             }
         \end{enumerate}
 
@@ -203,7 +198,7 @@ The general approach can be broken down as follows:
         \textbf{Step 2: Project the seasonality and latitudinal gradient}
 
         For all gases except CO_2,
-        the seasonality is projected by multiplying the relative seasonality from the historical dataset
+        the seasonality is projected by multiplying the relative seasonality derived in the historical dataset
         by the projected global-, annual-mean from Step 1.
         For CO_2, the change in seasonality over time is projected based on MAGICC's net primary productivity (NPP),
         following \citet{meinshausen_ssp-ghgs_2020}.
@@ -212,7 +207,8 @@ The general approach can be broken down as follows:
         The first latitudinal gradient PC is projected based on the change in emissions relative to 2022,
         using a linear relationship between the PC and emissions
         (fossil emissions for CO_2 and CH_4, total emissions for all other gases).
-        Where a second PC is used (CO_2, CH_4 and N_2O), it is held constant at its 2022 value.
+        % zalue-check: last year holding constant is 2022
+        Where a second PC is used (CO_2, CH_4 and N_2O), it is held constant at its last historical value (2022).
     }
 
     \item {
@@ -252,12 +248,10 @@ The general approach can be broken down as follows:
 
 \end{itemize}
 
-% The steps rely on input emissions scenarios, which we describe in Sect.~\ref{ssec:methods-input-emissions}.
-% The key choices are which route is used in Step 1
-% and which quantity drives the seasonality and latitudinal gradient in Step 2.
-% Steps 3 and 4 are the same for all gases.
 The high-level summary of which method is used for which gas is provided in the dot points below,
 while the specifics for each group of gases are described in the following sections.
+Note that Steps 3 (preparing the components) and 4 (generating the native resolution dataset)
+are the same for all gases.
 
 \begin{enumerate}
     \item {
@@ -451,13 +445,14 @@ It does not change the fact that the generated concentrations are sensible bound
 \label{ssec:methods-co2}
 
 We describe CO_2 first because it uses the most complex form of each step.
-The other gases use simpler forms of the same steps, so their sections refer back to this one.
+% The other gases use simpler forms of the same steps, so their sections refer back to this one.
 
 \subsubsection{Step 1: Project the global-, annual-mean}
 \label{sssec:methods-co2-project-global-mean}
 
 % ZNTODO: move this section or consolidate everything in this section
 \textbf{Running MAGICC.}
+
 We run MAGICC v7.6.0a3 \citep{meinshausen_magicc6-part-1_2011} [TODO cite Meinshausen et al., 2009]
 with its 600-member probabilistic parameter ensemble [TODO cite Sloughter et al.]
 % The probabilistic distribution file is
@@ -466,19 +461,18 @@ with its 600-member probabilistic parameter ensemble [TODO cite Sloughter et al.
 % based on Zhen Zhang et al. (in prep) and Kleinen et al. (2021)."
 % TODO-CHECK: {"tag": "magicc-n-ensemble-members", "unit": "dimensionless", "lower": 600, "upper": 600}
 for each scenario.
-This version of MAGICC is an interim version.
-It is calibrated to be consistent with the assessment of the IPCC's Sixth Assessment Report \citep{IPCC_AR6-WG1-Ch-7_2021}
+% This version of MAGICC is an interim version.
+This MAGICC setup is calibrated to be consistent with the assessment of the IPCC's Sixth Assessment Report \citep{IPCC_AR6-WG1-Ch-7_2021}
 [TODO cite AR6 WG1 Cross-Chapter Box 7.1 or the MAGICC AR6 calibration paper],
-with an update to include a probabilistic wetland CH_4 feedback
-(Sect.~\ref{ssec:methods-ch4}).
+with an update to include a probabilistic wetland CH_4 feedback based on [TODO cite Sloughter et al.].
 % ZNTODO: we also run MAGICC v7.5.3 (the version used in AR6) for every scenario
 % (`magicc_version_to_run` in `scripts/generate-concentration-files.py`),
 % but these runs aren't used in the output.
-% Decide whether to mention them (e.g. in the CH4 section or the discussion, to show the effect of the wetland feedback).
-% ZNTODO: add this comparison for CH4 specifically, note that it also matters for other gases, but we don't show that here.
+% There is a feedback difference for e.g. CO2, but this is tiny so don't show it unless asked specifically.
 
 % TODO-CHECK: {"tag": "magicc-switch-from-conc-to-emissions-year", "unit": "yr", "lower": 2015, "upper": 2015}
-For all gases, MAGICC is run in concentration-driven mode up to 2014 and in emissions-driven mode from 2015 onwards.
+For all gases, MAGICC is run in concentration-driven mode up to 2014 and in emissions-driven mode from 2015 onwards
+(consistent with the AR6 setup).
 Up to 2014, the concentrations are those used in CMIP6 \citep{meinshausen_historical-ghgs_2017,nicholls_rcmip_2020}
 % From `*_SWITCHFROMCONC2EMIS_YEAR = 2015` and `FILE_*_CONC = "SSP245_*_CONC.IN"`
 % in `magicc/magicc-v7.6.0a3/run/MAGCFG_DEFAULTALL.CFG`, the files' metadata says they come from RCMIP v4.0.0.
@@ -490,31 +484,68 @@ rather than our historical dataset,
 % but this is minor, given how similar the two histories are.
 so MAGICC's concentrations do not exactly match our historical dataset over the historical period
 (this is one of the reasons that harmonisation is needed, see below).
-From 2015 onwards, MAGICC is driven by the emissions in each scenario (Sect.~\ref{ssec:methods-input-emissions}),
-which include historical emissions from 2015 up to the harmonisation year
-and, for many gases, emissions inferred from single concentration projections
-(Sects.~\ref{ssec:methods-input-emissions} and~\ref{sssec:methods-cfc12-like-project-global-mean}).
-We then take the median of the ensemble's projected concentrations in each year.
+This was done because of the coupling between MAGICC's probabilistic AR6 configuration
+and the requirement to deliver on time (which did not allow for re-calibrating MAGICC based on CMIP7 GHG concentrations).
+% ZNTODO: discussion point. We need to be much faster at re-calibrating MAGICC so we can do this sort of re-calibration as needed
+% with robust understanding of the the impact of that re-calibration and confidence that other spurious changes are not sliding in.
+From 2015 onwards, MAGICC is driven by the emissions in each scenario (Sect.~\ref{ssec:methods-input-emissions}).
+
+To derive the input emissions, we require multiple input datasets.
+The first is the harmonised emissions that result from the CMIP7 ScenarioMIP emissions harmonisation process [TODO cite Kikstra et al.].
+This harmonised dataset only provides emissions for 23 species at most, most notably missing ozone-depleting substances.
+Emissions of other required species are provided by the CMIP7 ScenarioMIP infilling process [TODO cite Nicholls et al.].
+% Notes on this for the ScenarioMIP paper:
+% - infilling is silicone based first, to get to full set of 23
+% - then we use WMO inversions
+% - then use scalingn arguments for whatever else is left (based on M2020 I think, need to check)
+% - might also need to describe that we take CO2 AFOLU from IAMs because that isn't used in Kikstra et al. at all
+These two processes produce estimates of emissions to the end of 2100.
+Emissions extensions beyond 2100 are provided by [TODO cite Sandsted et al.].
+The last dataset we use is the historical emissions used for harmonising the CMIP7 ScenarioMIP datasets [TODO described in Kikstra et al., based on list of other sources].
+% zalue-check: the years described here
+This provides the emissions required to run MAGICC between 2015 (the start of its emissions-driven mode)
+and 2023 (the start of the harmonised scenario output).
+The result is a full set of emissions with which to run MAGICC from 2015 out to the end of 2500.
+Using CMIP7 historical emissions for this period introduces a small inconsistency in the MAGICC runs.
+There is a jump from the CMIP6 historical emissions used in MAGICC (consistent with the AR6 calibration) up until 2014
+and the CMIP7 historical emissions used from 2015 to 2022.
+Runs where we use both a) CMIP7 historical emissions and b) CMIP7 historical concentrations
+for the entire run show that the impact of this jump is small
+(less than [TODO number, I think 0.03 degree C and 0.05 W / m2]).
+% zalue-check: impact of this difference by doing runs where we overwrite the emissions (and concentration) inputs for the entire timeseries
+% vs. having the jump from 2014 to 2015?
+% ZNTODO: refer to discussion point about re-calibrating so we can do fully consistent CMIP7 runs faster
+% without breaking existing probabilistic configuration
+
+MAGICC's output is probabilistic, spanning the assessed ranges from AR6 over multiple dimensions [TODO citation, I guess AR6 WG1 Ch.7?].
+As a result of the requirement to produce a single forcing dataset,
+we must reduce this probabilistic output to a single dataset.
+We choose to use the median of the output ensemble
+because this is representative of our best estimate.
+Other approaches would represent different choices,
+e.g. taking a percentile higher than the median would represent a more conservative approach.
 
 \textbf{Harmonisation.}
-The median of the MAGICC ensemble does not exactly match our historical dataset
-in the last year of the historical dataset, 2022.
-To avoid a jump in concentrations between the historical and scenario datasets,
+
+The historical dataset provides the starting point for all our output datasets.
+Our future dataset must diverge from this historical dataset smoothly
+to avoid introducing artificial `shocks' or jumps in ESM output based on our forcings.
+To avoid such a jump in concentrations between the historical and scenario datasets,
 we harmonise the MAGICC median to the historical global-, annual-mean.
-Unlike the harmonisation used in the historical dataset
-(which adds a linearly declining offset, see Sect.~[TODO number] of [TODO cite historical paper]),
+% Unlike the harmonisation used in the historical dataset
+% (which adds a linearly declining offset, see Sect.~[TODO number] of [TODO cite historical paper]),
+To ensure that both the absolute value and the gradient is continuous,
 we use `gradient-aware' harmonisation [TODO cite gradient-aware-harmonisation package].
 % `harmonise_splines_add_cubic` from the gradient-aware-harmonisation package,
 % used in `notebooks/0031_create-projection-gradient-aware-harmonisation.py`.
 % Both timeseries are linearly interpolated between their annual values before harmonising.
 In this approach, we add a cubic polynomial to the MAGICC median
-such that the result matches both the value and the gradient of the historical global-, annual-mean
-in the harmonisation year (2022),
-while the cubic and its gradient decline to zero at the `convergence year',
-after which the result matches the MAGICC median exactly.
+such that the output dataset matches both the absolute value and the gradient of the historical global-, annual-mean
+in the harmonisation year (2022).
+The additional cubic and its gradient decline to zero in a specified `convergence year',
+after which the result follows the output MAGICC median.
 Matching the gradient, as well as the value, avoids a kink in concentrations at the transition from history to scenario,
 which would otherwise be visible as a jump in the growth rate.
-The convergence year is the harmonisation year plus a gas-specific convergence time.
 % From `convergence_time_delta` in `notebooks/0031_create-projection-gradient-aware-harmonisation.py`.
 For CO_2, the convergence time is
 % TODO-CHECK: {"tag": "co2-harmonisation-convergence-time", "unit": "yr", "lower": 15, "upper": 15}
