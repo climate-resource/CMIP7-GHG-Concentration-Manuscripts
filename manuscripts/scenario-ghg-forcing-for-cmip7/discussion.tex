@@ -5,3 +5,8 @@
 % - use of multiple sources: ok. Bit of a disconnect potentially between WMO-based gases and scenarios, but scenarios providers don't model these gases so not much can be done right now. Using one-box model vs. MAGICC a pragmatic choice because of time pressure. Updating MAGICC in line with harmonisation point above clearly a better solution
 % - crude statistical models. Required so we can span year 1 to year 2500. No obvious easy wins here.
 % - not prescribing WMO (2022) concentrations when running MAGICC. Clearly fixable. Minor issue given other uncertainies.
+% - mismatch after 2100 for the single-projection gases (see Sect. \ref{ssec:methods-input-emissions}):
+%   MAGICC is run with the official emissions extensions,
+%   but the official concentrations (WMO (2022), Western et al. (2024)) imply different emissions after 2100.
+%   Sum over gases of the max (over time) approximate radiative effect difference is ~0.03 W/m^2 in L (0.03-0.04 across scenarios).
+%   Good illustration of how hard it is to keep all the teams consistent across many decisions.
