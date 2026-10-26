@@ -2,7 +2,17 @@
 \label{sec:discussion}
 
 % - harmonisation: ok, clearly not perfect. Emulator which matched assessment and obs would be ideal (but may not be possible if obs move in a way that doesn't align with assessment). Emulator updated to match obs while minimising delta from assessment good plan b.
-% - use of multiple sources: ok. Bit of a disconnect potentially between WMO-based gases and scenarios, but scenarios providers don't model these gases so not much can be done right now. Using one-box model vs. MAGICC a pragmatic choice because of time pressure. Updating MAGICC in line with harmonisation point above clearly a better solution
+% - use of multiple sources: ok. Bit of a disconnect potentially between WMO-based gases and scenarios,
+%   but scenarios providers don't model these gases so not much can be done right now.
+%   Using one-box model vs. MAGICC a pragmatic choice because of time pressure.
+%   Updating MAGICC in line with harmonisation point above clearly a better solution.
+%   Historical regressions based on historical emissions estimates available at the time,
+%   which differ from the historical emissions used for producing scenarios
+%   hence get small divergences/inconsistencies, also in application because of time pressure
+%   (e.g. re-derived lat grad regression for some gases, not for others)
+%   Probably need to split this point out now.
+%   It is also related to getting negative values where we shouldn't,
+%   which can be methodological or just inconsistency between input data sources/assumptions
 % - crude statistical models. Required so we can span year 1 to year 2500. No obvious easy wins here.
 % - not prescribing WMO (2022) concentrations when running MAGICC. Clearly fixable. Minor issue given other uncertainies.
 % - mismatch after 2100 for the single-projection gases (see Sect. \ref{ssec:methods-input-emissions}):
@@ -10,3 +20,12 @@
 %   but the official concentrations (WMO (2022), Western et al. (2024)) imply different emissions after 2100.
 %   Sum over gases of the max (over time) approximate radiative effect difference is ~0.03 W/m^2 in L (0.03-0.04 across scenarios).
 %   Good illustration of how hard it is to keep all the teams consistent across many decisions.
+% - inconsistencies between historical and scenario methods
+%   e.g. using MAGICC's NPP to drive seasonality change in future but concentration - temperature composite for the historical
+% - poor performance e.g. CH4 fossil emissions vs. PC regression
+% In the historical dataset, the CH4 first PC is non-constant from year 287
+% (before 1948, it comes from the optimisation against ice cores).
+% So the regression here mixes the ice-core-optimised period (1750-1947) with the emissions-regression period (1948-2022).
+% Checked 2026-10-26: this regression (shown in Fig. \ref{fig:methods-regressions}) is the one used for the published data
+% (the slope implied by the published L data, -0.74943 yr / Mt CH_4, matches the re-derived regression exactly).
+% Its slope is around 5.6 times that of the historical dataset's regression against PRIMAP-hist (-0.135 yr / Mt CH_4).

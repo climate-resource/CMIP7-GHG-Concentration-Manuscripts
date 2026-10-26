@@ -1,3 +1,9 @@
+# TODOs: scenario GHG forcing for CMIP7 manuscript
+
+- [ ] go back through methods and add in figures references, check figures etc.
+- [ ] double check
+- [ ] check how VL-CF weaves throughout
+
 # TODOs: historical GHG forcing for CMIP7 manuscript
 
 Compiled from `manuscripts/historical-ghg-forcing-for-cmip7/*`,
