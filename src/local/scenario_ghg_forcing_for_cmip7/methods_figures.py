@@ -4,7 +4,7 @@ Generation of the scenario manuscript's methods figures
 The figures follow the plans in the manuscript's `methods.tex`:
 
 - time axes run to 2500 and are broken a little after 2100
-- harmonisation and one-box vs. MAGICC panels show all the marker scenarios
+- panels which compare scenarios show all of them, including VL-CF
 - everything else shows one scenario, L
   (the gases which use a single concentration projection
   are the same in every scenario anyway)
@@ -17,7 +17,7 @@ so all the manuscript's figures read the same way.
 
 from __future__ import annotations
 
-import re
+import dataclasses
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -27,6 +27,7 @@ import matplotlib.patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import xarray as xr
 
 from local.historical_ghg_forcing_for_cmip7.comparison_data import (
     TIME_COLUMN,
@@ -34,6 +35,7 @@ from local.historical_ghg_forcing_for_cmip7.comparison_data import (
 )
 from local.historical_ghg_forcing_for_cmip7.layout import (
     LEGEND_FONT_SIZE,
+    TITLE_FONT_SIZE,
     LayoutSettings,
     Panel,
     Row,
@@ -44,9 +46,9 @@ from local.historical_ghg_forcing_for_cmip7.layout import (
     manuscript_style,
 )
 from local.historical_ghg_forcing_for_cmip7.plotting import (
-    add_colour_bar,
     get_ticks_with_ends,
     label_name,
+    plot_pc_timeseries_regression,
 )
 from local.historical_ghg_forcing_for_cmip7.results_figure import (
     in_segment,
@@ -59,14 +61,12 @@ from local.scenario_ghg_forcing_for_cmip7.magicc_output import (
     MAGICC_AR6_VERSION,
     MAGICC_GAS_NAMES,
     MAGICC_VERSION,
-    NPP_VARIABLE,
 )
 from local.scenario_ghg_forcing_for_cmip7.methods_data import (
     CO2_SEASONALITY_REGRESSION,
     LAST_HISTORICAL_YEAR,
     get_historical_pcs,
     get_history,
-    get_magicc,
     get_magicc_concentrations,
     get_official_emissions,
     get_projected_co2_seasonality_change_pc,
@@ -87,15 +87,11 @@ from local.scenario_ghg_forcing_for_cmip7.scenarios import (
 SHOWN_SCENARIO = "l"
 """Scenario the single-scenario panels show"""
 
-MARKER_SCENARIOS = tuple(s for s in CMIP7_SCENARIOS if s.name != "vl-cf")
-"""Marker scenarios, lowest to highest
+ALL_SCENARIOS = CMIP7_SCENARIOS
+"""Scenarios shown in the panels which compare scenarios, lowest to highest
 
-VL-CF is left out of the harmonisation and one-box panels:
-it is harmonised in 2015, rather than 2022, so isn't comparable.
+Including VL-CF, which leaves history in 2015, rather than 2022.
 """
-
-ALL_MAGICC_SCENARIOS = CMIP7_SCENARIOS
-"""Scenarios MAGICC was run for, lowest to highest (including VL-CF)"""
 
 EXTENSIONS_START_YEAR = 2100.0
 """Year in which the extensions (beyond 2100) start"""
@@ -122,37 +118,43 @@ ONE_BOX_SEGMENTS = ((2000.0, BREAK_YEAR), (BREAK_YEAR, END_YEAR))
 CH4_VERSIONS_SEGMENTS = ((2020.0, BREAK_YEAR), (BREAK_YEAR, END_YEAR))
 """Time axis pieces for the comparison of MAGICC versions for CH4"""
 
-ENSEMBLE_SEGMENTS = ((1990.0, EXTENSIONS_START_YEAR),)
-"""Time axis for the MAGICC ensemble panels (not broken)"""
+ENSEMBLE_SEGMENTS = ((1990.0, BREAK_YEAR), (BREAK_YEAR, END_YEAR))
+"""Time axis pieces for the MAGICC ensemble panels"""
+
+ENSEMBLE_SEGMENT_SHARES = (2.0 / 3.0, 1.0 / 3.0)
+"""Share of the MAGICC ensemble panels' width given to each piece"""
 
 SEGMENT_SHARES = (0.6, 0.4)
 """Share of a broken panel's width given to each piece"""
 
-HARMONISATION_DETAIL_SEGMENTS = (
-    (2010.0, 2050.0),
-    (2050.0, BREAK_YEAR),
-    (BREAK_YEAR, END_YEAR),
-)
-"""Time axis pieces for harmonisation panels which show the harmonisation in detail
+HARMONISATION_SEGMENTS = ((2010.0, 2035.0),)
+"""Time axis of the panels which focus on the harmonisation (not broken)
 
-The first piece, where the harmonisation happens, gets half the panel's width
-(see [HARMONISATION_DETAIL_SHARES][]).
-The breaks are a little after round years (2040 and 2100),
-so those years' tick labels sit clear of the break marks.
+Short, so the harmonisation itself can be seen,
+and in its own panel, so it gets its own vertical axis.
+Starts before 2015, so VL-CF's harmonisation (in 2015) can be seen too.
 """
 
-HARMONISATION_DETAIL_SHARES = (0.5, 0.25, 0.25)
-"""Share of the panel's width given to each of [HARMONISATION_DETAIL_SEGMENTS][]"""
+HARMONISATION_TICKS = (2010.0, 2015.0, 2020.0, 2025.0, 2030.0, 2035.0)
+"""Major ticks of [HARMONISATION_SEGMENTS][]"""
+
+PROJECTION_SEGMENTS = ((2015.0, BREAK_YEAR), (BREAK_YEAR, END_YEAR))
+"""Time axis pieces for the panels which show the harmonised projections in full
+
+From 2015, so the start of VL-CF isn't cut off.
+"""
+
+PROJECTION_TICKS = (2015.0, 2060.0, 2100.0)
+"""Major ticks of the first piece of [PROJECTION_SEGMENTS][]
+
+Set explicitly, as the automatic choice can crowd the narrow piece.
+"""
+
+HARMONISATION_PANEL_WIDTHS = (0.8, 1.2)
+"""Share of the row's width given to the harmonisation and projection panels"""
 
 EXTENSION_TICKS = (2300.0, 2500.0)
 """Major ticks of the piece after the break"""
-
-HARMONISATION_DETAIL_TICKS = (
-    (2010.0, 2020.0, 2030.0, 2040.0),
-    (2060.0, 2080.0, 2100.0),
-    EXTENSION_TICKS,
-)
-"""Major ticks of each of [HARMONISATION_DETAIL_SEGMENTS][]"""
 
 EXTENSION_MINOR_TICKS = (2200.0, 2400.0)
 """Minor ticks of the piece after the break"""
@@ -178,10 +180,16 @@ LINE_WIDTH = 0.8
 HISTORY_LINE_WIDTH = 1.0
 """Width of the history's line"""
 
+HISTORY_ZORDER = 3.0
+"""Z-order of the history's line (over the scenarios which start where it ends)"""
+
+LEAVES_HISTORY_EARLY_ZORDER = 3.5
+"""Z-order of scenarios which leave history before it ends (over history)"""
+
 PC_LINESTYLES = ("-", ":")
 """Line style of each PC (first, second)"""
 
-PC_NAMES = ("1st PC", "2nd PC")
+PC_NAMES = ("PC0", "PC1")
 """Name of each PC in legends"""
 
 LEGEND_PANEL = "legend"
@@ -206,9 +214,13 @@ WESTERN_ET_AL_2024_GASES = ("hcfc22", "hcfc141b", "hcfc142b")
 """Gases whose projections come from Western et al. (2024), which we extend"""
 
 
-def broken(name: str, width: float = 1.0) -> Panel:
+def broken(
+    name: str,
+    width: float = 1.0,
+    shares: tuple[float, float] = SEGMENT_SHARES,
+) -> Panel:
     """Get a panel which is a time axis broken at [BREAK_YEAR][]"""
-    return Panel(name, width=width, broken=True, broken_split=SEGMENT_SHARES)
+    return Panel(name, width=width, broken=True, broken_split=shares)
 
 
 def legend_row(height: float = LEGEND_ROW_HEIGHT) -> Row:
@@ -305,6 +317,36 @@ def finish_time_axes(
     axes[0].set_ylabel(ylabel, fontsize="small")
 
 
+def join_to_history(values: pd.Series, history: pd.Series) -> pd.Series:
+    """
+    Join a projection which leaves history before history ends onto history
+
+    The published VL-CF data starts the year after it leaves history,
+    so without this there would be a gap between history and VL-CF.
+    Projections which start at the end of history already overlap it,
+    so are returned unchanged.
+    """
+    previous_year = values.index[0] - 1.0
+    if values.index[0] > LAST_HISTORICAL_YEAR or previous_year not in history.index:
+        return values
+
+    return pd.concat([history.loc[[previous_year]], values])
+
+
+def get_zorder(values: pd.Series) -> float:
+    """
+    Get the z-order of a scenario's line
+
+    Projections which leave history before history ends (VL-CF)
+    are drawn over the historical dataset's line,
+    so it can be seen where they leave it.
+    """
+    if values.index[0] < LAST_HISTORICAL_YEAR:
+        return LEAVES_HISTORY_EARLY_ZORDER
+
+    return 2.0
+
+
 def units_label(units: str) -> str:
     """Get the label of a vertical axis which shows values in some units"""
     return label_name(f"[{units}]").replace("dimensionless", "-")
@@ -375,7 +417,7 @@ def history_handle() -> matplotlib.lines.Line2D:
 
 
 def scenario_entries(
-    scenarios: Sequence = MARKER_SCENARIOS,
+    scenarios: Sequence = ALL_SCENARIOS,
 ) -> list[tuple[str, matplotlib.artist.Artist]]:
     """Get the legend entries which say which colour each scenario is"""
     return [(s.label, line_handle(s.colour)) for s in scenarios]
@@ -453,53 +495,91 @@ def ensemble_entries() -> list[tuple[str, matplotlib.artist.Artist]]:
     ]
 
 
-def harmonisation_panel(name: str = "harmonisation") -> Panel:
-    """Get a harmonisation panel (broken into [HARMONISATION_DETAIL_SEGMENTS][])"""
-    return Panel(name, broken=True, broken_split=HARMONISATION_DETAIL_SHARES)
+def harmonisation_panels(
+    harmonisation: str = "harmonisation", projections: str = "projections"
+) -> tuple[Panel, Panel]:
+    """
+    Get the panels which show the harmonisation, for one row
+
+    The first focuses on the harmonisation ([HARMONISATION_SEGMENTS][]),
+    the second shows the projections in full ([PROJECTION_SEGMENTS][]).
+    """
+    harmonisation_width, projections_width = HARMONISATION_PANEL_WIDTHS
+    return (
+        Panel(harmonisation, width=harmonisation_width),
+        broken(projections, width=projections_width),
+    )
+
+
+HARMONISATION_TITLES = {
+    "harmonisation": "Harmonisation, all scenarios, 2010\u20132035",
+    "projections": "Harmonisation, all scenarios, 2015\u20132500",
+}
+"""Titles of the panels made by [harmonisation_panels][]"""
 
 
 def plot_harmonisation(
-    axes: Sequence[matplotlib.axes.Axes], gas: str, summary_file: Path
+    harmonisation_axes: Sequence[matplotlib.axes.Axes],
+    projections_axes: Sequence[matplotlib.axes.Axes],
+    gas: str,
+    summary_file: Path,
 ) -> None:
     """
     Plot the raw MAGICC median, the harmonised projection and history, all scenarios
 
     The harmonised projection is the published data.
-    The time axis is broken into [HARMONISATION_DETAIL_SEGMENTS][],
-    so the harmonisation itself gets half the panel's width.
-    The panel must be made with [harmonisation_panel][].
+    It is plotted twice: once focussed on the harmonisation ([HARMONISATION_SEGMENTS][])
+    and once in full ([PROJECTION_SEGMENTS][]).
+    The panels must be made with [harmonisation_panels][].
     """
-    segments = HARMONISATION_DETAIL_SEGMENTS
     units = get_units(gas)
     history = get_history(gas, units)
     foreground = [history]
-    for scenario in MARKER_SCENARIOS:
+    for scenario in ALL_SCENARIOS:
         raw = get_magicc_concentrations(summary_file, gas, scenario.name, 0.5, units)
-        harmonised = get_scenario(gas, scenario.name, units)
-        plot_in_segments(
-            raw,
-            axes,
-            segments,
-            color=scenario.colour,
-            linestyle=RAW_LINESTYLE,
-            linewidth=0.6,
-        )
-        plot_in_segments(harmonised, axes, segments, color=scenario.colour)
+        harmonised = join_to_history(get_scenario(gas, scenario.name, units), history)
+        for axes, segments in (
+            (harmonisation_axes, HARMONISATION_SEGMENTS),
+            (projections_axes, PROJECTION_SEGMENTS),
+        ):
+            plot_in_segments(
+                raw,
+                axes,
+                segments,
+                color=scenario.colour,
+                linestyle=RAW_LINESTYLE,
+                linewidth=0.6,
+            )
+            plot_in_segments(
+                harmonised,
+                axes,
+                segments,
+                color=scenario.colour,
+                zorder=get_zorder(harmonised),
+            )
+
         foreground.extend([raw, harmonised])
 
-    plot_in_segments(
-        history,
-        axes,
-        segments,
-        color=HISTORY_COLOUR,
-        linewidth=HISTORY_LINE_WIDTH,
-        zorder=3.0,
-    )
-    finish_time_axes(axes, segments, units_label(units), foreground)
-    for ax, segment, ticks in zip(axes, segments, HARMONISATION_DETAIL_TICKS):
-        ax.set_xticks(ticks)
-        # Setting the ticks can move the limits
-        ax.set_xlim(segment)
+    for axes, segments in (
+        (harmonisation_axes, HARMONISATION_SEGMENTS),
+        (projections_axes, PROJECTION_SEGMENTS),
+    ):
+        plot_in_segments(
+            history,
+            axes,
+            segments,
+            color=HISTORY_COLOUR,
+            linewidth=HISTORY_LINE_WIDTH,
+            zorder=HISTORY_ZORDER,
+        )
+        finish_time_axes(axes, segments, units_label(units), foreground)
+
+    (ax,) = harmonisation_axes
+    ax.set_xticks(HARMONISATION_TICKS)
+    # Setting the ticks can move the limits
+    ax.set_xlim(HARMONISATION_SEGMENTS[0])
+    projections_axes[0].set_xticks(PROJECTION_TICKS)
+    projections_axes[0].set_xlim(PROJECTION_SEGMENTS[0])
 
 
 def harmonisation_entries() -> list[tuple[str, matplotlib.artist.Artist]]:
@@ -514,12 +594,12 @@ def plot_pcs(  # noqa: PLR0913
     axes: Sequence[matplotlib.axes.Axes],
     historical: pd.DataFrame | None,
     projected: pd.DataFrame,
-    scenario: str,
+    scenarios: Sequence[str] = (SHOWN_SCENARIO,),
     segments: Sequence[tuple[float, float]] = LONG_SEGMENTS,
     units: str = "-",
 ) -> None:
     """
-    Plot PCs over time: the historical dataset's and one scenario's projection
+    Plot PCs over time: the historical dataset's and the scenarios' projections
 
     Parameters
     ----------
@@ -532,9 +612,10 @@ def plot_pcs(  # noqa: PLR0913
     projected
         Projected PCs, with columns `(eof, scenario)` or just `scenario`
 
-    scenario
-        Scenario to show (if the projection is the same in every scenario,
-        it has only one scenario, which is shown whatever this is)
+    scenarios
+        Scenarios to show, each in its colour
+        (if the projection is the same in every scenario,
+        it has only one scenario, which is shown in L's colour whatever this is)
 
     segments
         Each piece of the time axis
@@ -545,20 +626,26 @@ def plot_pcs(  # noqa: PLR0913
     if not isinstance(projected.columns, pd.MultiIndex):
         projected = pd.concat({0: projected}, axis="columns")
 
-    colour = SCENARIOS[SHOWN_SCENARIO].colour
     foreground = []
     for eof in projected.columns.get_level_values(0).unique():
         eof_projected = projected[eof]
         if eof_projected.shape[1] == 1:
-            eof_projected = eof_projected.iloc[:, 0]
+            to_plot = {SHOWN_SCENARIO: eof_projected.iloc[:, 0]}
         else:
-            eof_projected = eof_projected[scenario]
+            to_plot = {scenario: eof_projected[scenario] for scenario in scenarios}
 
         linestyle = PC_LINESTYLES[eof]
-        plot_in_segments(
-            eof_projected, axes, segments, color=colour, linestyle=linestyle
-        )
-        foreground.append(eof_projected)
+        for scenario, values in to_plot.items():
+            plot_in_segments(
+                values,
+                axes,
+                segments,
+                color=SCENARIOS[scenario].colour,
+                linestyle=linestyle,
+                zorder=get_zorder(values.dropna()),
+            )
+            foreground.append(values)
+
         if historical is not None:
             plot_in_segments(
                 historical[eof],
@@ -618,18 +705,20 @@ def generate_co2_figure(
         `outfile`
     """
     rows = (
-        Row(panels=(Panel("ensemble"),), height=ROW_HEIGHT),
-        Row(panels=(harmonisation_panel(),), height=ROW_HEIGHT),
-        Row(panels=(broken("npp"), broken("seasonality-pc")), height=ROW_HEIGHT),
+        Row(
+            panels=(broken("ensemble", shares=ENSEMBLE_SEGMENT_SHARES),),
+            height=ROW_HEIGHT,
+        ),
+        Row(panels=harmonisation_panels(), height=ROW_HEIGHT),
+        Row(panels=(broken("seasonality-pc"),), height=ROW_HEIGHT),
         Row(panels=(broken("lat-gradient-pcs"),), height=ROW_HEIGHT),
         legend_row(height=0.55),
     )
     titles = {
         "ensemble": "MAGICC ensemble (raw), L",
-        "harmonisation": "Harmonisation, all scenarios",
-        "npp": "MAGICC median NPP",
-        "seasonality-pc": "Seasonality change PC",
-        "lat-gradient-pcs": "Latitudinal gradient PCs",
+        **HARMONISATION_TITLES,
+        "seasonality-pc": "Seasonality change PC, all scenarios",
+        "lat-gradient-pcs": "Latitudinal gradient PCs, all scenarios",
     }
     fig, axes = create_figure(rows, settings=LAYOUT_SETTINGS)
 
@@ -637,44 +726,22 @@ def generate_co2_figure(
         return get_panel_axes(rows, axes, name)
 
     plot_magicc_ensemble(panel("ensemble"), "co2", summary_file)
-    plot_harmonisation(panel("harmonisation"), "co2", summary_file)
-
-    # NPP is the same in every scenario up to the end of the history
-    npp = get_magicc(summary_file, NPP_VARIABLE, SHOWN_SCENARIO, 0.5)
-    npp_units = str(npp.name)
-    npp_history = npp[npp.index < LAST_HISTORICAL_YEAR + 1]
-    npp_projected = npp[npp.index >= LAST_HISTORICAL_YEAR]
-    plot_in_segments(
-        npp_projected,
-        panel("npp"),
-        LONG_SEGMENTS,
-        color=SCENARIOS[SHOWN_SCENARIO].colour,
-    )
-    plot_in_segments(
-        npp_history,
-        panel("npp"),
-        LONG_SEGMENTS,
-        color=HISTORY_COLOUR,
-        linewidth=HISTORY_LINE_WIDTH,
-    )
-    finish_time_axes(
-        panel("npp"),
-        LONG_SEGMENTS,
-        units_label(npp_units),
-        [npp_history, npp_projected],
+    plot_harmonisation(
+        panel("harmonisation"), panel("projections"), "co2", summary_file
     )
 
+    scenario_names = [s.name for s in ALL_SCENARIOS]
     plot_pcs(
         panel("seasonality-pc"),
         get_historical_pcs("co2", kind="seasonality-change"),
         get_projected_co2_seasonality_change_pc(bundle_dir),
-        SHOWN_SCENARIO,
+        scenario_names,
     )
     plot_pcs(
         panel("lat-gradient-pcs"),
         get_historical_pcs("co2"),
-        get_projected_pcs("co2", bundle_dir),
-        SHOWN_SCENARIO,
+        get_projected_pcs("co2", bundle_dir, include_vl_cf=True),
+        scenario_names,
     )
 
     add_legend(
@@ -685,7 +752,7 @@ def generate_co2_figure(
             *harmonisation_entries(),
             *pc_entries(2),
         ],
-        scenarios=MARKER_SCENARIOS,
+        scenarios=ALL_SCENARIOS,
     )
 
     return save(fig, axes, rows, titles, outfile)
@@ -717,7 +784,7 @@ def generate_ch4_figure(
     rows = (
         Row(panels=(broken("versions"),), height=ROW_HEIGHT),
         Row(panels=(Panel("versions-bars"),), height=ROW_HEIGHT),
-        Row(panels=(harmonisation_panel(),), height=ROW_HEIGHT),
+        Row(panels=harmonisation_panels(), height=ROW_HEIGHT),
         Row(panels=(broken("lat-gradient-pcs"),), height=ROW_HEIGHT),
         legend_row(height=0.55),
     )
@@ -730,7 +797,7 @@ def generate_ch4_figure(
             "Raw MAGICC median (line) and 5-95% range (box)\n"
             f"{MAGICC_AR6_VERSION} (lighter, left), {MAGICC_VERSION} (right)"
         ),
-        "harmonisation": "Harmonisation, all scenarios",
+        **HARMONISATION_TITLES,
         "lat-gradient-pcs": "Latitudinal gradient PCs",
     }
     fig, axes = create_figure(rows, settings=LAYOUT_SETTINGS)
@@ -742,7 +809,7 @@ def generate_ch4_figure(
 
     # MAGICC versions over time
     foreground = []
-    for scenario in ALL_MAGICC_SCENARIOS:
+    for scenario in ALL_SCENARIOS:
         for climate_model, linestyle in (
             (MAGICC_VERSION, "-"),
             (MAGICC_AR6_VERSION, RAW_LINESTYLE),
@@ -765,11 +832,11 @@ def generate_ch4_figure(
 
     # MAGICC versions in selected years
     (ax,) = panel("versions-bars")
-    n_scenarios = len(ALL_MAGICC_SCENARIOS)
+    n_scenarios = len(ALL_SCENARIOS)
     bar_width = 0.8 / (2 * n_scenarios)
     highest = -np.inf
     for i, year in enumerate(CH4_BAR_YEARS):
-        for j, scenario in enumerate(ALL_MAGICC_SCENARIOS):
+        for j, scenario in enumerate(ALL_SCENARIOS):
             for k, (climate_model, alpha) in enumerate(
                 ((MAGICC_AR6_VERSION, 0.45), (MAGICC_VERSION, 1.0))
             ):
@@ -811,12 +878,13 @@ def generate_ch4_figure(
     ax.tick_params(labelsize="small")
     ax.set_ylabel(units_label(units), fontsize="small")
 
-    plot_harmonisation(panel("harmonisation"), "ch4", summary_file)
+    plot_harmonisation(
+        panel("harmonisation"), panel("projections"), "ch4", summary_file
+    )
     plot_pcs(
         panel("lat-gradient-pcs"),
         get_historical_pcs("ch4"),
         get_projected_pcs("ch4", bundle_dir),
-        SHOWN_SCENARIO,
     )
 
     add_legend(
@@ -826,7 +894,7 @@ def generate_ch4_figure(
             *harmonisation_entries(),
             *pc_entries(2),
         ],
-        scenarios=ALL_MAGICC_SCENARIOS,
+        scenarios=ALL_SCENARIOS,
     )
 
     return save(fig, axes, rows, titles, outfile)
@@ -860,17 +928,20 @@ def generate_n2o_like_figure(
     """
     rows = (
         Row(
-            panels=(broken("lat-gradient-pcs", width=1.25), Panel("ensemble")),
+            panels=(
+                broken("lat-gradient-pcs"),
+                broken("ensemble", shares=ENSEMBLE_SEGMENT_SHARES),
+            ),
             height=ROW_HEIGHT,
         ),
-        Row(panels=(harmonisation_panel(),), height=ROW_HEIGHT),
+        Row(panels=harmonisation_panels(), height=ROW_HEIGHT),
         legend_row(height=0.55),
     )
     projected_pcs = get_projected_pcs(gas, bundle_dir)
     n_eofs = projected_pcs.columns.get_level_values(0).nunique()
     titles = {
         "ensemble": "MAGICC ensemble (raw), L",
-        "harmonisation": "Harmonisation, all scenarios",
+        **HARMONISATION_TITLES,
         "lat-gradient-pcs": "Latitudinal gradient PCs"
         if n_eofs > 1
         else "Latitudinal gradient PC",
@@ -884,10 +955,9 @@ def generate_n2o_like_figure(
         panel("lat-gradient-pcs"),
         get_historical_pcs(gas),
         projected_pcs,
-        SHOWN_SCENARIO,
     )
     plot_magicc_ensemble(panel("ensemble"), gas, summary_file)
-    plot_harmonisation(panel("harmonisation"), gas, summary_file)
+    plot_harmonisation(panel("harmonisation"), panel("projections"), gas, summary_file)
 
     add_legend(
         axes[LEGEND_PANEL],
@@ -897,7 +967,7 @@ def generate_n2o_like_figure(
             *ensemble_entries(),
             *harmonisation_entries(),
         ],
-        scenarios=MARKER_SCENARIOS,
+        scenarios=ALL_SCENARIOS,
     )
 
     return save(fig, axes, rows, titles, outfile)
@@ -1027,7 +1097,6 @@ def generate_cfc12_like_figure(
         panel("lat-gradient-pcs"),
         get_historical_pcs(gas),
         get_projected_pcs(gas, bundle_dir),
-        SHOWN_SCENARIO,
     )
 
     add_legend(
@@ -1083,8 +1152,8 @@ def generate_hfc125_like_figure(
     units = get_units(gas)
     history = get_history(gas, units)
     foreground = [history]
-    for scenario in MARKER_SCENARIOS:
-        one_box = get_scenario(gas, scenario.name, units)
+    for scenario in ALL_SCENARIOS:
+        one_box = join_to_history(get_scenario(gas, scenario.name, units), history)
         magicc = get_magicc_concentrations(summary_file, gas, scenario.name, 0.5, units)
         plot_in_segments(
             magicc,
@@ -1095,7 +1164,11 @@ def generate_hfc125_like_figure(
             linewidth=0.6,
         )
         plot_in_segments(
-            one_box, panel("one-box"), ONE_BOX_SEGMENTS, color=scenario.colour
+            one_box,
+            panel("one-box"),
+            ONE_BOX_SEGMENTS,
+            color=scenario.colour,
+            zorder=get_zorder(one_box),
         )
         foreground.extend([one_box, magicc])
 
@@ -1105,7 +1178,7 @@ def generate_hfc125_like_figure(
         ONE_BOX_SEGMENTS,
         color=HISTORY_COLOUR,
         linewidth=HISTORY_LINE_WIDTH,
-        zorder=3.0,
+        zorder=HISTORY_ZORDER,
     )
     finish_time_axes(panel("one-box"), ONE_BOX_SEGMENTS, units_label(units), foreground)
 
@@ -1113,7 +1186,6 @@ def generate_hfc125_like_figure(
         panel("lat-gradient-pcs"),
         get_historical_pcs(gas),
         get_projected_pcs(gas, bundle_dir),
-        SHOWN_SCENARIO,
     )
 
     add_legend(
@@ -1123,28 +1195,129 @@ def generate_hfc125_like_figure(
             ("One-box model (output)", line_handle("0.4")),
             ("MAGICC median", line_handle("0.4", linestyle=RAW_LINESTYLE)),
         ],
-        scenarios=MARKER_SCENARIOS,
+        scenarios=ALL_SCENARIOS,
     )
 
     return save(fig, axes, rows, titles, outfile)
 
 
-REGRESSION_PANELS = {
-    "co2": ("co2", "CO2, first lat. gradient PC"),
-    "ch4": ("ch4", "CH4, first lat. gradient PC"),
-    "n2o": ("n2o", "N2O, first lat. gradient PC"),
-    "co2-seasonality": (CO2_SEASONALITY_REGRESSION, "CO2, seasonality change PC"),
+REGRESSION_PANELS: dict[str, dict[str, tuple[str, str, str]]] = {
+    "co2": {
+        "seasonality-change": (
+            CO2_SEASONALITY_REGRESSION,
+            "Seasonality change PC\nvs. NPP",
+            "MAGICC median NPP",
+        ),
+        "lat-gradient": (
+            "co2",
+            "Lat. gradient PC0\nvs. emissions",
+            "Fossil co2 emissions",
+        ),
+    },
+    "ch4": {
+        "lat-gradient": (
+            "ch4",
+            "Lat. gradient PC0\nvs. emissions",
+            "Fossil ch4 emissions",
+        ),
+    },
+    "n2o": {
+        "lat-gradient": (
+            "n2o",
+            "Lat. gradient PC0\nvs. emissions",
+            "Total n2o emissions",
+        ),
+    },
 }
-"""Regression shown in each panel of the regressions figure, and its title"""
+"""The panels of each gas' regressions figure
+
+For each panel, the regression it shows (see [get_regression][]),
+its title and the name of the quantity the PC is regressed against.
+"""
+
+REGRESSION_X_UNITS = {
+    "co2": "GtC / yr",
+    CO2_SEASONALITY_REGRESSION: "GtC / yr",
+    "ch4": "MtCH4 / yr",
+    "n2o": "ktN2O / yr",
+}
+"""Units in which to show the quantity each regression's PC is regressed against
+
+The same as the historical dataset's figures, where they show the same thing.
+"""
+
+REGRESSION_ROW_HEIGHT = 1.4
+"""Height of the row of a regressions figure, in inches"""
 
 
-@manuscript_style
-def generate_regressions_figure(outfile: Path, bundle_dir: Path = BUNDLE_DIR) -> Path:
+def get_regression_inputs(
+    key: str, bundle_dir: Path = BUNDLE_DIR
+) -> tuple[xr.Dataset, xr.Dataset, dict[str, tuple[float, str]]]:
     """
-    Generate the figure of the regressions we re-derived
+    Get a regression we re-derived in the form the historical paper's plotting takes
+
+    See `plot_pc_timeseries_regression`.
 
     Parameters
     ----------
+    key
+        Regression of interest (see [get_regression][])
+
+    bundle_dir
+        Directory which holds the bundle (including our re-runs)
+
+    Returns
+    -------
+    :
+        PCs (the regression's `y`, as the first EOF's PC),
+        the quantity they are regressed against (`x`)
+        and the regression's result
+    """
+    data, info = get_regression(key, bundle_dir)
+    years = data["year"].to_numpy(dtype=int)
+    pcs = xr.Dataset(
+        {
+            "principal-components": xr.DataArray(
+                data["y"].to_numpy()[np.newaxis, :],
+                dims=("eof", "year"),
+                coords={"eof": [0], "year": years},
+                attrs={"units": info["y_unit"]},
+            )
+        }
+    )
+    timeseries = xr.Dataset(
+        {
+            "x": xr.DataArray(
+                data["x"].to_numpy(),
+                dims=("year",),
+                coords={"year": years},
+                attrs={"units": info["x_unit"]},
+            )
+        }
+    )
+    regression_info = {
+        "m": (info["slope"], info["slope_unit"]),
+        "c": (info["intercept"], info["y_unit"]),
+    }
+
+    return pcs, timeseries, regression_info
+
+
+@manuscript_style
+def generate_regressions_figure(
+    gas: str, outfile: Path, bundle_dir: Path = BUNDLE_DIR
+) -> Path:
+    """
+    Generate the figure of the regressions we re-derived for a gas
+
+    The regressions are plotted exactly as in the historical dataset's figures.
+    Figures with one panel are half the usual width.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest (a key of [REGRESSION_PANELS][])
+
     outfile
         File in which to write the figure
 
@@ -1156,85 +1329,56 @@ def generate_regressions_figure(outfile: Path, bundle_dir: Path = BUNDLE_DIR) ->
     :
         `outfile`
     """
-    names = list(REGRESSION_PANELS)
-    rows = tuple(
+    panels = REGRESSION_PANELS[gas]
+    rows = (
         Row(
-            panels=(Panel(left, colour_bar=True), Panel(right, colour_bar=True)),
-            height=1.3,
-        )
-        for left, right in zip(names[::2], names[1::2])
+            panels=tuple(Panel(name) for name in panels),
+            height=REGRESSION_ROW_HEIGHT,
+        ),
     )
-    titles = {name: label_name(title) for name, (_, title) in REGRESSION_PANELS.items()}
-    fig, axes = create_figure(rows, settings=LAYOUT_SETTINGS)
+    titles = {name: label_name(title) for name, (_, title, _) in panels.items()}
+    settings = dataclasses.replace(
+        LAYOUT_SETTINGS, width=LAYOUT_SETTINGS.width * len(panels) / 2
+    )
+    fig, axes = create_figure(rows, settings=settings)
 
-    for name, (key, _) in REGRESSION_PANELS.items():
-        ax = axes[name]
-        data, info = get_regression(key, bundle_dir)
-        scatter = ax.scatter(
-            data["x"], data["y"], c=data["year"], s=3.0, cmap="viridis", linewidths=0.0
+    for name, (key, _, x_name) in panels.items():
+        pcs, timeseries, regression_info = get_regression_inputs(key, bundle_dir)
+        plot_pc_timeseries_regression(
+            pcs,
+            timeseries,
+            timeseries_name=label_name(x_name),
+            regression_info=regression_info,
+            ax=axes[name],
+            x_unit=REGRESSION_X_UNITS[key],
         )
-        x = np.linspace(data["x"].min(), data["x"].max(), 2)
-        ax.plot(
-            x, info["slope"] * x + info["intercept"], color="k", linewidth=LINE_WIDTH
-        )
-        ax.set_xlabel(
-            label_name(f"[{get_short_units(str(info['x_unit']))}]"), fontsize="small"
-        )
-        ax.set_ylabel("PC value [-]", fontsize="small")
-        ax.tick_params(labelsize="small")
-        add_colour_bar(fig, scatter, cax=axes[f"{name}-colour-bar"], label="Year")
 
-    return save_without_legend(fig, axes, rows, titles, outfile)
+    if len(panels) == 1:
+        # A figure with one panel doesn't need a panel label, just the title
+        ((name, title),) = titles.items()
+        axes[name].set_title(title, loc="left", fontsize=TITLE_FONT_SIZE)
+        titles = {}
+        unlabelled = (name,)
+    else:
+        unlabelled = ()
 
-
-UNIT_ABBREVIATIONS = {
-    "gigametric_ton": "Gt",
-    "megametric_ton": "Mt",
-    "kilometric_ton": "kt",
-    "metric_ton": "t",
-    "gigatC": "GtC",
-}
-"""Short form of the units pint writes out in full"""
+    return save_without_legend(
+        fig, axes, rows, titles, outfile, settings=settings, unlabelled=unlabelled
+    )
 
 
-def get_short_units(units: str) -> str:
-    """
-    Get units as written for a reader
-
-    For example, "Mt CO2 / yr" for "CO2 * megametric_ton / yr".
-
-    Parameters
-    ----------
-    units
-        Units, as pint writes them
-
-    Returns
-    -------
-    :
-        Units, as a reader expects them
-    """
-    for long, short in UNIT_ABBREVIATIONS.items():
-        units = re.sub(rf"\b{long}\b", short, units)
-
-    # pint puts the species first
-    match = re.fullmatch(r"(\w+) \* (\w+) / (\w+)", units)
-    if match:
-        species, mass, time = match.groups()
-        units = f"{mass} {species} / {time}"
-
-    return units
-
-
-def save_without_legend(
+def save_without_legend(  # noqa: PLR0913
     fig: plt.Figure,
     axes: dict[str, matplotlib.axes.Axes],
     rows: Sequence[Row],
     titles: dict[str, str],
     outfile: Path,
+    settings: LayoutSettings = LAYOUT_SETTINGS,
+    unlabelled: Sequence[str] = (),
 ) -> Path:
     """Label, lay out and save a figure which has no legend panel, then close it"""
-    label_panels(rows, axes, titles)
-    lay_out_figure(fig, axes, rows, settings=LAYOUT_SETTINGS)
+    label_panels(rows, axes, titles, unlabelled=unlabelled)
+    lay_out_figure(fig, axes, rows, settings=settings)
 
     outfile.parent.mkdir(exist_ok=True, parents=True)
     fig.savefig(outfile)
@@ -1374,7 +1518,7 @@ def generate_magicc_mismatch_figure(
 
     emissions_foreground = [inverse_emissions]
     concentrations_foreground = [ours, history]
-    for scenario in MARKER_SCENARIOS:
+    for scenario in ALL_SCENARIOS:
         official = get_official_emissions(
             gas, scenario.name, emissions_units, bundle_dir
         )
@@ -1402,7 +1546,7 @@ def generate_magicc_mismatch_figure(
         SCENARIO_SEGMENTS,
         color=ours_colour,
         linewidth=HISTORY_LINE_WIDTH,
-        zorder=3.0,
+        zorder=HISTORY_ZORDER,
     )
     plot_in_segments(
         ours,
@@ -1410,7 +1554,7 @@ def generate_magicc_mismatch_figure(
         SCENARIO_SEGMENTS,
         color=ours_colour,
         linewidth=HISTORY_LINE_WIDTH,
-        zorder=3.0,
+        zorder=HISTORY_ZORDER,
     )
     plot_in_segments(
         history,
@@ -1418,7 +1562,7 @@ def generate_magicc_mismatch_figure(
         SCENARIO_SEGMENTS,
         color=ours_colour,
         linewidth=HISTORY_LINE_WIDTH,
-        zorder=3.0,
+        zorder=HISTORY_ZORDER,
     )
     finish_time_axes(
         panel("emissions"),
@@ -1445,7 +1589,7 @@ def generate_magicc_mismatch_figure(
                 line_handle("0.4", linestyle=RAW_LINESTYLE),
             ),
         ],
-        scenarios=MARKER_SCENARIOS,
+        scenarios=ALL_SCENARIOS,
     )
 
     return save(fig, axes, rows, titles, outfile)

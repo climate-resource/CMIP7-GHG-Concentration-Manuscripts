@@ -20,6 +20,7 @@ from local.scenario_ghg_forcing_for_cmip7.appendix_figures import (
     HFC125_LIKE_GASES,
     MAGICC_MISMATCH_GASES,
     N2O_LIKE_GASES,
+    REGRESSION_GASES,
     generate_appendix_figures,
     get_tags_in_texts,
 )
@@ -33,13 +34,14 @@ from local.scenario_ghg_forcing_for_cmip7.config import (
     MAGICC_SUMMARY,
     METADATA,
     METHODS_FIGURE_GASES,
-    REGRESSIONS_FIGURE,
     RERUN_CO2_SEASONALITY_FILES,
+    RERUN_CO2_SEASONALITY_VL_CF_FILES,
     RERUN_LAT_GRADIENT_GASES,
     SECTIONS,
     WESTERN_ET_AL_2024_FIGURE,
     get_magicc_mismatch_figure_file,
     get_methods_figure_file,
+    get_regressions_figure_file,
     get_rerun_lat_gradient_files,
 )
 from local.scenario_ghg_forcing_for_cmip7.methods_figures import (
@@ -64,7 +66,7 @@ def get_rerun_files(gas: str) -> list[Path]:
     """Get the re-run outputs a gas' methods figure needs"""
     res = get_rerun_lat_gradient_files(gas) if gas in RERUN_LAT_GRADIENT_GASES else []
     if gas == "co2":
-        res = [*res, *RERUN_CO2_SEASONALITY_FILES]
+        res = [*res, *RERUN_CO2_SEASONALITY_FILES, *RERUN_CO2_SEASONALITY_VL_CF_FILES]
 
     return res
 
@@ -115,16 +117,17 @@ for _gas in MAGICC_MISMATCH_GASES:
         generate_magicc_mismatch_figure(gas, outfile, magicc_summary, BUNDLE_DIR)
 
 
-def task_regressions_figure(
-    rerun_files: list[Path] = [
-        *RERUN_CO2_SEASONALITY_FILES,
-        *(f for g in ("co2", "ch4", "n2o") for f in get_rerun_lat_gradient_files(g)),
-    ],
-    figures_sources: list[Path] = FIGURES_SOURCES,
-    outfile: Annotated[Path, Product] = REGRESSIONS_FIGURE,
-) -> None:
-    """Generate the figure of the regressions we re-derived"""
-    generate_regressions_figure(outfile, BUNDLE_DIR)
+for _gas in REGRESSION_GASES:
+
+    @task(id=_gas)
+    def task_regressions_figure(
+        gas: str = _gas,
+        rerun_files: list[Path] = get_rerun_files(_gas),
+        figures_sources: list[Path] = FIGURES_SOURCES,
+        outfile: Annotated[Path, Product] = get_regressions_figure_file(_gas),
+    ) -> None:
+        """Generate the figure of the regressions we re-derived for a gas"""
+        generate_regressions_figure(gas, outfile, BUNDLE_DIR)
 
 
 def task_western_et_al_2024_figure(

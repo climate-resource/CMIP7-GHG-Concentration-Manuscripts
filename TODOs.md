@@ -1,6 +1,8 @@
 # TODOs: scenario GHG forcing for CMIP7 manuscript
 
-- [ ] go back through methods and add in figures references, check figures etc.
+- [x] finish off CO2 section
+- [x] read CO2 section again
+- [ ] go back through rest of methods and add in figures references, check figures etc.
 - [ ] double check
 - [ ] check how VL-CF weaves throughout
 

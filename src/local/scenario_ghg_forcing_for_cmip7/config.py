@@ -13,6 +13,7 @@ from pathlib import Path
 
 from local.cmip_ghg_generation import DEFAULT_BUNDLE_DIR as HISTORICAL_BUNDLE_DIR
 from local.paths import FIGURES_DIR, REPO_ROOT
+from local.scenario_ghg_forcing_for_cmip7 import rerun_vl_cf
 from local.scenario_ghg_forcing_for_cmip7.appendix_figures import (
     APPENDIX_FIGURE_GROUPS,
     CFC12_LIKE_GASES,
@@ -20,11 +21,12 @@ from local.scenario_ghg_forcing_for_cmip7.appendix_figures import (
     MAGICC_MISMATCH_GASES,
     MAIN_TEXT_GASES,
     N2O_LIKE_GASES,
-    REGRESSIONS_FIGURE_TAG,
+    REGRESSION_GASES,
     WESTERN_ET_AL_2024_FIGURE_TAG,
     get_appendix_figures_tag,
     get_magicc_mismatch_figure_tag,
     get_methods_figure_tag,
+    get_regressions_figure_tag,
 )
 from local.scenario_ghg_forcing_for_cmip7.bundle import (
     BUNDLE_DIR,
@@ -114,6 +116,11 @@ RERUN_CO2_SEASONALITY_FILES = [
 ]
 """What the re-run of the CO2 seasonality projection writes that we use"""
 
+RERUN_CO2_SEASONALITY_VL_CF_FILES = [
+    BUNDLE_DIR / f for f in rerun_vl_cf.RERUN_CO2_SEASONALITY_VL_CF_FILES
+]
+"""What the re-run of the CO2 seasonality projection for VL-CF writes that we use"""
+
 
 def get_rerun_lat_gradient_files(ghg: str) -> list[Path]:
     """Get the outputs we use of the re-run of a gas' latitudinal gradient projection"""
@@ -141,6 +148,7 @@ INTRODUCTION = MANUSCRIPT_DIR / "introduction.tex"
 SECTIONS = (
     MANUSCRIPT_DIR / "output-requirements.tex",
     MANUSCRIPT_DIR / "methods.tex",
+    MANUSCRIPT_DIR / "discussion.tex",
 )
 """Body sections, in the order they appear"""
 
@@ -182,8 +190,10 @@ def get_magicc_mismatch_figure_file(gas: str) -> Path:
     return METHODS_FIGURES_DIR / f"{gas}_magicc-mismatch.pdf"
 
 
-REGRESSIONS_FIGURE = METHODS_FIGURES_DIR / "regressions.pdf"
-"""The figure of the regressions we re-derived"""
+def get_regressions_figure_file(gas: str) -> Path:
+    """Get the file of the figure of the regressions we re-derived for a gas"""
+    return METHODS_FIGURES_DIR / f"{gas}_regressions.pdf"
+
 
 WESTERN_ET_AL_2024_FIGURE = METHODS_FIGURES_DIR / "western-et-al-2024-extensions.pdf"
 """The figure of our extensions of the Western et al. (2024) projections"""
@@ -205,7 +215,10 @@ FIGURE_FILES: dict[str, Path] = {
         get_magicc_mismatch_figure_tag(g): get_magicc_mismatch_figure_file(g)
         for g in MAGICC_MISMATCH_GASES
     },
-    REGRESSIONS_FIGURE_TAG: REGRESSIONS_FIGURE,
+    **{
+        get_regressions_figure_tag(g): get_regressions_figure_file(g)
+        for g in REGRESSION_GASES
+    },
     WESTERN_ET_AL_2024_FIGURE_TAG: WESTERN_ET_AL_2024_FIGURE,
 }
 """Tag in the latex which each figure replaces

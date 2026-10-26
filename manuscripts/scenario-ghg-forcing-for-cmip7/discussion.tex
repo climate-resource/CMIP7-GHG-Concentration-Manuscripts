@@ -1,7 +1,14 @@
 \section{Discussion}
 \label{sec:discussion}
 
-% - harmonisation: ok, clearly not perfect. Emulator which matched assessment and obs would be ideal (but may not be possible if obs move in a way that doesn't align with assessment). Emulator updated to match obs while minimising delta from assessment good plan b.
+% - harmonisation: ok, clearly not perfect.
+%   Emulator which matched assessment and obs would be ideal (but may not be possible if obs move in a way that doesn't align with assessment).
+%   Emulator updated to match obs while minimising delta from assessment good plan b.
+%   VL-CF is good illustration of the issues with the current set up.
+%   We don't know whether it is overly sensitive to the kick in concentrations of CH4 and N2O in the last few years
+%   or whether the harmonisation is correctly correcting for a missing process/poor calibration in MAGICC/mismatch between historical emissions and concentrations inputs.
+%   The fact that this is scenario dependent is definitely bad:
+%   VL-CF basically gets 'raw MAGICC' while the other experiments get 'MAGICC plus harmonisation effects/insights'.
 % - use of multiple sources: ok. Bit of a disconnect potentially between WMO-based gases and scenarios,
 %   but scenarios providers don't model these gases so not much can be done right now.
 %   Using one-box model vs. MAGICC a pragmatic choice because of time pressure.
@@ -13,6 +20,10 @@
 %   Probably need to split this point out now.
 %   It is also related to getting negative values where we shouldn't,
 %   which can be methodological or just inconsistency between input data sources/assumptions
+% We need to be much faster at re-calibrating MAGICC so we can do re-calibration to e.g. latest historical sources as needed
+% with robust understanding of the the impact of that re-calibration and confidence that other spurious changes are not sliding in.
+% This relates to the issue we had with running with CMIP6 historical even though it would have been better to run with CMIP7 historical.
+%
 % - crude statistical models. Required so we can span year 1 to year 2500. No obvious easy wins here.
 % - not prescribing WMO (2022) concentrations when running MAGICC. Clearly fixable. Minor issue given other uncertainies.
 % - mismatch after 2100 for the single-projection gases (see Sect. \ref{ssec:methods-input-emissions}):
@@ -22,10 +33,18 @@
 %   Good illustration of how hard it is to keep all the teams consistent across many decisions.
 % - inconsistencies between historical and scenario methods
 %   e.g. using MAGICC's NPP to drive seasonality change in future but concentration - temperature composite for the historical
+% - inconsistencies between experiments: the CO2 seasonality change PC vs. NPP regression was re-calculated for VL-CF
+%   (notebook `1011` regresses over the years up to the harmonisation year: 1981-2015 for VL-CF, 1981-2023 for the markers),
+%   giving a slope of 1.78 yr / GtC for VL-CF vs. 1.28 yr / GtC for the markers,
+%   i.e. VL-CF's seasonality responds roughly 40% more strongly to the same NPP change.
+%   Meanwhile, VL-CF's seasonality change PC is the historical one up to 2023
+%   (the projection is anchored at the historical PC in 2023 for all experiments),
+%   so VL-CF's counterfactual emissions from 2016 don't affect its seasonality until 2024.
+%   Another illustration (like the harmonisation point above) of VL-CF being treated differently to the other experiments.
 % - poor performance e.g. CH4 fossil emissions vs. PC regression
 % In the historical dataset, the CH4 first PC is non-constant from year 287
 % (before 1948, it comes from the optimisation against ice cores).
 % So the regression here mixes the ice-core-optimised period (1750-1947) with the emissions-regression period (1948-2022).
-% Checked 2026-10-26: this regression (shown in Fig. \ref{fig:methods-regressions}) is the one used for the published data
+% Checked 2026-10-26: this regression (shown in Fig. \ref{fig:methods-regressions-ch4}) is the one used for the published data
 % (the slope implied by the published L data, -0.74943 yr / Mt CH_4, matches the re-derived regression exactly).
 % Its slope is around 5.6 times that of the historical dataset's regression against PRIMAP-hist (-0.135 yr / Mt CH_4).

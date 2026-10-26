@@ -45,6 +45,10 @@ from local.scenario_ghg_forcing_for_cmip7.rerun_projections import (
     get_regression_file,
     get_regression_info_file,
 )
+from local.scenario_ghg_forcing_for_cmip7.rerun_vl_cf import (
+    CO2_SEASONALITY_VL_CF_PC_FILE,
+    VL_CF_MARKER,
+)
 from local.scenario_ghg_forcing_for_cmip7.scenarios import (
     CMIP7_HISTORY_SOURCE_ID,
     SCENARIOS,
@@ -158,16 +162,14 @@ def load_historical_yearly_global_mean(gas: str) -> xr.DataArray:
     return to_decimal_year(da, "yr")
 
 
-ESGF_READY_DIR = (
-    Path("data")
-    / "processed"
-    / "esgf-ready"
-    / "input4MIPs"
-    / "CMIP7"
-    / "ScenarioMIP"
-    / "CR"
+ESGF_READY_DIRS = tuple(
+    Path("data") / "processed" / "esgf-ready" / "input4MIPs" / "CMIP7" / activity / "CR"
+    for activity in ("ScenarioMIP", "PolMIP")
 )
-"""The published files, as archived in the bundle, relative to the bundle's root"""
+"""The published files, as archived in the bundle, relative to the bundle's root
+
+The markers are in ScenarioMIP, VL-CF in PolMIP.
+"""
 
 
 @cache
@@ -200,8 +202,10 @@ def load_published_yearly_global_mean(
     pieces = []
     for source_id in SCENARIOS[scenario].source_ids:
         files = sorted(
-            (
-                bundle_dir / ESGF_READY_DIR / source_id / "atmos" / "yr" / gas / "gm"
+            file
+            for esgf_ready_dir in ESGF_READY_DIRS
+            for file in (
+                bundle_dir / esgf_ready_dir / source_id / "atmos" / "yr" / gas / "gm"
             ).glob("*/*.nc")
         )
         if not files:
@@ -376,7 +380,9 @@ def get_historical_pcs(
     return to_decimal_years(res)
 
 
-def get_projected_pcs(gas: str, bundle_dir: Path = BUNDLE_DIR) -> pd.DataFrame:
+def get_projected_pcs(
+    gas: str, bundle_dir: Path = BUNDLE_DIR, include_vl_cf: bool = False
+) -> pd.DataFrame:
     """
     Get the projected latitudinal gradient PCs
 
@@ -388,6 +394,9 @@ def get_projected_pcs(gas: str, bundle_dir: Path = BUNDLE_DIR) -> pd.DataFrame:
     bundle_dir
         Directory which holds the bundle (including our re-runs)
 
+    include_vl_cf
+        Whether to include VL-CF (only for the gases in `TWO_EOF_GASES`)
+
     Returns
     -------
     :
@@ -398,6 +407,8 @@ def get_projected_pcs(gas: str, bundle_dir: Path = BUNDLE_DIR) -> pd.DataFrame:
     if gas in RERUN_GASES:
         pcs = pd.read_csv(bundle_dir / get_pcs_file(gas))
         res = pcs.pivot_table(index="year", columns=["eof", "scenario"], values="value")
+        if include_vl_cf:
+            res = res.join(get_vl_cf_pcs(gas, bundle_dir), how="outer")
 
     else:
         # Monthly PCs, which we take the annual-mean of
@@ -420,6 +431,50 @@ def get_projected_pcs(gas: str, bundle_dir: Path = BUNDLE_DIR) -> pd.DataFrame:
     res.index = res.index.astype(int)
 
     return to_decimal_years(res.sort_index(axis="columns"))
+
+
+def get_vl_cf_pcs(gas: str, bundle_dir: Path = BUNDLE_DIR) -> pd.DataFrame:
+    """
+    Get VL-CF's projected latitudinal gradient PCs
+
+    The original run's interim files for the gases in `TWO_EOF_GASES`
+    only hold VL-CF (see `rerun_projections`), so we take them from there.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest, one of `TWO_EOF_GASES`
+
+    bundle_dir
+        Directory which holds the bundle
+
+    Returns
+    -------
+    :
+        Annual PCs from the start of VL-CF's projection (2015), indexed by year,
+        with columns `(eof, scenario)`
+    """
+    if gas not in TWO_EOF_GASES:
+        raise NotImplementedError(gas)
+
+    info = xr.open_dataset(
+        bundle_dir
+        / INTERIM_DIR
+        / "latitudinal-gradient"
+        / f"{gas}_latitudinal-gradient-info.nc",
+        decode_times=xr.coders.CFDatetimeCoder(use_cftime=True),
+    )
+    monthly = info["principal-components-monthly"]
+    if list(monthly["scenario"].values) != [VL_CF_MARKER[2]]:
+        msg = (
+            f"Expected only VL-CF in the interim file, got {monthly['scenario'].values}"
+        )
+        raise AssertionError(msg)
+
+    # The monthly values are a mean-preserving interpolation of annual values
+    annual = monthly.groupby("time.year").mean()
+
+    return annual.to_dataframe(name="value")["value"].unstack(["eof", "scenario"])
 
 
 C8F18 = "c8f18"
@@ -522,7 +577,12 @@ def get_projected_co2_seasonality_change_pc(
         Annual PC from [LAST_HISTORICAL_YEAR][], indexed by decimal year,
         one column per scenario
     """
-    pcs = pd.read_csv(bundle_dir / CO2_SEASONALITY_PC_FILE)
+    pcs = pd.concat(
+        [
+            pd.read_csv(bundle_dir / CO2_SEASONALITY_PC_FILE),
+            pd.read_csv(bundle_dir / CO2_SEASONALITY_VL_CF_PC_FILE),
+        ]
+    )
     res = pcs.pivot_table(index="year", columns="scenario", values="value")
     res.index = res.index.astype(int)
 
@@ -627,7 +687,9 @@ def get_official_emissions(
     :
         Emissions, indexed by decimal year
     """
-    ((model, iam_scenario),) = ((m, s) for m, s, name in MARKERS if name == scenario)
+    ((model, iam_scenario),) = (
+        (m, s) for m, s, name in (*MARKERS, VL_CF_MARKER) if name == scenario
+    )
     stem = f"{iam_scenario}_{model}".replace(" ", "_").replace(".", "-")
     emissions = load_complete_emissions(
         bundle_dir / COMPLETE_EMISSIONS_DIR / f"{stem}.feather"

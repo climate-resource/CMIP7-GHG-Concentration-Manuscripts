@@ -130,8 +130,14 @@ def get_magicc_mismatch_figure_tag(gas: str) -> str:
     return f"@{gas}-magicc-mismatch-figure@"
 
 
-REGRESSIONS_FIGURE_TAG = "@regressions-methods-figure@"
-"""Tag of the figure of the regressions we re-derived"""
+REGRESSION_GASES = ("co2", "ch4", "n2o")
+"""Gases whose regressions we re-derive (so have a regressions figure)"""
+
+
+def get_regressions_figure_tag(gas: str) -> str:
+    """Get the tag of the figure of the regressions we re-derived for a gas"""
+    return f"@{gas}-regressions-figure@"
+
 
 WESTERN_ET_AL_2024_FIGURE_TAG = "@western-et-al-2024-extensions-figure@"
 """Tag of the figure of our extensions of Western et al. (2024)"""

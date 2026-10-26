@@ -27,22 +27,43 @@
 % ZNTODO: wherever we refer to this regression (here and in Sect. \ref{sssec:methods-ch4-project-seasonality-lat-gradient}),
 % refer to the discussion of inconsistencies between inputs (Sect. \ref{sec:discussion}).
 
+We re-derive the regressions for CO_2, CH_4 and N_2O only.
+For the other gases, we use the regressions from the historical dataset [TODO cite historical paper] directly,
+so they are not shown here.
+
 \begin{figure}[hbt!]
-\includegraphics[width=12cm]{@regressions-methods-figure@}
+\includegraphics[width=12cm]{@co2-regressions-figure@}
 \caption{
-    Regressions we re-derive for the projections
-    (Sects.~\ref{sssec:methods-co2-project-seasonality-lat-gradient},
-    \ref{sssec:methods-ch4-project-seasonality-lat-gradient}
-    and~\ref{sssec:methods-n2o-like-project-seasonality-lat-gradient}).
-    a)--c) First latitudinal gradient PC from the historical dataset
-    against the historical emissions which underpin the scenarios:
-    a) fossil CO_2, b) fossil CH_4, c) total N_2O.
-    d) CO_2 seasonality change PC from the historical dataset against MAGICC's median net primary productivity (NPP).
-    Points are coloured by year, the black lines are the regressions.
-    For the other gases, we use the regressions from the historical dataset [TODO cite historical paper] directly,
-    so they are not shown here.
+    Regressions we re-derive for the CO_2 projections
+    (Sect.~\ref{sssec:methods-co2-project-seasonality-lat-gradient}).
+    a) Seasonality change PC from the historical dataset
+    against MAGICC's median net primary productivity (NPP).
+    b) Latitudinal gradient PC0 from the historical dataset
+    against the historical fossil CO_2 emissions which underpin the scenarios.
 }
-\label{fig:methods-regressions}
+\label{fig:methods-regressions-co2}
+\end{figure}
+
+\begin{figure}[tp]
+\includegraphics[width=6cm]{@ch4-regressions-figure@}
+\caption{
+    Regression we re-derive for the CH_4 projections
+    (Sect.~\ref{sssec:methods-ch4-project-seasonality-lat-gradient}):
+    first latitudinal gradient PC from the historical dataset
+    against the historical fossil CH_4 emissions which underpin the scenarios.
+}
+\label{fig:methods-regressions-ch4}
+\end{figure}
+
+\begin{figure}[tp]
+\includegraphics[width=6cm]{@n2o-regressions-figure@}
+\caption{
+    Regression we re-derive for the N_2O projections
+    (Sect.~\ref{sssec:methods-n2o-like-project-seasonality-lat-gradient}):
+    first latitudinal gradient PC from the historical dataset
+    against the historical total N_2O emissions which underpin the scenarios.
+}
+\label{fig:methods-regressions-n2o}
 \end{figure}
 
 \clearpage
@@ -87,7 +108,7 @@
 For the gases which use a single concentration projection,
 MAGICC is run with the official emissions, including the official extensions beyond 2100,
 which differ from the emissions implied by our concentrations after 2100
-(Sect.~\ref{ssec:methods-input-emissions}).
+(Sect.~\ref{sssec:methods-cfc12-like-project-global-mean}).
 The figures in this appendix show the size of this difference for each gas.
 
 @magicc-mismatch-appendix-figures@
