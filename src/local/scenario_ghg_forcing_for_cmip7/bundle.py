@@ -50,11 +50,28 @@ The README is needed because `pyproject.toml` names it as the package's readme,
 so pixi can't install the bundle's package without it.
 """
 
-BUNDLE_TARBALLS = ("src.tar.gz", "data--interim--monthly-means.tar.gz")
+BUNDLE_TARBALLS = (
+    "src.tar.gz",
+    "data--raw--input-scenarios.tar.gz",
+    "data--interim--monthly-means.tar.gz",
+    "data--interim--annual-means.tar.gz",
+    "data--interim--complete-emissions.tar.gz",
+    "data--interim--inverse-emissions.tar.gz",
+    "data--interim--latitudinal-gradient.tar.gz",
+    "data--interim--western-et-al-2024.tar.gz",
+    "data--interim--wmo-2022.tar.gz",
+    "data--interim--magicc-output.tar.gz",
+    "data--processed--esgf-ready.tar.gz",
+)
 """Tarballs we need from the bundle
 
-We deliberately avoid the MAGICC tarballs:
-they are big (GBs) and none of the notebooks we re-run need them.
+The MAGICC output is big (~2.6 GB),
+but we need it for the NPP-based seasonality notebook and the MAGICC ensemble figures.
+We don't need the MAGICC model tarballs themselves (we never re-run MAGICC).
+
+The ESGF-ready files are the published files.
+We read them from here for the methods figures, which need every gas in every scenario,
+because getting them all from ESGF one dataset at a time takes hours.
 """
 
 EXECUTED_NOTEBOOKS_DIR = (

@@ -16,13 +16,18 @@ from local.gmd_latex import (
     assemble_main_tex,
     compile_latex,
 )
+from local.scenario_ghg_forcing_for_cmip7.appendix_figures import (
+    APPENDIX_FIGURE_GROUPS,
+    get_generated_figure_tags,
+    get_tags_in_texts,
+)
 from local.scenario_ghg_forcing_for_cmip7.bundle import BUNDLE_DIR
 from local.scenario_ghg_forcing_for_cmip7.config import (
     ABSTRACT,
     ACKNOWLEDGEMENTS,
+    APPENDICES,
     AUTHOR_CONTRIBUTION,
     BUILD_DIR,
-    BUNDLE_INVERSE_EMISSIONS,
     CLEAN_COPERNICUS_TEMPLATE_FILENAME,
     CODE_AND_DATA_AVAILABILITY,
     COMPETING_INTERESTS,
@@ -33,6 +38,7 @@ from local.scenario_ghg_forcing_for_cmip7.config import (
     INTRODUCTION,
     LATEX_DIR,
     LATEX_MAIN,
+    MAGICC_SUMMARY,
     METADATA,
     OUTPUT_PDF,
     REFERENCES_BIB,
@@ -46,6 +52,7 @@ MANUSCRIPT_FILES = {
     "abstract": ABSTRACT,
     "introduction": INTRODUCTION,
     "sections": list(SECTIONS),
+    "appendices": list(APPENDICES),
     "conclusion": CONCLUSION,
     "code_and_data_availability": CODE_AND_DATA_AVAILABILITY,
     "author_contribution": AUTHOR_CONTRIBUTION,
@@ -60,10 +67,26 @@ COPERNICUS_TEMPLATE = [
 ]
 """The template files the assembly reads or copies"""
 
+FIGURE_TAGS_IN_TEXT = get_tags_in_texts([*SECTIONS, *APPENDICES]) | {
+    tag for group in APPENDIX_FIGURE_GROUPS for tag in get_generated_figure_tags(group)
+}
+"""Tags of the figures the manuscript includes
+
+Those included by hand, plus those the generated appendix figures include
+(which is all of each group's figures, except those included by hand).
+Figures which aren't included aren't copied into the build,
+so they are only products of the assembly if they are included.
+"""
+
+FIGURE_FILES_IN_TEXT = {
+    tag: path for tag, path in FIGURE_FILES.items() if tag in FIGURE_TAGS_IN_TEXT
+}
+"""Figures the manuscript includes, by tag"""
+
 LATEX_SUPPORT_FILES = [
     *(LATEX_DIR / fn for fn in COPERNICUS_TEMPLATE_FILES),
     LATEX_DIR / REFERENCES_BIB.name,
-    *(LATEX_DIR / figure.name for figure in FIGURE_FILES.values()),
+    *(LATEX_DIR / figure.name for figure in FIGURE_FILES_IN_TEXT.values()),
 ]
 """Files the assembly puts next to `main.tex`, which latex needs to compile it"""
 
@@ -74,9 +97,9 @@ def task_assemble_latex(  # noqa: PLR0913
     replacements: Path = REPLACEMENTS,
     references_bib: Path = REFERENCES_BIB,
     copernicus_template: list[Path] = COPERNICUS_TEMPLATE,
-    figure_files: dict[str, Path] = FIGURE_FILES,
+    figure_files: dict[str, Path] = FIGURE_FILES_IN_TEXT,
     files_to_inline: dict[str, Path] = FILES_TO_INLINE,
-    value_check_data: Path = BUNDLE_INVERSE_EMISSIONS,
+    value_check_data: Path = MAGICC_SUMMARY,
     value_checks_source: Path = Path(
         local.scenario_ghg_forcing_for_cmip7.value_checks.__file__
     ),
