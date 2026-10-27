@@ -26,7 +26,7 @@
 # :format: latex
 # ```
 
-# %% [markdown] editable=true jp-MarkdownHeadingCollapsed=true slideshow={"slide_type": ""}
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Overview
 #
 # Here we provide a short description of the scenario dataset of concentrations
@@ -195,6 +195,7 @@ def load_eo_update_scenarios(ghg, time_sampling, grid, include_ext=True):
 
 
 # %% [markdown] editable=true jp-MarkdownHeadingCollapsed=true slideshow={"slide_type": ""}
+# (dataset-construction)=
 # # Dataset construction
 #
 # The original CMIP7 scenarios GHG concentration dataset (produced without using satellite data)
@@ -254,7 +255,7 @@ def load_eo_update_scenarios(ghg, time_sampling, grid, include_ext=True):
 # The updated dataset (produced by adding satellite data information, hereafter referred to as EO-Scenarios) is produced with the same methodology, save from the fact that the historical global means, seasonality, and latitudinal gradients of the historical period are taken from the EO-CMIP7 dataset, described in the user guide: 'Adding Earth Observation data to the generation of CMIP7 CO₂ and CH₄ Concentration Historical Dataset'. In short, it is a concentration dataset produced with the same methods as the GHG CMIP7 concentrations, but with an added observation dataset coprised of satellite observations pre-processed to be consistent with ground based observations.
 #
 
-# %% [markdown] editable=true jp-MarkdownHeadingCollapsed=true slideshow={"slide_type": ""}
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Finding and accessing the data
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -394,10 +395,7 @@ print(f"{extract_scenario_id('CR-l-1-1-0')=}")
 # from the modelling process required to produce them.
 # This means that, in radiative forcing terms, the uncertainty in these concentrations
 # is much larger than the historical data.
-# Nonetheless, it is very likely to be small
-# compared to other uncertainties in the climate system,
-# but this statement is not presently based on any robust analysis
-# (rather it is based on expert judgement and past experience).
+# In short, scenario uncertainties (uncertainties in the assumptions and models underlying the future emissions) are leading, and are captured via the provision of multiple scenarios
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## Differences compared to CMIP6
@@ -458,7 +456,7 @@ print(f"{extract_scenario_id('CR-l-1-1-0')=}")
 # }
 # ```
 
-# %% [markdown] editable=true slideshow={"slide_type": ""} jp-MarkdownHeadingCollapsed=true
+# %% [markdown] editable=true slideshow={"slide_type": ""}
 # # User guide
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -2261,7 +2259,8 @@ plt.show()
 # Comparing the data from EO-Scenarios and the baseline CMIP7 Scenarios shows the following changes:
 #
 # 1. Most obviously, the only gases provided here are CO{raw-latex}`\textsubscript{2}` and CH{raw-latex}`\textsubscript{4}`
-# 2. [TODO: add analysis]
+# 2. A different starting value, due to the harmonization to the updated historical concentrations
+# 3. Changes in seasonality and latitudinal gradient, expecially strong for high latitudes for CH{raw-latex}`\textsubscript{4}`
 #
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
@@ -2975,7 +2974,7 @@ plt.show()
 # ```
 
 # %% [markdown]
-# The difference in the seasonal amplitude for both gases is higher than the difference in global-, annual-means, as expected from the methodology explained in \ref{chapter2}. In short the historical concentrations and the output from running magic on the scenario-specific emissions are harmonized, and therefore the effect of changes in the final product is the most visible at the start of the time period. On the other hand, the seasonality and the latitudinal gradients are taken from the outputs of the principal component analysis performed on the historical period.
+# The difference in the seasonal amplitude for both gases is higher than the difference in global-, annual-means, as expected from the methodology explained in {numref}`Chapter %s <dataset-construction>`. In short the historical concentrations and the output from running magic on the scenario-specific emissions are harmonized, and therefore the effect of changes in the final product is the most visible at the start of the time period. On the other hand, the seasonality and the latitudinal gradients are taken from the outputs of the principal component analysis performed on the historical period.
 #
 # For CO{raw-latex}`\textsubscript{2}`, we notice that the difference in seasonality between EO-scenario and the baseline dataset grows with the total global concentration on a given scenario. This is not unexpected given the dependency of CO{raw-latex}`\textsubscript{2}`'s seasonality on absolute values. The difference remains under or slightly above 1 ppm.
 #
