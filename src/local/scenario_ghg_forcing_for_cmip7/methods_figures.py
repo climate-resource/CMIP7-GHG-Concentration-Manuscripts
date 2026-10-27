@@ -5,11 +5,16 @@ The figures follow the plans in the manuscript's `methods.tex`:
 
 - time axes run to 2500 and are broken a little after 2100
 - panels which compare scenarios show all of them, including VL-CF
-- everything else shows one scenario, L
+- the MAGICC ensemble panels (CO2 and the gases processed like N2O)
+  show one scenario, L
   (the gases which use a single concentration projection
   are the same in every scenario anyway)
 - latitudinal gradient (and seasonality change) PCs are shown over time,
+  for all scenarios,
   the regressions behind them are in their own (appendix) figure
+- what applies to only one panel is explained in that panel's own legend,
+  what applies to more than one panel is explained in the figure's legend panel,
+  in groups whose titles say which panels they apply to
 
 Built on the historical manuscript's layout and broken axis helpers,
 so all the manuscript's figures read the same way.
@@ -21,6 +26,7 @@ import dataclasses
 from collections.abc import Sequence
 from pathlib import Path
 
+import matplotlib.artist
 import matplotlib.axes
 import matplotlib.lines
 import matplotlib.patches
@@ -76,6 +82,7 @@ from local.scenario_ghg_forcing_for_cmip7.methods_data import (
     get_single_projection_inverse_emissions,
     get_units,
     get_western_et_al_2024,
+    get_western_et_al_2024_emissions,
     get_wmo_2022,
 )
 from local.scenario_ghg_forcing_for_cmip7.scenarios import (
@@ -150,7 +157,7 @@ PROJECTION_TICKS = (2015.0, 2060.0, 2100.0)
 Set explicitly, as the automatic choice can crowd the narrow piece.
 """
 
-HARMONISATION_PANEL_WIDTHS = (0.8, 1.2)
+HARMONISATION_PANEL_WIDTHS = (0.88, 1.12)
 """Share of the row's width given to the harmonisation and projection panels"""
 
 EXTENSION_TICKS = (2300.0, 2500.0)
@@ -159,11 +166,17 @@ EXTENSION_TICKS = (2300.0, 2500.0)
 EXTENSION_MINOR_TICKS = (2200.0, 2400.0)
 """Minor ticks of the piece after the break"""
 
-CH4_BAR_YEARS = (2050, 2100, 2300, 2500)
-"""Years shown in the box plot comparing MAGICC versions for CH4"""
+RANGES_YEARS = (2050, 2100, 2300, 2500)
+"""Years shown in the panels of MAGICC's medians and ranges"""
 
-CH4_BOX_Y_ROUNDING = 100.0
-"""The CH4 box plot's axis starts at the pre-industrial value, rounded down to this"""
+RANGES_GROUP_WIDTH = 0.94
+"""Share of the space between each year's ticks which that year's boxes fill"""
+
+RANGES_LEGEND_HEADROOM = 0.2
+"""Space above the boxes, as a share of their span, which leaves room for the legend"""
+
+AR6_VERSION_ALPHA = 0.45
+"""Opacity of the boxes of the MAGICC version used in AR6"""
 
 ENSEMBLE_RANGE = (0.05, 0.95)
 """Quantiles which give the range of MAGICC's ensemble we show"""
@@ -195,14 +208,17 @@ PC_NAMES = ("PC0", "PC1")
 LEGEND_PANEL = "legend"
 """Name of every figure's legend panel"""
 
-MAX_LEGEND_ENTRIES_PER_LINE = 4
-"""Most legend entries which fit on one line across a figure"""
-
 ROW_HEIGHT = 0.95
 """Height of a row of time series panels, in inches"""
 
-LEGEND_ROW_HEIGHT = 0.35
-"""Height of the legend row, in inches"""
+LEGEND_ROW_HEIGHT = 0.25
+"""Height of the legend row, in inches, if the legend has one line"""
+
+LEGEND_LINE_HEIGHT = 0.15
+"""Height each extra line adds to the legend row, in inches"""
+
+ALL_PANELS = "all panels"
+"""How a legend group's title says it applies to every panel"""
 
 LAYOUT_SETTINGS = LayoutSettings(align_right=True)
 """Layout settings (panels in a column share time axes, so line up both ends)"""
@@ -223,9 +239,12 @@ def broken(
     return Panel(name, width=width, broken=True, broken_split=shares)
 
 
-def legend_row(height: float = LEGEND_ROW_HEIGHT) -> Row:
-    """Get the row which holds a figure's legend"""
-    return Row(panels=(Panel(LEGEND_PANEL),), height=height)
+def legend_row(n_lines: int = 1) -> Row:
+    """Get the row which holds a figure's legend, which has `n_lines` lines"""
+    return Row(
+        panels=(Panel(LEGEND_PANEL),),
+        height=LEGEND_ROW_HEIGHT + (n_lines - 1) * LEGEND_LINE_HEIGHT,
+    )
 
 
 def to_frame(values: pd.Series) -> pd.DataFrame:
@@ -352,54 +371,132 @@ def units_label(units: str) -> str:
     return label_name(f"[{units}]").replace("dimensionless", "-")
 
 
+LegendEntry = tuple[str, matplotlib.artist.Artist]
+"""Label and handle of a legend entry"""
+
+LegendGroup = tuple[str, Sequence[LegendEntry]]
+"""Title and entries of a group of entries in a figure's legend panel"""
+
+
 def add_legend(
-    ax: matplotlib.axes.Axes,
-    entries: Sequence[tuple[str, matplotlib.artist.Artist]],
-    scenarios: Sequence = (),
+    ax: matplotlib.axes.Axes, lines: Sequence[Sequence[LegendGroup]]
 ) -> None:
     """
     Put a figure's legend in its legend panel
 
-    The entries which explain line styles go on one line,
-    the scenarios' colours (if any) on the line below.
+    The legend panel explains what applies to more than one panel
+    (what applies to only one panel is in that panel's legend,
+    see [add_panel_legend][]).
+    Its entries are in groups, each of which starts with a (bold) title
+    that says what the group explains and which panels it applies to.
 
     Parameters
     ----------
     ax
         The legend panel's axes
 
+    lines
+        Groups on each line of the legend, top to bottom
+        (the legend panel must be made with `legend_row(len(lines))`)
+    """
+    ax.axis("off")
+    for i, line in enumerate(lines):
+        handles: list[matplotlib.artist.Artist] = []
+        labels: list[str] = []
+        title_indexes = []
+        for title, entries in line:
+            title_indexes.append(len(labels))
+            # A handle which draws nothing, so the title reads as a heading
+            handles.append(matplotlib.lines.Line2D([], [], linestyle="none"))
+            labels.append(f"{title}:")
+            handles.extend(handle for _, handle in entries)
+            labels.extend(label for label, _ in entries)
+
+        legend = ax.legend(
+            handles=handles,
+            labels=labels,
+            loc="center",
+            # Lines spaced evenly from top to bottom
+            bbox_to_anchor=(0.5, 1.0 - (i + 0.5) / len(lines)),
+            ncols=len(labels),
+            frameon=False,
+            fontsize=LEGEND_FONT_SIZE,
+            # Tight, so all the datasets fit on one line
+            handlelength=1.4,
+            handletextpad=0.4,
+            columnspacing=0.6,
+            borderaxespad=0.0,
+        )
+        texts = legend.get_texts()
+        for j in title_indexes:
+            texts[j].set_fontweight("bold")
+
+        # See `add_scenario_legend` in the results figure for why
+        legend.set_in_layout(False)
+        ax.add_artist(legend)
+
+
+def add_panel_legend(
+    ax: matplotlib.axes.Axes,
+    entries: Sequence[LegendEntry],
+    loc: str = "best",
+    ncols: int = 1,
+) -> None:
+    """
+    Put a legend of what applies to only one panel in that panel
+
+    Parameters
+    ----------
+    ax
+        Axes to put the legend in (for a broken panel, one of its pieces)
+
     entries
-        Label and handle of each entry which explains a line style, in order
+        Label and handle of each entry, in order
+
+    loc
+        Where to put the legend
+        (`"best"` for panels which are drawn for many gases,
+        so the space which is free changes)
+
+    ncols
+        Number of columns
+    """
+    legend = ax.legend(
+        handles=[handle for _, handle in entries],
+        labels=[label for label, _ in entries],
+        loc=loc,
+        ncols=ncols,
+        frameon=False,
+        fontsize=LEGEND_FONT_SIZE,
+        handlelength=1.6,
+        handletextpad=0.5,
+        borderaxespad=0.3,
+        labelspacing=0.3,
+    )
+    legend.set_in_layout(False)
+
+
+def datasets_group(
+    panels: str = ALL_PANELS, scenarios: Sequence = ALL_SCENARIOS
+) -> LegendGroup:
+    """
+    Get the legend group which says which colour each dataset is
+
+    The historical dataset is included,
+    so it is clear that the colours distinguish datasets.
+
+    Parameters
+    ----------
+    panels
+        Panels the group applies to, as written in its title
 
     scenarios
         Scenarios whose colours to explain, in order
     """
-    entries = list(entries)
-    # As few lines as fit, with the entries shared evenly between them
-    n_lines = int(np.ceil(len(entries) / MAX_LEGEND_ENTRIES_PER_LINE))
-    per_line = int(np.ceil(len(entries) / max(n_lines, 1)))
-    lines = [entries[i : i + per_line] for i in range(0, len(entries), per_line)]
-    if scenarios:
-        lines.append(scenario_entries(scenarios))
-
-    ax.axis("off")
-    for i, line in enumerate(lines):
-        legend = ax.legend(
-            handles=[handle for _, handle in line],
-            labels=[label for label, _ in line],
-            loc="center",
-            # Lines spaced evenly from top to bottom
-            bbox_to_anchor=(0.5, 1.0 - (i + 0.5) / len(lines)),
-            ncols=len(line),
-            frameon=False,
-            fontsize=LEGEND_FONT_SIZE,
-            handlelength=1.8,
-            columnspacing=0.8,
-            borderaxespad=0.0,
-        )
-        # See `add_scenario_legend` in the results figure for why
-        legend.set_in_layout(False)
-        ax.add_artist(legend)
+    return (
+        f"Datasets ({panels})",
+        [(HISTORY_LABEL, history_handle()), *scenario_entries(scenarios)],
+    )
 
 
 def line_handle(
@@ -483,16 +580,126 @@ def plot_magicc_ensemble(
     )
 
 
-def ensemble_entries() -> list[tuple[str, matplotlib.artist.Artist]]:
+ENSEMBLE_TITLE = "MAGICC ensemble (raw), L"
+"""Title of the MAGICC ensemble panels"""
+
+
+def ensemble_entries() -> list[LegendEntry]:
     """Get the legend entries for the MAGICC ensemble panel"""
     colour = SCENARIOS[SHOWN_SCENARIO].colour
     return [
-        ("MAGICC median, L", line_handle(colour)),
+        (HISTORY_LABEL, history_handle()),
+        ("MAGICC median", line_handle(colour)),
         (
-            "MAGICC 5-95%, L",
+            "MAGICC 5\u201395% range",
             matplotlib.patches.Patch(facecolor=colour, alpha=0.25, linewidth=0.0),
         ),
     ]
+
+
+def get_ranges_bottom(gas: str, units: str, lowest: float) -> float:
+    """
+    Get the bottom of the vertical axis of a panel of MAGICC's medians and ranges
+
+    The pre-industrial concentration, rounded down to two significant figures,
+    rather than zero, so the boxes get the panel's height,
+    unless the boxes go lower than that,
+    in which case the bottom of the lowest box (`lowest`).
+    """
+    pre_industrial = get_history(gas, units).iloc[0]
+    if pre_industrial <= 0.0:
+        return 0.0
+
+    rounding = 10.0 ** (np.floor(np.log10(pre_industrial)) - 1.0)
+
+    return float(min(np.floor(pre_industrial / rounding) * rounding, lowest))
+
+
+def plot_magicc_ranges(
+    ax: matplotlib.axes.Axes,
+    gas: str,
+    summary_file: Path,
+    climate_models: Sequence[tuple[str, float]],
+) -> None:
+    """
+    Plot MAGICC's raw median and 5-95% range, all scenarios, in [RANGES_YEARS][]
+
+    Each year's boxes fill most of the space between its tick and the next,
+    with one box per scenario and MAGICC version.
+
+    Parameters
+    ----------
+    ax
+        Axes to plot on
+
+    gas
+        Gas of interest
+
+    summary_file
+        File which holds the MAGICC summary
+
+    climate_models
+        MAGICC versions to show, with the opacity of their boxes,
+        in the order they are shown within each scenario's slot
+    """
+    units = get_units(gas)
+    n_boxes = len(ALL_SCENARIOS) * len(climate_models)
+    box_width = RANGES_GROUP_WIDTH / n_boxes
+    lowest, highest = np.inf, -np.inf
+    for i, year in enumerate(RANGES_YEARS):
+        for j, scenario in enumerate(ALL_SCENARIOS):
+            for k, (climate_model, alpha) in enumerate(climate_models):
+                median, lower, upper = (
+                    get_magicc_concentrations(
+                        summary_file, gas, scenario.name, q, units, climate_model
+                    ).loc[year + 0.5]
+                    for q in (0.5, *ENSEMBLE_RANGE)
+                )
+                x = (
+                    i
+                    - RANGES_GROUP_WIDTH / 2
+                    + (j * len(climate_models) + k + 0.5) * box_width
+                )
+                # A box from the 5th to the 95th percentile, with the median across it
+                ax.bar(
+                    x,
+                    upper - lower,
+                    bottom=lower,
+                    width=box_width,
+                    color=scenario.colour,
+                    alpha=alpha,
+                    linewidth=0.0,
+                )
+                ax.hlines(
+                    median,
+                    x - box_width / 2,
+                    x + box_width / 2,
+                    color="0.1",
+                    linewidth=0.6,
+                )
+                lowest = min(lowest, lower)
+                highest = max(highest, upper)
+
+    bottom = get_ranges_bottom(gas, units, lowest - 0.03 * (highest - lowest))
+    ax.set_ylim(bottom, highest + RANGES_LEGEND_HEADROOM * (highest - bottom))
+    ax.set_xticks(range(len(RANGES_YEARS)))
+    ax.set_xticklabels([str(y) for y in RANGES_YEARS])
+    ax.set_xlim(-0.5, len(RANGES_YEARS) - 0.5)
+    ax.tick_params(labelsize="small")
+    ax.set_ylabel(units_label(units), fontsize="small")
+
+
+def ranges_entries(climate_models: Sequence[tuple[str, float]]) -> list[LegendEntry]:
+    """Get the legend entries for the panel made by [plot_magicc_ranges][]"""
+    boxes = [
+        (
+            f"{climate_model} 5\u201395% range",
+            matplotlib.patches.Patch(facecolor="0.4", alpha=alpha, linewidth=0.0),
+        )
+        for climate_model, alpha in climate_models
+    ]
+
+    return [*boxes, ("MAGICC median", line_handle("0.1", linewidth=0.6))]
 
 
 def harmonisation_panels(
@@ -512,8 +719,8 @@ def harmonisation_panels(
 
 
 HARMONISATION_TITLES = {
-    "harmonisation": "Harmonisation, all scenarios, 2010\u20132035",
-    "projections": "Harmonisation, all scenarios, 2015\u20132500",
+    "harmonisation": "Global-mean and harmonisation, 2010\u20132035",
+    "projections": "Global-mean and harmonisation, 2015\u20132500",
 }
 """Titles of the panels made by [harmonisation_panels][]"""
 
@@ -582,11 +789,11 @@ def plot_harmonisation(
     projections_axes[0].set_xlim(PROJECTION_SEGMENTS[0])
 
 
-def harmonisation_entries() -> list[tuple[str, matplotlib.artist.Artist]]:
+def harmonisation_entries() -> list[LegendEntry]:
     """Get the legend entries for the line styles of the harmonisation panel"""
     return [
+        ("CMIP7 forcings (harmonised)", line_handle("0.4")),
         ("Raw MAGICC median", line_handle("0.4", linestyle=RAW_LINESTYLE)),
-        ("Harmonised (output)", line_handle("0.4")),
     ]
 
 
@@ -660,25 +867,21 @@ def plot_pcs(  # noqa: PLR0913
     finish_time_axes(axes, segments, f"PC value [{units}]", foreground)
 
 
-def pc_entries(n_eofs: int) -> list[tuple[str, matplotlib.artist.Artist]]:
-    """Get the legend entries for the line styles of the PC panels"""
+def add_pc_legend(
+    axes: Sequence[matplotlib.axes.Axes], n_eofs: int, loc: str = "best"
+) -> None:
+    """Put the legend of the PCs' line styles in a PC panel, if it has two PCs"""
     if n_eofs == 1:
-        return []
+        return
 
-    return [
-        (name, line_handle("0.4", linestyle=linestyle))
-        for name, linestyle in zip(PC_NAMES[:n_eofs], PC_LINESTYLES)
-    ]
-
-
-def history_and_l_entries(
-    projection_label: str = "L",
-) -> list[tuple[str, matplotlib.artist.Artist]]:
-    """Get the legend entries for panels which show history and L"""
-    return [
-        (HISTORY_LABEL, history_handle()),
-        (projection_label, line_handle(SCENARIOS[SHOWN_SCENARIO].colour)),
-    ]
+    add_panel_legend(
+        axes[0],
+        [
+            (name, line_handle("0.4", linestyle=linestyle))
+            for name, linestyle in zip(PC_NAMES[:n_eofs], PC_LINESTYLES)
+        ],
+        loc=loc,
+    )
 
 
 @manuscript_style
@@ -712,13 +915,13 @@ def generate_co2_figure(
         Row(panels=harmonisation_panels(), height=ROW_HEIGHT),
         Row(panels=(broken("seasonality-pc"),), height=ROW_HEIGHT),
         Row(panels=(broken("lat-gradient-pcs"),), height=ROW_HEIGHT),
-        legend_row(height=0.55),
+        legend_row(2),
     )
     titles = {
-        "ensemble": "MAGICC ensemble (raw), L",
+        "ensemble": ENSEMBLE_TITLE,
         **HARMONISATION_TITLES,
-        "seasonality-pc": "Seasonality change PC, all scenarios",
-        "lat-gradient-pcs": "Latitudinal gradient PCs, all scenarios",
+        "seasonality-pc": "Seasonality change PC",
+        "lat-gradient-pcs": "Latitudinal gradient PCs",
     }
     fig, axes = create_figure(rows, settings=LAYOUT_SETTINGS)
 
@@ -744,15 +947,12 @@ def generate_co2_figure(
         scenario_names,
     )
 
+    # After the break, where the plume is narrowest
+    add_panel_legend(panel("ensemble")[1], ensemble_entries(), loc="upper right")
+    add_pc_legend(panel("lat-gradient-pcs"), 2, loc="lower left")
     add_legend(
         axes[LEGEND_PANEL],
-        [
-            (HISTORY_LABEL, history_handle()),
-            *ensemble_entries(),
-            *harmonisation_entries(),
-            *pc_entries(2),
-        ],
-        scenarios=ALL_SCENARIOS,
+        [[("Panels b, c", harmonisation_entries())], [datasets_group()]],
     )
 
     return save(fig, axes, rows, titles, outfile)
@@ -783,20 +983,16 @@ def generate_ch4_figure(
     """
     rows = (
         Row(panels=(broken("versions"),), height=ROW_HEIGHT),
-        Row(panels=(Panel("versions-bars"),), height=ROW_HEIGHT),
+        Row(panels=(Panel("ranges"),), height=ROW_HEIGHT),
         Row(panels=harmonisation_panels(), height=ROW_HEIGHT),
         Row(panels=(broken("lat-gradient-pcs"),), height=ROW_HEIGHT),
-        legend_row(height=0.55),
+        legend_row(2),
     )
     titles = {
         "versions": (
-            f"Raw MAGICC median, {MAGICC_VERSION} (solid), "
-            f"{MAGICC_AR6_VERSION} (dashed)"
+            f"Projections from {MAGICC_VERSION} compared to {MAGICC_AR6_VERSION}"
         ),
-        "versions-bars": (
-            "Raw MAGICC median (line) and 5-95% range (box)\n"
-            f"{MAGICC_AR6_VERSION} (lighter, left), {MAGICC_VERSION} (right)"
-        ),
+        "ranges": "Median and ranges",
         **HARMONISATION_TITLES,
         "lat-gradient-pcs": "Latitudinal gradient PCs",
     }
@@ -831,52 +1027,9 @@ def generate_ch4_figure(
     )
 
     # MAGICC versions in selected years
-    (ax,) = panel("versions-bars")
-    n_scenarios = len(ALL_SCENARIOS)
-    bar_width = 0.8 / (2 * n_scenarios)
-    highest = -np.inf
-    for i, year in enumerate(CH4_BAR_YEARS):
-        for j, scenario in enumerate(ALL_SCENARIOS):
-            for k, (climate_model, alpha) in enumerate(
-                ((MAGICC_AR6_VERSION, 0.45), (MAGICC_VERSION, 1.0))
-            ):
-                median, lower, upper = (
-                    get_magicc_concentrations(
-                        summary_file, "ch4", scenario.name, q, units, climate_model
-                    ).loc[year + 0.5]
-                    for q in (0.5, *ENSEMBLE_RANGE)
-                )
-                x = i - 0.4 + (2 * j + k + 0.5) * bar_width
-                # A box from the 5th to the 95th percentile, with the median across it
-                ax.bar(
-                    x,
-                    upper - lower,
-                    bottom=lower,
-                    width=bar_width,
-                    color=scenario.colour,
-                    alpha=alpha,
-                    linewidth=0.0,
-                )
-                ax.hlines(
-                    median,
-                    x - bar_width / 2,
-                    x + bar_width / 2,
-                    color="0.1",
-                    linewidth=0.6,
-                )
-                highest = max(highest, upper)
-
-    # Start at (roughly) the pre-industrial concentration, rather than zero,
-    # so the boxes get the panel's height
-    pre_industrial = get_history("ch4", units).iloc[0]
-    ax.set_ylim(
-        np.floor(pre_industrial / CH4_BOX_Y_ROUNDING) * CH4_BOX_Y_ROUNDING,
-        highest + 0.03 * (highest - pre_industrial),
-    )
-    ax.set_xticks(range(len(CH4_BAR_YEARS)))
-    ax.set_xticklabels([str(y) for y in CH4_BAR_YEARS])
-    ax.tick_params(labelsize="small")
-    ax.set_ylabel(units_label(units), fontsize="small")
+    climate_models = ((MAGICC_AR6_VERSION, AR6_VERSION_ALPHA), (MAGICC_VERSION, 1.0))
+    (ranges_ax,) = panel("ranges")
+    plot_magicc_ranges(ranges_ax, "ch4", summary_file, climate_models)
 
     plot_harmonisation(
         panel("harmonisation"), panel("projections"), "ch4", summary_file
@@ -884,17 +1037,26 @@ def generate_ch4_figure(
     plot_pcs(
         panel("lat-gradient-pcs"),
         get_historical_pcs("ch4"),
-        get_projected_pcs("ch4", bundle_dir),
+        get_projected_pcs("ch4", bundle_dir, include_vl_cf=True),
+        [s.name for s in ALL_SCENARIOS],
     )
 
+    add_panel_legend(
+        panel("versions")[0],
+        [
+            (MAGICC_VERSION, line_handle("0.4")),
+            (MAGICC_AR6_VERSION, line_handle("0.4", linestyle=RAW_LINESTYLE)),
+        ],
+        loc="upper left",
+    )
+    # On one line, above the boxes
+    add_panel_legend(
+        ranges_ax, ranges_entries(climate_models), loc="upper left", ncols=3
+    )
+    add_pc_legend(panel("lat-gradient-pcs"), 2)
     add_legend(
         axes[LEGEND_PANEL],
-        [
-            (HISTORY_LABEL, history_handle()),
-            *harmonisation_entries(),
-            *pc_entries(2),
-        ],
-        scenarios=ALL_SCENARIOS,
+        [[("Panels c, d", harmonisation_entries())], [datasets_group()]],
     )
 
     return save(fig, axes, rows, titles, outfile)
@@ -906,6 +1068,10 @@ def generate_n2o_like_figure(
 ) -> Path:
     """
     Generate the methods figure of a gas processed like N2O
+
+    Laid out like the CH4 figure ([generate_ch4_figure][]),
+    except that the comparison of MAGICC versions is replaced
+    by the MAGICC ensemble panel of the CO2 figure ([generate_co2_figure][]).
 
     Parameters
     ----------
@@ -928,46 +1094,41 @@ def generate_n2o_like_figure(
     """
     rows = (
         Row(
-            panels=(
-                broken("lat-gradient-pcs"),
-                broken("ensemble", shares=ENSEMBLE_SEGMENT_SHARES),
-            ),
+            panels=(broken("ensemble", shares=ENSEMBLE_SEGMENT_SHARES),),
             height=ROW_HEIGHT,
         ),
         Row(panels=harmonisation_panels(), height=ROW_HEIGHT),
-        legend_row(height=0.55),
+        Row(panels=(broken("lat-gradient-pcs"),), height=ROW_HEIGHT),
+        legend_row(2),
     )
-    projected_pcs = get_projected_pcs(gas, bundle_dir)
+    projected_pcs = get_projected_pcs(gas, bundle_dir, include_vl_cf=True)
     n_eofs = projected_pcs.columns.get_level_values(0).nunique()
     titles = {
-        "ensemble": "MAGICC ensemble (raw), L",
+        "ensemble": ENSEMBLE_TITLE,
         **HARMONISATION_TITLES,
-        "lat-gradient-pcs": "Latitudinal gradient PCs"
-        if n_eofs > 1
-        else "Latitudinal gradient PC",
+        "lat-gradient-pcs": (
+            "Latitudinal gradient PCs" if n_eofs > 1 else "Latitudinal gradient PC"
+        ),
     }
     fig, axes = create_figure(rows, settings=LAYOUT_SETTINGS)
 
     def panel(name: str) -> list[matplotlib.axes.Axes]:
         return get_panel_axes(rows, axes, name)
 
+    plot_magicc_ensemble(panel("ensemble"), gas, summary_file)
+    plot_harmonisation(panel("harmonisation"), panel("projections"), gas, summary_file)
     plot_pcs(
         panel("lat-gradient-pcs"),
         get_historical_pcs(gas),
         projected_pcs,
+        [s.name for s in ALL_SCENARIOS],
     )
-    plot_magicc_ensemble(panel("ensemble"), gas, summary_file)
-    plot_harmonisation(panel("harmonisation"), panel("projections"), gas, summary_file)
 
+    add_panel_legend(panel("ensemble")[0], ensemble_entries())
+    add_pc_legend(panel("lat-gradient-pcs"), n_eofs)
     add_legend(
         axes[LEGEND_PANEL],
-        [
-            (HISTORY_LABEL, history_handle()),
-            *pc_entries(n_eofs),
-            *ensemble_entries(),
-            *harmonisation_entries(),
-        ],
-        scenarios=ALL_SCENARIOS,
+        [[("Panels b, c", harmonisation_entries())], [datasets_group()]],
     )
 
     return save(fig, axes, rows, titles, outfile)
@@ -1038,16 +1199,12 @@ def generate_cfc12_like_figure(
         `outfile`
     """
     rows = (
-        Row(
-            panels=(broken("projection"), broken("inverse-emissions")),
-            height=ROW_HEIGHT,
-        ),
+        Row(panels=(broken("projection"),), height=ROW_HEIGHT),
         Row(panels=(broken("lat-gradient-pcs"),), height=ROW_HEIGHT),
         legend_row(),
     )
     titles = {
         "projection": "Global-, annual-mean",
-        "inverse-emissions": "Inverse emissions",
         "lat-gradient-pcs": "Latitudinal gradient PC",
     }
     fig, axes = create_figure(rows, settings=LAYOUT_SETTINGS)
@@ -1076,23 +1233,8 @@ def generate_cfc12_like_figure(
         [projection, history],
     )
 
-    emissions_units = get_emissions_units(gas)
-    inverse_emissions = get_single_projection_inverse_emissions(
-        gas, emissions_units, bundle_dir
-    )
-    shade_western_et_al_2024_extension(
-        gas, panel("inverse-emissions"), SCENARIO_SEGMENTS
-    )
-    plot_in_segments(
-        inverse_emissions, panel("inverse-emissions"), SCENARIO_SEGMENTS, color=colour
-    )
-    finish_time_axes(
-        panel("inverse-emissions"),
-        SCENARIO_SEGMENTS,
-        units_label(emissions_units),
-        [inverse_emissions],
-    )
-
+    # The projection doesn't depend on the scenario,
+    # so this is every scenario's PC
     plot_pcs(
         panel("lat-gradient-pcs"),
         get_historical_pcs(gas),
@@ -1101,7 +1243,20 @@ def generate_cfc12_like_figure(
 
     add_legend(
         axes[LEGEND_PANEL],
-        history_and_l_entries("Projection (the same in all scenarios)"),
+        [
+            [
+                (
+                    f"Datasets ({ALL_PANELS})",
+                    [
+                        (HISTORY_LABEL, history_handle()),
+                        (
+                            "CMIP7 forcings (the same in all datasets)",
+                            line_handle(colour),
+                        ),
+                    ],
+                )
+            ]
+        ],
     )
 
     return save(fig, axes, rows, titles, outfile)
@@ -1136,11 +1291,11 @@ def generate_hfc125_like_figure(
     rows = (
         Row(panels=(broken("one-box"),), height=ROW_HEIGHT),
         Row(panels=(broken("lat-gradient-pcs"),), height=ROW_HEIGHT),
-        legend_row(height=0.5),
+        legend_row(),
     )
     titles = {
         "one-box": (
-            "One-box model (our output) and MAGICC median (not used), all scenarios"
+            "Global-, annual-mean projections and comparison with MAGICC output"
         ),
         "lat-gradient-pcs": "Latitudinal gradient PC",
     }
@@ -1185,18 +1340,18 @@ def generate_hfc125_like_figure(
     plot_pcs(
         panel("lat-gradient-pcs"),
         get_historical_pcs(gas),
-        get_projected_pcs(gas, bundle_dir),
+        get_projected_pcs(gas, bundle_dir, include_vl_cf=True),
+        [s.name for s in ALL_SCENARIOS],
     )
 
-    add_legend(
-        axes[LEGEND_PANEL],
+    add_panel_legend(
+        panel("one-box")[0],
         [
-            (HISTORY_LABEL, history_handle()),
-            ("One-box model (output)", line_handle("0.4")),
+            ("CMIP7 forcings (one-box model)", line_handle("0.4")),
             ("MAGICC median", line_handle("0.4", linestyle=RAW_LINESTYLE)),
         ],
-        scenarios=ALL_SCENARIOS,
     )
+    add_legend(axes[LEGEND_PANEL], [[datasets_group()]])
 
     return save(fig, axes, rows, titles, outfile)
 
@@ -1205,26 +1360,26 @@ REGRESSION_PANELS: dict[str, dict[str, tuple[str, str, str]]] = {
     "co2": {
         "seasonality-change": (
             CO2_SEASONALITY_REGRESSION,
-            "Seasonality change PC\nvs. NPP",
+            "Seasonality change PC vs. NPP",
             "MAGICC median NPP",
         ),
         "lat-gradient": (
             "co2",
-            "Lat. gradient PC0\nvs. emissions",
+            "Latitudinal gradient PC0 vs. emissions",
             "Fossil co2 emissions",
         ),
     },
     "ch4": {
         "lat-gradient": (
             "ch4",
-            "Lat. gradient PC0\nvs. emissions",
+            "Latitudinal gradient PC0 vs. emissions",
             "Fossil ch4 emissions",
         ),
     },
     "n2o": {
         "lat-gradient": (
             "n2o",
-            "Lat. gradient PC0\nvs. emissions",
+            "Latitudinal gradient PC0 vs. emissions",
             "Total n2o emissions",
         ),
     },
@@ -1394,6 +1549,12 @@ def generate_western_et_al_2024_figure(
     """
     Generate the figure of our extensions of the Western et al. (2024) projections
 
+    One row per gas: concentrations on the left, emissions on the right.
+    The top row is annotated with the steps of the extension:
+    invert the projection to get emissions,
+    hold the emissions in 2100 constant,
+    then run the one-box model forward with them.
+
     Parameters
     ----------
     outfile
@@ -1409,17 +1570,24 @@ def generate_western_et_al_2024_figure(
     """
     rows = (
         *(
-            Row(panels=(broken(gas),), height=ROW_HEIGHT)
+            Row(
+                panels=(broken(gas), broken(f"{gas}-emissions")),
+                height=ROW_HEIGHT,
+            )
             for gas in WESTERN_ET_AL_2024_GASES
         ),
-        legend_row(),
+        legend_row(2),
     )
-    titles = {gas: label_name(gas) for gas in WESTERN_ET_AL_2024_GASES}
+    titles = {}
+    for gas in WESTERN_ET_AL_2024_GASES:
+        titles[gas] = f"{label_name(gas)} concentrations"
+        titles[f"{gas}-emissions"] = f"{label_name(gas)} emissions"
+
     fig, axes = create_figure(rows, settings=LAYOUT_SETTINGS)
 
     wmo_colour = "0.55"
     western_colour = SCENARIOS[SHOWN_SCENARIO].colour
-    for gas in WESTERN_ET_AL_2024_GASES:
+    for i, gas in enumerate(WESTERN_ET_AL_2024_GASES):
         gas_axes = get_panel_axes(rows, axes, gas)
         units = "ppt"
         raw, extended = get_western_et_al_2024(gas, bundle_dir)
@@ -1450,17 +1618,152 @@ def generate_western_et_al_2024_figure(
             [wmo, raw, extension, history],
         )
 
+        emissions_axes = get_panel_axes(rows, axes, f"{gas}-emissions")
+        emissions_units = get_emissions_units(gas)
+        inverse, constant = get_western_et_al_2024_emissions(
+            gas, emissions_units, bundle_dir
+        )
+        plot_in_segments(
+            inverse, emissions_axes, SCENARIO_SEGMENTS, color=western_colour
+        )
+        plot_in_segments(
+            constant,
+            emissions_axes,
+            SCENARIO_SEGMENTS,
+            color=western_colour,
+            linestyle=RAW_LINESTYLE,
+        )
+        finish_time_axes(
+            emissions_axes,
+            SCENARIO_SEGMENTS,
+            units_label(emissions_units),
+            [inverse, constant],
+        )
+
+        if i == 0:
+            annotate_western_et_al_2024_steps(
+                gas_axes, emissions_axes, inverse, constant, extension
+            )
+
     add_legend(
         axes[LEGEND_PANEL],
         [
-            (HISTORY_LABEL, history_handle()),
-            ("Western et al. (2024)", line_handle(western_colour)),
-            ("Our extension", line_handle(western_colour, linestyle=RAW_LINESTYLE)),
-            ("WMO (2022)", line_handle(wmo_colour)),
+            [
+                (
+                    ALL_PANELS.capitalize(),
+                    [
+                        (
+                            "Western et al. (2024) and its inverse emissions",
+                            line_handle(western_colour),
+                        ),
+                        (
+                            "Our extension",
+                            line_handle(western_colour, linestyle=RAW_LINESTYLE),
+                        ),
+                    ],
+                )
+            ],
+            [
+                (
+                    "Panels a, c, e",
+                    [
+                        (HISTORY_LABEL, history_handle()),
+                        ("WMO (2022)", line_handle(wmo_colour)),
+                    ],
+                )
+            ],
         ],
     )
 
     return save(fig, axes, rows, titles, outfile)
+
+
+def annotate_step(
+    ax: matplotlib.axes.Axes,
+    text: str,
+    xy: tuple[float, float],
+    xytext: tuple[float, float],
+) -> None:
+    """
+    Annotate a step of a process on a plot
+
+    Parameters
+    ----------
+    ax
+        Axes to annotate
+
+    text
+        Text of the annotation
+
+    xy
+        Point the annotation points to, in data coordinates
+
+    xytext
+        Where the text goes, in axes coordinates
+    """
+    ax.annotate(
+        text,
+        xy=xy,
+        xytext=xytext,
+        textcoords="axes fraction",
+        fontsize=LEGEND_FONT_SIZE,
+        ha="center",
+        va="center",
+        arrowprops={"arrowstyle": "-|>", "color": "0.3", "linewidth": 0.5},
+    )
+
+
+def annotate_western_et_al_2024_steps(
+    concentration_axes: Sequence[matplotlib.axes.Axes],
+    emissions_axes: Sequence[matplotlib.axes.Axes],
+    inverse: pd.Series,
+    constant: pd.Series,
+    extension: pd.Series,
+) -> None:
+    """
+    Annotate the steps of our extension of Western et al. (2024) on one gas' panels
+
+    The steps are numbered, so the caption can refer to them.
+
+    Parameters
+    ----------
+    concentration_axes
+        Axes of the gas' concentration panel
+
+    emissions_axes
+        Axes of the gas' emissions panel
+
+    inverse
+        Emissions implied by the Western et al. (2024) projection
+
+    constant
+        Constant emissions which drive our extension
+
+    extension
+        Our extension of the concentrations
+    """
+    before_break, after_break = emissions_axes
+    year = 2060.5
+    annotate_step(
+        before_break,
+        "1. Invert\nWestern et al. (2024)",
+        (year, inverse.loc[year]),
+        (0.65, 0.6),
+    )
+    year = 2300.5
+    annotate_step(
+        after_break,
+        "2. Hold 2100\nemissions\nconstant",
+        (year, constant.loc[year]),
+        (0.5, 0.55),
+    )
+    _, concentrations_after_break = concentration_axes
+    annotate_step(
+        concentrations_after_break,
+        "3. Run one-box\nmodel forward",
+        (year, extension.loc[year]),
+        (0.5, 0.55),
+    )
 
 
 @manuscript_style
@@ -1496,7 +1799,7 @@ def generate_magicc_mismatch_figure(
     rows = (
         Row(panels=(broken("emissions"),), height=ROW_HEIGHT),
         Row(panels=(broken("concentrations"),), height=ROW_HEIGHT),
-        legend_row(height=0.5),
+        legend_row(),
     )
     titles = {
         "emissions": "Emissions",
@@ -1577,19 +1880,24 @@ def generate_magicc_mismatch_figure(
         concentrations_foreground,
     )
 
+    ours_handle = line_handle(ours_colour, linewidth=HISTORY_LINE_WIDTH)
+    add_panel_legend(
+        panel("emissions")[0],
+        [
+            ("Inverse emissions of the CMIP7 forcings", ours_handle),
+            ("Official emissions", line_handle("0.4", linestyle=RAW_LINESTYLE)),
+        ],
+    )
+    add_panel_legend(
+        panel("concentrations")[0],
+        [
+            (f"{HISTORY_LABEL} and CMIP7 forcings", ours_handle),
+            ("MAGICC median", line_handle("0.4", linestyle=RAW_LINESTYLE)),
+        ],
+    )
     add_legend(
         axes[LEGEND_PANEL],
-        [
-            (
-                "Ours (inverse emissions; historical dataset and our concentrations)",
-                line_handle(ours_colour, linewidth=HISTORY_LINE_WIDTH),
-            ),
-            (
-                "Official emissions; MAGICC median",
-                line_handle("0.4", linestyle=RAW_LINESTYLE),
-            ),
-        ],
-        scenarios=ALL_SCENARIOS,
+        [[(f"Datasets (dashed lines, {ALL_PANELS})", scenario_entries())]],
     )
 
     return save(fig, axes, rows, titles, outfile)

@@ -2,9 +2,12 @@
 
 - [x] finish off CO2 section
 - [x] read CO2 section again
-- [ ] go back through rest of methods and add in figures references, check figures etc.
-- [ ] double check
+- [x] go back through rest of methods and add in figures references, check figures etc.
+- [x] double check
+- [x] triple check
 - [ ] check how VL-CF weaves throughout
+    - [ ] do statements apply generally rather than being ScenarioMIP specific
+    - [ ] use of scenarios vs datasets
 
 # TODOs: historical GHG forcing for CMIP7 manuscript
 

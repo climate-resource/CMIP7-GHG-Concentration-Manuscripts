@@ -49,7 +49,7 @@ so they are not shown here.
 \caption{
     Regression we re-derive for the CH_4 projections
     (Sect.~\ref{sssec:methods-ch4-project-seasonality-lat-gradient}):
-    first latitudinal gradient PC from the historical dataset
+    latitudinal gradient PC0 from the historical dataset
     against the historical fossil CH_4 emissions which underpin the scenarios.
 }
 \label{fig:methods-regressions-ch4}
@@ -60,7 +60,7 @@ so they are not shown here.
 \caption{
     Regression we re-derive for the N_2O projections
     (Sect.~\ref{sssec:methods-n2o-like-project-seasonality-lat-gradient}):
-    first latitudinal gradient PC from the historical dataset
+    latitudinal gradient PC0 from the historical dataset
     against the historical total N_2O emissions which underpin the scenarios.
 }
 \label{fig:methods-regressions-n2o}
@@ -75,10 +75,16 @@ so they are not shown here.
 \caption{
     Extension of the \citet{western_hcfcs_2024} projections beyond 2100
     (Sect.~\ref{sssec:methods-cfc12-like-project-global-mean}).
-    a) HCFC-22, b) HCFC-141b, c) HCFC-142b.
-    In each panel: the historical dataset, the \citet{western_hcfcs_2024} projection (to 2100),
-    our extension of it (after 2100)
-    and the \citet{wmo_ozone-ch7_2022} projection, for reference.
+    a, b) HCFC-22, c, d) HCFC-141b, e, f) HCFC-142b.
+    a, c, e) Global-, annual-mean concentrations:
+    the \citet{western_hcfcs_2024} projection (to 2100) and our extension of it (after 2100),
+    alongside the historical dataset and the \citet{wmo_ozone-ch7_2022} projection, for reference.
+    b, d, f) Emissions: the emissions implied by the \citet{western_hcfcs_2024} projection (to 2100)
+    and the constant emissions which drive our extension (after 2100).
+    The steps of the extension, numbered in a) and b), are the same for each gas:
+    1) we invert the \citet{western_hcfcs_2024} projection with a one-box model (Eq.~(\ref{eq:one-box})),
+    2) we hold the resulting emissions in 2100 constant
+    and 3) we run the one-box model forward from 2100 with these constant emissions.
 }
 \label{fig:methods-western-et-al-2024}
 \end{figure}

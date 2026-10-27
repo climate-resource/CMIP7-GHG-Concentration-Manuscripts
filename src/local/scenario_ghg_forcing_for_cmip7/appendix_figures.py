@@ -164,7 +164,7 @@ def get_n2o_like_figures(gas: str) -> tuple[AppendixFigure, ...]:
                 "n2o",
                 gas,
                 "Unlike N_2O, only one latitudinal gradient EOF is retained, "
-                "so there is only one PC in a).",
+                "so there is only one PC in d).",
             ),
             label=get_methods_figure_label(gas),
         ),
@@ -225,16 +225,16 @@ def get_magicc_mismatch_figures(gas: str) -> tuple[AppendixFigure, ...]:
             tag=get_magicc_mismatch_figure_tag(gas),
             caption=(
                 f"{name} emissions and concentrations: "
-                "ours compared with those used in, "
+                "the CMIP7 forcings compared with those used in, "
                 "and calculated by, MAGICC. "
-                f"a) The emissions implied by our {name} concentrations "
-                "(inverse emissions, black) "
+                f"a) The emissions implied by the CMIP7 {name} forcings "
+                "(inverse emissions) "
                 "and the official emissions "
                 "(including the official extensions beyond 2100), "
-                "with which MAGICC is run, in each scenario (dashed). "
-                f"b) Our {name} concentrations (the same in all scenarios, black), "
+                "with which MAGICC is run, in each dataset. "
+                f"b) The CMIP7 {name} forcings (the same in all datasets), "
                 "with the historical dataset, "
-                "and the median of MAGICC's concentrations in each scenario (dashed)."
+                "and the median of MAGICC's concentrations in each dataset."
             ),
             label=f"fig:magicc-mismatch-{gas}",
         ),

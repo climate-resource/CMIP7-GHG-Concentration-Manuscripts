@@ -395,7 +395,9 @@ def get_projected_pcs(
         Directory which holds the bundle (including our re-runs)
 
     include_vl_cf
-        Whether to include VL-CF (only for the gases in `TWO_EOF_GASES`)
+        Whether to include VL-CF
+        (ignored for the gases whose projection doesn't depend on the scenario,
+        as "all" already covers it)
 
     Returns
     -------
@@ -403,11 +405,12 @@ def get_projected_pcs(
         Annual PCs from [LAST_HISTORICAL_YEAR][], indexed by decimal year,
         with columns `(eof, scenario)`.
         Gases whose projection doesn't depend on the scenario have one scenario, "all".
+        VL-CF's PCs start where it leaves history (2015) for the gases which use MAGICC.
     """
     if gas in RERUN_GASES:
         pcs = pd.read_csv(bundle_dir / get_pcs_file(gas))
         res = pcs.pivot_table(index="year", columns=["eof", "scenario"], values="value")
-        if include_vl_cf:
+        if include_vl_cf and gas not in SINGLE_PROJECTION_GASES:
             res = res.join(get_vl_cf_pcs(gas, bundle_dir), how="outer")
 
     else:
@@ -427,6 +430,14 @@ def get_projected_pcs(
         annual = monthly.groupby("time.year").mean()
         annual = annual.sel(year=annual["year"] >= LAST_HISTORICAL_YEAR)
         res = annual.to_dataframe(name="value")["value"].unstack(["eof", "scenario"])
+        if include_vl_cf:
+            # The VL-CF run didn't write these gases' latitudinal gradients,
+            # because, for these gases, VL-CF is VL from 2022 onwards
+            # (checked against the published native resolution data, 2022-2500).
+            vl_cf = res.loc[:, pd.IndexSlice[:, "vl"]].rename(
+                columns={"vl": VL_CF_MARKER[2]}, level="scenario"
+            )
+            res = res.join(vl_cf)
 
     res.index = res.index.astype(int)
 
@@ -438,12 +449,13 @@ def get_vl_cf_pcs(gas: str, bundle_dir: Path = BUNDLE_DIR) -> pd.DataFrame:
     Get VL-CF's projected latitudinal gradient PCs
 
     The original run's interim files for the gases in `TWO_EOF_GASES`
-    only hold VL-CF (see `rerun_projections`), so we take them from there.
+    and `ONE_EOF_GASES` only hold VL-CF (see `rerun_projections`),
+    so we take them from there.
 
     Parameters
     ----------
     gas
-        Gas of interest, one of `TWO_EOF_GASES`
+        Gas of interest, one of `TWO_EOF_GASES` or `ONE_EOF_GASES`
 
     bundle_dir
         Directory which holds the bundle
@@ -454,7 +466,7 @@ def get_vl_cf_pcs(gas: str, bundle_dir: Path = BUNDLE_DIR) -> pd.DataFrame:
         Annual PCs from the start of VL-CF's projection (2015), indexed by year,
         with columns `(eof, scenario)`
     """
-    if gas not in TWO_EOF_GASES:
+    if gas not in (*TWO_EOF_GASES, *ONE_EOF_GASES):
         raise NotImplementedError(gas)
 
     info = xr.open_dataset(
@@ -470,6 +482,9 @@ def get_vl_cf_pcs(gas: str, bundle_dir: Path = BUNDLE_DIR) -> pd.DataFrame:
             f"Expected only VL-CF in the interim file, got {monthly['scenario'].values}"
         )
         raise AssertionError(msg)
+
+    if "eof" not in monthly.dims:
+        monthly = monthly.expand_dims(eof=info["eof"].values)
 
     # The monthly values are a mean-preserving interpolation of annual values
     annual = monthly.groupby("time.year").mean()
@@ -748,6 +763,114 @@ def get_western_et_al_2024(
         to_decimal_years(pd.Series(df.iloc[0].to_numpy(), index=df.columns.astype(int)))
         for df in (raw, extended)
     )
+
+
+WESTERN_ET_AL_2024_LIFETIMES = {"hcfc22": 11.6, "hcfc141b": 8.81, "hcfc142b": 17.1}
+"""Lifetimes (yr) with which the original run extended Western et al. (2024)
+
+Copied from notebook `0001_extend-western-et-al-2024`.
+"""
+
+
+def get_ppt_to_mass_factor(
+    gas: str, units: str, bundle_dir: Path = BUNDLE_DIR
+) -> float:
+    """
+    Get the factor which converts a gas' emissions from ppt / yr to mass per time
+
+    Taken from the original run's inverse emissions (notebook `1020`),
+    which are saved in both ppt / yr and mass per time,
+    so the conversion is exactly the one the original run used.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    units
+        Mass per time units to convert to
+
+    bundle_dir
+        Directory which holds the bundle
+
+    Returns
+    -------
+    :
+        Factor by which to multiply emissions in ppt / yr
+    """
+    raw = pd.read_feather(
+        bundle_dir
+        / INTERIM_DIR
+        / "inverse-emissions"
+        / f"single-concentration-projection_{gas}_inverse-emissions.feather"
+    )
+    is_ppt = raw.index.get_level_values("unit").str.contains("ppt")
+    ppt, mass = raw[is_ppt], raw[~is_ppt]
+    if ppt.shape[0] != 1 or mass.shape[0] != 1:
+        raise AssertionError(raw)
+
+    mass_converted = convert_series(
+        mass.iloc[0], mass.index.get_level_values("unit")[0], units
+    ).astype(float)
+    non_zero = ppt.iloc[0] != 0.0
+    factors = mass_converted[non_zero] / ppt.iloc[0][non_zero].astype(float)
+    np.testing.assert_allclose(factors, factors.iloc[0], rtol=1e-10)
+
+    return float(factors.iloc[0])
+
+
+def get_western_et_al_2024_emissions(
+    gas: str, units: str, bundle_dir: Path = BUNDLE_DIR
+) -> tuple[pd.Series, pd.Series]:
+    """
+    Get the emissions behind our extension of the Western et al. (2024) projection
+
+    The original run (notebook `0001`) assumes the gas follows a one-box model,
+    infers the emissions in 2100 from the concentration and its rate of change,
+    then holds them constant and runs the one-box model forward to 2500.
+    We apply the same inversion to every year of the projection,
+    so the emissions which lead up to 2100 can be shown too,
+    and check that running forward from 2100 reproduces our extension.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest, a key of [WESTERN_ET_AL_2024_LIFETIMES][]
+
+    units
+        Mass per time units in which to return the emissions
+
+    bundle_dir
+        Directory which holds the bundle
+
+    Returns
+    -------
+    :
+        Emissions implied by the Western et al. (2024) projection (to 2100)
+        and the constant emissions which drive our extension (2100 onwards),
+        both indexed by decimal year
+    """
+    raw, extended = get_western_et_al_2024(gas, bundle_dir)
+    tau = WESTERN_ET_AL_2024_LIFETIMES[gas]
+    # Emissions in concentration units, alpha E,
+    # with annual timesteps, as in notebook `0001`
+    alpha_e = (raw.diff() + raw / tau).dropna()
+
+    alpha_e_constant = alpha_e.iloc[-1]
+    rerun = [raw.iloc[-1]]
+    extension_years = extended.index[extended.index > raw.index[-1]]
+    for _ in extension_years:
+        rerun.append(rerun[-1] + alpha_e_constant - rerun[-1] / tau)
+
+    np.testing.assert_allclose(rerun[1:], extended.loc[extension_years], rtol=1e-10)
+
+    factor = get_ppt_to_mass_factor(gas, units, bundle_dir)
+    constant = pd.Series(
+        alpha_e_constant * factor,
+        index=extended.index[extended.index >= raw.index[-1]],
+    )
+
+    return alpha_e * factor, constant
 
 
 def get_wmo_2022(gas: str, bundle_dir: Path = BUNDLE_DIR) -> pd.Series:

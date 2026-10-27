@@ -1,23 +1,81 @@
 \section{Results}
 \label{sec:results}
 
-% ZN notes
+% Notes:
+% - not including CMIP5 at this point on purpose.
+%   It's not really relevant anymore, given how old CMIP5 concentrations are.
+%   (Belongs better in a forcings difference paper)
+% - write, then get feedback, then add things. It is hard to guess what people will find interesting
+%
+% ZNTODOs:
+% - change name of groups on figures so they don't match the names of CMIP7 scenarios
+% - plot IGCC too where available (shows which scenario is closest to 2023, 2024 and 2025)
+
+\subsection{Note on radiative effect comparisons}
+\label{ssec:results-radiative-forcing-comparisons-note}
+
+Throughout this section, we provide comparisons between datasets.
+We provide these comparisons both in units of concentration as well as in units of W/m2.
+As disussed in detail in [TODO cite historical manuscript],
+it must be noted that the comparisons in units of W/m2 are an approximation.
+The approximation matches or overestimates the true (effective) radiative forcing.
+
+\subsection{CO_2}
+\label{ssec:results-co2}
+
+The resulting dataset transitions smoothly from the historical dataset
+at both our native resolution (Fig.~\ref{fig:results-co2}a),
+and hemispheric means (Fig.~\ref{fig:results-co2}b).
+The scenarios are roughly evenly spaced until 2100
+and the datasets all have one of two shapes (Fig.~\ref{fig:results-co2}c):
+peak and decline (with the decline being very gentle for VL-CF)
+or ongoing rise (H, M).
+% TODO check values here
+Post 2100, the datasets either settle between 350 and 400~ppm
+or demonstrate a slow stabilisation consistent with the approximately net-zero emissions
+in the underlying emissions ([TODO appendix figure and ref]).
+The clear exception here is the LN scenario,
+which has the equal lowest concentrations by 2100
+and continues to well below pre-industrial concentrations by 2200,
+before [TODO check emissions, I think what we see after is basically re-equilibration with net-zero emissions].
+This excursion into deeply negative emissions and below pre-industrial concentrations
+is a novelty that has not previously been explored in detail with ESMs,
+particularly emissions-driven ESMs.
+Examining the ESM output from this experiment
+will be key to informing future updates of simple climate models
+and our method as it will provide new information
+about the extent to which our assumptions
+about the reversibility of seasonality and latitudinal gradients holds in physics-based models.
+
+% Deliberately decide not to make any comment about when the scenarios are distinguishable.
+% Separating detectable signal from noise is its own paper.
+
+Compared to CMIP6, the highest concentration scenarios peak at much lower levels (Fig.\ref{fig:results-co2}d).
+For example, CMIP6's highest concentration scenario was SSP5-8.5, which peaked above 2000~ppm.
+In contrast, CMIP7's highest concentration scenario is H, which peaks below 1500~ppm.
+The medium and low concentration scenarios cover a similar range across the two CMIP phases (Fig.\ref{fig:results-co2}e, f).
+The major exception, as discussed already, is LN, which is a completely new shape and absolute value from anything in CMIP6.
+A more minor exception is VL-CF, which has a significantly lower peak than any CMIP6 or CMIP7 scenario,
+in line with its counterfactual nature.
+
+\subsection{CH_4}
+\label{ssec:results-ch4}
+
+\subsection{N_2O}
+\label{ssec:results-n2o}
+
+\subsection{Equivalence datasets}
+\label{ssec:results-equivalence-datasets}
+
+\subsubsection{CFC-12-eq}
+\label{sssec:results-equivalence-datasets-cfc12eq}
+
+\subsubsection{HFC-134a-eq}
+\label{sssec:results-equivalence-datasets-hfc134aeq}
+
+% ZN notes to be deleted
 % - draft result figures cover the key bits, write to them
 % - comparison across scenarios and vs. CMIP6 probably most interesting bit
-% - plot IGCC too where available (shows which scenario is closest to 2023, 2024 and 2025)
-% - write then get feedback, hard to guess what people find interesting
-%
-% - change name of groups so they don't match scenario names
-%
-% - CO2
-%     - roughly even spread and similar shapes to 2100: Either peak and decline or ongoing rise (H, M)
-%     - post 2100 settle around 300-400ppm or slow stabilisation consistent with approx. net zero emissions (need to check underlying emissions timeseries and probably put in appendix)
-%     - make no comment on separation, that's a different thing determining when signal comes out of noise
-%     - compared to CMIP6, top end much lower
-%     - compared to CMIP6, medium and low similar range
-%     - compared to CMIP6, LN completely new shape and base (well below pre-industrial CO2, due to neg. emms c/f emissions)
-%     - VL-CF lowering peak CO2 by Xppm
-%     - LN who knows what happens to lat. gradient. Great one to look at once CMIP7 esm- results come out
 %
 % - CH4
 %     - low group consistent with decline in methane emissions, just different floor

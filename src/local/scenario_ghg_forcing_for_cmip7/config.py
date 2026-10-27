@@ -148,6 +148,7 @@ INTRODUCTION = MANUSCRIPT_DIR / "introduction.tex"
 SECTIONS = (
     MANUSCRIPT_DIR / "output-requirements.tex",
     MANUSCRIPT_DIR / "methods.tex",
+    MANUSCRIPT_DIR / "results.tex",
     MANUSCRIPT_DIR / "discussion.tex",
 )
 """Body sections, in the order they appear"""
