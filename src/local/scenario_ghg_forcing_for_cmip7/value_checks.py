@@ -18,6 +18,7 @@ from local.scenario_ghg_forcing_for_cmip7.rerun_projections import (
     MARKERS,
     SINGLE_PROJECTION_GASES,
 )
+from local.scenario_ghg_forcing_for_cmip7.rerun_vl_cf import VL_CF_MARKER
 from local.value_checks import CheckValue, ValueCheck
 
 MAGICC_SUMMARY_FILE = Path("manuscript-outputs") / "magicc-summary.feather"
@@ -58,7 +59,9 @@ def get_single_projection_magicc_max_erf_difference_sum_range(
     summary_file: Path,
 ) -> CheckValue:
     """
-    Get the range across the scenarios of the sum of the largest differences
+    Get the range across all experiments of the sum of the largest differences
+
+    All experiments means the ScenarioMIP scenarios and VL-CF.
 
     See [get_single_projection_magicc_max_erf_difference_sum][].
 
@@ -67,7 +70,7 @@ def get_single_projection_magicc_max_erf_difference_sum_range(
     """
     values = [
         get_single_projection_magicc_max_erf_difference_sum(summary_file, name).m
-        for _, _, name in MARKERS
+        for _, _, name in (*MARKERS, VL_CF_MARKER)
     ]
 
     return openscm_units.unit_registry.Quantity([min(values), max(values)], "W / m^2")
