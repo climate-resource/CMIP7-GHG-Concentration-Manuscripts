@@ -16,7 +16,7 @@
 
 Throughout this section, we provide comparisons between datasets.
 We provide these comparisons both in units of concentration as well as in units of W/m2.
-As disussed in detail in [TODO cite historical manuscript],
+As discussed in detail in [TODO cite historical manuscript],
 it must be noted that the comparisons in units of W/m2 are an approximation.
 The approximation matches or overestimates the true (effective) radiative forcing.
 
@@ -31,13 +31,14 @@ and the datasets all have one of two shapes (Fig.~\ref{fig:results-co2}c):
 peak and decline (with the decline being very gentle for VL-CF)
 or ongoing rise (H, M).
 % TODO check values here
-Post 2100, the datasets either settle between 350 and 400~ppm
-or demonstrate a slow stabilisation consistent with the approximately net-zero emissions
-in the underlying emissions ([TODO appendix figure and ref]).
+Post 2100, the datasets either settle between 300 and 350~ppm
+or demonstrate a slow stabilisation consistent with the net-zero emissions
+in the underlying emissions (Fig.~\ref{fig:emissions-co2}a).
 The clear exception here is the LN scenario,
 which has the equal lowest concentrations by 2100
 and continues to well below pre-industrial concentrations by 2200,
-before [TODO check emissions, I think what we see after is basically re-equilibration with net-zero emissions].
+before rising again once its emissions return to zero by 2300
+and the system begins to re-equilibrate (Fig.~\ref{fig:emissions-co2}a).
 This excursion into deeply negative emissions and below pre-industrial concentrations
 is a novelty that has not previously been explored in detail with ESMs,
 particularly emissions-driven ESMs.
@@ -50,19 +51,96 @@ about the reversibility of seasonality and latitudinal gradients holds in physic
 % Deliberately decide not to make any comment about when the scenarios are distinguishable.
 % Separating detectable signal from noise is its own paper.
 
-Compared to CMIP6, the highest concentration scenarios peak at much lower levels (Fig.\ref{fig:results-co2}d).
+Compared to CMIP6, the highest concentration scenarios peak at much lower levels (Fig.~\ref{fig:results-co2}d).
 For example, CMIP6's highest concentration scenario was SSP5-8.5, which peaked above 2000~ppm.
 In contrast, CMIP7's highest concentration scenario is H, which peaks below 1500~ppm.
-The medium and low concentration scenarios cover a similar range across the two CMIP phases (Fig.\ref{fig:results-co2}e, f).
+The medium and low concentration scenarios cover a similar range across the two CMIP phases (Fig.~\ref{fig:results-co2}e, f).
 The major exception, as discussed already, is LN, which is a completely new shape and absolute value from anything in CMIP6.
 A more minor exception is VL-CF, which has a significantly lower peak than any CMIP6 or CMIP7 scenario,
 in line with its counterfactual nature.
 
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@co2-results-figure@}
+\caption{
+    CO_2 datasets.
+    a) Native resolution (monthly, 15\textdegree{} latitude bands) data.
+    Here shown for the historical and L experiment from 2019--2028.
+    % from the last three years of the historical dataset to the first seven years of the experiment (2019--2028).
+    b) Global- and hemispheric-, monthly-means.
+    Like in a), also shown for the L experiment.
+    % The dotted line marks where the historical dataset ends and the experiment starts.
+    c) Global-, annual-means for all CMIP7 experiments, alongside the historical dataset.
+    d--f) Global-, annual-means for the CMIP7 experiments
+    compared with the CMIP6 experiments
+    % \citep[dashed,][]{meinshausen_ssp-ghgs_2020}
+    for the high (d), medium (e) and low (f) groups of experiments.
+    % In c--f), the time axis is broken in 2120, with the period after the break compressed.
+}
+\label{fig:results-co2}
+\end{figure}
+
 \subsection{CH_4}
 \label{ssec:results-ch4}
 
+CH_4's strong seasonality and latitudinal gradient continues into the scenarios (Fig.~\ref{fig:results-ch4}a, b).
+The group of scenarios with lower peaks have concentrations consistent with declining emissions.
+The difference in their end of century concentrations is driven by the different floor
+which CH_4 emissions reach in each experiment
+(Figs.~\ref{fig:results-ch4}c and \ref{fig:emissions-ch4}a).
+The ML experiment's CH_4 concentrations take longer to start declining,
+then show a similar shape to the lower peak scenarios,
+consistent with its delayed cut in CH_4 emissions.
+The M, H and HL experiments all follow a similar rise initially.
+M and H then stabilise at different levels, driven by the different levels at which their emissions stabilise.
+In line with its narrative and underlying emissions, concentrations in HL drop rapidly from 2070.
+% TODO check values here
+Post 2100, CH_4 concentrations stabilise between 900 and 1200~ppb (all experiments except M and H)
+or remain at elevated levels consistent with ongoing, approximately constant CH_4 emissions (M and H).
+
+Compared to CMIP6, the higher peak group of experiments reach similar concentrations until 2100 (Fig.~\ref{fig:results-ch4}d).
+After 2100, the H scenario's CH_4 concentrations remain notably higher than any CMIP6 scenario,
+reflecting the different extension choices.
+The medium peak group are similar to CMIP6, with the M's much higher extension being the notable difference (Fig.~\ref{fig:results-ch4}e).
+The lower group of scenarios has a higher peak than CMIP6 (Fig.~\ref{fig:results-ch4}f),
+reflecting updated assumptions about the speed with which CH_4 mitigation can be implemented compared to CMIP6 (Fig.~\ref{fig:emissions-ch4}d).
+The lower group also has a larger spread in peak concentrations
+and different extensions that are in line with higher sustained CH_4 emissions than assumed in CMIP6.
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@ch4-results-figure@}
+\caption{
+    Like Fig.~\ref{fig:results-co2}, except for CH_4.
+}
+\label{fig:results-ch4}
+\end{figure}
+
 \subsection{N_2O}
 \label{ssec:results-n2o}
+
+N_2O's moderate seasonality and latitudinal gradient continues into the scenarios (Fig.~\ref{fig:results-n2o}a, b).
+There is a roughly even spread of N_2O concentration pathways across the CMIP7 scenarios (Fig.~\ref{fig:results-n2o}c),
+albeit with a larger gap to the VL and VL-CF scenarios
+that reflects the exploration of all available N_2O mitigation options in VL
+(and VL-CF, which uses VL's N_2O emissions).
+Post 2100, all experiments' N_2O concentrations decline back to approximately pre-industrial levels,
+reflecting the emissions extensions which also return to approximately zero emissions (Fig.~\ref{fig:emissions-n2o}a).
+
+Compared to CMIP6, the concentrations are very similar out to 2100 (Fig.~\ref{fig:results-n2o}d, e, f).
+The exception is VL, which explores novel N_2O mitigation, compared to CMIP6 too.
+Beyond 2100, CMIP6 and CMIP7 are notably different.
+While CMIP6 assumed ongoing emissions, related to agriculture in particular \citep[see Fig.~\ref{fig:emissions-n2o}b--d and][]{meinshausen_ssp-ghgs_2020},
+CMIP7 assumes that all N_2O emissions can be mitigated.
+There is no correct answer for these highly uncertain long-term extensions
+but the impact of the two different choices is made clear here.
+In radiative effect terms, the difference between SSP3-7.0 and the H experiment is [TODO quantify]~W/m2 in 2500.
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@n2o-results-figure@}
+\caption{
+    Like Fig.~\ref{fig:results-co2}, except for N_2O.
+}
+\label{fig:results-n2o}
+\end{figure}
 
 \subsection{Equivalence datasets}
 \label{ssec:results-equivalence-datasets}
@@ -70,53 +148,51 @@ in line with its counterfactual nature.
 \subsubsection{CFC-12-eq}
 \label{sssec:results-equivalence-datasets-cfc12eq}
 
+CFC-12-eq's seasonality and latitudinal gradient continues from the historical datasets'
+and looks unusual because it is the composite of multiple species' seasonality and latitudinal gradients (Fig.~\ref{fig:results-cfc12eq}a, b).
+In line with the input data sources, CFC-12-eq's ongoing decline is projected to continue in the future (Fig.~\ref{fig:results-cfc12eq}c).
+
+The changes from CMIP6 are minor (Fig.~\ref{fig:results-cfc12eq}d, e, f).
+Present-day concentrations are slightly lower than those used in CMIP6,
+largely because of a change in the radiative efficiencies used to convert to CFC-12-eq
+rather than a change in the actual concentrations of each gas [TODO cite historical paper].
+Future concentrations are slightly higher
+% TODO check with co-authors
+because of updated handling of bank emissions [TODO citations].
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@cfc12eq-results-figure@}
+\caption{
+    Like Fig.~\ref{fig:results-co2}, except for CFC-12-eq.
+}
+\label{fig:results-cfc12eq}
+\end{figure}
+
 \subsubsection{HFC-134a-eq}
 \label{sssec:results-equivalence-datasets-hfc134aeq}
 
-% ZN notes to be deleted
-% - draft result figures cover the key bits, write to them
-% - comparison across scenarios and vs. CMIP6 probably most interesting bit
-%
-% - CH4
-%     - low group consistent with decline in methane emissions, just different floor
-%     - H, M and HL all similar rise, then question of when rise stops. HL then plummets, others roughly stabilise
-%     - post 2100 settle around 1000ppb or stabilisation consistent with approx. constant emissions (need to check underlying emissions timeseries and probably put in appendix)
-%     - make no comment on separation, that's a different thing determining when signal comes out of noise
-%     - compared to CMIP6, top end slightly lower although HL is a new high peak
-%     - compared to CMIP6, medium similar but different extension
-%     - compared to CMIP6, low has higher peak, better spread and different extension (check emissions, CMIP6 had emissions that went back to zero I believe)
-%     - VL-CF CH4 similar to VL. Makes sense as emissions are the same. You're seeing feedback (and harmonisation up until that has converged) effects here
-%
-% - N2O
-%     - roughly even spread
-%     - gap between VL and the rest (VL works hard on N2O)
-%     - post 2100 settle all decline back towards pre-industrial (need to check underlying emissions timeseries and probably put in appendix)
-%     - VL-CF makes harmonisation effect clear: MAGICC hasn't cpatured 'kick' since 2015 and this is obvious in VL-CF. N2O is trickiest for harmonisation, most important next fix
-%     - make no comment on separation, that's a different thing determining when signal comes out of noise
-%     - compared to CMIP6, very similar
-%     - compared to CMIP6, VL is new shape at low end
-%     - compared to CMIP6, extensions completely different. CMIP6 used constant ag. emissions. CMIP7 does not. No obvious answers of correct but clear implications of choice (will need plots to show this)
-%     - VL-CF CH4 similar to VL. Makes sense as emissions are the same. You're seeing feedback and harmonisation up until that has converged effects here, which demonstrates how big the harmonisation issue can be when model doesn't match history well.
-%
-% - N2O
-%     - roughly even spread
-%     - gap between VL and the rest (VL works hard on N2O)
-%     - post 2100 settle all decline back towards pre-industrial (need to check underlying emissions timeseries and probably put in appendix)
-%     - VL-CF makes harmonisation effect clear: MAGICC hasn't cpatured 'kick' since 2015 and this is obvious in VL-CF. N2O is trickiest for harmonisation, most important next fix
-%     - make no comment on separation, that's a different thing determining when signal comes out of noise
-%     - compared to CMIP6, very similar
-%     - compared to CMIP6, VL is new shape at low end
-%     - compared to CMIP6, extensions completely different. CMIP6 used constant ag. emissions. CMIP7 does not. No obvious answers of correct but clear implications of choice (will need plots to show this)
-%     - VL-CF CH4 similar to VL. Makes sense as emissions are the same. You're seeing feedback and harmonisation up until that has converged effects here, which demonstrates how big the harmonisation issue can be
-%
-% - CFC12-eq
-%     - ongoing decline projected
-%     - slightly lower than CMIP6 now, slightly higher long-term (due to better handling of slow release I think?)
-%
-% - HFC134a-eqq
-%     - all over the place, small effect (quantify ERF) so usually not modelled carefully (plot emissions too). ML and M shape 'creative'. L probably out of line with narrative
-%     - big spread. H very high
-%     - extensions consistent with decline in emissions (check plots), different to CMIP6 which went with constant I think (CMIP7 better here probably)
-%     - slightly lower than CMIP6 now, slightly higher long-term (due to better handling of slow release I think?)
-%     - compared to CMIP6, lower top end
-%     - VL-CF matches VL exactly
+HFC-134a-eq's almost zero seasonality, but notable latitudinal gradient,
+continues from the historical datasets' (Fig.~\ref{fig:results-hfc134aeq}a, b).
+Compared to the other species, projections of HFC-134a-eq are less consistent with the underlying scenario narratives and show more unusual shapes.
+This is in line with the underlying emissions (Fig.~\ref{fig:emissions-hfc134aeq}a).
+The most notable features are the odd shapes of the ML and M datasets
+and the fact that L has the third highest concentrations,
+which points to a consistency issue across the experiment ensemble for the emissions which underpin HFC-134a-eq.
+Given the small effective radiative forcing of these gases compared to other forcers,
+these inconsistencies are a minor problem for CMIP7 experiments (they may be more important in other contexts).
+Post 2100, the extensions are consistent with an ongoing decline in emissions (Fig.~\ref{fig:emissions-hfc134aeq}a),
+with the difference in concentrations being largely determined by cumulative emissions of gases with long lifetimes on the way to zero emissions.
+
+Compared to CMIP6, the highest peak HFC-134a-eq concentration is slightly lower.
+The medium peak scenarios are similar at the end of the century, but take quite different paths before then.
+The lower peak scenarios are similar, with the exception of the L scenario.
+The extensions in CMIP6 are generally similar, with the exception of SSP4-3.4 and SSP4-6.0,
+which both remain at elevated concentrations compared to M and ML.
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@hfc134aeq-results-figure@}
+\caption{
+    Like Fig.~\ref{fig:results-co2}, except for HFC-134a-eq.
+}
+\label{fig:results-hfc134aeq}
+\end{figure}

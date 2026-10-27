@@ -17,16 +17,20 @@ from local.scenario_ghg_forcing_for_cmip7 import rerun_vl_cf
 from local.scenario_ghg_forcing_for_cmip7.appendix_figures import (
     APPENDIX_FIGURE_GROUPS,
     CFC12_LIKE_GASES,
+    EMISSIONS_FIGURE_SPECIES,
     HFC125_LIKE_GASES,
     MAGICC_MISMATCH_GASES,
     MAIN_TEXT_GASES,
     N2O_LIKE_GASES,
     REGRESSION_GASES,
+    RESULTS_FIGURE_GASES,
     WESTERN_ET_AL_2024_FIGURE_TAG,
     get_appendix_figures_tag,
+    get_emissions_figure_tag,
     get_magicc_mismatch_figure_tag,
     get_methods_figure_tag,
     get_regressions_figure_tag,
+    get_results_figure_tag,
 )
 from local.scenario_ghg_forcing_for_cmip7.bundle import (
     BUNDLE_DIR,
@@ -199,6 +203,20 @@ def get_regressions_figure_file(gas: str) -> Path:
 WESTERN_ET_AL_2024_FIGURE = METHODS_FIGURES_DIR / "western-et-al-2024-extensions.pdf"
 """The figure of our extensions of the Western et al. (2024) projections"""
 
+RESULTS_FIGURES_DIR = FIGURES_OUT_DIR / "results"
+"""Directory which holds the results figures and the emissions figures"""
+
+
+def get_results_figure_file(gas: str) -> Path:
+    """Get the file which holds a gas' results figure"""
+    return RESULTS_FIGURES_DIR / f"{gas}_results.pdf"
+
+
+def get_emissions_figure_file(species: str) -> Path:
+    """Get the file which holds a species' emissions figure"""
+    return RESULTS_FIGURES_DIR / f"{species}_emissions.pdf"
+
+
 METHODS_FIGURE_GASES = (
     *MAIN_TEXT_GASES,
     *N2O_LIKE_GASES,
@@ -221,6 +239,14 @@ FIGURE_FILES: dict[str, Path] = {
         for g in REGRESSION_GASES
     },
     WESTERN_ET_AL_2024_FIGURE_TAG: WESTERN_ET_AL_2024_FIGURE,
+    **{
+        get_results_figure_tag(g): get_results_figure_file(g)
+        for g in RESULTS_FIGURE_GASES
+    },
+    **{
+        get_emissions_figure_tag(s): get_emissions_figure_file(s)
+        for s in EMISSIONS_FIGURE_SPECIES
+    },
 }
 """Tag in the latex which each figure replaces
 

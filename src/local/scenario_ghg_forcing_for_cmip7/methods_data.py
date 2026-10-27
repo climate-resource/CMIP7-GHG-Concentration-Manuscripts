@@ -702,13 +702,7 @@ def get_official_emissions(
     :
         Emissions, indexed by decimal year
     """
-    ((model, iam_scenario),) = (
-        (m, s) for m, s, name in (*MARKERS, VL_CF_MARKER) if name == scenario
-    )
-    stem = f"{iam_scenario}_{model}".replace(" ", "_").replace(".", "-")
-    emissions = load_complete_emissions(
-        bundle_dir / COMPLETE_EMISSIONS_DIR / f"{stem}.feather"
-    )
+    emissions = get_complete_emissions(scenario, bundle_dir)
     variable = f"Emissions|{MAGICC_GAS_NAMES[gas]}"
     selected = emissions[emissions.index.get_level_values("variable") == variable]
     if selected.shape[0] != 1:
@@ -720,6 +714,37 @@ def get_official_emissions(
     res.index = res.index.astype(int)
 
     return to_decimal_years(res)
+
+
+def get_complete_emissions(
+    scenario: str, bundle_dir: Path = BUNDLE_DIR
+) -> pd.DataFrame:
+    """
+    Get a scenario's complete emissions, as used to run MAGICC
+
+    Parameters
+    ----------
+    scenario
+        Scenario of interest
+
+    bundle_dir
+        Directory which holds the bundle
+
+    Returns
+    -------
+    :
+        Every species' emissions, from 1750 to 2500
+        (history up to the harmonisation year, then the scenario
+        and its extension beyond 2100)
+    """
+    ((model, iam_scenario),) = (
+        (m, s) for m, s, name in (*MARKERS, VL_CF_MARKER) if name == scenario
+    )
+    stem = f"{iam_scenario}_{model}".replace(" ", "_").replace(".", "-")
+
+    return load_complete_emissions(
+        bundle_dir / COMPLETE_EMISSIONS_DIR / f"{stem}.feather"
+    )
 
 
 @cache

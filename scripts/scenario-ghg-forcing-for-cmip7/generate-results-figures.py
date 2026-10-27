@@ -1,20 +1,22 @@
 """
 Generate the scenario results figures, for previewing
 
-Not part of the manuscript build (yet).
+The manuscript build makes them too
+(`task_results_figure` in `tasks/scenario_ghg_forcing_for_cmip7/task_tex_inputs.py`),
+this is just a quick way to make them without running the build.
 """
 
 from typing import Annotated
 
 import typer
 
-from local.scenario_ghg_forcing_for_cmip7.config import FIGURES_OUT_DIR
+from local.scenario_ghg_forcing_for_cmip7.appendix_figures import (
+    RESULTS_FIGURE_GASES,
+)
+from local.scenario_ghg_forcing_for_cmip7.config import get_results_figure_file
 from local.scenario_ghg_forcing_for_cmip7.results_figure import (
     generate_results_figure,
 )
-
-DEFAULT_GASES = ["co2", "ch4", "n2o", "cfc12eq", "hfc134aeq"]
-"""Gases to generate figures for if none are given"""
 
 
 def main(
@@ -26,8 +28,8 @@ def main(
     """
     Generate the scenario results figures
     """
-    for gas in gases or DEFAULT_GASES:
-        generate_results_figure(gas, FIGURES_OUT_DIR / f"{gas}_results.pdf")
+    for gas in gases or RESULTS_FIGURE_GASES:
+        generate_results_figure(gas, get_results_figure_file(gas))
 
 
 if __name__ == "__main__":

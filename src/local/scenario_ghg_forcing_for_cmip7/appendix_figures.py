@@ -142,6 +142,26 @@ def get_regressions_figure_tag(gas: str) -> str:
 WESTERN_ET_AL_2024_FIGURE_TAG = "@western-et-al-2024-extensions-figure@"
 """Tag of the figure of our extensions of Western et al. (2024)"""
 
+RESULTS_FIGURE_GASES = ("co2", "ch4", "n2o", "cfc12eq", "hfc134aeq")
+"""Gases which have a results figure"""
+
+
+def get_results_figure_tag(gas: str) -> str:
+    """Get the tag of a gas' results figure"""
+    return f"@{gas}-results-figure@"
+
+
+EMISSIONS_FIGURE_SPECIES = ("co2", "ch4", "n2o", "hfc134aeq")
+"""Species which have an emissions figure
+
+The emissions behind the results figures which the results discuss.
+"""
+
+
+def get_emissions_figure_tag(species: str) -> str:
+    """Get the tag of a species' emissions figure"""
+    return f"@{species}-emissions-figure@"
+
 
 def get_like_caption(reference_gas: str, gas: str, extra: str = "") -> str:
     """Get a caption which says a figure is like a methods figure, for another gas"""

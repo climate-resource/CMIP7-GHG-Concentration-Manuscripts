@@ -13,11 +13,14 @@ One figure per gas, the same for every gas:
 Built on the historical manuscript's results figure
 ([local.historical_ghg_forcing_for_cmip7.results_figure][]),
 so the two read the same way.
+The yearly panels are shared with the emissions figure
+([local.scenario_ghg_forcing_for_cmip7.emissions_figure][]),
+so the emissions can be read against the concentrations.
 """
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import matplotlib.axes
@@ -162,20 +165,7 @@ TITLES = {
 YEARLY_ROW_HEIGHT = 0.85
 """Height of each of the CMIP6 comparison panels, in inches"""
 
-ROWS = (
-    Row(
-        panels=(
-            Panel(
-                "native-resolution",
-                aspect=1.0,
-                projection="3d",
-                colour_bar=True,
-                colour_bar_height=0.6,
-            ),
-            Panel("monthly"),
-        ),
-        height=1.05,
-    ),
+YEARLY_ROWS = (
     Row(
         panels=(
             Panel("cmip7", broken=True, broken_split=SEGMENT_SHARES, row_span=3),
@@ -195,12 +185,33 @@ ROWS = (
         height=0.45,
     ),
 )
-"""Layout of the figure's panels, top to bottom
+"""Layout of the yearly panels, top to bottom
 
-- One scenario at native resolution, beside its monthly spatial-means.
 - Every CMIP7 scenario on the left, spanning the rows
   which hold the comparisons with CMIP6 on the right, one per group of scenarios.
 - The legends for the yearly panels, one under each column.
+"""
+
+ROWS = (
+    Row(
+        panels=(
+            Panel(
+                "native-resolution",
+                aspect=1.0,
+                projection="3d",
+                colour_bar=True,
+                colour_bar_height=0.6,
+            ),
+            Panel("monthly"),
+        ),
+        height=1.05,
+    ),
+    *YEARLY_ROWS,
+)
+"""Layout of the figure's panels, top to bottom
+
+- One scenario at native resolution, beside its monthly spatial-means.
+- The yearly panels, see [YEARLY_ROWS][].
 """
 
 LAYOUT_SETTINGS = LayoutSettings(align_right=True)
@@ -259,6 +270,43 @@ def get_history_frame(gas: str, cmip_era: str, units: str) -> pd.DataFrame:
     return as_frame(da.sel(time=da["time"] < last_year + 1))
 
 
+def branch_off_history(
+    scenario: Scenario, scenario_pdf: pd.DataFrame, history: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Join a scenario onto its history
+
+    The history's last point before the scenario starts
+    is put in front of the scenario,
+    so the scenario's line branches off the history's.
+    For most scenarios, that is the history's last point.
+    Some (e.g. VL-CF) start before the end of the history we show,
+    so they branch off it part way along.
+
+    Parameters
+    ----------
+    scenario
+        Scenario of interest
+
+    scenario_pdf
+        The scenario's data, with a [TIME_COLUMN][] and a [VALUE_COLUMN][]
+
+    history
+        The scenario's history, in the same form
+
+    Returns
+    -------
+    :
+        The scenario, starting from the history's last point before it
+    """
+    branch_point = history[history[TIME_COLUMN] < scenario_pdf[TIME_COLUMN].min()]
+    if branch_point.empty:
+        msg = f"{scenario.name} starts before the history we have"
+        raise AssertionError(msg)
+
+    return pd.concat([branch_point.iloc[-1:], scenario_pdf], ignore_index=True)
+
+
 def get_scenario_frame(
     gas: str, scenario: Scenario, history: pd.DataFrame, units: str
 ) -> pd.DataFrame:
@@ -274,14 +322,8 @@ def get_scenario_frame(
         Scenario of interest
 
     history
-        The scenario's history, as returned by [get_history_frame][]
-
-        The history's last point before the scenario starts
-        is put in front of the scenario,
-        so the scenario's line branches off the history's.
-        For most scenarios, that is the history's last point.
-        Some (e.g. VL-CF) start before the end of the history we show,
-        so they branch off it part way along.
+        The scenario's history, as returned by [get_history_frame][],
+        see [branch_off_history][]
 
     units
         Units to return the data in
@@ -292,32 +334,23 @@ def get_scenario_frame(
         The scenario, starting from the history's last point before it
     """
     da = convert_units(get_scenario_yearly_global_mean(gas, scenario), units)
-    scenario_pdf = as_frame(da)
-    branch_point = history[history[TIME_COLUMN] < scenario_pdf[TIME_COLUMN].min()]
-    if branch_point.empty:
-        msg = f"{scenario.name} starts before the history we have"
-        raise AssertionError(msg)
 
-    return pd.concat([branch_point.iloc[-1:], scenario_pdf], ignore_index=True)
+    return branch_off_history(scenario, as_frame(da), history)
 
 
 def plot_yearly_panel(  # noqa: PLR0913
-    gas: str,
     axes: Sequence[matplotlib.axes.Axes],
     segments: Sequence[tuple[float, float]],
     ticks: Sequence[Sequence[float]],
-    scenarios: Sequence[Scenario],
+    scenarios: Mapping[Scenario, pd.DataFrame],
     histories: dict[str, pd.DataFrame],
     units: str,
 ) -> dict[str, matplotlib.lines.Line2D]:
     """
-    Plot scenarios' yearly global-means, with their histories
+    Plot scenarios' yearly values, with their histories
 
     Parameters
     ----------
-    gas
-        Gas of interest
-
     axes
         Axes of each piece of the time axis
 
@@ -328,13 +361,14 @@ def plot_yearly_panel(  # noqa: PLR0913
         Ticks of each piece of the time axis
 
     scenarios
-        Scenarios to plot
+        Scenarios to plot, with their data, already joined onto their histories
+        (see [branch_off_history][])
 
     histories
         History of each CMIP era to plot, as returned by [get_history_frame][]
 
     units
-        Units to plot in
+        Units the data is in, as written on the vertical axis
 
     Returns
     -------
@@ -356,8 +390,7 @@ def plot_yearly_panel(  # noqa: PLR0913
         )
         foreground.append(history)
 
-    for scenario in scenarios:
-        pdf = get_scenario_frame(gas, scenario, histories[scenario.cmip_era], units)
+    for scenario, pdf in scenarios.items():
         handles[scenario.label] = plot_line_in_segments(
             pdf,
             axes,
@@ -564,6 +597,100 @@ def add_scenario_legend(
     legend.set_in_layout(False)
 
 
+def get_axes_of_panel(
+    rows: tuple[Row, ...], axes: Mapping[str, matplotlib.axes.Axes], name: str
+) -> list[matplotlib.axes.Axes]:
+    """
+    Get the axes of a panel (more than one if its time axis is broken)
+
+    Parameters
+    ----------
+    rows
+        Rows of the figure, top to bottom
+
+    axes
+        The figure's axes
+
+    name
+        Name of the panel
+
+    Returns
+    -------
+    :
+        The panel's axes, left to right
+    """
+    (panel,) = (p for row in rows for p in row.panels if p.name == name)
+
+    return [axes[n] for n in get_panel_axes_names(panel)]
+
+
+def plot_yearly_panels(
+    rows: tuple[Row, ...],
+    axes: Mapping[str, matplotlib.axes.Axes],
+    histories: dict[str, pd.DataFrame],
+    scenarios: Mapping[Scenario, pd.DataFrame],
+    units: str,
+) -> None:
+    """
+    Plot the yearly panels and their legends (see [YEARLY_ROWS][])
+
+    Parameters
+    ----------
+    rows
+        Rows of the figure, top to bottom (must include [YEARLY_ROWS][])
+
+    axes
+        The figure's axes
+
+    histories
+        History of each CMIP era, as returned by [get_history_frame][]
+
+    scenarios
+        Every scenario in [CMIP7_SCENARIOS][] and [CMIP6_SCENARIOS][],
+        with its data, already joined onto its history (see [branch_off_history][])
+
+    units
+        Units the data is in, as written on the vertical axis
+    """
+    handles = plot_yearly_panel(
+        get_axes_of_panel(rows, axes, "cmip7"),
+        YEARLY_SEGMENTS,
+        YEARLY_TICKS,
+        {s: scenarios[s] for s in CMIP7_SCENARIOS},
+        {"CMIP7": histories["CMIP7"]},
+        units,
+    )
+    for i, group in enumerate(SCENARIO_GROUPS):
+        handles.update(
+            plot_yearly_panel(
+                get_axes_of_panel(rows, axes, group),
+                YEARLY_SEGMENTS,
+                YEARLY_TICKS,
+                {
+                    s: scenarios[s]
+                    for s in (
+                        *get_scenarios_in_group(group, CMIP7_SCENARIOS),
+                        *get_scenarios_in_group(group, CMIP6_SCENARIOS),
+                    )
+                },
+                histories,
+                units,
+            )
+        )
+        # The comparison panels share one time axis, only the bottom one labels it
+        if i < len(SCENARIO_GROUPS) - 1:
+            for ax in get_axes_of_panel(rows, axes, group):
+                ax.tick_params(labelbottom=False)
+
+    for cmip_era, era_scenarios in (
+        ("CMIP7", CMIP7_SCENARIOS),
+        ("CMIP6", CMIP6_SCENARIOS),
+    ):
+        add_scenario_legend(
+            axes[LEGEND_PANELS[cmip_era]], cmip_era, era_scenarios, handles
+        )
+
+
 @manuscript_style
 def generate_results_figure(gas: str, outfile: Path) -> Path:
     """
@@ -584,10 +711,6 @@ def generate_results_figure(gas: str, outfile: Path) -> Path:
     """
     fig, axes = create_figure(ROWS, settings=LAYOUT_SETTINGS)
 
-    def panel_axes(name: str) -> list[matplotlib.axes.Axes]:
-        (panel,) = (p for row in ROWS for p in row.panels if p.name == name)
-        return [axes[n] for n in get_panel_axes_names(panel)]
-
     native_resolution, joined = get_native_resolution_to_show(gas)
     units = native_resolution.attrs["units"]
     mesh = plot_flying_carpet(
@@ -607,37 +730,11 @@ def generate_results_figure(gas: str, outfile: Path) -> Path:
         cmip_era: get_history_frame(gas, cmip_era, units)
         for cmip_era in ("CMIP7", "CMIP6")
     }
-    handles = plot_yearly_panel(
-        gas,
-        panel_axes("cmip7"),
-        YEARLY_SEGMENTS,
-        YEARLY_TICKS,
-        CMIP7_SCENARIOS,
-        {"CMIP7": histories["CMIP7"]},
-        units,
-    )
-    for i, group in enumerate(SCENARIO_GROUPS):
-        handles.update(
-            plot_yearly_panel(
-                gas,
-                panel_axes(group),
-                YEARLY_SEGMENTS,
-                YEARLY_TICKS,
-                (
-                    *get_scenarios_in_group(group, CMIP7_SCENARIOS),
-                    *get_scenarios_in_group(group, CMIP6_SCENARIOS),
-                ),
-                histories,
-                units,
-            )
-        )
-        # The comparison panels share one time axis, only the bottom one labels it
-        if i < len(SCENARIO_GROUPS) - 1:
-            for ax in panel_axes(group):
-                ax.tick_params(labelbottom=False)
-
-    for cmip_era, scenarios in (("CMIP7", CMIP7_SCENARIOS), ("CMIP6", CMIP6_SCENARIOS)):
-        add_scenario_legend(axes[LEGEND_PANELS[cmip_era]], cmip_era, scenarios, handles)
+    scenarios = {
+        s: get_scenario_frame(gas, s, histories[s.cmip_era], units)
+        for s in (*CMIP7_SCENARIOS, *CMIP6_SCENARIOS)
+    }
+    plot_yearly_panels(ROWS, axes, histories, scenarios, units)
 
     label_panels(ROWS, axes, TITLES, unlabelled=tuple(LEGEND_PANELS.values()))
 

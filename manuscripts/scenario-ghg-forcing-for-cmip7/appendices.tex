@@ -120,3 +120,60 @@ The figures in this appendix show the size of this difference for each gas.
 @magicc-mismatch-appendix-figures@
 
 \clearpage
+\section{Emissions}
+\label{app:emissions}
+
+The figures in this appendix show the underlying emissions.
+% The CMIP7 emissions are the emissions with which MAGICC is run,
+% including the extensions beyond 2100 (Sect.~\ref{sssec:methods-co2-project-global-mean}).
+% The CMIP6 emissions are those behind the CMIP6 projections \citep{meinshausen_ssp-ghgs_2020},
+% as compiled in \citet{nicholls_rcmip_2020}.
+
+\begin{figure}[hbt!]
+\includegraphics[width=12cm]{@co2-emissions-figure@}
+\caption{
+    CO_2 total emissions.
+    % (fossil and biosphere).
+    a) Emissions for all CMIP7 experiments,
+    alongside the historical emissions to which they are harmonised.
+    b--d) Global emissions for the CMIP7 and CMIP6 experiments
+    for the high (b), medium (c) and low (d) groups of experiments.
+    % The time axis is broken in 2120, with the period after the break compressed.
+    % The concentrations which result from these emissions are shown in Fig.~\ref{fig:results-co2}.
+}
+\label{fig:emissions-co2}
+\end{figure}
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@ch4-emissions-figure@}
+\caption{
+    Like Fig.~\ref{fig:emissions-co2}, except for CH_4.
+    % (concentrations in Fig.~\ref{fig:results-ch4}).
+}
+\label{fig:emissions-ch4}
+\end{figure}
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@n2o-emissions-figure@}
+\caption{
+    Like Fig.~\ref{fig:emissions-co2}, except for N_2O.
+    % (concentrations in Fig.~\ref{fig:results-n2o}).
+}
+\label{fig:emissions-n2o}
+\end{figure}
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@hfc134aeq-emissions-figure@}
+\caption{
+    Like Fig.~\ref{fig:emissions-co2}, except for HFC-134a-eq.
+    % (concentrations in Fig.~\ref{fig:results-hfc134aeq}).
+    The emissions of the gases which make up HFC-134a-eq (Sect.~\ref{ssec:methods-equivalent-species})
+    are converted to HFC-134a-eq using their 100-year global warming potentials
+    (\citealp{IPCC_AR6-WG1-Ch-7-SM_2021}, Table 7.SM.7).
+    % rather than their radiative efficiencies (as is done for the concentrations),
+    % so these emissions are only a guide to the emissions which underpin the HFC-134a-eq concentrations.
+}
+\label{fig:emissions-hfc134aeq}
+\end{figure}
+
+\clearpage

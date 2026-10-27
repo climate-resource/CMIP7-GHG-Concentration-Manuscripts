@@ -9,18 +9,24 @@ from pytask import Product, task
 
 import local.historical_ghg_forcing_for_cmip7.author_contributions
 import local.scenario_ghg_forcing_for_cmip7.appendix_figures
+import local.scenario_ghg_forcing_for_cmip7.emissions_figure
+import local.scenario_ghg_forcing_for_cmip7.esgf_data
 import local.scenario_ghg_forcing_for_cmip7.methods_data
 import local.scenario_ghg_forcing_for_cmip7.methods_figures
+import local.scenario_ghg_forcing_for_cmip7.results_figure
+import local.scenario_ghg_forcing_for_cmip7.scenarios
 from local.historical_ghg_forcing_for_cmip7.author_contributions import (
     generate_author_contributions,
 )
 from local.scenario_ghg_forcing_for_cmip7.appendix_figures import (
     APPENDIX_FIGURE_GROUPS,
     CFC12_LIKE_GASES,
+    EMISSIONS_FIGURE_SPECIES,
     HFC125_LIKE_GASES,
     MAGICC_MISMATCH_GASES,
     N2O_LIKE_GASES,
     REGRESSION_GASES,
+    RESULTS_FIGURE_GASES,
     generate_appendix_figures,
     get_tags_in_texts,
 )
@@ -39,10 +45,16 @@ from local.scenario_ghg_forcing_for_cmip7.config import (
     RERUN_LAT_GRADIENT_GASES,
     SECTIONS,
     WESTERN_ET_AL_2024_FIGURE,
+    get_emissions_figure_file,
     get_magicc_mismatch_figure_file,
     get_methods_figure_file,
     get_regressions_figure_file,
     get_rerun_lat_gradient_files,
+    get_results_figure_file,
+)
+from local.scenario_ghg_forcing_for_cmip7.emissions_figure import (
+    CMIP6_EMISSIONS_FILE,
+    generate_emissions_figure,
 )
 from local.scenario_ghg_forcing_for_cmip7.methods_figures import (
     generate_cfc12_like_figure,
@@ -54,12 +66,32 @@ from local.scenario_ghg_forcing_for_cmip7.methods_figures import (
     generate_regressions_figure,
     generate_western_et_al_2024_figure,
 )
+from local.scenario_ghg_forcing_for_cmip7.results_figure import (
+    generate_results_figure,
+)
 
 FIGURES_SOURCES = [
     Path(local.scenario_ghg_forcing_for_cmip7.methods_figures.__file__),
     Path(local.scenario_ghg_forcing_for_cmip7.methods_data.__file__),
 ]
 """The modules which make the figures (they are re-made if these change)"""
+
+RESULTS_FIGURES_SOURCES = [
+    Path(local.scenario_ghg_forcing_for_cmip7.results_figure.__file__),
+    Path(local.scenario_ghg_forcing_for_cmip7.esgf_data.__file__),
+    Path(local.scenario_ghg_forcing_for_cmip7.scenarios.__file__),
+]
+"""The modules which make the results figures (they are re-made if these change)"""
+
+EMISSIONS_FIGURES_SOURCES = [
+    *RESULTS_FIGURES_SOURCES,
+    Path(local.scenario_ghg_forcing_for_cmip7.emissions_figure.__file__),
+    Path(local.scenario_ghg_forcing_for_cmip7.methods_data.__file__),
+]
+"""The modules which make the emissions figures (they are re-made if these change)
+
+They share the results figures' yearly panels.
+"""
 
 
 def get_rerun_files(gas: str) -> list[Path]:
@@ -140,6 +172,42 @@ def task_western_et_al_2024_figure(
 ) -> None:
     """Generate the figure of our extensions of the Western et al. (2024) projections"""
     generate_western_et_al_2024_figure(outfile, BUNDLE_DIR)
+
+
+for _gas in RESULTS_FIGURE_GASES:
+
+    @task(id=_gas)
+    def task_results_figure(
+        gas: str = _gas,
+        figures_sources: list[Path] = RESULTS_FIGURES_SOURCES,
+        outfile: Annotated[Path, Product] = get_results_figure_file(_gas),
+    ) -> None:
+        """
+        Generate a gas' results figure
+
+        The published data it shows comes from ESGF
+        (downloaded the first time, then re-used from disk),
+        so it isn't tracked as a dependency.
+        """
+        generate_results_figure(gas, outfile)
+
+
+for _species in EMISSIONS_FIGURE_SPECIES:
+
+    @task(id=_species)
+    def task_emissions_figure(
+        species: str = _species,
+        extracted_markers: list[Path] = [
+            *BUNDLE_EXTRACTED_MARKERS,
+            *HISTORICAL_BUNDLE_EXTRACTED_MARKERS,
+        ],
+        figures_sources: list[Path] = EMISSIONS_FIGURES_SOURCES,
+        outfile: Annotated[Path, Product] = get_emissions_figure_file(_species),
+    ) -> None:
+        """Generate a species' emissions figure"""
+        generate_emissions_figure(
+            species, outfile, BUNDLE_DIR, cmip6_emissions_file=CMIP6_EMISSIONS_FILE
+        )
 
 
 for _group, _out_file in APPENDIX_FIGURES_FILES.items():
