@@ -17,9 +17,9 @@ Paths are relative to `manuscripts/scenario-ghg-forcing-for-cmip7/` unless state
 - [ ] Invite all the data producers to be co-authors (ZN to do, not a manuscript edit)
 - [ ] `results.tex:160-162`: check with co-authors that future CFC-12-eq concentrations are slightly higher
       "because of updated handling of bank emissions" (and get the citations for it).
-- [ ] `metadata.toml:32,65`: emails for FB and JL (currently `tbd@invalid.com`).
-- [ ] `metadata.toml:12`: author contributions are placeholders, confirm them.
-- [ ] `metadata.toml:1`: title is a placeholder (the comment points to `manuscript-planning.md`, which no longer exists).
+- [ ] `metadata.toml:32,65`: email for FB (currently `tbd@invalid.com`).
+- [x] `metadata.toml:12`: author contributions are placeholders, confirm them.
+- [x] `metadata.toml:1`: title is a placeholder (the comment points to `manuscript-planning.md`, which no longer exists).
 
 #### Waiting on others
 

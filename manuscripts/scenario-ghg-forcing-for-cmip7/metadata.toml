@@ -1,15 +1,12 @@
-# Placeholder title: manuscript-planning.md doesn't give one yet.
 [title_info]
-title = "Greenhouse gas concentration forcing for projecting potential climate change in CMIP7"
-running_title = "GHG forcing for CMIP7 projections"
+title = "Greenhouse gas concentration forcing for CMIP7 climate change projection experiments"
+running_title = "GHG forcing for CMIP7 projection experiments"
 
-# Authors as the creators of the scenario run's Zenodo record (https://zenodo.org/records/21501391).
 # Each author's `contributions` are tags, which are turned into the author contributions statement
 # (one sentence per tag, e.g. "ZN and MM acquired funding.").
 # The tags, and the text each is written as, are `CONTRIBUTIONS`
 # in `src/local/historical_ghg_forcing_for_cmip7/author_contributions.py`.
 # `contributions_initials` is how the author is written in that statement.
-# The contributions are placeholders for now.
 
 [[authors]]
 given_name = "Zebedee"
@@ -62,7 +59,7 @@ contributions = [
 [[authors]]
 given_name = "Jared"
 surname = "Lewis"
-email = "tbd@invalid.com"
+email = "jared.lewis@climate-resource.com"
 affiliations = ["cr"]
 contributions_initials = "JL"
 contributions = [
