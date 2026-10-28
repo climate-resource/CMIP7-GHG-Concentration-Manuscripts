@@ -24,9 +24,11 @@ Paths are relative to `manuscripts/scenario-ghg-forcing-for-cmip7/` unless state
 #### Waiting on others
 
 - [ ] `conclusion.tex:36-39`: C3S paragraph stays commented out until C3S is confirmed (also needs the C3S project name).
-- [ ] Scenario user guide needs to be published so we can cite/link it
+- [x] Scenario user guide needs to be published so we can cite/link it
       (`methods.tex:1099` "[TODO cite scenario user guide]", `conclusion.tex:6` "[TODO link]").
       Source is `notebooks/user-guide-scenarios.py`; the historical one is `nicholls_historical-user-guide_2026`.
+      Published at https://zenodo.org/records/23719968, added as `nicholls_scenario-user-guide_2026`,
+      cited in the methods and linked and cited in the conclusion (as in the historical manuscript).
 - [x] Historical paper has no bib entry yet, so all the "[TODO cite historical paper]" items below wait on that
       (see Citations). Added `nicholls_historical-ghgs_2026` (unpublished, in preparation).
 
