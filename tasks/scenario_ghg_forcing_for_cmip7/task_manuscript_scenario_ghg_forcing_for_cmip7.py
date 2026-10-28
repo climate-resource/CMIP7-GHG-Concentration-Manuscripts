@@ -45,6 +45,9 @@ from local.scenario_ghg_forcing_for_cmip7.config import (
     REPLACEMENTS,
     SECTIONS,
 )
+from local.scenario_ghg_forcing_for_cmip7.magicc_jump_summary import (
+    MAGICC_JUMP_SUMMARY,
+)
 from local.scenario_ghg_forcing_for_cmip7.value_checks import get_value_checks
 from local.value_checks import run_value_checks
 
@@ -100,6 +103,7 @@ def task_assemble_latex(  # noqa: PLR0913
     figure_files: dict[str, Path] = FIGURE_FILES_IN_TEXT,
     files_to_inline: dict[str, Path] = FILES_TO_INLINE,
     value_check_data: Path = MAGICC_SUMMARY,
+    magicc_jump_summary: Path = BUNDLE_DIR / MAGICC_JUMP_SUMMARY,
     value_checks_source: Path = Path(
         local.scenario_ghg_forcing_for_cmip7.value_checks.__file__
     ),

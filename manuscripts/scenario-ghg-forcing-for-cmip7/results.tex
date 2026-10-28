@@ -32,8 +32,8 @@ The experiments are roughly evenly spaced until 2100
 and the datasets all have one of two shapes (Fig.~\ref{fig:results-co2}c):
 peak and decline (with the decline being very gentle for VL-CF)
 or ongoing rise (H, M).
-% TODO check values here
-Post 2100, the datasets either settle between 300 and 350~ppm
+% value-check: {"tag": "co2-settled-2500-range", "unit": "ppm", "lower": 305, "upper": 365}
+Post 2100, the datasets either settle between 305 and 365~ppm by 2500
 or demonstrate a slow stabilisation consistent with the net-zero emissions
 in the underlying emissions (Fig.~\ref{fig:emissions-co2}a).
 The clear exception here is the LN scenario,
@@ -108,7 +108,7 @@ consistent with its delayed cut in CH_4 emissions.
 The M, H and HL experiments all follow a similar rise initially.
 M and H then stabilise at different levels, driven by the different levels at which their emissions stabilise.
 In line with its narrative and underlying emissions, concentrations in HL drop rapidly from 2070.
-% TODO check values here
+% value-check: {"tag": "ch4-stabilised-2500-range", "unit": "ppb", "lower": 900, "upper": 1200}
 Post 2100, CH_4 concentrations stabilise between 900 and 1200~ppb (all experiments except M and H)
 or remain at elevated levels consistent with ongoing, approximately constant CH_4 emissions (M and H).
 
@@ -152,7 +152,8 @@ While CMIP6 assumed ongoing emissions, related to agriculture in particular \cit
 CMIP7 assumes that all N_2O emissions can be mitigated.
 There is no correct answer for these highly uncertain long-term extensions
 but the impact of the two different choices is made clear here.
-In radiative effect terms, the difference between SSP3-7.0 and the H experiment is [TODO quantify]~W/m2 in 2500.
+% value-check: {"tag": "n2o-ssp370-minus-h-2500-radiative-effect", "unit": "W / m^2", "lower": 0.75, "upper": 0.85}
+In radiative effect terms, the difference in N_2O concentrations between the SSP3-7.0 and H experiments is around 0.8~W/m2 in 2500.
 
 \begin{figure}[tp]
 \includegraphics[width=12cm]{@n2o-results-figure@}

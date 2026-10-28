@@ -11,6 +11,61 @@ Paths are relative to `manuscripts/scenario-ghg-forcing-for-cmip7/` unless state
 ### Outstanding
 
 - [x] make full TODO list
+- [x] `methods.tex:336-354`: impact of the 2014/2015 jump in MAGICC's inputs
+      (was "less than [TODO number, I think 0.03 degree C and 0.05 W / m2]").
+      Done 2026-10-29: text gives the largest difference in MAGICC's CO2, CH4 and N2O over 2015-2500 and 1750-2014, with value checks.
+    - Notebook `data/raw/scenario-ghg-forcing-for-cmip7/notebooks-modified/0021_run-magicc_cmip7-history-check.py`,
+      runs `src/local/scenario_ghg_forcing_for_cmip7/magicc_jump.py`,
+      comparison `src/local/scenario_ghg_forcing_for_cmip7/magicc_jump_summary.py`
+      (separate so changing the comparison doesn't re-run MAGICC),
+      tasks `tasks/scenario_ghg_forcing_for_cmip7/task_magicc_jump.py`
+      (all 7 markers + VL-CF, 600 members, `published` and `cmip7-history` set-ups,
+      outputs and `summary.json` in the bundle's `manuscript-outputs/magicc-jump`).
+    - `published` reproduces the published output exactly (GSAT, total ERF, CO2, CH4, N2O, every experiment).
+    - Checked: passing the scenario from 1750 is enough for MAGICC to use the CMIP7 historical emissions
+      (its fossil CO2 emissions before 2015 equal the CMIP7 input), no new `*_EMIS.IN` files needed.
+    - Largest median difference (cmip7-history minus published):
+        - 1750-2014: GSAT 0.026 degC, ERF 0.063 W/m2 (both 1967; same in every experiment).
+        - 2015-2100: GSAT 0.079 degC (H, 2100), ERF 0.11 W/m2 (M, 2025).
+        - 2015-2500: GSAT 0.088 degC (H, 2297), ERF 0.13 W/m2 (HL, 2146).
+    - GHG vs. aerosol ERF (both saved in every run and in `summary.json`):
+        - In the 2020s, the ~0.1 W/m2 ERF difference is about half GHGs (~0.05, mostly N2O and CH4)
+          and half aerosols (~0.04-0.05, less negative aerosol ERF with the CMIP7 history).
+        - Later, the GHG difference grows (up to 0.18 W/m2, HL 2166; N2O alone reaches ~0.1 by 2500)
+          while the aerosol difference changes sign (down to -0.1 W/m2), offsetting part of it.
+          So the long-term GSAT difference is driven by GHGs.
+        - Not investigated: why the aerosol ERF differs after 2015 when both set-ups use the same emissions
+          (a guess: MAGICC scales aerosol forcing relative to emissions in a historical reference year).
+    - Confirmed (ZN): the post-2015 aerosol difference comes from MAGICC scaling aerosol forcing
+      relative to emissions in a historical reference year.
+    - Concentrations (raw MAGICC medians, not harmonised, ZN's call), largest difference 2015-2500:
+      CO2 6.8 ppm (HL, 2153; ~0.09 W/m2), CH4 99 ppb (HL, 2076; ~0.04 W/m2),
+      N2O 18 ppb (VL, 2500; ~0.06 W/m2). To 2100: CO2 3.8 ppm, CH4 99 ppb, N2O 8.6 ppb.
+      In the text (2015-2500 and 1750-2014) instead of the GSAT/ERF numbers (ZN, 2026-10-29).
+    - The GSAT/ERF numbers (and their value checks) are for the ScenarioMIP paper instead.
+    - Value checks: `magicc-jump-runs-reproduce-published`, `magicc-jump-n-runs`,
+      `magicc-jump-max-<gsat|erf|erf-ghg|erf-aerosols|co2|ch4|n2o>-difference-<history|to-2100|to-2500>`.
+      Original notes, how to do it (fiddly):
+    - We need two runs.
+      Step 1: a run which reproduces the output we already have (make sure we can reproduce the existing output).
+      Step 2: alter the run so that it uses CMIP7 historical emissions and concentrations.
+    - To get the concentrations in, we have to write all the `*CONC.IN` files.
+    - To get the emissions in, ZN thinks we just need to write the SCEN file with input from 1750 onwards
+      and don't need to write new `*_EMIS.IN` files, but we should check.
+    - Easiest start: notebook `1200_run-magicc-concentration-driven` from `cmip7-scenariomip-ghg-concentrations`.
+      Update it so that it runs all the CMIP7 ScenarioMIP scenarios
+      (using the MAGICC emissions input files we already have from the output bundle here)
+      in the two ways described above.
+    - Running the notebooks will take a while, so this check needs to be cached
+      (pytask probably does that for us already, so we likely don't need our own caching).
+    - The difference between the two runs gives the maximum difference we could expect from this jump.
+      If we had recalibrated MAGICC (as we wanted), the difference would be smaller,
+      because we would have updated the model physics to stay close to the AR6 assessed ranges.
+    - Searched for an existing notebook which does this (2026-10-28), none found:
+      `emissions_harmonization_historical`, `cmip7-scenariomip-ghg-concentrations` and `repos-agcec/magicc`
+      (all branches). `1200` only writes `*_CONC.IN` (CMIP7 emissions only from 2015).
+      `repos-agcec/magicc/tests/regression/scripts/process_cmip7_scenariomip_markers.py` is our standard setup
+      (CMIP6 concentrations to 2014), but its `processing.py` has helpers for writing MAGICC input files.
 
 #### To ask co-authors
 
@@ -127,31 +182,49 @@ Back matter
 
 Radiative effect numbers are calculated from our concentrations (not loaded from external ERF totals like IGCC).
 
-- [ ] `abstract.tex:10-20`: all the X/Y/S values (CO_2, CH_4, N_2O ranges, years and scenarios),
+- [x] `abstract.tex:10-20`: all the X/Y/S values (CO_2, CH_4, N_2O ranges, years and scenarios),
       the CMIP6 comparison ranges (CH_4 and N_2O are "TBD", CFC-12 "[higher/lower] by X"), plus value checks for all of them.
-- [ ] `results.tex:136`: N_2O radiative effect difference between SSP3-7.0 and H in 2500 ("[TODO quantify]").
-- [ ] `results.tex:34-37`: check "Post 2100, the [CO_2] datasets either settle between 300 and 350 ppm".
-- [ ] `results.tex:97-99`: check "Post 2100, CH_4 concentrations stabilise between 900 and 1200 ppb".
-- [ ] `methods.tex:340-344`: impact of the 2014/2015 jump in MAGICC's inputs
-      ("less than [TODO number, I think 0.03 degree C and 0.05 W / m2]").
-      Notebooks doing these runs exist somewhere, maybe in emissions-harmonisation-historical; add a (cached) value check.
-- [ ] `methods.tex:505-512`: the notebook's check that 2022 monthly values match the historical dataset never runs
+      Done (2022-2500 for both phases), with value checks for every number, year and experiment
+      (`<gas>-<cmip7|cmip6>-<min|max>`, `-year`, `-is-<experiment>`, `-range-width-relative-to-cmip6`, `cfc12-*`).
+      CMIP7's CFC-12 is above every CMIP6 SSP in every year, ~6% above the CMIP6 mean to 2100.
+- [x] `results.tex:136`: N_2O radiative effect difference between SSP3-7.0 and H in 2500 ("[TODO quantify]").
+      ~0.8 W/m2 (`n2o-ssp370-minus-h-2500-radiative-effect`).
+- [x] `results.tex:34-37`: check "Post 2100, the [CO_2] datasets either settle between 300 and 350 ppm".
+      Wasn't quite right: the settled experiments end at 312-363 ppm (VL-CF above 350), text now says 310-365 (`co2-settled-2500-range`).
+- [x] `results.tex:97-99`: check "Post 2100, CH_4 concentrations stabilise between 900 and 1200 ppb".
+      Holds (952-1065 ppb in 2500, `ch4-stabilised-2500-range`).
+- [x] `methods.tex:505-512`: the notebook's check that 2022 monthly values match the historical dataset never runs
       (`.isel(time=slice(-6, 0, None))` selects nothing, presumably meant `slice(None, -6)`).
       Fix, re-check, then quantify "The differences are negligible [TODO quantify and value check]".
-- [ ] `methods.tex:561-562`: check CH_4 VL vs. VL-CF "differ by ~70 ppb until 2040".
-- [ ] `methods.tex:731-733`: list the gases, scenarios and years where the lat. gradient has to be scaled down further
+      Didn't touch the original notebook; a value check now compares the published 2022 files directly:
+      at most 0.0014 W/m2 (CO_2, 0.11 ppm) over every gas, latitude and month
+      (`max-2022-monthly-difference-from-history-radiative-effect`, also used for the same claim in the introduction).
+- [x] `methods.tex:561-562`: check CH_4 VL vs. VL-CF "differ by ~70 ppb until 2040".
+      Wasn't quite right: the difference peaks at ~69 ppb in 2041, rather than holding until 2040. Text now says
+      "up to around 70 ppb (around 2040)" (`ch4-vl-minus-vl-cf-max`, `-max-year`).
+- [x] `methods.tex:731-733`: list the gases, scenarios and years where the lat. gradient has to be scaled down further
       (currently the list is just the gases the code allows this for).
-- [ ] `methods.tex:777-778`: value check for filling the final year (2500) with linear extrapolation.
-- [ ] `methods.tex:815-818`: check "small by 2100" with numbers, relative to each gas' maximum over historical and future.
-- [ ] `methods.tex:939-940`: check the assumption that emissions are constant over the year in the one-box model.
-- [ ] `methods.tex:943-945`: one-box gases don't guarantee a continuous growth rate at 2022, check how big the kinks are.
+      Skipped (ZN's call, 2026-10-28). The ZNTODO comment is still in `methods.tex`.
+- [x] `methods.tex:777-778`: value check for filling the final year (2500) with linear extrapolation.
+      `single-projection-final-year-linearly-extrapolated` (2500 = 2 x 2499 - 2498 for every single projection gas).
+- [x] `methods.tex:815-818`: check "small by 2100" with numbers, relative to each gas' maximum over historical and future.
+      HCFC-22 8%, HCFC-141b 12%, HCFC-142b 33% of peak in 2100; together 0.006 W/m2. Text now gives both
+      (`western-et-al-2024-2100-max-fraction-of-peak`, `western-et-al-2024-2100-radiative-effect`).
+- [x] `methods.tex:939-940`: check the assumption that emissions are constant over the year in the one-box model.
+      Holds: `0030` holds year y - 1's emissions constant over 12 monthly Euler steps (noted in a comment).
+- [x] `methods.tex:943-945`: one-box gases don't guarantee a continuous growth rate at 2022, check how big the kinks are.
       The comment says "appendix figure of the join, see the figure plan at the top", but there's no figure plan any more,
       so decide whether we want that figure.
-- [ ] `methods.tex:286`: confirm MAGICC uses the CMIP6 (RCMIP v4.0.0) concentrations up to 2014
+      Skipped (ZN's call, 2026-10-28). The ZNTODO comment is still in `methods.tex`.
+- [x] `methods.tex:286`: confirm MAGICC uses the CMIP6 (RCMIP v4.0.0) concentrations up to 2014
       (neither the probabilistic distribution nor `0021_run-magicc.py` seem to override them).
-- [ ] `methods.tex:1044-1047`: `GHG_RADIATIVE_EFFICIENCIES` docstring in the scenario code says Table 7.SM.6,
+      Skipped (ZN's call, 2026-10-28). The ZNTODO comment is still in `methods.tex`.
+- [x] `methods.tex:1044-1047`: `GHG_RADIATIVE_EFFICIENCIES` docstring in the scenario code says Table 7.SM.6,
       the historical manuscript checked that 7.SM.7 is right. Check the scenario values match the historical ones.
-- [ ] `methods.tex:1114`: check whether M20 adds anything about the vertical dimension (as far as ZN knows, it points back to M17).
+      Values identical to the historical ones for every shared gas (scenario also has Halon-1201).
+      Docstring updated to Table 7.SM.7 in `~/Documents/repos/cmip7-scenariomip-ghg-concentrations` (not committed).
+- [x] `methods.tex:1114`: check whether M20 adds anything about the vertical dimension (as far as ZN knows, it points back to M17).
+      M20 only provides surface mole fractions, no vertical treatment, so nothing to add (noted in a comment).
 
 #### Value checks
 
@@ -238,15 +311,15 @@ Cross-references:
 
 Not marked as TODOs, spotted while compiling this list.
 
-- [ ] `abstract.tex:12-13,18-19`: CH_4 and N_2O units are ppm, should be ppb.
-- [ ] `abstract.tex:14,20`: "CFC12" → "CFC-12".
+- [x] `abstract.tex:12-13,18-19`: CH_4 and N_2O units are ppm, should be ppb.
+- [x] `abstract.tex:14,20`: "CFC12" → "CFC-12".
 - [x] `introduction.tex:104`: extensions run "2101 to the end of 2025", should be 2500.
 - [ ] `introduction.tex:96`: "how add" → "how to add".
 - [ ] `introduction.tex:79`: "once an agreed communication format has been agreed".
 - [ ] `discussion.tex:66`: "Montreal Agreement" → "Montreal Protocol".
 - [ ] `discussion.tex:102`: "The second, like also affected the historical dataset" (grammar).
 - [ ] `methods.tex:360`: `[as done in][]\citep{meinshausen_ssp-ghgs_2020}` is malformed, should be `\citep[as done in][]{...}`.
-- [ ] `methods.tex:562`: `\~70ppb` renders as an accent, use `$\sim$70~ppb`.
+- [x] `methods.tex:562`: `\~70ppb` renders as an accent, use `$\sim$70~ppb`.
 - [x] `methods.tex:972`: unclosed parenthesis in the zero-seasonality gas list (closed when adding the historical citation).
 - [ ] Spelling: "conistency" (`introduction.tex:15`), "counterfactural" (`introduction.tex:36`), "throughly" (`introduction.tex:78`),
       "experiemnt" (`output-requirements.tex:57`), "timesescale" (`methods.tex:654`), "scenarion" (`methods.tex:1084`).

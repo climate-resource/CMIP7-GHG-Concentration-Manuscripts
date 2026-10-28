@@ -336,14 +336,29 @@ The result is a full set of emissions with which to run MAGICC from 2015 out to 
 Using CMIP7 historical emissions for this period introduces a small inconsistency in the MAGICC runs.
 There is a jump from the CMIP6 historical emissions used in MAGICC (consistent with the AR6 calibration)
 up until 2014 and the CMIP7 historical emissions used from 2015 onwards.
-Runs where we use both a) CMIP7 historical emissions and b) CMIP7 historical concentrations
-for the entire run (i.e. runs where there is no jump, but where we're also no longer consistent with the AR6 setup)
-show that the impact of this jump is small
-(less than [TODO number, I think 0.03 degree C and 0.05 W / m2]).
-% zalue-check: impact of this difference by doing runs where we overwrite the emissions (and concentration) inputs for the entire timeseries
-% vs. having the jump from 2014 to 2015.
-% There are already notebooks that do this somewhere, maybe in emissions-harmonisation-historical,
-% just need to find them and use the ideas from them to add a (cached) zalue-check here.
+This is imperfect and points to the need to be able to re-calibrate MAGICC
+to fit different input assumptions more quickly (see further discussion in Sect.~\ref{sec:discussion}).
+%
+% Runs where we use both a) CMIP7 historical emissions and b) CMIP7 historical concentrations
+% for the entire run (i.e. runs where there is no jump, but where we're also no longer consistent with the AR6 setup)
+% provide an upper bound on the effect of switching to CMIP7 inputs.
+% The values are an upper bound because re-calibrating would mitigate the effect of the updated inputs.
+% % Our re-run of the published set-up reproduces the published output exactly,
+% % so the difference below is purely from the change in historical inputs.
+% % value-check: {"tag": "magicc-jump-runs-reproduce-published"}
+% % value-check: {"tag": "magicc-jump-n-runs", "unit": "dimensionless", "lower": 600, "upper": 600}
+% % The numbers are from MAGICC's median concentrations, i.e. before harmonisation.
+% % value-check: {"tag": "magicc-jump-max-co2-difference-to-2500", "unit": "ppm", "lower": 6.5, "upper": 7}
+% % value-check: {"tag": "magicc-jump-max-ch4-difference-to-2500", "unit": "ppb", "lower": 95, "upper": 105}
+% % value-check: {"tag": "magicc-jump-max-n2o-difference-to-2500", "unit": "ppb", "lower": 17.5, "upper": 18.5}
+% These updates would lead to changes of around
+% 7~ppm for CO_2, 100~ppb for CH_4 and 18~ppb for N_2O
+% (in the ensemble median, over 2015--2500, across all experiments).
+% % value-check: {"tag": "magicc-jump-max-co2-difference-history", "unit": "ppm", "lower": 1.8, "upper": 2}
+% % value-check: {"tag": "magicc-jump-max-ch4-difference-history", "unit": "ppb", "lower": 24, "upper": 25}
+% % value-check: {"tag": "magicc-jump-max-n2o-difference-history", "unit": "ppb", "lower": 7, "upper": 7.5}
+% Over the historical period (1750--2014), where the two sets of runs differ only in their historical inputs,
+% the differences are at most around 2~ppm, 25~ppb and 7~ppb respectively.
 
 \textbf{Best estimate.}
 
@@ -501,14 +516,16 @@ specifically the mean of the values in the harmonisation year and the following 
 % (relative difference between scenarios in December 2022, checked with rtol=1e-4 in the notebook)
 As a result, the monthly values are the same in all experiments with the same harmonisation year up to the end of that year.
 We also constrain the interpolated values to be non-negative.
-% ZNTODO value check here: the notebook's check that the monthly values match the historical dataset's monthly values
-% (`.isel(time=slice(-6, 0, None))`) selects nothing, so the check never runs.
-% The intention was presumably `slice(None, -6)` (i.e. all but the last six months of the overlap).
-% Worth fixing and re-checking before we claim agreement with the historical monthly values.
+% The original run's notebook check that the monthly values match the historical dataset's monthly values
+% (`.isel(time=slice(-6, 0, None))`) selects nothing, so never ran.
+% The value check below compares the published files directly instead.
 For the ScenarioMIP scenarios, the monthly values in 2022 (which are part of our output) are not exactly the same as those in the historical dataset,
 because the historical dataset's monthly values in 2022 were interpolated using
 2023 values derived from observations rather than the values derived by our method.
-The differences are negligible [TODO quantify and value check].
+% value-check: {"tag": "max-2022-monthly-difference-from-history-radiative-effect", "unit": "W / m^2", "lower": 0, "upper": 0.002}
+The differences are negligible
+(at most 0.002~W/m^2 in approximate radiative effect terms (Sect.~\ref{ssec:results-radiative-forcing-comparisons-note})
+for any gas, latitude band and month).
 
 \textbf{Seasonality.}
 No further processing is required (the seasonality from Step 2 already has a monthly dimension).
@@ -557,8 +574,9 @@ well beyond a time horizon which can be justified based on CH_4's atmospheric li
 The importance of the harmonisation is already clear when the results for VL-CF are compared to VL.
 Despite the fact that these two experiments have identical CH_4 emissions,
 therefore the CH_4 concentrations should only differ due to feedback effects,
-% TODO-CHECK difference
-their concentrations differ by \~70ppb until 2040.
+% value-check: {"tag": "ch4-vl-minus-vl-cf-max", "unit": "ppb", "lower": 65, "upper": 72}
+% value-check: {"tag": "ch4-vl-minus-vl-cf-max-year", "unit": "yr", "lower": 2038, "upper": 2042}
+their concentrations before 2040 differ by approximately 70~ppb at most.
 When considering the raw MAGICC output, it is clear that this difference is driven by the harmonisation,
 which is compensating for the difference between the raw MAGICC output and the historical concentrations after 2020
 (Fig.~\ref{fig:methods-ch4}c, d).
@@ -784,7 +802,7 @@ These projections are the same for all datasets
 as is also assumed in the underlying emissions, [TODO cite Nicholls et al. ScenarioMIP]).
 The raw data from our input sources is values at the start of each year.
 We convert them to annual-means by taking the mean of the values at the start of each year and the start of the next year.
-% TODO VALUE-CHECK
+% value-check: {"tag": "single-projection-final-year-linearly-extrapolated"}
 We fill the final year (2500) using linear extrapolation.
 
 We use the input data as is (we do not perform any harmonisation to the historical dataset).
@@ -822,10 +840,12 @@ For the extension, we assume that emissions are constant after 2100,
 at the value inferred from the concentration and its rate of change in 2100.
 This is a simple and conservative assumption
 that means that concentrations converge towards a steady state rather than declining to zero.
-% ZNTODO: check "small by 2100" with numbers (value check).
-% The check of 'small' should be relative to each gas' maximum concentration over the historical and future datasets
+% value-check: {"tag": "western-et-al-2024-2100-max-fraction-of-peak", "unit": "dimensionless", "lower": 0.3, "upper": 0.35}
+% value-check: {"tag": "western-et-al-2024-2100-radiative-effect", "unit": "W / m^2", "lower": 0, "upper": 0.01}
 Sensitivity to the choice of extrapolation is small given that the concentrations of these gases are small by 2100
-(so extrapolating concentrations back to pre-industrial values is very similar).
+% (at most around a third of their peak, for HCFC-142b,
+% and together less than 0.01~W/m^2 in approximate radiative effect terms,
+so extrapolating concentrations back to pre-industrial values leads to very similar results to what we have done here.
 The extended projections are then processed as described above for the \citet{wmo_ozone-ch7_2022} projections.
 
 There are two minor inconsistencies across various data production processes
@@ -946,8 +966,9 @@ We start the one-box model from the historical dataset's global-, annual-mean in
 and run it forward with the emissions in each experiment (Sect.~\ref{sssec:methods-co2-project-global-mean}),
 using a forward Euler scheme with monthly timesteps
 (the emissions in year $y$ drive the change in concentrations from year $y$ to year $y+1$
-% ZNTODO: check constancy assumption
 and are assumed to be constant over the year).
+% Checked 2026-10-28: `notebooks/0030_create-projection-one-box-model.py` holds year y - 1's emissions constant
+% over 12 monthly forward Euler steps to go from year y - 1's concentration to year y's.
 Because the one-box model starts from the historical dataset's value, no harmonisation is required
 (Fig.~\ref{fig:methods-hfc125}a).
 % ZNTODO: unlike the gradient-aware harmonisation, this doesn't guarantee that the growth rate is continuous at 2022
@@ -1027,10 +1048,10 @@ We provide the same equivalent species as in the historical dataset
 calculated in the same way
 and using the same radiative efficiencies
 (\citealp{IPCC_AR6-WG1-Ch-7-SM_2021}, Table 7.SM.7).
-% ZNTODO: the docstring of `GHG_RADIATIVE_EFFICIENCIES` in the scenario code
-% (`src/cmip7_scenariomip_ghg_generation/constants.py`) says Table 7.SM.6.
-% The historical manuscript checked that 7.SM.7 is the right table.
-% Check the scenario values match the historical ones (value check).
+% Checked 2026-10-28: `GHG_RADIATIVE_EFFICIENCIES` in the scenario code
+% (`src/cmip7_scenariomip_ghg_generation/constants.py`) matches the historical values for every gas both have
+% (the scenario code also has Halon-1201, which isn't in our output).
+% Its docstring said Table 7.SM.6, now corrected to Table 7.SM.7 (in Section 7.SM.6) in the scenario repository.
 % `notebooks/1101_create-esgf-files-equivalent-species.py`
 % One difference is that, for the scenarios, we calculate the equivalent species on the native resolution grid
 % and then derive the other grids from this,
@@ -1097,4 +1118,4 @@ we do not provide a vertical dimension.
 For modelling teams which do not have their own tracer transport and therefore require a vertical gradient,
 we suggest using the simplified parameterisations provided in \citet{meinshausen_historical-ghgs_2017}
 as discussed in \citet{nicholls_historical-ghgs_2026}.
-% ZNTODO: check whether M20 adds anything to this (as far as I know, M20 also points back to M17).
+% Checked 2026-10-28: M20 only provides surface mole fractions (no vertical treatment), so adds nothing to M17 here.
