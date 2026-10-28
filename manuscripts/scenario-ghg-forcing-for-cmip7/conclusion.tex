@@ -1,2 +1,39 @@
 % Placeholder. See manuscript-planning.md for the plan.
-We have provided greenhouse gas concentrations for the CMIP7 ScenarioMIP experiments.
+A number of datasets for exploring future climate change under different boundary conditions is now available.
+These datasets cover those included in CMIP7's ScenarioMIP exercise [TODO cite van Vuuren].
+As an illustration of our ability to produce greenhouse gas forcings
+for different futures, we have also described the forcings produced for the counterfactual VL-CF experiment.
+For users, a full user guide is available at [TODO link].
+As for most forcings, the latest version
+and versions to use in CMIP7 experiments can be found at
+% \newline \mbox{\url{https://input4mips-cvs.readthedocs.io/en/latest/}},
+\url{https://input4mips-cvs.readthedocs.io/en/latest/},
+with the specific page for greenhouse gas forcing being
+\newline \mbox{\url{https://input4mips-cvs.readthedocs.io/en/latest/dataset-overviews/greenhouse-gas-concentrations/}}.
+Further guidance on how to use forcings in each CMIP experiment can be found at
+\newline \mbox{\url{https://wcrp-cmip.github.io/cmip7-guidance/docs/CMIP7/Experiment_set_up_and_Forcings/}}.
+As noted in the historical dataset description [TODO cite],
+the conventions for recording which forcings were used in a simulation are not yet settled,
+so the guidance pages, rather than this paper, should be used as the primary source of information.
+
+Compared to the CMIP6 experiments,
+the CMIP7 experiments cover a narrower range of greenhouse gas concentrations,
+most notably for CO_2.
+The CMIP7 experiments also include consideration of a greater variety of potential futures.
+Notably, there is inclusion of sustained, large-scale negative emissions in the LN experiment
+which may lead to CO_2 concentrations dropping below pre-industrial values
+(emissions-driven ESM simulations for this experiment will be particularly novel),
+greater exploration of the difference between peak warming in the range of 1.5 to 2.0\textdegree~C via the VL, L and LN experiments
+and a more extreme exploration of reversibility via the HL experiment.
+All of the changes are driven by changes in the underlying experiment descriptions between CMIP6 and CMIP7.
+
+The dataset described here has been available from ESGF since approximately mid-2026,
+keeping as close to CMIP7's intended timeline as possible (Sect.~\ref{sec:output-dataset-requirements}).
+This meant that many potential improvements remain unaddressed (Sect.~\ref{sec:discussion}).
+We aim to provide updates in future that improve our and the general field of forcing production and provision.
+The European Union Horizon project Quality-assured Updates of forcing Information for Climate Change Assessments (QUICCA)
+is an example of one project which is supporting such updates.
+% % Include if we get confirmation of C3S before submission
+% The [C3S project], despite its focus on historical forcings,
+% will also support the development of a suite of tools
+% that will also support efforts to produce forcings for projection experiments.

@@ -16,7 +16,7 @@ given_name = "Zebedee"
 surname = "Nicholls"
 email = "zebedee.nicholls@climate-resource.com"
 correspondence_author = true
-affiliations = ["crs"]
+affiliations = ["crs", "cr", "uom-sgeas", "iiasa-ece"]
 contributions_initials = "ZN"
 contributions = [
     "dataset-production",
@@ -38,13 +38,14 @@ contributions = [
 ]
 
 [[authors]]
-given_name = "Malte"
-surname = "Meinshausen"
-email = "malte.meinshausen@unimelb.edu.au"
-affiliations = ["cr"]
-contributions_initials = "MM"
+given_name = "Anna"
+surname = 'Lanteri'
+email = "anna.lanteri@climate-resource.com"
+affiliations = ["crs"]
+contributions_initials = "AL"
 contributions = [
-    "conceptualisation",
+    "dataset-contributed",
+    "figures-tables",
     "review-and-editing",
 ]
 
@@ -69,6 +70,19 @@ contributions = [
     "review-and-editing",
 ]
 
+[[authors]]
+given_name = "Malte"
+surname = "Meinshausen"
+email = "malte.meinshausen@unimelb.edu.au"
+affiliations = ["cr", "uom-sgeas"]
+contributions_initials = "MM"
+contributions = [
+    "conceptualisation",
+    "review-and-editing",
+]
+
 [affiliations]
 crs = "Climate Resource S, Berlin, Germany"
 cr =  "Climate Resource, Melbourne, Australia"
+uom-sgeas = "School of Geography, Earth and Atmospheric Sciences, The University of Melbourne, Melbourne, Victoria, Australia"
+iiasa-ece = "Energy, Climate and Environment Program, International Institute for Applied Systems Analysis (IIASA), 2361 Laxenburg, Austria"

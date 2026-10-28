@@ -8,6 +8,9 @@
 - [x] check how VL-CF weaves throughout
     - [x] do statements apply generally rather than being ScenarioMIP specific
     - [x] use of scenarios vs datasets
+- [x] conclusion
+- [ ] check manuscript-planning doc
+- [ ] make full TODO list
 
 # TODOs: historical GHG forcing for CMIP7 manuscript
 
