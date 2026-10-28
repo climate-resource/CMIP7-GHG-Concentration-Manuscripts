@@ -99,15 +99,16 @@ as well as global-means, hemispheric-means and datasets that include latitudinal
 No dependency on longitude is provided.
 For a brief discussion on how add a vertical dimension to these datasets, see Sect.~\ref{ssec:methods-vertical}.
 
-The output datasets extend from 2022 to the end of 2500.
+The output datasets extend from 2022 to the end of 2500
+(VL-CF's from 2016, because it diverges from history in 2016).
 The CMIP7 historical experiment runs to the end of 2021,
-so this means that users can use the scenario datasets alone from the end of their historical simulations
+so this means that users can use these datasets alone after branching from their historical simulations
 (2022 is also included in the historical datasets,
-but users should use the scenario datasets for 2022 values where they can
+but users should use the datasets described here for all values where they can
 % TODO: zalue check of max of this difference across all datasets at the lat. monthly level i.e. take max across the lat. month dimensions for the difference between history and all scenarios in 2022
 although the difference between the two is negligible).
 The output data is split by experiment
-and into `main' (up until the end of 2100) and extensions (2101 to the end of 2025).
+and into `main' (up until the end of 2100) and extensions (2101 to the end of 2500).
 As above, see the guidance pages \newline
 (\mbox{\url{https://wcrp-cmip.github.io/cmip7-guidance/docs/CMIP7/Experiment_set_up_and_Forcings/}})
 for specific information about how to find and use the datasets needed for each experiment.

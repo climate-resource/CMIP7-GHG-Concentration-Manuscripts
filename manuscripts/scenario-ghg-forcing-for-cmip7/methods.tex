@@ -56,13 +56,15 @@ Each experiment follows the historical dataset up to and including
 a year which we call its harmonisation year, $y_h$,
 and is projected thereafter.
 For the ScenarioMIP scenarios, $y_h$ is 2022, the last year of the historical dataset.
-VL-CF's emissions diverge from history from 2016 onwards, so, for VL-CF, $y_h$ is 2015.
+VL-CF's diverges from history in 2016, so, for VL-CF, $y_h$ is 2015
+although VL-CF uses the same input data sources as VL for many gases
+so its GHG concentration forcings are the same or very close to VL in many cases.
 % From `harmonisation_year = 2015` in the injected parameters of the VL-CF run's notebooks (e.g. `1011`, `1031`),
 % vs. the default of 2023 for the markers, which the notebooks cap at the end of the historical dataset (2022).
-% The only exception is the gases which we do not model with MAGICC
-% (those which use a single concentration projection or the one-box model, see Step 1 below).
-% VL-CF's emissions of these gases are the same as VL's,
-% so VL-CF's data for these gases is the historical dataset up to 2021 and identical to VL's from 2022 onwards.
+% The exception is the gases which we do not model with MAGICC
+% (those which use a single concentration projection or the one-box model, see Step~1 below).
+% VL-CF's emissions of these gases are the same as VL's, i.e. they do not diverge from history in 2016,
+% so, for these gases, VL-CF's data is the historical dataset up to 2021 and identical to VL's from 2022 onwards.
 % Checked 2026-10-27: official emissions identical for VL and VL-CF (e.g. HFC-125, SF6, CF4, CFC-12, and also CH4 and N2O),
 % published VL-CF HFC-125 and CFC-12 global-means equal to history 2016-2021,
 % VL-CF native grid equal to VL's 2022-2500 for HFC-125 and SF6.
@@ -84,8 +86,8 @@ The general approach can be broken down as follows:
                 For the ozone-depleting substances (ODSs) controlled by the Montreal Protocol,
                 we use an existing projection from the literature directly
                 (\citealp{wmo_ozone-ch7_2022} and, for the HCFCs, \citealp{western_hcfcs_2024}).
-                These projections are therefore the same in all experiments.
-                % TODO: check if we need to forward ref the discussion
+                These projections are therefore the same in all experiments
+                (see Sect.~\ref{sec:discussion} for a discussion of this choice).
             }
             \item {
                 \textbf{One-box model.}
@@ -109,8 +111,8 @@ The general approach can be broken down as follows:
         We use the single concentration projection route where such a projection is available,
         the one-box route based on expert judgement about the impact of lifetime feedbacks
         and the impact of updating MAGICC's lifetimes
-        [TODO discussion point about this: definitely not ideal, but only affects gases with relatively
-        minor radiative forcing so an ok imperfection]
+        (an imperfect, but pragmatic, choice which only affects gases with relatively small radiative forcing,
+        see Sect.~\ref{sec:discussion})
         and MAGICC otherwise.
         % The method used for each gas is listed in Sects.~\ref{ssec:methods-co2}--\ref{ssec:methods-hfc125-like}.
     }
@@ -271,10 +273,11 @@ We use a 600-member probabilistic parameter ensemble
 that has been calibrated to be consistent with the assessment of the IPCC's Sixth Assessment Report \citep{IPCC_AR6-WG1-Ch-7_2021}
 based on the methods described in [TODO cite RCMIP2],
 with an update to include a probabilistic wetland CH_4 feedback as described in [TODO cite Sloughter et al.].
-% ZNTODO: we also run MAGICC v7.5.3 (the version used in AR6) for every scenario
-% (`magicc_version_to_run` in `scripts/generate-concentration-files.py`),
-% but these runs aren't used in the output.
-% There is a feedback difference for e.g. CO2, but this is tiny so don't show it unless asked specifically.
+For comparison, we also run MAGICC v7.5.3, the version used in AR6, which does not include this feedback,
+with the same emissions (Sect.~\ref{sssec:methods-ch4-project-global-mean}).
+These runs are not used in our output.
+% (`magicc_version_to_run` in `scripts/generate-concentration-files.py`.)
+% The difference between the two versions for e.g. CO2 is tiny, so we don't show it unless asked.
 
 % TODO-CHECK: {"tag": "magicc-switch-from-conc-to-emissions-year", "unit": "yr", "lower": 2015, "upper": 2015}
 For all gases, MAGICC is run in concentration-driven mode up to 2014 and in emissions-driven mode from 2015 onwards
@@ -285,13 +288,12 @@ Up to 2014, the concentrations are those used in CMIP6 \citep{meinshausen_histor
 % The probabilistic distribution doesn't override these and neither does `notebooks/0021_run-magicc.py` as far as I can see.
 % ZNTODO: confirm.
 rather than our historical dataset,
-% ZNTODO: note that this is to maintain consistency with AR6 calibration,
-% more ideal would be to recalibrate to AR6 assessment on the basis of CMIP7 historical
-% but this is minor, given how similar the two histories are.
 so MAGICC's concentrations do not exactly match our historical dataset over the historical period
 (this is one of the reasons that harmonisation is needed, see Fig.~\ref{fig:methods-co2}a, b below).
 This was done because of the coupling between MAGICC's probabilistic AR6 configuration
 and the requirement to deliver on time (which did not allow for re-calibrating MAGICC based on CMIP7 GHG concentrations).
+Re-calibrating MAGICC to be consistent with the AR6 assessment on the basis of the CMIP7 historical concentrations
+would be preferable (Sect.~\ref{sec:discussion}), but was not possible under the time constraints.
 From 2015 onwards, MAGICC is driven by the emissions in each experiment (described below).
 
 We run in emissions-driven mode for every gas.
@@ -350,10 +352,6 @@ As a result of the requirement to produce a single forcing dataset,
 we must reduce this probabilistic output to a single dataset.
 We choose to use the median of the probabilistic ensemble as our best estimate
 (the probabilistic ensemble's 5--95\% range and chosen median are shown in Fig.~\ref{fig:methods-co2}a,
-% ZNTODO: be careful about the use of scenario throughout.
-% Scenario should only be used when we're only talking about the ScenarioMIP scenarios.
-% When we're referring to ScenarioMIP scenarios plus VL-CF, we should use future experiments or similar
-% (this will be the majority of cases).
 the chosen medians for all future datasets are shown in Fig.~\ref{fig:methods-co2}b, c).
 Other approaches would represent different choices,
 e.g. taking a percentile higher than the median would represent a more conservative approach
@@ -420,19 +418,17 @@ we instead project the seasonality change PC based on the global net primary pro
 We first perform a linear regression between the historical seasonality change PC and the median NPP from MAGICC
 over the historical period
 (i.e. the years in which we have both the seasonality change PC from the observation network and MAGICC output,
-Fig.~\ref{fig:methods-regressions-co2}a).
-% TODO-CHECK: {"tag": "co2-seasonality-change-npp-regression-years", ...}
-% ZNTODO: note in the text (and return to in the discussion, Sect. \ref{sec:discussion})
-% that the seasonality change PC vs. NPP regression was re-calculated for VL-CF, and differs from the markers' one.
-% Notebook `1011` regresses over the years up to the harmonisation year,
-% which is 2015 for VL-CF rather than 2023 for the markers:
-% the markers use 1981-2023 (slope 1.28 yr / GtC), VL-CF uses 1981-2015 (slope 1.78 yr / GtC).
-% So the same NPP change gives VL-CF's seasonality change PC roughly 40% more change than the markers'.
-% (From our re-run of the VL-CF notebook, `manuscript-outputs/rerun-markers/regressions/co2-seasonality-change-vl-cf_regression.json`.)
-% Related: the seasonality change PC projection is anchored in 2023, not 2022
-% (the historical seasonality change PC runs to 2023 because the observations do),
-% so $y_h$ below is 2023 for the seasonality and every experiment, including VL-CF,
-% uses the historical seasonality change PC up to and including 2023.
+% Fig.~\ref{fig:methods-regressions-co2}a).
+% % value-check: {"tag": "co2-seasonality-change-regression-first-year", "unit": "yr", "lower": 1981, "upper": 1981}
+% % value-check: {"tag": "co2-seasonality-change-regression-last-year", "unit": "yr", "lower": 2023, "upper": 2023}
+% For the ScenarioMIP scenarios, these years are 1981--2023.
+% % Notebook `1011` regresses over the years up to the harmonisation year.
+% % value-check: {"tag": "vl-cf-regression-is-up-to-harmonisation-year"}
+% For VL-CF, the regression only uses the years up to its harmonisation year (1981--2015),
+% % value-check: {"tag": "co2-seasonality-change-vl-cf-regression-slope-ratio", "unit": "dimensionless", "lower": 1.35, "upper": 1.45}
+% which makes its slope around 40\% steeper,
+% i.e. the same change in NPP gives around 40\% more change in VL-CF's seasonality change PC
+% (this was not intended, see Sect.~\ref{sec:discussion}).
 We then project the PC with
 \begin{equation}
     \label{eq:pc-projection}
@@ -440,17 +436,17 @@ We then project the PC with
 \end{equation}
 where $PC$ is the PC being projected,
 $y$ is the year,
-$y_h$ is the harmonisation year (Sect.~\ref{ssec:methods-general-approach})
-% This shouldn't have been the same for all experiments, that's a bug.
-% We might release a corrected dataset in case anyone wants
-% to explore the impact of the difference
-% but that is expected to be small based on Meinshausen 2020.
-% ;
-% for the seasonality change PC, $y_h$ is 2023 in all experiments,
-% because the historical seasonality change PC extends to 2023),
+$y_h$ is the harmonisation year (Sect.~\ref{ssec:methods-general-approach}),
 $x$ is the quantity which drives the PC (here NPP)
 and $\beta$ is the slope of the regression between the PC and $x$.
 This form ensures that the PC is continuous (i.e. harmonised) at the transition from history to projection.
+For the seasonality change PC, the historical PC extends to 2023 (because the observations do),
+% The regression uses every year the historical PC covers, so its last year is the PC's last year.
+% value-check: {"tag": "co2-seasonality-change-regression-last-year", "unit": "yr", "lower": 2023, "upper": 2023}
+and the projection starts from its value in 2023, rather than in the harmonisation year, in all experiments.
+As a result, VL-CF's seasonality change PC follows the historical one up to 2023,
+rather than diverging from it in 2016 like the rest of VL-CF's data
+(this should be corrected in future work, see Sect.~\ref{sec:discussion}).
 
 \textbf{Latitudinal gradient.}
 We use the latitudinal gradient EOFs from the historical dataset.
@@ -479,6 +475,9 @@ and in which emissions are non-zero.
 We then project the first PC using Eq.~(\ref{eq:pc-projection}),
 with fossil CO_2 emissions as the driver, $x$ (Fig.~\ref{fig:methods-co2}e).
 The second PC is held constant at its value in the harmonisation year (Fig.~\ref{fig:methods-co2}e).
+% As for the seasonality change PC, VL-CF's regression only uses the years up to its harmonisation year,
+% % value-check: {"tag": "co2-vl-cf-regression-slope-ratio", "unit": "dimensionless", "lower": 1.01, "upper": 1.02}
+% which makes its slope around 1.5\% steeper.
 
 \subsubsection{Step 3: Prepare the components to be combined}
 \label{sssec:methods-co2-prepare-components}
@@ -603,9 +602,9 @@ We note here that the regression is particularly poor (Fig.~\ref{fig:methods-reg
 which suggests that this method may be worth reconsidering in future.
 It is also notably different from the regression used in the historical dataset
 (see Sect.~\ref{sec:discussion} for both points).
-% ZNTODO: note in the text (and return to in the discussion, Sect. \ref{sec:discussion})
-% that VL-CF's first PC is projected with a different regression to the markers' one
-% (see the ZNTODO in Sect. \ref{sssec:methods-n2o-like-project-seasonality-lat-gradient} for N2O).
+% % value-check: {"tag": "ch4-vl-cf-regression-slope-ratio", "unit": "dimensionless", "lower": 1.03, "upper": 1.05}
+% As for CO_2, VL-CF's regression only uses the years up to its harmonisation year,
+% which makes its slope around 4\% steeper.
 % In the VL-CF run, notebook `1031` has `harmonisation_year = 2015`,
 % so the regression only uses years up to 2015 (1750-2015 rather than 1750-2023)
 % and VL-CF's PC is anchored to the historical PC and fossil emissions in 2015, rather than 2022.
@@ -614,8 +613,6 @@ It is also notably different from the regression used in the historical dataset
 % (39.8 Mt CH4 / yr in 2300, implied by both PCs)
 % and VL-CF's PC0 ends at -76.5, VL's at -76.8 (Fig. \ref{fig:methods-ch4}e),
 % compared with a historical PC0 of around -200 in 2022.
-% Still worth stating, because it means that the difference between VL-CF's and VL's PC0
-% isn't only due to the difference in their emissions.
 % (Reproduced exactly from the re-run regressions and the published PCs, 2026-10-27.)
 
 \subsubsection{Step 3: Prepare the components to be combined}
@@ -685,8 +682,14 @@ this is the same as for CO_2 (Sect.~\ref{sssec:methods-co2-project-seasonality-l
 except that the first PC is regressed against, and projected with, total N_2O emissions
 (following \citealp{meinshausen_ssp-ghgs_2020}, regression shown in Fig.~\ref{fig:methods-regressions-n2o},
 resulting PCs shown in Fig.~\ref{fig:methods-n2o}d).
-% ZNTODO: note in the text (and return to in the discussion, Sect. \ref{sec:discussion})
-% that VL-CF's first PC is projected differently to the markers' (as for the CO2 seasonality change PC).
+% % value-check: {"tag": "n2o-vl-cf-regression-slope-ratio", "unit": "dimensionless", "lower": 1.35, "upper": 1.45}
+% As for CO_2, VL-CF's regression only uses the years up to its harmonisation year.
+% For N_2O, this makes its slope around 40\% steeper,
+% value-check: {"tag": "n2o-vl-cf-pc0-2300", "unit": "dimensionless", "lower": -0.15, "upper": -0.13}
+% value-check: {"tag": "n2o-vl-pc0-2300", "unit": "dimensionless", "lower": -0.56, "upper": -0.54}
+% so VL-CF's first PC ends up notably different from VL's
+% (around $-0.14$, rather than around $-0.55$, in 2300, Fig.~\ref{fig:methods-n2o}d).
+%
 % In the VL-CF run, notebooks `1030` and `1031` have `harmonisation_year = 2015`,
 % so VL-CF's PC is anchored to the historical PC and emissions in 2015, rather than 2022,
 % and, for the gases which use `1031` (CO2, CH4, N2O), the regression only uses years up to 2015.
@@ -706,10 +709,15 @@ with total emissions of the gas as the driver.
 For these gases, we use the regression slope derived when producing the historical dataset \citep{nicholls_historical-ghgs_2026} directly,
 rather than re-deriving it (resulting PCs shown in Appendix~\ref{app:methods-figures-n2o-like}).
 We return to this inconsistency in Sect.~\ref{sec:discussion}.
+For VL-CF, the PC is also anchored to the historical PC and emissions in its harmonisation year (2015),
+which differs from the ScenarioMIP scenarios harmonisation year (2022),
+% value-check: {"tag": "hfc134a-vl-cf-pc0-2300", "unit": "dimensionless", "lower": -1.9, "upper": -1.7}
+% value-check: {"tag": "hfc134a-vl-pc0-2300", "unit": "dimensionless", "lower": 4.4, "upper": 4.6}
+thus makes VL-CF's PC notably different from VL's
+(e.g. for HFC-134a, around $-1.8$, rather than around 4.5, in 2300,
+see discussion of this issue in Sect.~\ref{sec:discussion}).
 % `notebooks/1030_scale-latitudinal-gradient-based-on-emissions.py`,
 % reads `<gas>_pc0-total-emissions-regression.yaml` from the historical run's interim data.
-% Note in discussion: the historical regression is against RCMIP SSP2-4.5 emissions,
-% while here we apply it to the ScenarioMIP emissions.
 
 \subsubsection{Step 3: Prepare the components to be combined}
 \label{sssec:methods-n2o-like-prepare-components}
@@ -1059,7 +1067,7 @@ which also appears in the directory path and filename.
 The source IDs are of the form \texttt{CR-[experiment]-[version]},
 with the experiment always being written in lowercase
 e.g. \texttt{CR-l-1-1-0} for version 1.1.0 of the L scenario.
-This requires care to parse when there is a hyphen in the scenarion name,
+This requires care to parse when there is a hyphen in the experiment name,
 e.g. for VL-CF we have \texttt{CR-vl-cf-1-1-0} for version 1.1.0 of VL-CF.
 % From the published file names in the 1.1.0 bundle.
 % The ScenarioMIP scenarios are published under the ScenarioMIP activity and VL-CF under the PolMIP activity.

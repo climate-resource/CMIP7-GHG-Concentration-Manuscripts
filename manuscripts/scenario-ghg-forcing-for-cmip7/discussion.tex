@@ -81,16 +81,29 @@ The issue relates to CO_2's seasonality change and the latitudinal gradient used
 In short, the regression with historical drivers was re-calculated over the period up until 2015 only,
 rather than over the full historical period as was done for the ScenarioMIP experiments.
 Therefore the sensitivity of the seasonality for CO_2 and latitudinal gradients for CO_2, CH_4 and N_2O
-to their drivers is different in VL-CF than the other scenarios, which doesn't make physical sense.
+to their drivers is different in VL-CF than in the ScenarioMIP scenarios, which doesn't make physical sense.
+% % value-check: {"tag": "co2-seasonality-change-vl-cf-regression-slope-ratio", "unit": "dimensionless", "lower": 1.35, "upper": 1.45}
+% % value-check: {"tag": "n2o-vl-cf-regression-slope-ratio", "unit": "dimensionless", "lower": 1.35, "upper": 1.45}
+% The difference is largest for CO_2's seasonality change and N_2O's latitudinal gradient,
+% for which VL-CF's regression slopes are around 40\% steeper
+% (Sects.~\ref{sssec:methods-co2-project-seasonality-lat-gradient} and \ref{sssec:methods-n2o-like-project-seasonality-lat-gradient}).
+% In addition, VL-CF's CO_2 seasonality change follows the historical one up to 2023,
+% rather than diverging from it from 2016 like the rest of VL-CF's data
+% (Sect.~\ref{sssec:methods-co2-project-seasonality-lat-gradient}).
 This should be rectified in future work and we will endeavour to release an updated version of VL-CF without this issue in case any ESM team wishes to quantify the impact of this difference.
 Based on the work in \citet{meinshausen_ssp-ghgs_2020},
 which showed that the sensitivity of projections to latitudinal gradients and seasonality was small,
 we expect the impact to be small and therefore have not recommended that any simulations that use the existing VL-CF dataset be re-run.
 
-The sixth issue is inconsistencies between the methods used for the historical and scenario datasets.
+The sixth issue is inconsistencies between the methods used for the historical dataset and for the projections.
 Specifically, NPP is used to drive seasonality change in the future
 but a composite of global-, annual-mean concentrations and temperature is used to drive the same changes in the historical dataset \citep{nicholls_historical-ghgs_2026}.
 In addition, the latitudinal gradient is based on regressions that use different emissions sets.
+For the gases for which we re-derive the regressions (CO_2, CH_4 and N_2O),
+we use the CMIP7 historical emissions, rather than the emissions used during the production of the historical dataset.
+For the other gases, we use the historical dataset's regressions,
+which are against the SSP2-4.5 emissions,
+but then apply them with the CMIP7 emissions.
 % The difference is largest for CH_4.
 % % value-check: {"tag": "ch4-lat-gradient-regression-slope-ratio-to-historical", "unit": "dimensionless", "lower": 5.5, "upper": 5.7}
 % The slope of our regression is around 5.6 times that of the regression used in the historical dataset

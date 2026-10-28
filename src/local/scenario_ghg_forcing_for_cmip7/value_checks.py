@@ -6,6 +6,7 @@ See [local.value_checks][] for how these are used.
 
 from __future__ import annotations
 
+import json
 from functools import partial
 from pathlib import Path
 
@@ -26,15 +27,21 @@ from local.scenario_ghg_forcing_for_cmip7.esgf_data import (
     get_scenario_yearly_global_mean,
 )
 from local.scenario_ghg_forcing_for_cmip7.methods_data import (
+    CO2_SEASONALITY_REGRESSION,
     HISTORICAL_INTERIM_DIR,
     get_max_radiative_effect_difference,
+    get_projected_pcs,
     get_regression,
 )
 from local.scenario_ghg_forcing_for_cmip7.rerun_projections import (
     MARKERS,
     SINGLE_PROJECTION_GASES,
+    get_regression_info_file,
 )
-from local.scenario_ghg_forcing_for_cmip7.rerun_vl_cf import VL_CF_MARKER
+from local.scenario_ghg_forcing_for_cmip7.rerun_vl_cf import (
+    VL_CF_HARMONISATION_YEAR,
+    VL_CF_MARKER,
+)
 from local.scenario_ghg_forcing_for_cmip7.scenarios import CMIP7_SCENARIOS
 from local.value_checks import CheckValue, ValueCheck
 
@@ -283,6 +290,156 @@ def get_ch4_lat_gradient_regression_year(bundle_dir: Path, *, last: bool) -> Che
     )
 
 
+VL_CF_REGRESSION_KEYS = (CO2_SEASONALITY_REGRESSION, "co2", "ch4", "n2o")
+"""Keys of the regressions which were re-calculated for VL-CF, see [get_regression][]"""
+
+
+def get_regression_slope(key: str, bundle_dir: Path, last_year: int | None) -> float:
+    """
+    Get the slope of one of our regressions, fitted up to a given year
+
+    Parameters
+    ----------
+    key
+        Key of the regression, see [get_regression][]
+
+    bundle_dir
+        Directory which holds the original run's bundle (including our re-runs)
+
+    last_year
+        Last year to fit over
+
+        If `None`, all the years the regression uses (as for the ScenarioMIP scenarios).
+
+    Returns
+    -------
+    :
+        Slope, in the regression's units
+    """
+    data, _ = get_regression(key, bundle_dir=bundle_dir)
+    if last_year is not None:
+        data = data[data["year"] <= last_year]
+
+    return float(np.polyfit(data["x"], data["y"], 1)[0])
+
+
+def get_vl_cf_regression_slope_ratio(key: str, bundle_dir: Path) -> CheckValue:
+    """
+    Get the ratio of VL-CF's regression slope to the ScenarioMIP scenarios'
+
+    VL-CF's regressions only use the years up to its harmonisation year,
+    see [get_vl_cf_regression_reproduced][].
+
+    Parameters
+    ----------
+    key
+        Key of the regression, see [get_regression][]
+
+    bundle_dir
+        Directory which holds the original run's bundle (including our re-runs)
+
+    Returns
+    -------
+    :
+        VL-CF's slope divided by the ScenarioMIP scenarios' slope
+    """
+    vl_cf = get_regression_slope(key, bundle_dir, VL_CF_HARMONISATION_YEAR)
+    scenariomip = get_regression_slope(key, bundle_dir, None)
+
+    return openscm_units.unit_registry.Quantity(vl_cf / scenariomip, "dimensionless")
+
+
+def get_vl_cf_regression_reproduced(bundle_dir: Path) -> CheckValue:
+    """
+    Get whether fitting up to VL-CF's harmonisation year reproduces its regression
+
+    We only have VL-CF's own regression result for the CO2 seasonality change PC
+    (from our re-run of the VL-CF notebook).
+    Reproducing it this way confirms how VL-CF's regressions were calculated,
+    which [get_vl_cf_regression_slope_ratio][] relies on for the other regressions.
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory which holds the original run's bundle (including our re-runs)
+
+    Returns
+    -------
+    :
+        Whether the slopes agree
+    """
+    info = json.loads(
+        (
+            bundle_dir / get_regression_info_file(f"{CO2_SEASONALITY_REGRESSION}-vl-cf")
+        ).read_text()
+    )
+    refit = get_regression_slope(
+        CO2_SEASONALITY_REGRESSION, bundle_dir, VL_CF_HARMONISATION_YEAR
+    )
+
+    return bool(np.isclose(refit, info["slope"], rtol=1e-8))
+
+
+def get_regression_year(key: str, bundle_dir: Path, *, last: bool) -> CheckValue:
+    """
+    Get the first or last year one of our regressions is fitted over
+
+    For the ScenarioMIP scenarios.
+
+    Parameters
+    ----------
+    key
+        Key of the regression, see [get_regression][]
+
+    bundle_dir
+        Directory which holds the original run's bundle (including our re-runs)
+
+    last
+        Whether to get the last year (otherwise the first)
+
+    Returns
+    -------
+    :
+        The year
+    """
+    data, _ = get_regression(key, bundle_dir=bundle_dir)
+    years = data["year"]
+
+    return openscm_units.unit_registry.Quantity(
+        int(years.max() if last else years.min()), "yr"
+    )
+
+
+def get_pc0_in_year(gas: str, scenario: str, year: int, bundle_dir: Path) -> CheckValue:
+    """
+    Get the projected first latitudinal gradient PC in a year
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    scenario
+        Scenario (or VL-CF) of interest
+
+    year
+        Year of interest
+
+    bundle_dir
+        Directory which holds the original run's bundle (including our re-runs)
+
+    Returns
+    -------
+    :
+        The PC's annual value
+    """
+    pcs = get_projected_pcs(gas, bundle_dir=bundle_dir, include_vl_cf=True)
+    in_year = pcs.loc[(pcs.index >= year) & (pcs.index < year + 1), (0, scenario)]
+    (value,) = in_year.to_numpy()
+
+    return openscm_units.unit_registry.Quantity(float(value), "dimensionless")
+
+
 def get_value_checks(bundle_dir: Path = BUNDLE_DIR) -> tuple[ValueCheck, ...]:
     """
     Get the value checks for the scenario GHG manuscript
@@ -370,5 +527,49 @@ def get_value_checks(bundle_dir: Path = BUNDLE_DIR) -> tuple[ValueCheck, ...]:
                 ),
             )
             for end in ("first", "last")
+        ),
+        *(
+            ValueCheck(
+                tag=f"{key}-vl-cf-regression-slope-ratio",
+                calculate=partial(get_vl_cf_regression_slope_ratio, key, bundle_dir),
+                description=(
+                    f"Slope of VL-CF's {key} regression "
+                    "divided by the ScenarioMIP scenarios'"
+                ),
+            )
+            for key in VL_CF_REGRESSION_KEYS
+        ),
+        ValueCheck(
+            tag="vl-cf-regression-is-up-to-harmonisation-year",
+            calculate=partial(get_vl_cf_regression_reproduced, bundle_dir),
+            description=(
+                "Fitting up to VL-CF's harmonisation year "
+                "reproduces VL-CF's CO2 seasonality change regression"
+            ),
+        ),
+        *(
+            ValueCheck(
+                tag=f"{CO2_SEASONALITY_REGRESSION}-regression-{end}-year",
+                calculate=partial(
+                    get_regression_year,
+                    CO2_SEASONALITY_REGRESSION,
+                    bundle_dir,
+                    last=end == "last",
+                ),
+                description=(
+                    f"{end.capitalize()} year the CO2 seasonality change PC "
+                    "regression is fitted over (ScenarioMIP scenarios)"
+                ),
+            )
+            for end in ("first", "last")
+        ),
+        *(
+            ValueCheck(
+                tag=f"{gas}-{scenario}-pc0-2300",
+                calculate=partial(get_pc0_in_year, gas, scenario, 2300, bundle_dir),
+                description=f"{gas} first latitudinal gradient PC in 2300, {scenario}",
+            )
+            for gas in ("n2o", "hfc134a")
+            for scenario in ("vl", VL_CF_MARKER[-1])
         ),
     )

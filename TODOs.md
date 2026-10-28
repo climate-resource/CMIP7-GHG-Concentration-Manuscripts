@@ -41,34 +41,47 @@ Introduction
 
 Methods
 
-- [ ] `methods.tex:112-113`: replace the bracketed "[TODO discussion point about this: ...]" (why the one-box route)
+- [x] `methods.tex:112-113`: replace the bracketed "[TODO discussion point about this: ...]" (why the one-box route)
       with a forward ref, the discussion already covers it (`discussion.tex:49-54`).
-- [ ] `methods.tex:88`: decide whether the single concentration projection route needs a forward ref to the discussion
-      (`discussion.tex:64-70` covers using a single source for ODSs).
-- [ ] `methods.tex:274-277`: we also run MAGICC v7.5.3 for every scenario.
+- [x] `methods.tex:88`: decide whether the single concentration projection route needs a forward ref to the discussion
+      (`discussion.tex:64-70` covers using a single source for ODSs). Added one.
+- [x] `methods.tex:274-277`: we also run MAGICC v7.5.3 for every scenario.
       Fig. `methods-ch4` a, b already shows these runs, but the CO_2 Step 1 text doesn't say we run v7.5.3.
       Decide whether to say so there (ZNTODO says don't show the tiny CO_2 feedback difference unless asked).
-- [ ] `methods.tex:288-290`: say that using CMIP6 concentrations to 2014 maintains consistency with the AR6 calibration,
+      Now says we also run v7.5.3 (no wetland feedback) for comparison, not used in the output, pointing to CH_4 Step 1.
+- [x] `methods.tex:288-290`: say that using CMIP6 concentrations to 2014 maintains consistency with the AR6 calibration,
       recalibrating on CMIP7 history would be better, but the effect is minor given how similar the histories are
       (partly covered at `methods.tex:293-294` already).
-- [ ] `methods.tex:353-356`: check use of "scenario" throughout
+- [x] `methods.tex:353-356`: check use of "scenario" throughout
       ("scenario" only for the ScenarioMIP scenarios, "experiments"/"datasets" when VL-CF is included).
-- [ ] VL-CF regression inconsistencies: state each in the methods text (and check `discussion.tex:72-87` covers them):
-    - [ ] CO_2 seasonality change PC vs. NPP (`methods.tex:425-435`, also the commented "that's a bug" note at `methods.tex:444-450`):
+      Whole manuscript checked. Changed where VL-CF is included (results panel c and the groups, abstract,
+      discussion, `methods.tex` "scenarion name", intro "scenario datasets").
+      Left: ScenarioMIP/CMIP6 scenarios, scenarios as a concept, emissions "which underpin the scenarios".
+      Intro now also says VL-CF's data starts in 2016.
+- [x] VL-CF regression inconsistencies: state each in the methods text (and check `discussion.tex:72-87` covers them).
+      Done, with value checks (`<key>-vl-cf-regression-slope-ratio`, computed by refitting up to 2015,
+      which `vl-cf-regression-is-up-to-harmonisation-year` confirms reproduces VL-CF's CO_2 seasonality regression;
+      `<gas>-<vl|vl-cf>-pc0-2300`). The discussion's fifth issue now says which are biggest
+      and that VL-CF's CO_2 seasonality change follows history to 2023.
+    - [x] CO_2 seasonality change PC vs. NPP (`methods.tex:425-435`, also the commented "that's a bug" note at `methods.tex:444-450`):
           VL-CF regresses over 1981-2015 (slope 1.78 yr / GtC) vs. 1981-2023 for the markers (1.28 yr / GtC),
           i.e. ~40% more seasonality change for the same NPP change.
           Also, the seasonality change PC is anchored in 2023 (not $y_h$) in every experiment, including VL-CF.
-    - [ ] CH_4 lat. gradient PC0 (`methods.tex:604-617`): VL-CF regression ~4% steeper, anchored in 2015. Small effect.
-    - [ ] N_2O lat. gradient PC0 (`methods.tex:686-697`): VL-CF regression ~40% steeper,
+    - [x] CH_4 lat. gradient PC0 (`methods.tex:604-617`): VL-CF regression ~4% steeper, anchored in 2015. Small effect.
+    - [x] N_2O lat. gradient PC0 (`methods.tex:686-697`): VL-CF regression ~40% steeper,
           PC0 ends near -0.14 (VL-CF) vs. -0.55 (VL) with the same emissions after 2100.
           One-EOF gases (`1030`) only differ by anchor, giving a constant offset (e.g. HFC-134a in 2300: VL-CF -1.81, VL 4.54).
-- [ ] `methods.tex:709-710`: check the discussion says that the historical one-EOF regressions are against RCMIP SSP2-4.5 emissions,
+- [x] `methods.tex:709-710`: check the discussion says that the historical one-EOF regressions are against RCMIP SSP2-4.5 emissions,
       while we apply them to the ScenarioMIP emissions (`discussion.tex:92` touches on this).
-- [ ] `methods.tex:62-68` and the commented-out VL-CF section (`methods.tex:990-1012`):
+      It does now (sixth issue), also saying the re-derived regressions use CMIP7, not historical-dataset, emissions.
+- [x] `methods.tex:62-68` and the commented-out VL-CF section (`methods.tex:990-1012`):
       VL-CF equals history up to 2021 and VL from 2022 for the non-MAGICC gases.
       The Fig. `methods-hfc125` caption says so, but nowhere says why. Add a sentence, then delete the commented-out section.
-- [ ] `methods.tex:325-326` (notes for the ScenarioMIP paper): check whether "scaling arguments for whatever else is left
+      Sentence added in the general approach (their emissions are VL's), the section was already deleted.
+- [x] `methods.tex:325-326` (notes for the ScenarioMIP paper): check whether "scaling arguments for whatever else is left
       (based on M2020)" and "CO2 AFOLU from IAMs" need to be described here.
+      No: the original run's code takes the emissions team's complete emissions as is (no AFOLU handling),
+      so both belong to the ScenarioMIP emissions paper (cited for infilling). Notes left as they are.
 
 Results
 
@@ -159,7 +172,8 @@ Each needs implementing in `src/local/scenario_ghg_forcing_for_cmip7/value_check
     - [ ] `cfc12-like-wmo-historical-agreement-2022` (`methods.tex:782`)
     - [ ] `n-output-variables` (`methods.tex:1061`)
 - [ ] Tag only, needs bounds/spec as well as implementing:
-    - [ ] `co2-seasonality-change-npp-regression-years` (`methods.tex:424`)
+    - [x] `co2-seasonality-change-npp-regression-years` (`methods.tex:424`)
+          Done as `co2-seasonality-change-regression-first-year`/`-last-year`.
     - [ ] `co2-lat-gradient-regression-years` (`methods.tex:478`)
     - [ ] `n2o-lat-gradient-regression-years` (`methods.tex:699`)
     - [ ] `cfc12-like-gases` (`methods.tex:752`), `hfc125-like-gases` (`methods.tex:920`)
@@ -226,7 +240,7 @@ Not marked as TODOs, spotted while compiling this list.
 
 - [ ] `abstract.tex:12-13,18-19`: CH_4 and N_2O units are ppm, should be ppb.
 - [ ] `abstract.tex:14,20`: "CFC12" → "CFC-12".
-- [ ] `introduction.tex:104`: extensions run "2101 to the end of 2025", should be 2500.
+- [x] `introduction.tex:104`: extensions run "2101 to the end of 2025", should be 2500.
 - [ ] `introduction.tex:96`: "how add" → "how to add".
 - [ ] `introduction.tex:79`: "once an agreed communication format has been agreed".
 - [ ] `discussion.tex:66`: "Montreal Agreement" → "Montreal Protocol".
