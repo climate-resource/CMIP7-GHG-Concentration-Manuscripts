@@ -75,6 +75,8 @@ from local.scenario_ghg_forcing_for_cmip7.results_figure import (
 FIGURES_SOURCES = [
     Path(local.scenario_ghg_forcing_for_cmip7.methods_figures.__file__),
     Path(local.scenario_ghg_forcing_for_cmip7.methods_data.__file__),
+    # The scenarios' colours
+    Path(local.scenario_ghg_forcing_for_cmip7.scenarios.__file__),
 ]
 """The modules which make the figures (they are re-made if these change)"""
 

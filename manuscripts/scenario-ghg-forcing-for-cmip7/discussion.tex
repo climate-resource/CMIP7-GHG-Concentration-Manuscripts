@@ -80,8 +80,10 @@ As a result of the tight delivery timelines,
 differences between VL-CF and the rest of the experiments emerged that were not intended.
 These are all related to the fact that VL-CF diverges from history in 2016.
 The issue relates to CO_2's seasonality change and the latitudinal gradient used for CO_2, CH_4 and N_2O.
-In short, the regression with historical drivers was re-calculated over the period up until 2015 only,
+In short, for VL-CF the regression with historical drivers was re-calculated over the period up until 2015 only,
 rather than over the full historical period as was done for the ScenarioMIP experiments.
+In addition, the second PC, where it is used,
+follows the historical PC values from 2016 to 2023 then returns to 2015 values for the future.
 Therefore the sensitivity of the seasonality for CO_2 and latitudinal gradients for CO_2, CH_4 and N_2O
 to their drivers is different in VL-CF than in the ScenarioMIP scenarios, which doesn't make physical sense.
 % % value-check: {"tag": "co2-seasonality-change-vl-cf-regression-slope-ratio", "unit": "dimensionless", "lower": 1.35, "upper": 1.45}

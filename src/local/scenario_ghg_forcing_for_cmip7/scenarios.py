@@ -77,13 +77,11 @@ class Scenario:
 SCENARIO_GROUPS = ("higher-peak", "medium-peak", "lower-peak")
 """Groups of scenarios, in the order they are shown (top to bottom)"""
 
-# TODO: get official colour palettes.
-# These are the colours we have been using so far
-# (`notebooks/cci-2026-poster.py`, also the GHG viewer).
+# The CMIP7 colours are the official CMIP7 ScenarioMIP palette
+# (VL-CF isn't part of ScenarioMIP, so has no official colour).
 # The CMIP6 ones are the IPCC AR6 SSP colours.
 CMIP7_SCENARIOS = (
     # PolMIP's counterfactual to VL (emissions diverge from history from 2016).
-    # TODO: get an official colour for VL-CF.
     # Grey, as a counterfactual, and to stay clear of the other low scenarios' colours.
     Scenario(
         "vl-cf",
@@ -94,35 +92,35 @@ CMIP7_SCENARIOS = (
         ("CR-vl-cf-1-1-0", "CR-vl-cf-ext-1-1-0"),
     ),
     Scenario(
-        "vl", "VL", "CMIP7", "#24a4ff", "lower-peak", ("CR-vl-1-1-0", "CR-vl-ext-1-1-0")
+        "vl", "VL", "CMIP7", "#16188F", "lower-peak", ("CR-vl-1-1-0", "CR-vl-ext-1-1-0")
     ),
     Scenario(
-        "ln", "LN", "CMIP7", "#4a0daf", "lower-peak", ("CR-ln-1-1-0", "CR-ln-ext-1-1-0")
+        "ln", "LN", "CMIP7", "#22e5db", "lower-peak", ("CR-ln-1-1-0", "CR-ln-ext-1-1-0")
     ),
     Scenario(
-        "l", "L", "CMIP7", "#00cc69", "lower-peak", ("CR-l-1-1-0", "CR-l-ext-1-1-0")
+        "l", "L", "CMIP7", "#20A359", "lower-peak", ("CR-l-1-1-0", "CR-l-ext-1-1-0")
     ),
     Scenario(
         "ml",
         "ML",
         "CMIP7",
-        "#f5ac00",
+        "#dec820",
         "medium-peak",
         ("CR-ml-1-1-0", "CR-ml-ext-1-1-0"),
     ),
     Scenario(
-        "m", "M", "CMIP7", "#ffa9dc", "medium-peak", ("CR-m-1-1-0", "CR-m-ext-1-1-0")
+        "m", "M", "CMIP7", "#fc7b03", "medium-peak", ("CR-m-1-1-0", "CR-m-ext-1-1-0")
     ),
     Scenario(
         "hl",
         "HL",
         "CMIP7",
-        "#8f003b",
+        "#E744F6",
         "higher-peak",
         ("CR-hl-1-1-0", "CR-hl-ext-1-1-0"),
     ),
     Scenario(
-        "h", "H", "CMIP7", "#700000", "higher-peak", ("CR-h-1-1-0", "CR-h-ext-1-1-0")
+        "h", "H", "CMIP7", "#a41212", "higher-peak", ("CR-h-1-1-0", "CR-h-ext-1-1-0")
     ),
 )
 """CMIP7 scenarios, lowest to highest"""

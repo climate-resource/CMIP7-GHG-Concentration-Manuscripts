@@ -6,7 +6,9 @@ See [local.value_checks][] for how these are used.
 
 from __future__ import annotations
 
+import importlib.util
 import json
+import re
 from functools import cache, partial
 from pathlib import Path
 
@@ -27,24 +29,35 @@ from local.scenario_ghg_forcing_for_cmip7.esgf_data import (
     get_history_yearly_global_mean,
     get_scenario_yearly_global_mean,
 )
+from local.scenario_ghg_forcing_for_cmip7.magicc_jump import (
+    EXPERIMENTS,
+    MAGICC_DIR,
+    MAGICC_PROB_DISTRIBUTION,
+    get_complete_emissions_file,
+)
 from local.scenario_ghg_forcing_for_cmip7.magicc_jump_summary import (
     JUMP_PERIODS,
     JUMP_VARIABLES,
     MAGICC_JUMP_SUMMARY,
+    load_published,
 )
 from local.scenario_ghg_forcing_for_cmip7.methods_data import (
     CO2_SEASONALITY_REGRESSION,
     ESGF_READY_DIRS,
     HISTORICAL_ESGF_READY_DIR,
     HISTORICAL_INTERIM_DIR,
+    INTERIM_DIR,
+    LAST_HISTORICAL_YEAR,
     get_max_radiative_effect_difference,
     get_projected_pcs,
     get_regression,
+    load_historical_yearly_global_mean,
     load_published_yearly_global_mean,
 )
 from local.scenario_ghg_forcing_for_cmip7.rerun_projections import (
     MARKERS,
     SINGLE_PROJECTION_GASES,
+    TWO_EOF_GASES,
     get_regression_info_file,
 )
 from local.scenario_ghg_forcing_for_cmip7.rerun_vl_cf import (
@@ -904,6 +917,789 @@ def get_magicc_jump_max_difference(
     return openscm_units.unit_registry.Quantity(value["value"], units)
 
 
+SCENARIOMIP_EXPERIMENTS = tuple(name for _, _, name in MARKERS)
+"""The ScenarioMIP experiments (i.e. every experiment except VL-CF)"""
+
+HARMONISATION_YEARS = {
+    **dict.fromkeys(SCENARIOMIP_EXPERIMENTS, LAST_HISTORICAL_YEAR),
+    VL_CF_MARKER[-1]: VL_CF_HARMONISATION_YEAR,
+}
+"""Year in which each experiment is harmonised to (and leaves) history"""
+
+
+def to_check_value(values: list[float] | list[int], units: str) -> CheckValue:
+    """
+    Convert values which should all be the same to a check value
+
+    If they are all the same, a single quantity.
+    Otherwise, a quantity with the lowest and highest values,
+    so the check passes only if both are within the statement's bounds.
+    """
+    if len(set(values)) == 1:
+        return openscm_units.unit_registry.Quantity(values[0], units)
+
+    return openscm_units.unit_registry.Quantity([min(values), max(values)], units)
+
+
+def get_published_source_id_dirs(bundle_dir: Path) -> dict[str, Path]:
+    """
+    Get the directory of every published source ID
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory which holds the original run's bundle
+
+    Returns
+    -------
+    :
+        Directory of each source ID, keyed by source ID
+    """
+    return {
+        source_id_dir.name: source_id_dir
+        for esgf_ready_dir in ESGF_READY_DIRS
+        for source_id_dir in sorted((bundle_dir / esgf_ready_dir).iterdir())
+    }
+
+
+def get_published_variables(bundle_dir: Path) -> tuple[str, ...]:
+    """
+    Get the variables (gases and equivalent species) we publish
+
+    Taken from L (every experiment has the same, see [get_n_output_variables][]).
+    """
+    (l_dir,) = (
+        source_id_dir
+        for source_id, source_id_dir in get_published_source_id_dirs(bundle_dir).items()
+        if source_id == SCENARIOS["l"].source_ids[0]
+    )
+
+    return tuple(sorted(p.name for p in (l_dir / "atmos" / "mon").iterdir()))
+
+
+def get_native_grid_lat_band_width(bundle_dir: Path) -> CheckValue:
+    """
+    Get the width of the latitude bands of our native grid
+
+    From the latitude bounds of every published source ID's CO2 native grid files.
+    """
+    widths = set()
+    for source_id_dir in get_published_source_id_dirs(bundle_dir).values():
+        for file in (source_id_dir / "atmos" / "mon" / "co2" / "gnz").glob("*/*.nc"):
+            lat_bnds = xr.open_dataset(file, decode_times=False)["lat_bnds"].values
+            widths.update(np.unique(lat_bnds[:, 1] - lat_bnds[:, 0]).tolist())
+
+    return to_check_value(sorted(widths), "degree")
+
+
+def get_file_time_range(file: Path) -> tuple[str, str]:
+    """
+    Get the time range of a published file from its name
+
+    E.g. `("2022", "2100")` for yearly files
+    and `("202201", "210012")` for monthly files.
+    """
+    return tuple(file.stem.rsplit("_", 1)[1].split("-"))  # type: ignore[return-value]
+
+
+def get_output_year(
+    experiments: tuple[str, ...], bundle_dir: Path, *, last: bool
+) -> CheckValue:
+    """
+    Get the first or last year of our published data
+
+    From the names of the monthly files, so it includes every month
+    (e.g. a last year of 2500 means the data runs to December 2500).
+
+    Parameters
+    ----------
+    experiments
+        Experiments of interest
+
+    bundle_dir
+        Directory which holds the original run's bundle
+
+    last
+        Whether to get the last year (otherwise the first)
+
+    Returns
+    -------
+    :
+        The year (if not the same in all the experiments,
+        the range across them, see [to_check_value][])
+    """
+    source_id_dirs = get_published_source_id_dirs(bundle_dir)
+    years = []
+    for experiment in experiments:
+        months = [
+            month
+            for source_id in SCENARIOS[experiment].source_ids
+            for file in (source_id_dirs[source_id] / "atmos" / "mon").glob("*/*/*/*.nc")
+            for month in get_file_time_range(file)
+        ]
+        month = max(months) if last else min(months)
+        if month.endswith("12" if last else "01"):
+            years.append(int(month[:4]))
+        else:
+            msg = f"{experiment} doesn't cover whole years ({month=})"
+            raise AssertionError(msg)
+
+    return to_check_value(years, "yr")
+
+
+def get_n_output_variables(bundle_dir: Path) -> CheckValue:
+    """
+    Get the number of variables we publish (gases and equivalent species)
+
+    Counted for every published source ID, frequency and grid.
+    """
+    counts = []
+    for source_id_dir in get_published_source_id_dirs(bundle_dir).values():
+        for frequency_dir in (source_id_dir / "atmos").iterdir():
+            variables = {p.parent.name for p in frequency_dir.glob("*/*")}
+            for grid in {p.name for p in frequency_dir.glob("*/*")}:
+                counts.append(
+                    sum((frequency_dir / v / grid).is_dir() for v in variables)
+                )
+
+    return to_check_value(counts, "dimensionless")
+
+
+ESGF_VERSION = "1-1-0"
+"""Version of our published data, as it appears in the source IDs"""
+
+
+def get_source_ids_as_described(bundle_dir: Path) -> CheckValue:
+    """
+    Get whether the published source IDs have the form we describe
+
+    `CR-[experiment]-[version]` up to 2100
+    and `CR-[experiment]-ext-[version]` for the extensions,
+    with the experiment in lowercase.
+    """
+    expected = {
+        source_id
+        for scenario in CMIP7_SCENARIOS
+        for source_id in (
+            f"CR-{scenario.name.lower()}-{ESGF_VERSION}",
+            f"CR-{scenario.name.lower()}-ext-{ESGF_VERSION}",
+        )
+    }
+    known = {
+        source_id for scenario in CMIP7_SCENARIOS for source_id in scenario.source_ids
+    }
+
+    return set(get_published_source_id_dirs(bundle_dir)) == expected == known
+
+
+EXTENSION_FILE_YEARS = ((2101, 2200), (2201, 2300), (2301, 2400), (2401, 2500))
+"""Years covered by each of the extensions' files"""
+
+
+def get_output_time_chunks_as_described(bundle_dir: Path) -> CheckValue:
+    """
+    Get whether the published files are split in time as we describe
+
+    Up to 2100, a single file per variable, frequency and grid
+    (from 2022 for the ScenarioMIP experiments, 2016 for VL-CF).
+    The extensions (2101-2500), one file per 100 years.
+    """
+    source_id_dirs = get_published_source_id_dirs(bundle_dir)
+    for scenario in CMIP7_SCENARIOS:
+        main, extension = scenario.source_ids
+        first_year = HARMONISATION_YEARS[scenario.name] + (
+            1 if scenario.name == VL_CF_MARKER[-1] else 0
+        )
+        expected_years = {
+            main: {(first_year, 2100)},
+            extension: set(EXTENSION_FILE_YEARS),
+        }
+        for source_id, years in expected_years.items():
+            for frequency_dir in (source_id_dirs[source_id] / "atmos").iterdir():
+                for grid_dir in frequency_dir.glob("*/*"):
+                    ranges = {
+                        get_file_time_range(file) for file in grid_dir.glob("*/*.nc")
+                    }
+                    if frequency_dir.name == "mon":
+                        expected = {(f"{s}01", f"{e}12") for s, e in years}
+                    else:
+                        expected = {(str(s), str(e)) for s, e in years}
+
+                    if ranges != expected:
+                        return False
+
+    return True
+
+
+def get_magicc_n_ensemble_members(bundle_dir: Path) -> CheckValue:
+    """
+    Get the number of ensemble members in the published MAGICC output
+
+    For every experiment.
+    """
+    return to_check_value(
+        [
+            int(
+                load_published(name, ("Surface Air Temperature Change",), bundle_dir)
+                .index.get_level_values("run_id")
+                .nunique()
+            )
+            for _, _, name in EXPERIMENTS
+        ],
+        "dimensionless",
+    )
+
+
+def get_magicc_switch_from_conc_to_emissions_year(bundle_dir: Path) -> CheckValue:
+    """
+    Get the year in which MAGICC switches from concentrations to emissions
+
+    From MAGICC's default configuration
+    (the bundle's MAGICC, extracted by the MAGICC jump runs),
+    after checking that the probabilistic distribution doesn't override it.
+
+    Returns
+    -------
+    :
+        The year (if not the same for every group of gases,
+        the range across them, see [to_check_value][])
+    """
+    cfg = (bundle_dir / MAGICC_DIR / "run" / "MAGCFG_DEFAULTALL.CFG").read_text()
+    years = [
+        int(year)
+        for year in re.findall(
+            r"^\s*\w+_SWITCHFROMCONC2EMIS_YEAR\s*=\s*(\d+)", cfg, flags=re.M | re.I
+        )
+    ]
+    if not years:
+        raise AssertionError(cfg)
+
+    prob_distribution = json.loads((bundle_dir / MAGICC_PROB_DISTRIBUTION).read_text())
+    overridden = {
+        key
+        for configuration in prob_distribution["configurations"]
+        for key in configuration["nml_allcfgs"]
+        if "switchfromconc2emis" in key.lower()
+    }
+    if overridden:
+        raise AssertionError(overridden)
+
+    return to_check_value(years, "yr")
+
+
+CONVERGED_RTOL = 5e-7
+"""Relative difference below which our data equals MAGICC's median
+
+Above the numerical noise in the published files (up to around 6e-8),
+below the smallest difference the year before convergence (around 2e-6).
+"""
+
+
+def get_harmonisation_convergence_time(gas: str, bundle_dir: Path) -> CheckValue:
+    """
+    Get the convergence time of the harmonisation of MAGICC's output
+
+    From the data:
+    the time from the harmonisation year
+    until our global-, annual-mean equals MAGICC's median (from then on).
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory which holds the original run's bundle
+
+    Returns
+    -------
+    :
+        The convergence time (if not the same in every experiment,
+        the range across them, see [to_check_value][])
+    """
+    times = []
+    for _, _, name in EXPERIMENTS:
+        magicc = load_published(
+            name, (f"Atmospheric Concentrations|{gas.upper()}",), bundle_dir
+        ).median(axis="index")
+        ours = to_yearly_series(
+            load_published_yearly_global_mean(gas, name, bundle_dir)
+        )
+        years = ours.index.intersection(magicc.index)
+        relative_difference = (ours[years] - magicc[years].to_numpy()).abs() / ours[
+            years
+        ].abs()
+        not_converged = relative_difference[relative_difference > CONVERGED_RTOL]
+        times.append(int(not_converged.index.max()) + 1 - HARMONISATION_YEARS[name])
+
+    return to_check_value(times, "yr")
+
+
+def get_scenariomip_max_relative_difference_monthly_global_mean(
+    year: int, bundle_dir: Path
+) -> CheckValue:
+    """
+    Get the largest difference between the ScenarioMIP experiments' monthly global-means
+
+    Relative to the first experiment,
+    over every published variable and month in `year`.
+    """
+    source_id_dirs = get_published_source_id_dirs(bundle_dir)
+    largest = 0.0
+    for variable in get_published_variables(bundle_dir):
+        values = []
+        for experiment in SCENARIOMIP_EXPERIMENTS:
+            source_id_dir = source_id_dirs[SCENARIOS[experiment].source_ids[0]]
+            (file,) = (source_id_dir / "atmos" / "mon" / variable / "gm").glob("*/*.nc")
+            da = xr.load_dataset(
+                file, decode_times=xr.coders.CFDatetimeCoder(use_cftime=True)
+            )[variable]
+            values.append(da.sel(time=da["time"].dt.year == year).to_numpy())
+
+        stacked = np.stack(values)
+        largest = max(
+            largest,
+            float((np.abs(stacked - stacked[0]) / np.abs(stacked[0])).max()),
+        )
+
+    return openscm_units.unit_registry.Quantity(largest, "dimensionless")
+
+
+ANNUAL_MEANS_DIR = INTERIM_DIR / "annual-means"
+"""The original run's global-, annual-means, relative to the bundle's root"""
+
+PROJECTION_METHODS = (
+    "gradient-aware-harmonisation",
+    "one-box",
+    "single-concentration-projection",
+)
+"""The ways we project global-, annual-means (and the prefix of their interim files)"""
+
+PROJECTION_METHOD_RTOL = 1e-5
+"""Difference (relative to the largest value) below which our data matches a method's"""
+
+
+@cache
+def get_projection_method(gas: str, bundle_dir: Path) -> str:
+    """
+    Get the method used to project a gas' global-, annual-mean
+
+    From the data: the method whose interim global-, annual-mean
+    matches our published data.
+    We compare from 2023,
+    because in the harmonisation year our data is the historical dataset's.
+    The interim files hold different experiments for different methods
+    (VL-CF for MAGICC plus harmonisation, see `rerun_projections`),
+    so we compare the experiment the file holds
+    (L for the single concentration projections, which are the same in all experiments).
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory which holds the original run's bundle
+
+    Returns
+    -------
+    :
+        The method, one of [PROJECTION_METHODS][]
+    """
+    matches = []
+    for method in PROJECTION_METHODS:
+        file = bundle_dir / ANNUAL_MEANS_DIR / f"{method}_{gas}_annual-mean.feather"
+        if not file.exists():
+            continue
+
+        interim_df = pd.read_feather(file)
+        experiment = interim_df.index.get_level_values("scenario")[0]
+        interim = interim_df.iloc[0]
+        interim.index = interim.index.astype(int)
+        published = to_yearly_series(
+            load_published_yearly_global_mean(
+                gas, "l" if experiment == "all" else experiment, bundle_dir
+            )
+        )
+        years = published.index.intersection(interim.index)
+        years = years[years > LAST_HISTORICAL_YEAR]
+        difference = np.abs(published[years].to_numpy() - interim[years].to_numpy())
+        if difference.max() / np.abs(interim[years].to_numpy()).max() < (
+            PROJECTION_METHOD_RTOL
+        ):
+            matches.append(method)
+
+    if len(matches) != 1:
+        raise AssertionError((gas, matches))
+
+    return matches[0]
+
+
+def get_gases_with_projection_method(method: str, bundle_dir: Path) -> set[str]:
+    """
+    Get the published gases whose global-, annual-mean uses a projection method
+
+    See [get_projection_method][].
+    Equivalent species are left out (they are calculated from the other gases).
+    """
+    return {
+        gas
+        for gas in get_published_variables(bundle_dir)
+        if not gas.endswith("eq") and get_projection_method(gas, bundle_dir) == method
+    }
+
+
+CFC12_LIKE_GASES_WMO_2022 = (
+    "ccl4",
+    "cfc11",
+    "cfc113",
+    "cfc114",
+    "cfc115",
+    "ch3br",
+    "ch3ccl3",
+    "ch3cl",
+    "halon1211",
+    "halon1301",
+    "halon2402",
+)
+"""Gases processed like CFC-12 with projections from WMO (2022), as listed"""
+
+CFC12_LIKE_GASES_WESTERN_ET_AL_2024 = ("hcfc22", "hcfc141b", "hcfc142b")
+"""Gases processed like CFC-12 with projections from Western et al. (2024), as listed"""
+
+HFC125_LIKE_GASES = (
+    "c2f6",
+    "c3f8",
+    "c4f10",
+    "c5f12",
+    "c6f14",
+    "c7f16",
+    "c8f18",
+    "cc4f8",
+    "cf4",
+    "ch2cl2",
+    "chcl3",
+    "hfc143a",
+    "hfc227ea",
+    "hfc236fa",
+    "hfc4310mee",
+    "nf3",
+    "sf6",
+    "so2f2",
+)
+"""Gases processed like HFC-125, as listed in the text"""
+
+
+def get_cfc12_like_gases_as_described(bundle_dir: Path) -> CheckValue:
+    """
+    Get whether the gases processed like CFC-12 are those we list
+
+    From the data (see [get_projection_method][]),
+    with the Western et al. (2024) gases being those
+    whose projections were extended (`data/interim/western-et-al-2024`).
+    """
+    single_projection = get_gases_with_projection_method(
+        "single-concentration-projection", bundle_dir
+    )
+    western = {
+        file.stem.split("_")[1]
+        for file in (bundle_dir / INTERIM_DIR / "western-et-al-2024").glob(
+            "western-et-al-2024_*_extended.feather"
+        )
+    }
+
+    return single_projection == {
+        "cfc12",
+        *CFC12_LIKE_GASES_WMO_2022,
+        *CFC12_LIKE_GASES_WESTERN_ET_AL_2024,
+    } and western == set(CFC12_LIKE_GASES_WESTERN_ET_AL_2024)
+
+
+def get_hfc125_like_gases_as_described(bundle_dir: Path) -> CheckValue:
+    """
+    Get whether the gases processed like HFC-125 are those we list
+
+    From the data (see [get_projection_method][]).
+    """
+    return get_gases_with_projection_method("one-box", bundle_dir) == {
+        "hfc125",
+        *HFC125_LIKE_GASES,
+    }
+
+
+def get_single_projection_max_relative_difference_from_history(
+    year: int, bundle_dir: Path
+) -> CheckValue:
+    """
+    Get the largest difference between the single concentration projections and history
+
+    Relative to the historical dataset,
+    over the gases processed like CFC-12 (in our output), in `year`.
+    The projections as used, i.e. before they are joined to the history
+    (from the interim files).
+    """
+    largest = 0.0
+    for gas in get_gases_with_projection_method(
+        "single-concentration-projection", bundle_dir
+    ):
+        projection_df = pd.read_feather(
+            bundle_dir
+            / ANNUAL_MEANS_DIR
+            / f"single-concentration-projection_{gas}_annual-mean.feather"
+        )
+        projection = projection_df.iloc[0]
+        projection.index = projection.index.astype(int)
+        history_da = load_historical_yearly_global_mean(gas)
+        if history_da.attrs["units"] != projection_df.index.get_level_values("unit")[0]:
+            raise NotImplementedError(gas)
+
+        history = to_yearly_series(history_da)
+        largest = max(
+            largest, float(abs(projection[year] - history[year]) / history[year])
+        )
+
+    return openscm_units.unit_registry.Quantity(largest, "dimensionless")
+
+
+WMO_2022_TABLE_A5_LIFETIMES = {
+    "c2f6": (10000.0, 10000.0),
+    "c3f8": (2600.0, 2600.0),
+    "c4f10": (2600.0, 2600.0),
+    "c5f12": (4100.0, 4100.0),
+    "c6f14": (3100.0, 3100.0),
+    "c7f16": (3000.0, 3000.0),
+    "c8f18": (3000.0, 3000.0),
+    "cc4f8": (3200.0, 3200.0),
+    "cf4": (50000.0, 50000.0),
+    "ch2cl2": (176.0 / 365.0, 176.0 / 365.0),
+    "chcl3": (178.0 / 365.0, 178.0 / 365.0),
+    "hcfc141b": (8.81, 8.81),
+    "hcfc142b": (17.1, 17.1),
+    "hcfc22": (11.6, 11.6),
+    "hfc125": (30.7, 30.7),
+    "hfc143a": (51.8, 51.8),
+    "hfc227ea": (35.8, 35.8),
+    "hfc236fa": (213.0, 213.0),
+    "hfc4310mee": (17.0, 17.0),
+    "nf3": (569.0, 569.0),
+    "sf6": (850.0, 1280.0),
+    "so2f2": (36.0, 36.0),
+}
+"""Total lifetimes (years) from Table A-5 of WMO (2022), as (low, high)
+
+Only for the gases whose lifetimes we use (the one-box gases
+and the gases whose Western et al. (2024) projections we extend).
+Copied from the 'WMO (2022) Total Lifetime' column of
+https://csl.noaa.gov/assessments/ozone/2022/downloads/Annex_2022OzoneAssessment.pdf
+(lifetimes given in days converted with 365 days per year, as in the original run).
+The table gives a range for SF6.
+"""
+
+ORIGINAL_RUN_CONSTANTS = (
+    Path("src") / "cmip7_scenariomip_ghg_generation" / "constants.py"
+)
+"""The original run's constants (including lifetimes), relative to the bundle's root"""
+
+
+def load_original_run_lifetimes(bundle_dir: Path) -> dict[str, float]:
+    """
+    Load the lifetimes used by the original run, in years
+
+    From the bundle's copy of the original run's code
+    (which only needs `openscm_units`, so we can load it here).
+    """
+    spec = importlib.util.spec_from_file_location(
+        "original_run_constants", bundle_dir / ORIGINAL_RUN_CONSTANTS
+    )
+    if spec is None or spec.loader is None:
+        raise AssertionError(spec)
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    return {gas: float(v.to("yr").m) for gas, v in module.GHG_LIFETIMES.items()}
+
+
+def get_lifetimes_from_wmo_2022(bundle_dir: Path) -> CheckValue:
+    """
+    Get whether the lifetimes we use are those in Table A-5 of WMO (2022)
+
+    For the one-box gases
+    and the gases whose Western et al. (2024) projections we extend
+    (where the table gives a range, the original run uses the middle of it).
+    """
+    gases = {
+        *get_gases_with_projection_method("one-box", bundle_dir),
+        *CFC12_LIKE_GASES_WESTERN_ET_AL_2024,
+    }
+    if gases != set(WMO_2022_TABLE_A5_LIFETIMES):
+        raise AssertionError(gases ^ set(WMO_2022_TABLE_A5_LIFETIMES))
+
+    used = load_original_run_lifetimes(bundle_dir)
+
+    return all(
+        np.isclose(used[gas], (low + high) / 2.0, rtol=1e-10)
+        for gas, (low, high) in WMO_2022_TABLE_A5_LIFETIMES.items()
+    )
+
+
+def get_historical_radiative_effect(gas: str, year: int) -> float:
+    """
+    Get a gas' approximate radiative effect in the historical dataset
+
+    Relative to 1750, in W / m^2.
+    """
+    da = load_historical_yearly_global_mean(gas)
+    values = to_yearly_series(da)
+
+    return float(
+        (values[year] - values[1750])
+        * get_radiative_effect_per_unit(gas, da.attrs["units"])
+    )
+
+
+def get_hfc125_largest_radiative_effect_in_group(
+    year: int, bundle_dir: Path
+) -> CheckValue:
+    """
+    Get whether HFC-125 has the largest radiative effect of the one-box gases
+
+    In the historical dataset, see [get_historical_radiative_effect][].
+    """
+    effects = {
+        gas: get_historical_radiative_effect(gas, year)
+        for gas in get_gases_with_projection_method("one-box", bundle_dir)
+    }
+
+    return max(effects, key=effects.__getitem__) == "hfc125"
+
+
+def get_hfc125_radiative_effect(year: int) -> CheckValue:
+    """Get HFC-125's radiative effect, see [get_historical_radiative_effect][]"""
+    return openscm_units.unit_registry.Quantity(
+        get_historical_radiative_effect("hfc125", year), "W / m^2"
+    )
+
+
+HISTORICAL_PCS_FILE_PATTERN = "{gas}_allyears-lat-gradient-eofs-pcs.nc"
+"""Historical dataset's latitudinal gradient PCs (in its interim data)"""
+
+
+@cache
+def load_historical_pc(gas: str, eof: int) -> pd.Series[float]:
+    """
+    Load one of the historical dataset's annual latitudinal gradient PCs
+
+    Indexed by year.
+    """
+    (file,) = HISTORICAL_INTERIM_DIR.rglob(HISTORICAL_PCS_FILE_PATTERN.format(gas=gas))
+    pc = xr.load_dataset(file)["principal-components"].sel(eof=eof)
+
+    return pd.Series(pc.to_numpy(), index=pc["year"].to_numpy().astype(int))
+
+
+def get_second_pc_follows_history_then_constant(bundle_dir: Path) -> CheckValue:
+    """
+    Get whether the projected second PCs are as described
+
+    For CO2, CH4 and N2O, in every experiment:
+    the historical dataset's PC up to its last year (2023),
+    then constant at its value in the experiment's harmonisation year.
+    """
+    for gas in TWO_EOF_GASES:
+        history = load_historical_pc(gas, 1)
+        pcs = get_projected_pcs(gas, bundle_dir=bundle_dir, include_vl_cf=True)[1]
+        for experiment in pcs.columns:
+            projected = pcs[experiment].dropna()
+            projected.index = np.floor(projected.index).astype(int)
+            expected = pd.Series(
+                [
+                    history[year]
+                    if year <= history.index.max()
+                    else history[HARMONISATION_YEARS[experiment]]
+                    for year in projected.index
+                ],
+                index=projected.index,
+            )
+            if not np.allclose(projected, expected, rtol=1e-5, atol=1e-5):
+                return False
+
+    return True
+
+
+def get_n_constant_pc0_regression_years(gas: str, bundle_dir: Path) -> CheckValue:
+    """
+    Get the number of years in a PC regression in which the first PC is constant
+
+    I.e. years in which the historical dataset's first PC
+    has the same value as in the year before
+    (so isn't derived from observations or emissions).
+    """
+    data, _ = get_regression(gas, bundle_dir=bundle_dir)
+    history = load_historical_pc(gas, 0)
+    constant = history[history.diff() == 0.0].index
+
+    return openscm_units.unit_registry.Quantity(
+        int(np.isin(data["year"].astype(int), constant).sum()), "dimensionless"
+    )
+
+
+@cache
+def load_complete_emissions(name: str, bundle_dir: Path) -> pd.DataFrame:
+    """
+    Load the complete emissions an experiment's MAGICC run used (1750 to 2500)
+
+    Indexed by variable and unit, one column per year.
+    """
+    ((model, scenario),) = (
+        (model, scenario) for model, scenario, n in EXPERIMENTS if n == name
+    )
+    res = pd.read_feather(bundle_dir / get_complete_emissions_file(model, scenario))
+    res.columns = res.columns.astype(int)
+
+    return res.reset_index(
+        [n for n in res.index.names if n not in ("variable", "unit")], drop=True
+    )
+
+
+EMISSIONS_RTOL = 1e-4
+"""Relative difference above which emissions differ (well above numerical noise)"""
+
+
+def get_last_year_emissions_identical(
+    names: tuple[str, ...], bundle_dir: Path
+) -> CheckValue:
+    """
+    Get the last year in which experiments' emissions are all the same
+
+    Before this year, all the experiments follow history
+    (they are harmonised to it), so this is the last year they follow history.
+
+    Parameters
+    ----------
+    names
+        Experiments to compare
+
+    bundle_dir
+        Directory which holds the original run's bundle
+
+    Returns
+    -------
+    :
+        The last year, over every species, before which the emissions are all the same
+    """
+    reference = load_complete_emissions(names[0], bundle_dir)
+    differs = pd.Series(False, index=reference.columns)
+    for name in names[1:]:
+        emissions = load_complete_emissions(name, bundle_dir).loc[reference.index]
+        relative_difference = (emissions - reference).abs() / reference.abs().where(
+            reference != 0.0
+        )
+        differs |= (relative_difference > EMISSIONS_RTOL).any(axis="index")
+
+    return openscm_units.unit_registry.Quantity(int(differs.idxmax()) - 1, "yr")
+
+
 def get_value_checks(bundle_dir: Path = BUNDLE_DIR) -> tuple[ValueCheck, ...]:
     """
     Get the value checks for the scenario GHG manuscript
@@ -1193,5 +1989,162 @@ def get_value_checks(bundle_dir: Path = BUNDLE_DIR) -> tuple[ValueCheck, ...]:
             )
             for short_name in JUMP_VARIABLES.values()
             for period_name, period in JUMP_PERIODS.items()
+        ),
+        ValueCheck(
+            tag="native-grid-lat-band-width",
+            calculate=partial(get_native_grid_lat_band_width, bundle_dir),
+            description="Width of the latitude bands of our native grid",
+        ),
+        ValueCheck(
+            tag="output-first-year",
+            calculate=partial(
+                get_output_year, SCENARIOMIP_EXPERIMENTS, bundle_dir, last=False
+            ),
+            description="First year of our published ScenarioMIP data",
+        ),
+        ValueCheck(
+            tag="output-first-year-vl-cf",
+            calculate=partial(
+                get_output_year, (VL_CF_MARKER[-1],), bundle_dir, last=False
+            ),
+            description="First year of our published VL-CF data",
+        ),
+        ValueCheck(
+            tag="output-last-year",
+            calculate=partial(
+                get_output_year, SCENARIOMIP_EXPERIMENTS, bundle_dir, last=True
+            ),
+            description="Last year of our published ScenarioMIP data (to December)",
+        ),
+        ValueCheck(
+            tag="n-output-variables",
+            calculate=partial(get_n_output_variables, bundle_dir),
+            description="Number of variables we publish",
+        ),
+        ValueCheck(
+            tag="source-ids",
+            calculate=partial(get_source_ids_as_described, bundle_dir),
+            description="The published source IDs have the form we describe",
+        ),
+        ValueCheck(
+            tag="output-time-chunks",
+            calculate=partial(get_output_time_chunks_as_described, bundle_dir),
+            description="The published files are split in time as we describe",
+        ),
+        ValueCheck(
+            tag="magicc-n-ensemble-members",
+            calculate=partial(get_magicc_n_ensemble_members, bundle_dir),
+            description="Ensemble members in the published MAGICC output",
+        ),
+        ValueCheck(
+            tag="magicc-switch-from-conc-to-emissions-year",
+            calculate=partial(
+                get_magicc_switch_from_conc_to_emissions_year, bundle_dir
+            ),
+            description="Year MAGICC switches from concentrations to emissions",
+        ),
+        *(
+            ValueCheck(
+                tag=f"{gas}-harmonisation-convergence-time",
+                calculate=partial(get_harmonisation_convergence_time, gas, bundle_dir),
+                description=f"Convergence time of the harmonisation of {gas}",
+            )
+            for gas in TWO_EOF_GASES
+        ),
+        ValueCheck(
+            tag="scenariomip-max-relative-difference-2022-monthly-global-mean",
+            calculate=partial(
+                get_scenariomip_max_relative_difference_monthly_global_mean,
+                LAST_HISTORICAL_YEAR,
+                bundle_dir,
+            ),
+            description=(
+                "Largest relative difference between the ScenarioMIP experiments' "
+                "monthly global-means in 2022"
+            ),
+        ),
+        ValueCheck(
+            tag="cfc12-like-gases",
+            calculate=partial(get_cfc12_like_gases_as_described, bundle_dir),
+            description="The gases processed like CFC-12 are those we list",
+        ),
+        ValueCheck(
+            tag="hfc125-like-gases",
+            calculate=partial(get_hfc125_like_gases_as_described, bundle_dir),
+            description="The gases processed like HFC-125 are those we list",
+        ),
+        ValueCheck(
+            tag="cfc12-like-wmo-historical-agreement-2022",
+            calculate=partial(
+                get_single_projection_max_relative_difference_from_history,
+                LAST_HISTORICAL_YEAR,
+                bundle_dir,
+            ),
+            description=(
+                "Largest relative difference between the single concentration "
+                "projections and the historical dataset in 2022"
+            ),
+        ),
+        ValueCheck(
+            tag="one-box-lifetimes",
+            calculate=partial(get_lifetimes_from_wmo_2022, bundle_dir),
+            description="The lifetimes we use are those in WMO (2022) Table A-5",
+        ),
+        ValueCheck(
+            tag="hfc125-largest-erf-one-box-group-2022",
+            calculate=partial(
+                get_hfc125_largest_radiative_effect_in_group,
+                LAST_HISTORICAL_YEAR,
+                bundle_dir,
+            ),
+            description="HFC-125 has the largest radiative effect of the one-box gases",
+        ),
+        ValueCheck(
+            tag="hfc125-erf-2022",
+            calculate=partial(get_hfc125_radiative_effect, LAST_HISTORICAL_YEAR),
+            description="HFC-125's approximate radiative effect in 2022",
+        ),
+        ValueCheck(
+            tag="second-pc-follows-history-then-constant",
+            calculate=partial(get_second_pc_follows_history_then_constant, bundle_dir),
+            description=(
+                "The second PCs follow history to 2023, "
+                "then are constant at their harmonisation year value"
+            ),
+        ),
+        *(
+            ValueCheck(
+                tag=f"{gas}-lat-gradient-regression-{which}-year",
+                calculate=partial(
+                    get_regression_year, gas, bundle_dir, last=which == "last"
+                ),
+                description=f"{which.capitalize()} year of {gas}'s PC regression",
+            )
+            for gas in ("co2", "n2o")
+            for which in ("first", "last")
+        ),
+        *(
+            ValueCheck(
+                tag=f"{gas}-lat-gradient-regression-n-constant-pc0-years",
+                calculate=partial(get_n_constant_pc0_regression_years, gas, bundle_dir),
+                description=(
+                    f"Years in {gas}'s PC regression in which the first PC is constant"
+                ),
+            )
+            for gas in TWO_EOF_GASES
+        ),
+        ValueCheck(
+            tag="scenariomip-emissions-last-historical-year",
+            calculate=partial(
+                get_last_year_emissions_identical, SCENARIOMIP_EXPERIMENTS, bundle_dir
+            ),
+            description="Last year the ScenarioMIP experiments' emissions are the same",
+        ),
+        ValueCheck(
+            tag="vl-cf-emissions-last-historical-year",
+            calculate=partial(
+                get_last_year_emissions_identical, ("vl", VL_CF_MARKER[-1]), bundle_dir
+            ),
+            description="Last year VL-CF's and VL's emissions are the same",
         ),
     )

@@ -16,9 +16,10 @@ they would either be produced on the same specified emissions-basis
 or we would need to work with the experiment provider to design a new method.
 Supporting ScenarioMIP's needs drives the temporal extent of our datasets.
 ScenarioMIP's experiments start in 2022 (immediately following the end of the historical experiment)
-and their extensions run until 2500-12.
-% TODO zalue-check: {"tag": "output-first-year", "unit": "yr", "lower": 2022, "upper": 2022}
-% TODO zalue-check: {"tag": "output-last-year", "unit": "yr", "lower": 2500, "upper": 2500}
+and their extensions run until December 2500.
+% value-check: {"tag": "output-first-year", "unit": "yr", "lower": 2022, "upper": 2022}
+% The last year check is based on the monthly files, so the data runs to December 2500.
+% value-check: {"tag": "output-last-year", "unit": "yr", "lower": 2500, "upper": 2500}
 The dataset we present here meets these requirements, Sect.~\ref{ssec:prep-for-esgf}.
 In theory, other timespans could be produced if experiment designs required this
 (as above, we would have to work with experiment designers to support this if custom methods are needed).

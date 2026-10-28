@@ -43,7 +43,7 @@ but generally cannot be applied across the entire timespan from year 1 to year 2
 \label{ssec:methods-general-approach}
 
 As for the historical dataset, our `native resolution'
-% TODO-CHECK: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
+% value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
 has monthly temporal resolution and 15\textdegree~latitudinal spatial resolution.
 This is the first dataset we generate for all gases.
 From the native resolution datasets, we create lower resolution data products
@@ -93,6 +93,8 @@ The general approach can be broken down as follows:
                 \textbf{One-box model.}
                 For gases with no significant lifetime feedbacks,
                 we run a one-box model with each experiment's emissions.
+                % For SF6, Table A-5 gives a range (850--1280 years), the original run uses its middle.
+                % value-check: {"tag": "one-box-lifetimes"}
                 This allows us to use up-to-date lifetimes \citep[Table A-5,][]{wmo_ozone-ch7_2022}
                 in a transparent way
                 without altering the AR6-calibrated configuration of MAGICC [TODO citations].
@@ -130,8 +132,14 @@ The general approach can be broken down as follows:
         The first latitudinal gradient PC is projected based on the change in emissions relative to the harmonisation year,
         using a linear relationship between the PC and emissions
         (fossil emissions for CO_2 and CH_4, total emissions for all other gases).
-        % zalue-check: last year holding constant is 2022
-        Where a second PC is used (CO_2, CH_4 and N_2O), it is held constant at its value in the harmonisation year.
+        % The historical dataset's PCs extend to 2023 (one year beyond its concentrations),
+        % and the projection takes them up to then.
+        % value-check: {"tag": "second-pc-follows-history-then-constant"}
+        Where a second PC is used (CO_2, CH_4 and N_2O), it follows the historical dataset's PCs up to their last year (2023),
+        then is held constant at its value in the harmonisation year.
+        % Mentioned in discussion, doesn't need to come up here again.
+        % (for VL-CF, this means that the second PC follows the historical PCs from 2016 to 2023,
+        % then returns to its value in 2015 which is ).
     }
 
     \item {
@@ -267,7 +275,7 @@ We run MAGICC v7.6.0a3 \citep{meinshausen_magicc6-part-1_2011} [TODO cite Meinsh
 % `magicc/magicc-v7.6.0a3/configs/magicc-ar7-fast-track-drawnset-v0-3-0.json`, DOI 10.5281/zenodo.14678474.
 % Its description: "IPCC AR6 configuration, updated to include a probabilistic wetland methane feedback
 % based on Zhen Zhang et al. (in prep) and Kleinen et al. (2021)."
-% TODO-CHECK: {"tag": "magicc-n-ensemble-members", "unit": "dimensionless", "lower": 600, "upper": 600}
+% value-check: {"tag": "magicc-n-ensemble-members", "unit": "dimensionless", "lower": 600, "upper": 600}
 for each experiment.
 We use a 600-member probabilistic parameter ensemble
 that has been calibrated to be consistent with the assessment of the IPCC's Sixth Assessment Report \citep{IPCC_AR6-WG1-Ch-7_2021}
@@ -279,7 +287,7 @@ These runs are not used in our output.
 % (`magicc_version_to_run` in `scripts/generate-concentration-files.py`.)
 % The difference between the two versions for e.g. CO2 is tiny, so we don't show it unless asked.
 
-% TODO-CHECK: {"tag": "magicc-switch-from-conc-to-emissions-year", "unit": "yr", "lower": 2015, "upper": 2015}
+% value-check: {"tag": "magicc-switch-from-conc-to-emissions-year", "unit": "yr", "lower": 2015, "upper": 2015}
 For all gases, MAGICC is run in concentration-driven mode up to 2014 and in emissions-driven mode from 2015 onwards
 (consistent with the AR6 setup).
 Up to 2014, the concentrations are those used in CMIP6 \citep{meinshausen_historical-ghgs_2017,nicholls_rcmip_2020}
@@ -329,9 +337,12 @@ Emissions of other required species are provided by the CMIP7 ScenarioMIP infill
 These two processes produce estimates of emissions to the end of 2100.
 Emissions extensions beyond 2100 are provided by [TODO cite Sandsted et al.].
 The last dataset we use is the historical emissions used for harmonising the CMIP7 ScenarioMIP datasets [TODO described in Kikstra et al., based on list of other sources].
-% zalue-check: the years described here
-This provides the emissions required to run MAGICC between 2015 (the start of its emissions-driven mode)
-and the year in which each experiment's emissions diverge from history (2023 for the ScenarioMIP scenarios, 2016 for VL-CF).
+% The experiments' emissions are harmonised to history,
+% so are the same as each other (and history) up to these years.
+% value-check: {"tag": "scenariomip-emissions-last-historical-year", "unit": "yr", "lower": 2023, "upper": 2023}
+% value-check: {"tag": "vl-cf-emissions-last-historical-year", "unit": "yr", "lower": 2015, "upper": 2015}
+This provides the emissions required to run MAGICC from 2015 (the start of its emissions-driven mode)
+up to the last year in which each experiment's emissions follow history (2023 for the ScenarioMIP scenarios, 2015 for VL-CF).
 The result is a full set of emissions with which to run MAGICC from 2015 out to the end of 2500.
 Using CMIP7 historical emissions for this period introduces a small inconsistency in the MAGICC runs.
 There is a jump from the CMIP6 historical emissions used in MAGICC (consistent with the AR6 calibration)
@@ -396,7 +407,9 @@ Matching the gradient, as well as the value, avoids a kink in concentrations at 
 which would otherwise be visible as a jump in the growth rate (Fig.~\ref{fig:methods-co2}b).
 % From `convergence_time_delta` in `notebooks/0031_create-projection-gradient-aware-harmonisation.py`.
 For CO_2, the convergence time is
-% TODO-CHECK: {"tag": "co2-harmonisation-convergence-time", "unit": "yr", "lower": 15, "upper": 15}
+% The convergence times are derived from the data:
+% our global-, annual-means equal MAGICC's median from the harmonisation year plus the convergence time.
+% value-check: {"tag": "co2-harmonisation-convergence-time", "unit": "yr", "lower": 15, "upper": 15}
 chosen to be 15~years as the difference between MAGICC's output and history is small
 and we do not want the harmonisation to introduce other artefacts.
 This harmonisation approach is a `band-aid' approach to work around inconsistencies between the historical dataset and our methods
@@ -483,13 +496,25 @@ and the historical fossil CO_2 emissions that underpin the scenarios
 In the historical dataset, this regression was against emissions from PRIMAP-hist
 \citep{nicholls_historical-ghgs_2026},
 so we re-derive it to be consistent with the historical emissions that underpin the CMIP7 scenarios [TODO cite Kikstra and underlying datasets].
-We use all years in which the first PC is not constant
-(i.e. the years in which it is derived from observations or emissions)
-and in which emissions are non-zero.
-% TODO-CHECK: {"tag": "co2-lat-gradient-regression-years", ...}
+% Another thing to fix when re-implementing.
+% We use all years in which emissions are non-zero,
+% starting two years before the first PC stops being constant
+% (i.e. the years in which it is derived from observations or emissions,
+% plus the last two years in which it is constant, an artefact of how the code selects the years).
+% ZNTODO: the original code (`notebooks/1031_scale-latitudinal-gradient-eofs.py`) compares an array index
+% with years (`start_non_constant_pc0 = np.where(pc0.diff("year") != 0.0)[0][0]`, then `pc0["year"] >= start_non_constant_pc0`).
+% The PCs start in year 1 and `diff` labels with the later year, so the cut-off is two years before the first PC changes.
+% For CO2, this includes 1750 (the first year with emissions, in which the first PC is still constant),
+% for N2O, 1988 and 1989. CH4 isn't affected (its first PC changes long before 1750).
+% Decide whether to keep this description, call it a bug, or both (e.g. in the discussion).
+% value-check: {"tag": "co2-lat-gradient-regression-first-year", "unit": "yr", "lower": 1750, "upper": 1750}
+% value-check: {"tag": "co2-lat-gradient-regression-last-year", "unit": "yr", "lower": 2023, "upper": 2023}
+% value-check: {"tag": "co2-lat-gradient-regression-n-constant-pc0-years", "unit": "dimensionless", "lower": 1, "upper": 1}
 We then project the first PC using Eq.~(\ref{eq:pc-projection}),
 with fossil CO_2 emissions as the driver, $x$ (Fig.~\ref{fig:methods-co2}e).
-The second PC is held constant at its value in the harmonisation year (Fig.~\ref{fig:methods-co2}e).
+As described in Sect.~\ref{ssec:methods-general-approach},
+the second PC follows the historical dataset's PCs up to 2023,
+then is held constant at its value in the harmonisation year (Fig.~\ref{fig:methods-co2}e).
 % As for the seasonality change PC, VL-CF's regression only uses the years up to its harmonisation year,
 % % value-check: {"tag": "co2-vl-cf-regression-slope-ratio", "unit": "dimensionless", "lower": 1.01, "upper": 1.02}
 % which makes its slope around 1.5\% steeper.
@@ -512,9 +537,11 @@ We avoid this by setting the value at the boundary between December of the harmo
 (a `wall control point' in the terminology of \citealp{lai-kaplan_algorithm_2022})
 to the same value in all experiments with the same harmonisation year,
 specifically the mean of the values in the harmonisation year and the following year across these experiments.
-% TODO-CHECK: {"tag": "scenarios-identical-december-2022", "unit": "dimensionless", "lower": 0, "upper": 1e-4}
-% (relative difference between scenarios in December 2022, checked with rtol=1e-4 in the notebook)
-As a result, the monthly values are the same in all experiments with the same harmonisation year up to the end of that year.
+% The original run's notebook checks the relative difference between scenarios in December 2022 with rtol=1e-4.
+% The value check covers every month of 2022 and every gas (in the global-mean).
+% value-check: {"tag": "scenariomip-max-relative-difference-2022-monthly-global-mean", "unit": "dimensionless", "lower": 0, "upper": 1e-4}
+As a result, the monthly values are the same (to within 0.01\%)
+in all experiments with the same harmonisation year up to the end of the harmonisation year.
 We also constrain the interpolated values to be non-negative.
 % The original run's notebook check that the monthly values match the historical dataset's monthly values
 % (`.isel(time=slice(-6, 0, None))`) selects nothing, so never ran.
@@ -541,7 +568,8 @@ The latitudinal gradient is then the sum over EOFs of the product of each EOF an
 \label{sssec:methods-co2-generate-native-resolution}
 
 We calculate the native resolution from the derived components using Eq.~(\ref{eq:native-resolution-sum}).
-% TODO-CHECK: {"tag": "output-first-year", "unit": "yr", "lower": 2022, "upper": 2022}
+% value-check: {"tag": "output-first-year", "unit": "yr", "lower": 2022, "upper": 2022}
+% value-check: {"tag": "output-first-year-vl-cf", "unit": "yr", "lower": 2016, "upper": 2016}
 We only keep values from 2022 onwards for the ScenarioMIP scenarios and from 2016 onwards for VL-CF
 (see Sect.~\ref{ssec:prep-for-esgf}).
 
@@ -563,7 +591,7 @@ These raise the resulting CH_4 concentrations significantly
 compared to the previous version of MAGICC which did not include this feedback (Fig.~\ref{fig:methods-ch4}a, b).
 
 We use a convergence time of
-% TODO-CHECK: {"tag": "ch4-harmonisation-convergence-time", "unit": "yr", "lower": 60, "upper": 60}
+% value-check: {"tag": "ch4-harmonisation-convergence-time", "unit": "yr", "lower": 60, "upper": 60}
 60~years for the harmonisation.
 % In the code: `convergence_time_delta["ch4"] = 30 * 2`.
 % 60 years is roughly 6-7 times CH4's ~9 year lifetime, so not the 3x lifetime rule.
@@ -660,7 +688,7 @@ As for CO_2 (Sect.~\ref{sssec:methods-co2-project-global-mean}), except for the 
 MAGICC's raw output for N_2O is shown in Fig.~\ref{fig:methods-n2o}a
 and the resulting global-, annual-means in Fig.~\ref{fig:methods-n2o}b, c.
 For N_2O, the convergence time is
-% TODO-CHECK: {"tag": "n2o-harmonisation-convergence-time", "unit": "yr", "lower": 75, "upper": 75}
+% value-check: {"tag": "n2o-harmonisation-convergence-time", "unit": "yr", "lower": 75, "upper": 75}
 75~years.
 Like for CH_4, this time horizon is based on expert judgement.
 Also like for CH_4, the difference between VL-CF and VL illustrates the underlying issues with harmonisation
@@ -719,7 +747,11 @@ resulting PCs shown in Fig.~\ref{fig:methods-n2o}d).
 % which gives VL-CF a constant offset, e.g. HFC-134a in 2300: VL-CF -1.81, VL 4.54 (same emissions).
 % (Reproduced exactly from the re-run regressions and the official emissions, 2026-10-27.)
 % `notebooks/1031_scale-latitudinal-gradient-eofs.py`
-% TODO-CHECK: {"tag": "n2o-lat-gradient-regression-years", ...}
+% As for CO2, the N2O regression starts two years before the first PC stops being constant (see the ZNTODO there),
+% i.e. it includes 1988 and 1989, in which the first PC is constant.
+% value-check: {"tag": "n2o-lat-gradient-regression-first-year", "unit": "yr", "lower": 1988, "upper": 1988}
+% value-check: {"tag": "n2o-lat-gradient-regression-last-year", "unit": "yr", "lower": 2023, "upper": 2023}
+% value-check: {"tag": "n2o-lat-gradient-regression-n-constant-pc0-years", "unit": "dimensionless", "lower": 2, "upper": 2}
 
 For the other gases processed like N_2O, only one EOF is retained (as in the historical dataset).
 We project its PC using Eq.~(\ref{eq:pc-projection}),
@@ -777,7 +809,8 @@ except in Step 1 (Project the global-, annual-mean) and Step 2 (Project the seas
 These differences arise because, for these gases,
 we use a prescribed projection of global-, annual-mean concentrations from the literature.
 
-% TODO-CHECK: {"tag": "cfc12-like-gases"}
+% The groups of gases are derived from the data (which interim projection our output matches).
+% value-check: {"tag": "cfc12-like-gases"}
 The approach described in this section is also used for
 CCl_4, CFC-11, CFC-113, CFC-114, CFC-115, CH_3Br, CH_3CCl_3, CH_3Cl, Halon-1211, Halon-1301 and Halon-2402,
 all of which use projections from \citet{wmo_ozone-ch7_2022},
@@ -807,7 +840,8 @@ We fill the final year (2500) using linear extrapolation.
 
 We use the input data as is (we do not perform any harmonisation to the historical dataset).
 To check this won't lead to spurious jumps, we check that the projection and the historical dataset agree in 2022 to within
-% TODO-CHECK: {"tag": "cfc12-like-wmo-historical-agreement-2022", "unit": "dimensionless", "lower": 0, "upper": 0.002}
+% The largest difference is for CH3CCl3 (around 0.13\%).
+% value-check: {"tag": "cfc12-like-wmo-historical-agreement-2022", "unit": "dimensionless", "lower": 0, "upper": 0.002}
 0.2\%.
 % Note there is no gradient matching here, so there can be a kink at 2022 in principle.
 % The projections are used from 2022 onwards.
@@ -835,7 +869,7 @@ and the number of moles in the atmosphere,
 which we calculate from the mass of the atmosphere (5.137 $\times 10^{18}$~kg)
 and the molar mass of dry air (28.9~g~mol$^{-1}$) [TODO cite CDIAC conversion table or equivalent].
 We use the lifetimes from Table A-5 of \citet{wmo_ozone-ch7_2022}.
-% TODO-CHECK: {"tag": "one-box-lifetimes"} (check the lifetimes in the code against WMO 2022 Table A-5)
+% value-check: {"tag": "one-box-lifetimes"}
 For the extension, we assume that emissions are constant after 2100,
 at the value inferred from the concentration and its rate of change in 2100.
 This is a simple and conservative assumption
@@ -882,9 +916,9 @@ we take, for each species, the maximum (over time) difference in approximate rad
 % (concentration difference multiplied by radiative efficiency, \citealp{IPCC_AR6-WG1-Ch-7-SM_2021}, Table 7.SM.7)
 (TODO forward ref section where we talk about limits of approximate radiative effect)
 between MAGICC's median concentrations and the CMIP7 concentrations, then sum over species.
-% TODO-CHECK: {"tag": "single-projection-magicc-max-erf-difference-sum-l", "unit": "W / m^2", "lower": 0.029, "upper": 0.031}
+% value-check: {"tag": "single-projection-magicc-max-erf-difference-sum-l", "unit": "W / m^2", "lower": 0.029, "upper": 0.031}
 In L, this sum is around 0.03~W/m^2
-% TODO-CHECK: {"tag": "single-projection-magicc-max-erf-difference-sum-range", "unit": "W / m^2", "lower": 0.029, "upper": 0.038}
+% value-check: {"tag": "single-projection-magicc-max-erf-difference-sum-range", "unit": "W / m^2", "lower": 0.029, "upper": 0.038}
 and it is 0.03--0.04~W/m^2 across all experiments.
 % Calculated with MAGICC v7.6.0a3 medians vs. `single-concentration-projection_<gas>_annual-mean.feather`, 2022-2500,
 % excluding Halon-1202 (not in our output).
@@ -944,10 +978,11 @@ of the gases in this group,
 it has the largest effective radiative forcing in 2022 in the historical dataset
 % Approximate ERF in 2022 (radiative efficiency times concentration):
 % HFC-125 0.0097, SF6 0.0063, CF4 0.0054 (relative to 1750), HFC-143a 0.0050 W/m^2.
-% TODO-CHECK: {"tag": "hfc125-largest-erf-one-box-group-2022"}
+% value-check: {"tag": "hfc125-largest-erf-one-box-group-2022"}
+% value-check: {"tag": "hfc125-erf-2022", "unit": "W / m^2", "lower": 0.009, "upper": 0.011}
 (around 0.01~W/m^2).
 
-% TODO-CHECK: {"tag": "hfc125-like-gases"}
+% value-check: {"tag": "hfc125-like-gases"}
 The approach described in this section is also used for
 C_2F_6, C_3F_8, C_4F_10, C_5F_12, C_6F_14, C_7F_16, C_8F_18, cC_4F_8, CF_4,
 CH_2Cl_2, CHCl_3,
@@ -1065,12 +1100,12 @@ and using the same radiative efficiencies
 
 As for the historical dataset,
 we format the data in a standard way before publishing it.
-% TODO-CHECK: {"tag": "n-output-variables", "unit": "dimensionless", "lower": 46, "upper": 46}
+% value-check: {"tag": "n-output-variables", "unit": "dimensionless", "lower": 46, "upper": 46}
 We provide the same variable set and five combinations of frequency and grid
 as for the historical dataset \citep{nicholls_historical-ghgs_2026}:
 
 \begin{enumerate}
-    % TODO zalue-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
+    % value-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
     \item mon-gnz: Our native dataset (monthly-means on our native 15\textdegree~latitudinal grid)
     \item mon-gr1z: Monthly-mean hemispheric-means
     \item mon-gm: Monthly-mean global-mean
@@ -1084,7 +1119,7 @@ Instead, the experiment is part of the \texttt{source\_id} attribute,
 which also appears in the directory path and filename.
 % From `create_source_id` and `create_source_id_extension`
 % in `src/cmip7_scenariomip_ghg_generation/input4mips_cvs_helpers.py`.
-% TODO-CHECK: {"tag": "source-ids"}
+% value-check: {"tag": "source-ids"}
 The source IDs are of the form \texttt{CR-[experiment]-[version]},
 with the experiment always being written in lowercase
 e.g. \texttt{CR-l-1-1-0} for version 1.1.0 of the L scenario.
@@ -1095,7 +1130,7 @@ e.g. for VL-CF we have \texttt{CR-vl-cf-1-1-0} for version 1.1.0 of VL-CF.
 The data up to the end of 2100 and the data beyond 2100 (the extensions) are published under different source IDs.
 The extensions have source IDs of the form \texttt{CR-[experiment]-ext-[version]},
 e.g. \texttt{CR-l-ext-1-1-0}.
-% TODO-CHECK: {"tag": "output-time-chunks"}
+% value-check: {"tag": "output-time-chunks"}
 % For each scenario, the data from 2022 to 2100 is in a single file per variable, frequency and grid,
 % while the extensions are split into files covering 100 years each (2101--2200, 2201--2300, 2301--2400 and 2401--2500).
 Users therefore have to parse the experiment out of the source ID

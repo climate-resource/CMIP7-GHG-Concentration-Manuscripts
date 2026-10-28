@@ -228,35 +228,38 @@ Radiative effect numbers are calculated from our concentrations (not loaded from
 
 #### Value checks
 
-None of the scenario manuscript's checks are live yet: they're all written as `TODO-CHECK`, `TODO zalue-check` or `zalue-check`
-(the misspelling stops the checker treating them as real checks).
-Each needs implementing in `src/local/scenario_ghg_forcing_for_cmip7/value_checks.py`, then converting to `% value-check: {...}`.
+All done 2026-10-29: every `TODO-CHECK`, `TODO zalue-check` and `zalue-check` is now a live `% value-check`
+(105 checks pass). Where possible the checks derive the statement from the data
+(e.g. the gas groups from which interim projection our output matches,
+the convergence times from where our data meets MAGICC's median).
+Text changed to match the data (please review):
 
-- [ ] Already implemented, just convert the comment:
-      `single-projection-magicc-max-erf-difference-sum-l` (`methods.tex:855`),
-      `single-projection-magicc-max-erf-difference-sum-range` (`methods.tex:857`).
-- [ ] Tag and bounds given, needs implementing:
-    - [ ] `native-grid-lat-band-width` (`methods.tex:46,1066`)
-    - [ ] `output-first-year` (`output-requirements.tex:20`, `methods.tex:528`), `output-last-year` (`output-requirements.tex:21`)
-    - [ ] `magicc-n-ensemble-members` (`methods.tex:268`)
-    - [ ] `magicc-switch-from-conc-to-emissions-year` (`methods.tex:279`)
-    - [ ] `co2-harmonisation-convergence-time` (`methods.tex:386`), `ch4-...` (`methods.tex:550`), `n2o-...` (`methods.tex:646`)
-    - [ ] `scenarios-identical-december-2022` (`methods.tex:501`)
-    - [ ] `cfc12-like-wmo-historical-agreement-2022` (`methods.tex:782`)
-    - [ ] `n-output-variables` (`methods.tex:1061`)
-- [ ] Tag only, needs bounds/spec as well as implementing:
-    - [x] `co2-seasonality-change-npp-regression-years` (`methods.tex:424`)
-          Done as `co2-seasonality-change-regression-first-year`/`-last-year`.
-    - [ ] `co2-lat-gradient-regression-years` (`methods.tex:478`)
-    - [ ] `n2o-lat-gradient-regression-years` (`methods.tex:699`)
-    - [ ] `cfc12-like-gases` (`methods.tex:752`), `hfc125-like-gases` (`methods.tex:920`)
-    - [ ] `one-box-lifetimes` (`methods.tex:810`, against WMO 2022 Table A-5)
-    - [ ] `hfc125-largest-erf-one-box-group-2022` (`methods.tex:917`)
-    - [ ] `source-ids` (`methods.tex:1080`), `output-time-chunks` (`methods.tex:1091`)
-- [ ] No tag yet:
-    - [ ] last year PC2 held constant is 2022 (`methods.tex:131`)
-    - [ ] years when emissions diverge from history (2023 ScenarioMIP, 2016 VL-CF) (`methods.tex:330`)
-    - [ ] CH_4 VL vs. VL-CF difference (`methods.tex:561`, see above)
+- [x] `methods.tex` general approach, Step 2, and CO2 latitudinal gradient: the second PC is *not* simply
+      held constant at its harmonisation-year value. It follows the historical dataset's PCs up to 2023
+      (their last year), then is held at its harmonisation-year value.
+      For VL-CF, it follows the historical PCs 2016-2023, then drops back to its 2015 value.
+      Text now says this. Might deserve a mention in the discussion (artefact, particularly for VL-CF).
+- [x] `methods.tex` MAGICC emissions: was "the year in which each experiment's emissions diverge from history
+      (2023 for ScenarioMIP, 2016 for VL-CF)", which mixed the last year on history (2023) with the first year off it (2016).
+      The ScenarioMIP experiments' emissions are identical up to 2023 and VL-CF's equal VL's up to 2015.
+      Now "the last year in which each experiment's emissions follow history (2023 ..., 2015 for VL-CF)".
+- [ ] `methods.tex` CO2 (and N2O) latitudinal gradient regression years: the original code compares an array index with years,
+      so the regression starts two years before the first PC stops being constant
+      (CO2: includes 1750, N2O: includes 1988 and 1989, CH4 unaffected).
+      Text now describes this as "an artefact of how the code selects the years"; ZNTODO left for ZN to decide
+      whether to call it a bug and/or mention it in the discussion.
+- [x] `methods.tex` mean-preserving interpolation: monthly global-means in 2022 are the same across the ScenarioMIP
+      experiments to within 1.4e-5 (relative), not exactly. Text now says "(to within 0.01\%)".
+      (At native resolution, 2022 differs by up to 0.4% between experiments (CH2Cl2, January),
+      from the latitudinal gradient; the text makes no claim about that.)
+- [x] Everything else just converted (the statements held):
+      lat band width, output first/last years (plus VL-CF's 2016), MAGICC ensemble size and switch year,
+      convergence times (15/60/75 years), CFC-12-like and HFC-125-like gas lists,
+      CFC-12-like agreement with history in 2022 (max 0.13%, CH3CCl3),
+      lifetimes vs. WMO (2022) Table A-5 (transcribed from the annex PDF; SF6 uses the middle of the 850-1280 year range),
+      HFC-125 largest one-box radiative effect in 2022 (0.0097 W/m2), number of output variables (46),
+      source IDs, output time chunks, single-projection MAGICC differences.
+- [x] CH_4 VL vs. VL-CF difference: done earlier (`ch4-vl-minus-vl-cf-max`).
 
 #### Citations and cross-references
 
@@ -326,7 +329,9 @@ Not marked as TODOs, spotted while compiling this list.
 
 #### Build code
 
-- [ ] `src/local/scenario_ghg_forcing_for_cmip7/scenarios.py:80,86`: official colour palettes, and a colour for VL-CF.
+- [x] `src/local/scenario_ghg_forcing_for_cmip7/scenarios.py:80,86`: official colour palettes, and a colour for VL-CF.
+      Done 2026-10-29: official CMIP7 ScenarioMIP palette (from ZN). VL-CF isn't part of ScenarioMIP, so keeps its grey.
+      The methods figures didn't depend on `scenarios.py` (so wouldn't pick up colour changes), fixed. All figures regenerated.
 
 #### Needs editor or reviewer feedback
 
