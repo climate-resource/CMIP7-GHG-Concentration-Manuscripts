@@ -600,7 +600,9 @@ As for CO_2 (Sect.~\ref{sssec:methods-co2-project-seasonality-lat-gradient}),
 with fossil CH_4 emissions in place of fossil CO_2 emissions
 (consistent with the historical dataset, \citealp{nicholls_historical-ghgs_2026}, resulting PCs shown in Fig.~\ref{fig:methods-ch4}e).
 We note here that the regression is particularly poor (Fig.~\ref{fig:methods-regressions-ch4}),
-which suggests that this method may be worth reconsidering in future (Sect.~\ref{sec:discussion}).
+which suggests that this method may be worth reconsidering in future.
+It is also notably different from the regression used in the historical dataset
+(see Sect.~\ref{sec:discussion} for both points).
 % ZNTODO: note in the text (and return to in the discussion, Sect. \ref{sec:discussion})
 % that VL-CF's first PC is projected with a different regression to the markers' one
 % (see the ZNTODO in Sect. \ref{sssec:methods-n2o-like-project-seasonality-lat-gradient} for N2O).
@@ -986,30 +988,6 @@ This step is the same as for CO_2 (Sect.~\ref{sssec:methods-co2-prepare-componen
 \label{sssec:methods-hfc125-like-generate-native-resolution}
 
 This step is the same as for CO_2 (Sect.~\ref{sssec:methods-co2-generate-native-resolution}).
-
-% % ZNNOTE: should not be needed because the above applies to VL-CF too, hence commented out.
-% % We can bring this back in later if needed
-% \subsection{Generating concentrations for VL-CF}
-% \label{ssec:methods-vl-cf}
-%
-% % ZNTODO: VL-CF was produced after the 1.1.0 bundle, with a later version of the code
-% % (cmip7-scenariomip-ghg-concentrations commits from July 2026, e.g. `b5b46dc Get vl-cf running`,
-% % notebook `1050_hack-vl-cf-inputs`). The description below is based on that code.
-% % Confirm, and add the bundle/Zenodo reference for the VL-CF run.
-% The VL-CF experiment's emissions diverge from history from 2016 onwards (see Sect.~[TODO introduction/output requirements]).
-% Its concentrations are therefore produced in the same way as for the other scenarios,
-% with the following differences.
-% First, its datasets start in 2015 rather than 2022.
-% % Second, for the gases which use gradient-aware harmonisation
-% % (Sects.~\ref{ssec:methods-co2}--\ref{ssec:methods-n2o-like}),
-% % the MAGICC median is harmonised to the historical dataset in 2015, rather than 2022.
-% % Third, for all other gases,
-% % VL-CF's concentrations, seasonality and latitudinal gradient are taken
-% % from the historical dataset from 2015 to 2021
-% % and from the VL scenario from 2022 onwards.
-% % ZNTODO: the third point means that VL-CF matches history (not a counterfactual) for these gases up to 2021.
-% % That's presumably intentional (the counterfactual is about CO2, CH4, N2O and the MAGICC-based F-gases),
-% % but worth stating why.
 
 \subsection{Derived output grids}
 \label{ssec:methods-derived-grids}

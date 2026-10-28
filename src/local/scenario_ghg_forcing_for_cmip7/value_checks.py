@@ -13,6 +13,7 @@ import numpy as np
 import openscm_units
 import pandas as pd
 import xarray as xr
+import yaml
 
 from local.historical_ghg_forcing_for_cmip7.comparison_data import (
     TIME_COLUMN,
@@ -25,7 +26,9 @@ from local.scenario_ghg_forcing_for_cmip7.esgf_data import (
     get_scenario_yearly_global_mean,
 )
 from local.scenario_ghg_forcing_for_cmip7.methods_data import (
+    HISTORICAL_INTERIM_DIR,
     get_max_radiative_effect_difference,
+    get_regression,
 )
 from local.scenario_ghg_forcing_for_cmip7.rerun_projections import (
     MARKERS,
@@ -219,6 +222,67 @@ def get_history_minus_igcc(gas: str, year: int) -> CheckValue:
     )
 
 
+HISTORICAL_CH4_LAT_GRADIENT_REGRESSION_FILE = (
+    HISTORICAL_INTERIM_DIR / "ch4" / "ch4_pc0-ch4-fossil-emissions-regression.yaml"
+)
+"""The historical dataset's regression of CH4's first latitudinal gradient PC
+
+Against PRIMAP-hist's fossil CH4 emissions.
+"""
+
+
+def get_ch4_lat_gradient_regression_slope_ratio_to_historical(
+    bundle_dir: Path,
+) -> CheckValue:
+    """
+    Get the ratio of our CH4 latitudinal gradient regression's slope to the historical
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory which holds the original run's bundle (including our re-runs)
+
+    Returns
+    -------
+    :
+        Our slope divided by the historical dataset's slope
+    """
+    _, info = get_regression("ch4", bundle_dir=bundle_dir)
+    ours = openscm_units.unit_registry.Quantity(info["slope"], info["slope_unit"])
+
+    historical_info = yaml.safe_load(
+        HISTORICAL_CH4_LAT_GRADIENT_REGRESSION_FILE.read_text()
+    )
+    historical = openscm_units.unit_registry.Quantity(*historical_info["m"])
+
+    return (ours / historical).to("dimensionless")
+
+
+def get_ch4_lat_gradient_regression_year(bundle_dir: Path, *, last: bool) -> CheckValue:
+    """
+    Get the first or last year our CH4 latitudinal gradient regression is fitted over
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory which holds the original run's bundle (including our re-runs)
+
+    last
+        Whether to get the last year (otherwise the first)
+
+    Returns
+    -------
+    :
+        The year
+    """
+    data, _ = get_regression("ch4", bundle_dir=bundle_dir)
+    years = data["year"]
+
+    return openscm_units.unit_registry.Quantity(
+        int(years.max() if last else years.min()), "yr"
+    )
+
+
 def get_value_checks(bundle_dir: Path = BUNDLE_DIR) -> tuple[ValueCheck, ...]:
     """
     Get the value checks for the scenario GHG manuscript
@@ -281,5 +345,30 @@ def get_value_checks(bundle_dir: Path = BUNDLE_DIR) -> tuple[ValueCheck, ...]:
             description=(
                 "CMIP7 historical CH4 global-, annual-mean minus IGCC's, in 2022"
             ),
+        ),
+        ValueCheck(
+            tag="ch4-lat-gradient-regression-slope-ratio-to-historical",
+            calculate=partial(
+                get_ch4_lat_gradient_regression_slope_ratio_to_historical, bundle_dir
+            ),
+            description=(
+                "Slope of our CH4 latitudinal gradient PC0 regression "
+                "divided by the historical dataset's"
+            ),
+        ),
+        *(
+            ValueCheck(
+                tag=f"ch4-lat-gradient-regression-{end}-year",
+                calculate=partial(
+                    get_ch4_lat_gradient_regression_year,
+                    bundle_dir,
+                    last=end == "last",
+                ),
+                description=(
+                    f"{end.capitalize()} year our CH4 latitudinal gradient PC0 "
+                    "regression is fitted over"
+                ),
+            )
+            for end in ("first", "last")
         ),
     )

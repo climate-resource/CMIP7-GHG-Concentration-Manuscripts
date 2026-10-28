@@ -91,6 +91,14 @@ The sixth issue is inconsistencies between the methods used for the historical a
 Specifically, NPP is used to drive seasonality change in the future
 but a composite of global-, annual-mean concentrations and temperature is used to drive the same changes in the historical dataset \citep{nicholls_historical-ghgs_2026}.
 In addition, the latitudinal gradient is based on regressions that use different emissions sets.
+% The difference is largest for CH_4.
+% % value-check: {"tag": "ch4-lat-gradient-regression-slope-ratio-to-historical", "unit": "dimensionless", "lower": 5.5, "upper": 5.7}
+% The slope of our regression is around 5.6 times that of the regression used in the historical dataset
+% % value-check: {"tag": "ch4-lat-gradient-regression-first-year", "unit": "yr", "lower": 1750, "upper": 1750}
+% % value-check: {"tag": "ch4-lat-gradient-regression-last-year", "unit": "yr", "lower": 2023, "upper": 2023}
+% and our regression is fitted over 1750--2023 (Fig.~\ref{fig:methods-regressions-ch4}),
+% so it mixes the years in which the historical first PC comes from the optimisation against ice cores
+% with the years in which it comes from the regression against emissions \citep{nicholls_historical-ghgs_2026}.
 These introduce further inconsistencies in seasonality and latitudinal gradients
 that should be reconsidered in future work.
 

@@ -89,15 +89,22 @@ Discussion
 
 Appendices
 
-- [ ] `appendices.tex:27-28`: wherever we refer to the CH_4 regression (there and in `sssec:methods-ch4-project-seasonality-lat-gradient`),
+- [x] `appendices.tex:27-28`: wherever we refer to the CH_4 regression (there and in `sssec:methods-ch4-project-seasonality-lat-gradient`),
       refer to the discussion of inconsistencies between inputs.
+      The discussion's sixth issue now says the CH_4 slope is ~5.6 times the historical one and the fit (1750-2023)
+      mixes the ice-core-optimised and emissions-regression years (value checks `ch4-lat-gradient-regression-*`).
+      The CH_4 regression figure caption and the CH_4 Step 2 methods text point there.
 
 Back matter
 
-- [ ] `code-and-data-availability.tex:1-2`: placeholder, "check this".
+- [x] `code-and-data-availability.tex:1-2`: placeholder, "check this".
       Also needs the bundle/Zenodo reference for the VL-CF run,
       which was produced after the 1.1.0 bundle with later code (`methods.tex:995-998`).
       @Claude check: I think this bundle has VL-CF already
+      Checked: 21501391 (2026-07-23) does have VL-CF, but it's a later version of the same Zenodo concept (18690744)
+      as 19243739 (v1.1.0, 2026-03-27). The ScenarioMIP files' `doi` attribute is 19243739, VL-CF's is 21501391
+      (21501391 also includes the ScenarioMIP files). The text now gives 19243739 for ScenarioMIP and 21501391 for VL-CF.
+      The commented-out VL-CF section's ZNTODO (`methods.tex:995-998`) is resolved by this, delete it with that section.
 - [x] `competing-interests.tex:1`: placeholder, confirm.
 - [x] `conclusion.tex:1`: placeholder comment points to `manuscript-planning.md` (no longer exists), remove once happy.
 
