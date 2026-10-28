@@ -52,7 +52,7 @@ and note that the production of any other dataset used in CMIP7's future-focusse
 % The rest of this isn't really introduction.
 % We could split out a separate section, let's see what feedback we get.
 We do not document how to use these forcings in each experiment.
-As noted in [TODO ref to historical paper], such documentation is best left to the CMIP7 guidance pages
+As noted in \citet{nicholls_historical-ghgs_2026}, such documentation is best left to the CMIP7 guidance pages
 because these pages are kept up to date in real time
 (see \newline \mbox{\url{https://wcrp-cmip.github.io/cmip7-guidance/docs/CMIP7/Experiment_set_up_and_Forcings/}})
 or papers describing the experiments themselves
@@ -64,7 +64,7 @@ As above, please see the guidance pages at
 or the papers describing the experiments for details about which forcings to use
 and how to implement them in your model.
 
-As is also noted in [TODO ref to historical paper], how to record which forcings were used in a simulation
+As is also noted in \citet{nicholls_historical-ghgs_2026}, how to record which forcings were used in a simulation
 (e.g. how to choose the forcing index, i.e. the `f' in variant labels like `r1i1p1f1')
 is not yet settled.
 Users should consult the introduction of the guidance pages \newline
@@ -78,10 +78,10 @@ If the recommendations are still unclear or not defined when users are producing
 we encourage the teams to throughly document their `f' mapping so that this information
 can be provided to users once an agreed communication format has been agreed.
 
-In line with the historical concentrations [CITE historical paper],
+In line with the historical concentrations \citep{nicholls_historical-ghgs_2026},
 all of our values are mole fractions in dry air.
 However, throughout, we use `concentration' as shorthand.
-As noted in [TODO ref historical paper],
+As noted in \citet{nicholls_historical-ghgs_2026},
 our output files use CF standard names of the form \texttt{mole\_fraction\_of\_X\_in\_air}
 (e.g. \texttt{mole\_fraction\_of\_carbon\_dioxide\_in\_air}, \citealp{eaton_cf-conventions_2026}).
 The CF standard names do not state whether these \texttt{\_in\_air} names include the effect of water vapour.
@@ -93,7 +93,7 @@ The output datasets are provided at different spatial and temporal resolutions.
 We provide both monthly and yearly datasets,
 as well as global-means, hemispheric-means and datasets that include latitudinal variations.
 No dependency on longitude is provided.
-For a brief discussion on how add a vertical dimension to these datasets, see Sect.~[TODO number] of [TODO cite historical paper].
+For a brief discussion on how add a vertical dimension to these datasets, see Sect.~[TODO number] of \citet{nicholls_historical-ghgs_2026}.
 
 The output datasets extend from year 2022 to the end of 2500.
 The CMIP7 historical experiment runs to the end of 2021,
@@ -105,6 +105,6 @@ and into `main' (up until the end of 2100) and extensions (2101 to the end of 20
 As above, see the guidance pages \newline
 (\mbox{\url{https://wcrp-cmip.github.io/cmip7-guidance/docs/CMIP7/Experiment_set_up_and_Forcings/}})
 for specific information about how to find and use the datasets needed for each experiment.
-The set of GHGs made available matches the historical set [TODO cite historical paper]
+The set of GHGs made available matches the historical set \citep{nicholls_historical-ghgs_2026}
 and the set provided for CMIP6's ScenarioMIP experiments \citep{meinshausen_ssp-ghgs_2020},
 including the same set of equivalent species.

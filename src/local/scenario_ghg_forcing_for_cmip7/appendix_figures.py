@@ -218,7 +218,7 @@ def get_hfc125_like_figures(gas: str) -> tuple[AppendixFigure, ...]:
         extra = (
             "In the historical dataset, the C_8F_18 latitudinal gradient "
             "has an assumed shape, scaled to reproduce the CMIP6 hemispheric-means "
-            "[TODO cite historical paper]. "
+            r"\citep{nicholls_historical-ghgs_2026}. "
             "There is no regression between it and emissions, "
             "so in the projections it is held constant "
             "at its value in December 2022, "

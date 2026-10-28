@@ -27,8 +27,8 @@ Paths are relative to `manuscripts/scenario-ghg-forcing-for-cmip7/` unless state
 - [ ] Scenario user guide needs to be published so we can cite/link it
       (`methods.tex:1099` "[TODO cite scenario user guide]", `conclusion.tex:6` "[TODO link]").
       Source is `notebooks/user-guide-scenarios.py`; the historical one is `nicholls_historical-user-guide_2026`.
-- [ ] Historical paper has no bib entry yet, so all the "[TODO cite historical paper]" items below wait on that
-      (see Citations).
+- [x] Historical paper has no bib entry yet, so all the "[TODO cite historical paper]" items below wait on that
+      (see Citations). Added `nicholls_historical-ghgs_2026` (unpublished, in preparation).
 
 #### Text to write or rework
 
@@ -154,15 +154,19 @@ Each needs implementing in `src/local/scenario_ghg_forcing_for_cmip7/value_check
 
 #### Citations and cross-references
 
-Historical paper (no bib entry yet):
+Historical paper (now `nicholls_historical-ghgs_2026`):
 `methods.tex:5,9,40,71,149,412,464,473,489,591,601,704,972,974,1017,1040,1063,1113`
 (and commented `371`),
 `introduction.tex:55,67,81,84,96,108` (`81` is written "[CITE historical paper]"),
 `output-requirements.tex:4`, `results.tex:20,159`, `discussion.tex:91,102`, `conclusion.tex:15`, `appendices.tex:31`
 and the generated C_8F_18 caption (`src/local/scenario_ghg_forcing_for_cmip7/appendix_figures.py:221`).
 
-- [ ] Add the historical paper bib entry and replace all of the above.
+- [x] Add the historical paper bib entry and replace all of the above.
+      `\citep` where the citation is parenthetical, `\citet` after "noted in"/"discussed in"/"refer to",
+      `\citealp` inside existing parentheses. Also updated `nicholls_scenario-ghgs_2026` to the scenario `metadata.toml` title and authors.
 - [ ] `introduction.tex:96`: also needs the section number in the historical paper (vertical dimension).
+      It was 3.11 (`ssec:methods-vertical`) in the last historical build (2026-10-21),
+      but the historical methods have changed since, so re-check before hard-coding it.
 
 Others (bib entry exists for those marked ✓):
 
@@ -210,7 +214,7 @@ Not marked as TODOs, spotted while compiling this list.
 - [ ] `discussion.tex:102`: "The second, like also affected the historical dataset" (grammar).
 - [ ] `methods.tex:360`: `[as done in][]\citep{meinshausen_ssp-ghgs_2020}` is malformed, should be `\citep[as done in][]{...}`.
 - [ ] `methods.tex:562`: `\~70ppb` renders as an accent, use `$\sim$70~ppb`.
-- [ ] `methods.tex:972`: unclosed parenthesis in the zero-seasonality gas list.
+- [x] `methods.tex:972`: unclosed parenthesis in the zero-seasonality gas list (closed when adding the historical citation).
 - [ ] Spelling: "conistency" (`introduction.tex:15`), "counterfactural" (`introduction.tex:36`), "throughly" (`introduction.tex:78`),
       "experiemnt" (`output-requirements.tex:57`), "timesescale" (`methods.tex:654`), "scenarion" (`methods.tex:1084`).
 

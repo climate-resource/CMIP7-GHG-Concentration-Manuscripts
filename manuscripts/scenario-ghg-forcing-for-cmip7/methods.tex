@@ -2,11 +2,11 @@
 \label{sec:methods}
 
 Our methods are based on those in \citet{meinshausen_ssp-ghgs_2020}.
-As for the historical dataset [TODO cite historical paper],
+As for the historical dataset \citep{nicholls_historical-ghgs_2026},
 we have re-implemented the underlying software and made changes in a number of places,
 so we describe the method in full.
 Wherever a step is the same as in the historical dataset,
-we refer to the historical paper [TODO cite]
+we refer to \citet{nicholls_historical-ghgs_2026}
 for details rather than repeating them.
 
 \subsection{Motivation}
@@ -37,7 +37,7 @@ and evolve in a way that is informed by history, but which can be driven by quan
 This last requirement is limiting and a key motivator for the relatively simple approach we take
 (as in \citealp{meinshausen_ssp-ghgs_2020}).
 More complicated approaches may provide improved results,
-but generally cannot be applied across the entire timespan from year 1 to year 2500 [TODO see also cite historical paper discussion].
+but generally cannot be applied across the entire timespan from year 1 to year 2500 (see also the discussion in \citealp{nicholls_historical-ghgs_2026}).
 
 \subsection{General approach}
 \label{ssec:methods-general-approach}
@@ -68,7 +68,7 @@ VL-CF's emissions diverge from history from 2016 onwards, so, for VL-CF, $y_h$ i
 % VL-CF native grid equal to VL's 2022-2500 for HFC-125 and SF6.
 
 The datasets are built from the same three components as the historical dataset:
-the global-, annual-mean, the seasonality and the latitudinal gradient [TODO cite historical paper].
+the global-, annual-mean, the seasonality and the latitudinal gradient \citep{nicholls_historical-ghgs_2026}.
 
 The general approach can be broken down as follows:
 
@@ -146,7 +146,7 @@ The general approach can be broken down as follows:
     \item {
         \textbf{Step 4: Generate native resolution}
 
-        As for the historical dataset, we sum the components to give the native resolution dataset [TODO cite historical paper]:
+        As for the historical dataset, we sum the components to give the native resolution dataset \citep{nicholls_historical-ghgs_2026}:
 
         \begin{equation}
             \label{eq:native-resolution-sum}
@@ -368,7 +368,7 @@ to avoid introducing artificial `shocks' or jumps in ESM output based on our for
 To avoid such a jump in concentrations between the historical and projected datasets,
 we harmonise the MAGICC median to the historical global-, annual-mean (Fig.~\ref{fig:methods-co2}b, c).
 % Unlike the harmonisation used in the historical dataset
-% (which adds a linearly declining offset, see [TODO cite historical paper]),
+% (which adds a linearly declining offset, see \citealp{nicholls_historical-ghgs_2026}),
 To ensure that both the absolute value and the gradient are continuous,
 we use `gradient-aware' harmonisation [TODO cite gradient-aware-harmonisation package].
 % `harmonise_splines_add_cubic` from the gradient-aware-harmonisation package,
@@ -409,7 +409,7 @@ Future work should consider more robust approaches that do not require such work
 \label{sssec:methods-co2-project-seasonality-lat-gradient}
 
 \textbf{Seasonality.}
-In the historical dataset, the CO_2 seasonality is the sum of a `base' seasonality and a seasonality change [TODO cite historical paper].
+In the historical dataset, the CO_2 seasonality is the sum of a `base' seasonality and a seasonality change \citep{nicholls_historical-ghgs_2026}.
 The seasonality change is then the product of a seasonality change EOF and PC.
 Historically, the seasonality change PC is driven by a composite of global-mean temperature and CO_2 concentrations.
 For the projections, following \citet{meinshausen_ssp-ghgs_2020},
@@ -461,7 +461,7 @@ For CO_2, as in the historical dataset, there are two EOFs.
 Following \citet{meinshausen_ssp-ghgs_2020},
 the first PC is projected based on the change in fossil CO_2 emissions,
 i.e. all emissions which originate from fossil reservoirs (as opposed to originating from the biosphere),
-consistent with the historical dataset [TODO cite historical paper].
+consistent with the historical dataset \citep{nicholls_historical-ghgs_2026}.
 % `notebooks/1031_scale-latitudinal-gradient-eofs.py`
 % The fossil emissions come from the emissions team's fossil/biosphere split file
 % (`...harmonised-emissions-fossil-biosphere-aggregation...`, `extract_fossil_biosphere_timeseries`).
@@ -470,7 +470,7 @@ with a linear regression between the first PC from the historical dataset
 and the historical fossil CO_2 emissions that underpin the scenarios
 (Sect.~\ref{sssec:methods-co2-project-global-mean}, Fig.~\ref{fig:methods-regressions-co2}b).
 In the historical dataset, this regression was against emissions from PRIMAP-hist
-[TODO cite historical paper],
+\citep{nicholls_historical-ghgs_2026},
 so we re-derive it to be consistent with the historical emissions that underpin the CMIP7 scenarios [TODO cite Kikstra and underlying datasets].
 We use all years in which the first PC is not constant
 (i.e. the years in which it is derived from observations or emissions)
@@ -486,7 +486,7 @@ The second PC is held constant at its value in the harmonisation year (Fig.~\ref
 \textbf{Global-, annual-mean.}
 As for the historical dataset, the global-, annual-mean must be interpolated to monthly timesteps using mean-preserving interpolation
 (where we use the Lai-Kaplan \citealp{lai-kaplan_algorithm_2022} and Rymes-Myers algorithms \citealp{rymes-myers_algorithm_2001},
-see [TODO cite historical paper]).
+see \citealp{nicholls_historical-ghgs_2026}).
 % `notebooks/1000_interpolate-annual-mean-to-monthly.py`
 To ensure that the result joins smoothly onto the historical dataset,
 we first join the historical global-, annual-mean (up to the harmonisation year) and the harmonised, projected global-, annual-mean (thereafter)
@@ -588,7 +588,7 @@ The limitations of this harmonisation are considered in more depth in Sect.~\ref
 \textbf{Seasonality.}
 Following \citet{meinshausen_ssp-ghgs_2020},
 the seasonality is the product of the relative seasonality from the historical dataset
-(which does not vary over time, see [TODO cite historical paper])
+(which does not vary over time, see \citealp{nicholls_historical-ghgs_2026})
 and the projected global-, annual-mean from Step 1.
 % `notebooks/1010_scale-seasonality-based-on-annual-mean.py`
 As in the historical dataset,
@@ -598,7 +598,7 @@ not its monthly interpolation, so that the seasonality has an annual-mean of zer
 \textbf{Latitudinal gradient.}
 As for CO_2 (Sect.~\ref{sssec:methods-co2-project-seasonality-lat-gradient}),
 with fossil CH_4 emissions in place of fossil CO_2 emissions
-(consistent with the historical dataset, [TODO cite historical paper], resulting PCs shown in Fig.~\ref{fig:methods-ch4}e).
+(consistent with the historical dataset, \citealp{nicholls_historical-ghgs_2026}, resulting PCs shown in Fig.~\ref{fig:methods-ch4}e).
 We note here that the regression is particularly poor (Fig.~\ref{fig:methods-regressions-ch4}),
 which suggests that this method may be worth reconsidering in future (Sect.~\ref{sec:discussion}).
 % ZNTODO: note in the text (and return to in the discussion, Sect. \ref{sec:discussion})
@@ -701,7 +701,7 @@ resulting PCs shown in Fig.~\ref{fig:methods-n2o}d).
 For the other gases processed like N_2O, only one EOF is retained (as in the historical dataset).
 We project its PC using Eq.~(\ref{eq:pc-projection}),
 with total emissions of the gas as the driver.
-For these gases, we use the regression slope derived when producing the historical dataset [TODO cite historical paper] directly,
+For these gases, we use the regression slope derived when producing the historical dataset \citep{nicholls_historical-ghgs_2026} directly,
 rather than re-deriving it (resulting PCs shown in Appendix~\ref{app:methods-figures-n2o-like}).
 We return to this inconsistency in Sect.~\ref{sec:discussion}.
 % `notebooks/1030_scale-latitudinal-gradient-based-on-emissions.py`,
@@ -969,9 +969,9 @@ but its concentrations for these gases are only used to compare with the one-box
 This step is the same as for the gases processed like N_2O which retain one EOF
 (Sect.~\ref{sssec:methods-n2o-like-project-seasonality-lat-gradient}, Fig.~\ref{fig:methods-hfc125}b).
 For the gases which are assumed to have zero seasonality in the historical dataset
-(C_4F_10, C_5F_12, C_6F_14, C_7F_16, C_8F_18 and cC_4F_8 [TODO cite historical paper],
+(C_4F_10, C_5F_12, C_6F_14, C_7F_16, C_8F_18 and cC_4F_8, \citealp{nicholls_historical-ghgs_2026}),
 the seasonality remains zero.
-For C_8F_18, the historical dataset does not have a regression between the latitudinal gradient and emissions [TODO cite historical paper],
+For C_8F_18, the historical dataset does not have a regression between the latitudinal gradient and emissions \citep{nicholls_historical-ghgs_2026},
 so we keep the latitudinal gradient constant at its value in December 2022
 (Fig.~\ref{fig:methods-c8f18}).
 % `notebooks/1030_scale-latitudinal-gradient-based-on-emissions.py`: for c8f18 the slope is set to zero
@@ -1014,7 +1014,7 @@ This step is the same as for CO_2 (Sect.~\ref{sssec:methods-co2-generate-native-
 \subsection{Derived output grids}
 \label{ssec:methods-derived-grids}
 
-As for the historical dataset [TODO cite historical paper],
+As for the historical dataset \citep{nicholls_historical-ghgs_2026},
 we derive the global-mean and hemispheric-means (i.e. area-weighted means)
 and annual-means from the native resolution dataset.
 
@@ -1037,7 +1037,7 @@ We can produce this upon request.
 \label{ssec:methods-equivalent-species}
 
 We provide the same equivalent species as in the historical dataset
-(CFC-11-eq, CFC-12-eq and HFC-134a-eq, see [TODO cite historical paper]),
+(CFC-11-eq, CFC-12-eq and HFC-134a-eq, see \citealp{nicholls_historical-ghgs_2026}),
 calculated in the same way
 and using the same radiative efficiencies
 (\citealp{IPCC_AR6-WG1-Ch-7-SM_2021}, Table 7.SM.7).
@@ -1060,7 +1060,7 @@ As for the historical dataset,
 we format the data in a standard way before publishing it.
 % TODO-CHECK: {"tag": "n-output-variables", "unit": "dimensionless", "lower": 46, "upper": 46}
 We provide the same variable set and five combinations of frequency and grid
-as for the historical dataset [TODO cite historical paper]:
+as for the historical dataset \citep{nicholls_historical-ghgs_2026}:
 
 \begin{enumerate}
     % TODO zalue-check: {"tag": "native-grid-lat-band-width", "unit": "degree", "lower": 15, "upper": 15}
@@ -1110,5 +1110,5 @@ As for the historical dataset,
 we do not provide a vertical dimension.
 For modelling teams which do not have their own tracer transport and therefore require a vertical gradient,
 we suggest using the simplified parameterisations provided in \citet{meinshausen_historical-ghgs_2017}
-as discussed in [TODO cite historical paper].
+as discussed in \citet{nicholls_historical-ghgs_2026}.
 % ZNTODO: check whether M20 adds anything to this (as far as I know, M20 also points back to M17).
