@@ -1,5 +1,10 @@
 # TODOs: scenario GHG forcing for CMIP7 manuscript
 
+## Outstanding
+
+- [x] check manuscript-planning doc
+- [ ] clean out TODOs
+- [ ] make full TODO list
 - [x] finish off CO2 section
 - [x] read CO2 section again
 - [x] go back through rest of methods and add in figures references, check figures etc.
@@ -9,8 +14,10 @@
     - [x] do statements apply generally rather than being ScenarioMIP specific
     - [x] use of scenarios vs datasets
 - [x] conclusion
-- [ ] check manuscript-planning doc
-- [ ] make full TODO list
+
+### To ask co-authors
+
+- [ ] Invite all the data producers to be co-authors (ZN to do, not a manuscript edit)
 
 # TODOs: historical GHG forcing for CMIP7 manuscript
 

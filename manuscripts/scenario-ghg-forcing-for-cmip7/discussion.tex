@@ -1,6 +1,22 @@
 \section{Discussion}
 \label{sec:discussion}
 
+% ZNNOTES:
+%
+% Things we could possibly add:
+% - changes in scenarios compared to long-term records
+
+The produced GHG concentration forcings are available and consistent with the underlying emissions.
+The fact that the experiment design requires delivery of a single estimate for each experiment (Sect.~\ref{sec:output-dataset-requirements})
+leads to one key consequence: emissions-driven simulations from ESMs will almost certainly not exactly reproduce the provided GHG concentrations.
+This cannot be avoided.
+We cannot use an ESM to produce the GHG forcings in the first place because of their computational expense (Sect.~\ref{ssec:methods-motivation}).
+Even if we did pick a single ESM to use to produce the GHG forcings,
+ESMs will likely not all produce the same output in their emissions-driven simulations
+so the picked forcing dataset would still disagree with all other ESM outputs.
+This disagreement between the provided GHG concentration forcings
+and output from ESMs is a known consequence of the experiment design.
+
 There are a number of discussion points and improvements worth returning to.
 The first is the use of harmonisation.
 Harmonisation is difficult in all contexts in which it is used [TODO cite e.g. Kikstra, Gidden].
@@ -37,7 +53,15 @@ this was an acceptable choice given the delivery timelines we were required to m
 Nonetheless, an updated calibration of MAGICC, including updating lifetimes to match the latest literature estimates,
 would resolve this issue too.
 
-The third point to consider is the use of a single source for projections of ozone-depleting substances.
+The third key note is that the datasets produced here are not exhaustive.
+Due to the computational expense of ESMs, only a limited number of experiments can be run.
+We only produce forcings for this limited set,
+so the range of forcings included here should not be confused with the `full range' of possible future GHG concentrations:
+that full range is wider than shown here, particularly in the relationship across GHGs
+(the GHG concentration forcings produced here tend to be correlated across scenarios
+i.e. higher CO_2 concentrations implies higher CH_4 concentrations).
+
+The fourth point to consider is the use of a single source for projections of ozone-depleting substances.
 In some ways, this is at odds with the overall scenario narrative that underpins ScenarioMIP scenarios.
 While it is true that the Montreal Agreement should constrain the evolution of concentrations of these species,
 concentrations of other species explore a range of futures,
@@ -45,7 +69,7 @@ both ones compliant with international agreements and ones that are not.
 Not applying the same logic to the ozone-depleting substances results in a small inconsistency
 that may be worth further consideration.
 
-The fourth issue is inconsistencies between experiments.
+The fifth issue is inconsistencies between experiments.
 % Note to us: we should probably produce corrected versions of VL-CF
 % and upload them to ESGF in case anyone wants to see what the impact of these issues are in an ESM.
 % This would be a good exercise to do in the context of the DestinE project.
@@ -62,7 +86,7 @@ Based on the work in \citet{meinshausen_ssp-ghgs_2020},
 which showed that the sensitivity of projections to latitudinal gradients and seasonality was small,
 we expect the impact to be small and therefore have not recommended that any simulations that use the existing VL-CF dataset be re-run.
 
-The fifth issue is inconsistencies between the methods used for the historical and scenario datasets.
+The sixth issue is inconsistencies between the methods used for the historical and scenario datasets.
 Specifically, NPP is used to drive seasonality change in the future
 but a composite of global-, annual-mean concentrations and temperature is used to drive the same changes in the historical dataset [TODO cite historical paper].
 In addition, the latitudinal gradient is based on regressions that use different emissions sets.

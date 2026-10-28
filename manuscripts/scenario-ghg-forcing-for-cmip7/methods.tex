@@ -13,11 +13,14 @@ for details rather than repeating them.
 \label{ssec:methods-motivation}
 
 Our method is driven by three key requirements (Sect.~\ref{sec:output-dataset-requirements}).
-First, the concentrations should be consistent with the emissions in each experiment [TODO cite Kikstra],
-so that the climate outcomes of the ESM simulations can be linked back to the underlying emissions.
+First, the concentrations should be consistent with the
+quantified information used to define the scenarios that underpin each experiment [TODO cite e.g. van Vuuren, Annika's PolMIP stuff],
+particularly the emissions in each experiment [TODO cite Kikstra, Annika's PolMIP dataset],
+so that the climate outcomes of the ESM simulations can be linked back to the underlying experiment inputs
+e.g. socio-economic assumptions and emissions.
 This constrains our available options.
-In order to produce GHG concentration forcings for all experiments on CMIP timelines,
-we need a fast running model.
+In order to produce GHG concentration forcings for all experiments on CMIP timelines from emissions alone,
+we need a fast-running, all GHG emissions-driven model.
 This rules out all full scale ESMs.
 Instead we use simple models: a one-box model where it is sufficient
 and the simple climate model MAGICC \citep{meinshausen_magicc6-part-1_2011} [TODO cite Meinshausen et al., 2009] otherwise.
