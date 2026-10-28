@@ -25,6 +25,7 @@ from local.scenario_ghg_forcing_for_cmip7.rerun_projections import (
     get_regression_info_file,
     get_save_pcs_cell,
     get_save_regression_cell,
+    path_from_bundle_root,
     rerun,
 )
 
@@ -89,7 +90,7 @@ def rerun_co2_seasonality_vl_cf(bundle_dir: Path = BUNDLE_DIR) -> Path:
             f'magicc_output_db_dir = "{MAGICC_OUTPUT_DB_DIR.as_posix()}"',
             'magicc_db_backend_str = "feather"',
             "historical_data_seasonality_lat_gradient_info_root"
-            f' = "{HISTORICAL_INTERIM_ROOT.resolve().as_posix()}"',
+            f' = "{path_from_bundle_root(HISTORICAL_INTERIM_ROOT, bundle_dir)}"',
             f'out_file = "{CO2_SEASONALITY_VL_CF_FILE.as_posix()}"',
         ],
         extra_cells=[
