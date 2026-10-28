@@ -1,50 +1,90 @@
 \section{Discussion}
 \label{sec:discussion}
 
-% - harmonisation: ok, clearly not perfect.
-%   Emulator which matched assessment and obs would be ideal (but may not be possible if obs move in a way that doesn't align with assessment).
-%   Emulator updated to match obs while minimising delta from assessment good plan b.
+There are a number of discussion points and improvements worth returning to.
+The first is the use of harmonisation.
+Harmonisation is difficult in all contexts in which it is used [TODO cite e.g. Kikstra, Gidden].
+The need for it is an indication that there is a mismatch between the timeseries being harmonised to, usually a historical timeseries,
+the method/timeseries being harmonised, usually a projection timeseries based on modelling of some sort.
+Harmonisation then has to resolve this mismatch.
+As illustrated in this paper, there is no perfect way to do this.
+Using no harmonisation leads to a spurious jump in the output at the time point when we transition from the historical to projection timeseries.
+Never returning to the projection timeseries means that the difference at the harmonisation point
+affects every projected time point too, which does not always make physical sense (e.g. for short-lived emissions in this paper).
+Between these two extremes, a tradeoff is being made between having a faster transition to the projected timeseries (and therefore risking introducing unphysical features)
+and persisting the difference from historical over all time (which can also introduce unphysical features).
 %   VL-CF is good illustration of the issues with the current set up.
 %   We don't know whether it is overly sensitive to the kick in concentrations of CH4 and N2O in the last few years
 %   or whether the harmonisation is correctly correcting for a missing process/poor calibration in MAGICC/mismatch between historical emissions and concentrations inputs.
-%   The fact that this is scenario dependent is definitely bad:
-%   VL-CF basically gets 'raw MAGICC' while the other experiments get 'MAGICC plus harmonisation effects/insights'.
-% - use of multiple sources: ok. Bit of a disconnect potentially between WMO-based gases and scenarios,
-%   but scenarios providers don't model these gases so not much can be done right now.
-%   Using one-box model vs. MAGICC a pragmatic choice because of time pressure.
-%   Updating MAGICC in line with harmonisation point above clearly a better solution.
-%   Historical regressions based on historical emissions estimates available at the time,
-%   which differ from the historical emissions used for producing scenarios
-%   hence get small divergences/inconsistencies, also in application because of time pressure
-%   (e.g. re-derived lat grad regression for some gases, not for others)
-%   Probably need to split this point out now.
-%   It is also related to getting negative values where we shouldn't,
-%   which can be methodological or just inconsistency between input data sources/assumptions
-% We need to be much faster at re-calibrating MAGICC so we can do re-calibration to e.g. latest historical sources as needed
-% with robust understanding of the the impact of that re-calibration and confidence that other spurious changes are not sliding in.
-% This relates to the issue we had with running with CMIP6 historical even though it would have been better to run with CMIP7 historical.
-%
-% - crude statistical models. Required so we can span year 1 to year 2500. No obvious easy wins here.
-% - not prescribing WMO (2022) concentrations when running MAGICC. Clearly fixable. Minor issue given other uncertainies.
-% - mismatch after 2100 for the single-projection gases (see Sect. \ref{ssec:methods-input-emissions}):
-%   MAGICC is run with the official emissions extensions,
-%   but the official concentrations (WMO (2022), Western et al. (2024)) imply different emissions after 2100.
-%   Sum over gases of the max (over time) approximate radiative effect difference is ~0.03 W/m^2 in L (0.03-0.04 across scenarios).
-%   Good illustration of how hard it is to keep all the teams consistent across many decisions.
-% - inconsistencies between historical and scenario methods
-%   e.g. using MAGICC's NPP to drive seasonality change in future but concentration - temperature composite for the historical
-% - inconsistencies between experiments: the CO2 seasonality change PC vs. NPP regression was re-calculated for VL-CF
-%   (notebook `1011` regresses over the years up to the harmonisation year: 1981-2015 for VL-CF, 1981-2023 for the markers),
-%   giving a slope of 1.78 yr / GtC for VL-CF vs. 1.28 yr / GtC for the markers,
-%   i.e. VL-CF's seasonality responds roughly 40% more strongly to the same NPP change.
-%   Meanwhile, VL-CF's seasonality change PC is the historical one up to 2023
-%   (the projection is anchored at the historical PC in 2023 for all experiments),
-%   so VL-CF's counterfactual emissions from 2016 don't affect its seasonality until 2024.
-%   Another illustration (like the harmonisation point above) of VL-CF being treated differently to the other experiments.
-% - poor performance e.g. CH4 fossil emissions vs. PC regression
-% In the historical dataset, the CH4 first PC is non-constant from year 287
-% (before 1948, it comes from the optimisation against ice cores).
-% So the regression here mixes the ice-core-optimised period (1750-1947) with the emissions-regression period (1948-2022).
-% Checked 2026-10-26: this regression (shown in Fig. \ref{fig:methods-regressions-ch4}) is the one used for the published data
-% (the slope implied by the published L data, -0.74943 yr / Mt CH_4, matches the re-derived regression exactly).
-% Its slope is around 5.6 times that of the historical dataset's regression against PRIMAP-hist (-0.135 yr / Mt CH_4).
+The fact that the harmonisation effect also depends on the harmonisation time,
+therefore the experiment in this case (the harmonisation effect for VL differs notably from that for VL-CF, [TODO ref section]),
+is another clear undesirable side effect.
+The answer to this is to minimise the difference between the historical timeseries and the projection method,
+therefore reducing the possible impact of harmonisation.
+For our particular use case, the area for future improvement is clear:
+improve our calibration processes so that we can produce a calibration of MAGICC
+which agrees closely with the historical timeseries within the short forcing preparation timelines available.
+This would have allowed us to run MAGICC with CMIP7 concentrations for the historical period,
+rather than the CMIP6 concentrations we used because of the calibration's tight coupling with the CMIP6 historical timeseries.
+Ideally, this calibration process would be sufficiently sophisticated that it would maintain agreement with key assessments,
+like AR6, while taking into account the updated historical timeseries.
+This is certainly challenging, but it is also doable.
+
+Being able to re-calibrate MAGICC on shorter timescales would solve another identified issue,
+the use of a one-box model for projections of some gases rather than MAGICC.
+Given the small radiative forcing of these gases (compared to total radiative forcing),
+this was an acceptable choice given the delivery timelines we were required to meet.
+Nonetheless, an updated calibration of MAGICC, including updating lifetimes to match the latest literature estimates,
+would resolve this issue too.
+
+The third point to consider is the use of a single source for projections of ozone-depleting substances.
+In some ways, this is at odds with the overall scenario narrative that underpins ScenarioMIP scenarios.
+While it is true that the Montreal Agreement should constrain the evolution of concentrations of these species,
+concentrations of other species explore a range of futures,
+both ones compliant with international agreements and ones that are not.
+Not applying the same logic to the ozone-depleting substances results in a small inconsistency
+that may be worth further consideration.
+
+The fourth issue is inconsistencies between experiments.
+% Note to us: we should probably produce corrected versions of VL-CF
+% and upload them to ESGF in case anyone wants to see what the impact of these issues are in an ESM.
+% This would be a good exercise to do in the context of the DestinE project.
+As a result of the tight delivery timelines,
+differences between VL-CF and the rest of the experiments emerged that were not intended.
+These are all related to the fact that VL-CF diverges from history in 2016.
+The issue relates to CO_2's seasonality change and the latitudinal gradient used for CO_2, CH_4 and N_2O.
+In short, the regression with historical drivers was re-calculated over the period up until 2015 only,
+rather than over the full historical period as was done for the ScenarioMIP experiments.
+Therefore the sensitivity of the seasonality for CO_2 and latitudinal gradients for CO_2, CH_4 and N_2O
+to their drivers is different in VL-CF than the other scenarios, which doesn't make physical sense.
+This should be rectified in future work and we will endeavour to release an updated version of VL-CF without this issue in case any ESM team wishes to quantify the impact of this difference.
+Based on the work in \citet{meinshausen_ssp-ghgs_2020},
+which showed that the sensitivity of projections to latitudinal gradients and seasonality was small,
+we expect the impact to be small and therefore have not recommended that any simulations that use the existing VL-CF dataset be re-run.
+
+The fifth issue is inconsistencies between the methods used for the historical and scenario datasets.
+Specifically, NPP is used to drive seasonality change in the future
+but a composite of global-, annual-mean concentrations and temperature is used to drive the same changes in the historical dataset [TODO cite historical paper].
+In addition, the latitudinal gradient is based on regressions that use different emissions sets.
+These introduce further inconsistencies in seasonality and latitudinal gradients
+that should be reconsidered in future work.
+
+The sixth issue is the need to use a method which can produce datasets that span from year 1 to 2500 or beyond.
+This limits the level of sophistication which can be used as there are only a few ways to get information over such a long timespan.
+While there are no obvious solutions here, a number of elements could be considered more carefully and perhaps updated.
+The first is the driver for changes in the latitudinal gradient.
+While a linear regression against emissions works well for some species,
+for others (most notably CH_4) it is a much less good fit.
+The second, like also affected the historical dataset [TODO cite paper], is the need to scale latitudinal gradients and seasonality down
+in order to avoid negative values appearing in the output datasets.
+More careful consideration of the method as a whole
+and how to preserve internal consistency
+may lead to better results or identification of improved methods
+that nonetheless meet the constraints set by the output dataset requirements.
+
+The last issue is the difference between inversions of the CMIP7 concentrations and the CMIP7 extended emissions,
+and the fact that we run MAGICC in emissions-driven mode for gases where the CMIP7 concentrations are defined by an external source.
+Both of these lead to internal inconsistencies, albeit minor ones in the wider picture.
+Nonetheless, they point to the need for careful coordination between the multiple teams involved in producing forcings.
+While CMIP7 has achieved a much greater coherence than was achieved in CMIP6,
+there is still room for improvement, which we hope that future work can address.
