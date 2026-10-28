@@ -74,7 +74,7 @@ class Scenario:
         return CMIP7_LINESTYLE if self.cmip_era == "CMIP7" else CMIP6_LINESTYLE
 
 
-SCENARIO_GROUPS = ("high", "medium", "low")
+SCENARIO_GROUPS = ("higher-peak", "medium-peak", "lower-peak")
 """Groups of scenarios, in the order they are shown (top to bottom)"""
 
 # TODO: get official colour palettes.
@@ -90,61 +90,106 @@ CMIP7_SCENARIOS = (
         "VL-CF",
         "CMIP7",
         "#8c8c8c",
-        "low",
+        "lower-peak",
         ("CR-vl-cf-1-1-0", "CR-vl-cf-ext-1-1-0"),
     ),
-    Scenario("vl", "VL", "CMIP7", "#24a4ff", "low", ("CR-vl-1-1-0", "CR-vl-ext-1-1-0")),
-    Scenario("ln", "LN", "CMIP7", "#4a0daf", "low", ("CR-ln-1-1-0", "CR-ln-ext-1-1-0")),
-    Scenario("l", "L", "CMIP7", "#00cc69", "low", ("CR-l-1-1-0", "CR-l-ext-1-1-0")),
     Scenario(
-        "ml", "ML", "CMIP7", "#f5ac00", "medium", ("CR-ml-1-1-0", "CR-ml-ext-1-1-0")
+        "vl", "VL", "CMIP7", "#24a4ff", "lower-peak", ("CR-vl-1-1-0", "CR-vl-ext-1-1-0")
     ),
-    Scenario("m", "M", "CMIP7", "#ffa9dc", "medium", ("CR-m-1-1-0", "CR-m-ext-1-1-0")),
     Scenario(
-        "hl", "HL", "CMIP7", "#8f003b", "high", ("CR-hl-1-1-0", "CR-hl-ext-1-1-0")
+        "ln", "LN", "CMIP7", "#4a0daf", "lower-peak", ("CR-ln-1-1-0", "CR-ln-ext-1-1-0")
     ),
-    Scenario("h", "H", "CMIP7", "#700000", "high", ("CR-h-1-1-0", "CR-h-ext-1-1-0")),
+    Scenario(
+        "l", "L", "CMIP7", "#00cc69", "lower-peak", ("CR-l-1-1-0", "CR-l-ext-1-1-0")
+    ),
+    Scenario(
+        "ml",
+        "ML",
+        "CMIP7",
+        "#f5ac00",
+        "medium-peak",
+        ("CR-ml-1-1-0", "CR-ml-ext-1-1-0"),
+    ),
+    Scenario(
+        "m", "M", "CMIP7", "#ffa9dc", "medium-peak", ("CR-m-1-1-0", "CR-m-ext-1-1-0")
+    ),
+    Scenario(
+        "hl",
+        "HL",
+        "CMIP7",
+        "#8f003b",
+        "higher-peak",
+        ("CR-hl-1-1-0", "CR-hl-ext-1-1-0"),
+    ),
+    Scenario(
+        "h", "H", "CMIP7", "#700000", "higher-peak", ("CR-h-1-1-0", "CR-h-ext-1-1-0")
+    ),
 )
 """CMIP7 scenarios, lowest to highest"""
 
 CMIP6_SCENARIOS = (
     Scenario(
-        "ssp119", "SSP1-1.9", "CMIP6", "#00a9cf", "low", ("UoM-IMAGE-ssp119-1-2-1",)
+        "ssp119",
+        "SSP1-1.9",
+        "CMIP6",
+        "#00a9cf",
+        "lower-peak",
+        ("UoM-IMAGE-ssp119-1-2-1",),
     ),
     Scenario(
-        "ssp126", "SSP1-2.6", "CMIP6", "#003466", "low", ("UoM-IMAGE-ssp126-1-2-1",)
+        "ssp126",
+        "SSP1-2.6",
+        "CMIP6",
+        "#003466",
+        "lower-peak",
+        ("UoM-IMAGE-ssp126-1-2-1",),
     ),
     Scenario(
-        "ssp434", "SSP4-3.4", "CMIP6", "#2274ae", "medium", ("UoM-GCAM4-ssp434-1-2-1",)
+        "ssp434",
+        "SSP4-3.4",
+        "CMIP6",
+        "#2274ae",
+        "medium-peak",
+        ("UoM-GCAM4-ssp434-1-2-1",),
     ),
     Scenario(
         "ssp245",
         "SSP2-4.5",
         "CMIP6",
         "#f69320",
-        "medium",
+        "medium-peak",
         ("UoM-MESSAGE-GLOBIOM-ssp245-1-2-1",),
     ),
     Scenario(
-        "ssp460", "SSP4-6.0", "CMIP6", "#b0724e", "medium", ("UoM-GCAM4-ssp460-1-2-1",)
+        "ssp460",
+        "SSP4-6.0",
+        "CMIP6",
+        "#b0724e",
+        "medium-peak",
+        ("UoM-GCAM4-ssp460-1-2-1",),
     ),
     Scenario(
         "ssp534-over",
         "SSP5-3.4-over",
         "CMIP6",
         "#92397a",
-        "high",
+        "higher-peak",
         ("UoM-REMIND-MAGPIE-ssp534-over-1-2-1",),
     ),
     Scenario(
-        "ssp370", "SSP3-7.0", "CMIP6", "#df0000", "high", ("UoM-AIM-ssp370-1-2-1",)
+        "ssp370",
+        "SSP3-7.0",
+        "CMIP6",
+        "#df0000",
+        "higher-peak",
+        ("UoM-AIM-ssp370-1-2-1",),
     ),
     Scenario(
         "ssp585",
         "SSP5-8.5",
         "CMIP6",
         "#980002",
-        "high",
+        "higher-peak",
         ("UoM-REMIND-MAGPIE-ssp585-1-2-1",),
     ),
 )

@@ -8,7 +8,7 @@ One figure per gas, the same for every gas:
   joined onto the end of the history
 - every CMIP7 scenario's yearly global-mean
 - the CMIP7 scenarios' yearly global-means next to CMIP6's,
-  in groups of high, medium and low scenarios
+  in groups of higher, medium and lower peak scenarios
 
 Built on the historical manuscript's results figure
 ([local.historical_ghg_forcing_for_cmip7.results_figure][]),
@@ -26,14 +26,21 @@ from pathlib import Path
 import matplotlib.axes
 import matplotlib.lines
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 import numpy as np
+import openscm_units
 import pandas as pd
 import xarray as xr
 from loguru import logger
 
 from local.historical_ghg_forcing_for_cmip7.comparison_data import (
+    IGCC_COLUMNS,
     TIME_COLUMN,
     VALUE_COLUMN,
+    get_igcc_comparison,
+)
+from local.historical_ghg_forcing_for_cmip7.equivalent_species import (
+    EQUIVALENT_SPECIES,
 )
 from local.historical_ghg_forcing_for_cmip7.layout import (
     LEGEND_FONT_SIZE,
@@ -156,11 +163,62 @@ TITLES = {
     ),
     "monthly": f"Monthly spatial-means, {SCENARIOS[HIGHLIGHTED_SCENARIO].label}",
     "cmip7": "CMIP7 global-, annual-means",
-    "high": "High scenarios",
-    "medium": "Medium scenarios",
-    "low": "Low scenarios",
+    # Not "High" etc., which would read as the H, M and L scenarios
+    "higher-peak": "Higher peak",
+    "medium-peak": "Medium peak",
+    "lower-peak": "Lower peak",
 }
 """Title of each panel"""
+
+IGCC_FIRST_YEAR = 2020
+"""First year of IGCC's record we show
+
+IGCC is there to show how the scenarios compare with the latest observations,
+so we show it from a couple of years before the scenarios start
+(enough to see how it compares with the end of the history,
+the historical manuscript compares the two in full).
+Also the first year of the inset, see [add_igcc_inset][].
+"""
+
+IGCC_MARKER_SIZE = 2.5
+"""Size of the markers which show IGCC's record"""
+
+INSET_CANDIDATE_BOXES = (
+    (0.15, 0.6, 0.5, 0.33),
+    (0.15, 0.08, 0.5, 0.33),
+)
+"""Boxes the IGCC inset may be put in, as (x0, y0, width, height)
+
+In axes co-ordinates of the first piece of the panel's time axis.
+Both on the left, near the years the inset magnifies,
+so it is easy to see which years those are.
+The inset's vertical tick labels go on its right (see [add_igcc_inset][]),
+so the left edge only has to clear the box around the years it magnifies.
+The bottom one leaves room for its horizontal tick labels.
+In preference order, see [choose_inset_box][].
+"""
+
+InsetPlacement = tuple[int, tuple[float, float, float, float]]
+"""Where to put an inset, as (piece, box)
+
+The piece is the index of the piece of the time axis the inset goes on,
+the box is (x0, y0, width, height) in axes co-ordinates of that piece.
+"""
+
+INSET_PLACEMENTS: dict[str, InsetPlacement] = {
+    # Both of INSET_CANDIDATE_BOXES are crossed by the experiments' rise and fall,
+    # while the middle of the extensions is empty
+    # (between M's and H's plateaus and the rest).
+    # Far enough left for the inset's vertical tick labels to stay inside the panel.
+    "ch4": (1, (0.03, 0.36, 0.6, 0.3)),
+}
+"""Where to put the IGCC inset, for gases where [INSET_CANDIDATE_BOXES][] don't work
+
+Gases not listed use [choose_inset_box][].
+"""
+
+INSET_PADDING_FRACTION = 0.08
+"""Room to leave above and below the data in the inset, as a fraction of its range"""
 
 YEARLY_ROW_HEIGHT = 0.85
 """Height of each of the CMIP6 comparison panels, in inches"""
@@ -338,6 +396,157 @@ def get_scenario_frame(
     return branch_off_history(scenario, as_frame(da), history)
 
 
+def get_igcc_frame(gas: str, units: str) -> pd.DataFrame | None:
+    """
+    Get IGCC's yearly global-mean, over the years we show it
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    units
+        Units to return the data in
+
+    Returns
+    -------
+    :
+        IGCC's record from [IGCC_FIRST_YEAR][] onwards,
+        or `None` if IGCC doesn't have `gas`
+        or, for an equivalent species, defines it differently to us
+        (see [local.historical_ghg_forcing_for_cmip7.comparison_data.IGCC_COLUMNS][]),
+        so the two aren't comparable.
+    """
+    if gas in EQUIVALENT_SPECIES or gas not in IGCC_COLUMNS:
+        return None
+
+    comparison = get_igcc_comparison(gas)
+    pdf = comparison.data
+    factor = openscm_units.unit_registry.Quantity(1.0, comparison.units).to(units).m
+    res = pdf.assign(**{VALUE_COLUMN: pdf[VALUE_COLUMN] * factor})
+
+    return res[res[TIME_COLUMN] >= IGCC_FIRST_YEAR]
+
+
+def choose_inset_box(ax: matplotlib.axes.Axes) -> tuple[float, float, float, float]:
+    """
+    Choose the emptiest of [INSET_CANDIDATE_BOXES][]
+
+    Parameters
+    ----------
+    ax
+        Axes the inset goes in, with everything already drawn
+        and its limits settled
+
+    Returns
+    -------
+    :
+        The box with the fewest data points in it
+        (the first in preference order, if there is a tie)
+    """
+    data_to_axes = ax.transData + ax.transAxes.inverted()
+    points = np.vstack(
+        [data_to_axes.transform(line.get_xydata()) for line in ax.get_lines()]
+    )
+
+    def n_inside(box: tuple[float, float, float, float]) -> int:
+        x0, y0, width, height = box
+        inside = (
+            (points[:, 0] >= x0)
+            & (points[:, 0] <= x0 + width)
+            & (points[:, 1] >= y0)
+            & (points[:, 1] <= y0 + height)
+        )
+
+        return int(inside.sum())
+
+    return min(INSET_CANDIDATE_BOXES, key=n_inside)
+
+
+def add_igcc_inset(
+    axes: Sequence[matplotlib.axes.Axes],
+    igcc: pd.DataFrame,
+    placement: InsetPlacement | None = None,
+) -> matplotlib.axes.Axes:
+    """
+    Add an inset which magnifies the years IGCC covers
+
+    The scenarios barely differ over these years,
+    so at the panel's scale IGCC sits on top of them.
+    The inset is a zoom of the panel: it re-draws every line on it.
+
+    Parameters
+    ----------
+    axes
+        Axes of each piece of the panel's time axis,
+        with everything already drawn and their limits settled
+
+        The years IGCC covers are on the first piece.
+
+    igcc
+        IGCC's record, as returned by [get_igcc_frame][]
+
+    placement
+        Where to put the inset
+
+        If `None`, the emptiest of [INSET_CANDIDATE_BOXES][] on the first piece,
+        see [choose_inset_box][].
+
+    Returns
+    -------
+    :
+        The inset
+    """
+    ax = axes[0]
+    last_year = int(np.floor(igcc[TIME_COLUMN].max()))
+    xlim = (float(IGCC_FIRST_YEAR), last_year + 1.0)
+
+    if placement is None:
+        placement = (0, choose_inset_box(ax))
+
+    piece, box = placement
+    ax_inset = axes[piece].inset_axes(box)
+    in_view = []
+    for line in ax.get_lines():
+        xy = line.get_xydata()
+        ax_inset.plot(
+            xy[:, 0],
+            xy[:, 1],
+            color=line.get_color(),
+            linestyle=line.get_linestyle(),
+            linewidth=line.get_linewidth(),
+            marker=line.get_marker(),
+            markersize=line.get_markersize(),
+            markerfacecolor=line.get_markerfacecolor(),
+            markeredgewidth=line.get_markeredgewidth(),
+            zorder=line.get_zorder(),
+        )
+        in_view.append(xy[(xy[:, 0] >= xlim[0]) & (xy[:, 0] <= xlim[1]), 1])
+
+    values = np.concatenate(in_view)
+    padding = INSET_PADDING_FRACTION * (values.max() - values.min())
+    ax_inset.set_ylim(values.min() - padding, values.max() + padding)
+    ax_inset.set_xlim(xlim)
+    # Only the years at either end, labelled where their annual-means are drawn:
+    # the inset is too narrow to label every year,
+    # and its ends are what say which years it magnifies
+    ax_inset.set_xticks(
+        [xlim[0] + 0.5, last_year + 0.5], labels=[f"{xlim[0]:.0f}", f"{last_year}"]
+    )
+    ax_inset.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(3))
+    # On the right, away from the panel's own vertical axis and tick labels
+    ax_inset.yaxis.tick_right()
+    ax_inset.tick_params(labelsize="x-small")
+
+    # Only a box around the years it magnifies, no lines joining it to the inset:
+    # they would cross the panel's data
+    # (and be cut off at the break in the time axis if the inset is past it).
+    (x0, x1), (y0, y1) = ax_inset.get_xlim(), ax_inset.get_ylim()
+    ax.indicate_inset((x0, y0, x1 - x0, y1 - y0), edgecolor="black", linewidth=0.5)
+
+    return ax_inset
+
+
 def plot_yearly_panel(  # noqa: PLR0913
     axes: Sequence[matplotlib.axes.Axes],
     segments: Sequence[tuple[float, float]],
@@ -345,6 +554,7 @@ def plot_yearly_panel(  # noqa: PLR0913
     scenarios: Mapping[Scenario, pd.DataFrame],
     histories: dict[str, pd.DataFrame],
     units: str,
+    igcc: pd.DataFrame | None = None,
 ) -> dict[str, matplotlib.lines.Line2D]:
     """
     Plot scenarios' yearly values, with their histories
@@ -370,6 +580,11 @@ def plot_yearly_panel(  # noqa: PLR0913
     units
         Units the data is in, as written on the vertical axis
 
+    igcc
+        IGCC's record, as returned by [get_igcc_frame][]
+
+        If `None`, IGCC isn't shown.
+
     Returns
     -------
     :
@@ -377,6 +592,22 @@ def plot_yearly_panel(  # noqa: PLR0913
     """
     handles = {}
     foreground = []
+    if igcc is not None:
+        handles["IGCC"] = plot_line_in_segments(
+            igcc,
+            axes,
+            segments,
+            color=HISTORY_COLOUR,
+            linestyle="none",
+            marker="o",
+            markersize=IGCC_MARKER_SIZE,
+            markerfacecolor="none",
+            markeredgewidth=0.6,
+            # On top of the scenarios, which it is compared with
+            zorder=4.0,
+        )
+        foreground.append(igcc)
+
     for cmip_era, history in histories.items():
         linestyle = CMIP7_LINESTYLE if cmip_era == "CMIP7" else CMIP6_LINESTYLE
         handles[f"{cmip_era} history"] = plot_line_in_segments(
@@ -573,6 +804,12 @@ def add_scenario_legend(
     """
     entries = [
         ("History", handles[f"{cmip_era} history"]),
+        # IGCC is only drawn with the CMIP7 scenarios
+        *(
+            (("IGCC", handles["IGCC"]),)
+            if cmip_era == "CMIP7" and "IGCC" in handles
+            else ()
+        ),
         *((s.label, handles[s.label]) for s in scenarios),
     ]
     linestyle = "solid" if cmip_era == "CMIP7" else "dashed"
@@ -624,12 +861,14 @@ def get_axes_of_panel(
     return [axes[n] for n in get_panel_axes_names(panel)]
 
 
-def plot_yearly_panels(
+def plot_yearly_panels(  # noqa: PLR0913
     rows: tuple[Row, ...],
     axes: Mapping[str, matplotlib.axes.Axes],
     histories: dict[str, pd.DataFrame],
     scenarios: Mapping[Scenario, pd.DataFrame],
     units: str,
+    igcc: pd.DataFrame | None = None,
+    igcc_inset_placement: InsetPlacement | None = None,
 ) -> None:
     """
     Plot the yearly panels and their legends (see [YEARLY_ROWS][])
@@ -651,15 +890,29 @@ def plot_yearly_panels(
 
     units
         Units the data is in, as written on the vertical axis
+
+    igcc
+        IGCC's record, as returned by [get_igcc_frame][]
+
+        Shown in the panel with every CMIP7 scenario,
+        with an inset which magnifies the years it covers (see [add_igcc_inset][]).
+        If `None`, IGCC isn't shown.
+
+    igcc_inset_placement
+        Where to put the inset, see [add_igcc_inset][]
     """
+    cmip7_axes = get_axes_of_panel(rows, axes, "cmip7")
     handles = plot_yearly_panel(
-        get_axes_of_panel(rows, axes, "cmip7"),
+        cmip7_axes,
         YEARLY_SEGMENTS,
         YEARLY_TICKS,
         {s: scenarios[s] for s in CMIP7_SCENARIOS},
         {"CMIP7": histories["CMIP7"]},
         units,
+        igcc=igcc,
     )
+    if igcc is not None:
+        add_igcc_inset(cmip7_axes, igcc, igcc_inset_placement)
     for i, group in enumerate(SCENARIO_GROUPS):
         handles.update(
             plot_yearly_panel(
@@ -734,7 +987,15 @@ def generate_results_figure(gas: str, outfile: Path) -> Path:
         s: get_scenario_frame(gas, s, histories[s.cmip_era], units)
         for s in (*CMIP7_SCENARIOS, *CMIP6_SCENARIOS)
     }
-    plot_yearly_panels(ROWS, axes, histories, scenarios, units)
+    plot_yearly_panels(
+        ROWS,
+        axes,
+        histories,
+        scenarios,
+        units,
+        igcc=get_igcc_frame(gas, units),
+        igcc_inset_placement=INSET_PLACEMENTS.get(gas),
+    )
 
     label_panels(ROWS, axes, TITLES, unlabelled=tuple(LEGEND_PANELS.values()))
 

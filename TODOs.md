@@ -34,8 +34,8 @@ Paths are relative to `manuscripts/scenario-ghg-forcing-for-cmip7/` unless state
 
 Introduction
 
-- [ ] `introduction.tex:1-2`: consider adding paragraphs about the need for standardisation, production of forcings, harmonisation etc.
-- [ ] `introduction.tex:4-19`: first paragraph "is a bit of a mess and probably trying to say too much", rework.
+- [x] `introduction.tex:1-2`: consider adding paragraphs about the need for standardisation, production of forcings, harmonisation etc.
+- [x] `introduction.tex:4-19`: first paragraph "is a bit of a mess and probably trying to say too much", rework.
 
 Methods
 
@@ -70,13 +70,22 @@ Methods
 
 Results
 
-- [ ] `results.tex:12`: rename the high/medium/low groups on the figures so they don't clash with the CMIP7 scenario names (H, M, L).
-- [ ] `results.tex:13`: plot IGCC concentrations where available (shows which scenario is closest in 2023, 2024 and 2025).
+- [x] `results.tex:12`: rename the high/medium/low groups on the figures so they don't clash with the CMIP7 scenario names (H, M, L).
+      Now "Higher peak", "Medium peak" and "Lower peak" (figure titles, results and emissions figure captions,
+      "lower group" in the CH_4 results text).
+- [x] `results.tex:13`: plot IGCC concentrations where available (shows which scenario is closest in 2023, 2024 and 2025).
+      IGCC v6.4.0 from 2020 onwards, as circles in panel c of the CO_2, CH_4 and N_2O results figures,
+      with an inset zooming in on 2020 to IGCC's last year (2025).
+      Not shown for CFC-12-eq and HFC-134a-eq, IGCC defines them differently (captions say so).
+      The ScenarioMIP scenarios are identical until 2024, so IGCC can't single out a scenario.
+      Instead, one sentence per gas in the results compares the ScenarioMIP experiments with IGCC in 2025
+      (CO_2 ~0.7 ppm below, CH_4 30-35 ppb above with ~11 ppb already there in 2022, N_2O ~0.2 ppb above),
+      with value checks (`igcc-last-year`, `<gas>-scenariomip-minus-igcc-last-igcc-year`, `ch4-history-minus-igcc-2022`).
 
 Discussion
 
-- [ ] Two "The sixth issue" paragraphs (`discussion.tex:89,96`), renumber.
-- [ ] (Optional) `discussion.tex:4-7`: possible addition, changes in scenarios compared to long-term records.
+- [x] Two "The sixth issue" paragraphs (`discussion.tex:89,96`), renumber.
+- [x] (Optional) `discussion.tex:4-7`: possible addition, changes in scenarios compared to long-term records.
 
 Appendices
 
@@ -88,8 +97,9 @@ Back matter
 - [ ] `code-and-data-availability.tex:1-2`: placeholder, "check this".
       Also needs the bundle/Zenodo reference for the VL-CF run,
       which was produced after the 1.1.0 bundle with later code (`methods.tex:995-998`).
-- [ ] `competing-interests.tex:1`: placeholder, confirm.
-- [ ] `conclusion.tex:1`: placeholder comment points to `manuscript-planning.md` (no longer exists), remove once happy.
+      @Claude check: I think this bundle has VL-CF already
+- [x] `competing-interests.tex:1`: placeholder, confirm.
+- [x] `conclusion.tex:1`: placeholder comment points to `manuscript-planning.md` (no longer exists), remove once happy.
 
 #### Numbers to fill in and statements to check
 

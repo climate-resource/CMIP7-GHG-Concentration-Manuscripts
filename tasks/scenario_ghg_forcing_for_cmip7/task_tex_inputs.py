@@ -8,6 +8,8 @@ from typing import Annotated
 from pytask import Product, task
 
 import local.historical_ghg_forcing_for_cmip7.author_contributions
+import local.historical_ghg_forcing_for_cmip7.comparison_data
+import local.historical_ghg_forcing_for_cmip7.equivalent_species
 import local.scenario_ghg_forcing_for_cmip7.appendix_figures
 import local.scenario_ghg_forcing_for_cmip7.emissions_figure
 import local.scenario_ghg_forcing_for_cmip7.esgf_data
@@ -80,6 +82,9 @@ RESULTS_FIGURES_SOURCES = [
     Path(local.scenario_ghg_forcing_for_cmip7.results_figure.__file__),
     Path(local.scenario_ghg_forcing_for_cmip7.esgf_data.__file__),
     Path(local.scenario_ghg_forcing_for_cmip7.scenarios.__file__),
+    # IGCC's record
+    Path(local.historical_ghg_forcing_for_cmip7.comparison_data.__file__),
+    Path(local.historical_ghg_forcing_for_cmip7.equivalent_species.__file__),
 ]
 """The modules which make the results figures (they are re-made if these change)"""
 

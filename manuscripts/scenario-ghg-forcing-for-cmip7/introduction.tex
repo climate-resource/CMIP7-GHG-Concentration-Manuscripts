@@ -1,27 +1,12 @@
-% ZNTODO:
-% - consider adding paragraphs about need for standardisation, production of forcings, harmonisation etc.
-
-% ZNTODO: this paragraph is a bit of a mess and probably trying to say too much. Come back to it
 The seventh phase of the Coupled Model Intercomparison Project (CMIP7) is in progress \citep{dunne_cmip7_2025}.
 Within CMIP7, there are a range of experiments.
-Here we consider experiments which explore future climate change.
-These experiments provide insights into the future climate change that is consistent with the forcings that define each experiment.
-However, they have applications beyond this.
-As discussed in [TODO cite SSP paper], there can be more than one way,
-specifically set of underlying socioeconomic assumptions,
-to produce forcings consistent with each experiment.
-As a result, these experiments not only provide information about future climate change under the specific assumptions made in their underlying scenario,
-but also future climate change in any other scenario which results in forcings that are consistent with the experiment's forcings
-(where consistency is not defined here and what meets the requirements of conistency will depend on the intended use case).
-This means that they are a key link point between various socioeconomic explorations
-and the resulting future climate change
-(this link is extremely valuable because of the cost of running an ESM: we cannot run an ESM for every set of forcings of interest,
-so having ESM output for a range of forcing sets, which covers many potential variations, is key to allow for an at least approximate estimate of future climate change under any set of underlying assumptions).
+Here we consider experiments which explore future climate change,
+consistent with each experiments forcings i.e. chosen boundary conditions.
 
 Within CMIP7's exploration of possible futures, the most well known effort is ScenarioMIP [TODO other citations] \citep{van-vuuren_scenariomip_2025}.
 ScenarioMIP's remit is to explore future climate change under a selected range of possible boundary conditions
 (with the question of what to select being the key choice for the ScenarioMIP team to make,
-given that not all possible boundary conditions can be run by ESMs).
+given that not all possible boundary conditions can be run by Earth System Models (ESMs) because of their computational expense).
 In CMIP7, ScenarioMIP explores scenarios
 % ZNTODO: add reference to underlying papers for each scenario here
 that range from very low future emissions (the VL scenario) to high emissions (the H scenario),
@@ -31,21 +16,40 @@ low emissions (L), approximately at the top of the range that could be considere
 medium followed by low emissions (ML);
 medium emissions (M), approximately in line with countries' current Nationally Determined Contributions (NDCs) [TODO cite PA];
 and high followed by low (and then negative) emissions (HL) \citep[for full details see ][]{van-vuuren_scenariomip_2025} [TODO add Riahi citation here].
-Beyond ScenarioMIP, other efforts are also being setup.
+Beyond ScenarioMIP, other efforts are also undertaken.
 Here we illustrate our support for such efforts by also presenting the GHG forcings for PolMIP's [TODO check citation] VL-CF experiment.
 VL-CF is a counterfactural experiment in which emissions are reduced from the start of 2016 onwards (i.e. just after the signing of The Paris Agreement)
-such that global-mean temperatures peak at around 1.5~\textdegree C (according to AR6 science).
+such that global-mean temperatures peak at around 1.5~\textdegree C (according to AR6 science) [TODO add citation].
+
+The design of the ScenarioMIP experiments maximises the usefulness derived from the resulting Earth System Model (ESM) output,
+given that ESMs cannot be run for all experiments of interest due to their computational expense.
+As discussed in [TODO cite SSP paper], there is normally more than one way,
+specifically set of underlying socioeconomic assumptions and mitigation actions,
+to produce forcings consistent with each experiment.
+As a result, these experiments not only provide information about future climate change
+under the specific assumptions made in their underlying scenario,
+but also future climate change in any other scenario
+which results in forcings that are consistent with the experiment's forcings
+(where consistency is not defined here and what meets the requirements of conistency will depend on the intended use case).
+This means that these experiments are a key link point between various socioeconomic explorations
+and the resulting future climate change
+(this link is extremely valuable because of the cost of running an ESM: we cannot run an ESM for every set of forcings of interest,
+so having ESM output for a range of forcing sets, which covers many potential variations,
+allows for an at least approximate estimate of future climate change under any set of underlying assumptions).
 
 There is an increasing move towards emissions-driven capability in ESMs.
 At this stage, CO_2 emissions-driven capability is close to mainstream,
 while some early adopters also have CH_4 and N_2O emissions-driven capability.
 For these teams, the CO_2, CH_4 and N_2O concentrations provided here are not needed.
-However, for all other teams, there is still a reliance on our provided concentrations.
-For species other than CO_2, CH_4 and N_2O, all models will rely on our provided GHG concentration forcings as far as we are aware.
+However, for all other teams, there is still a reliance on the provided concentrations.
+For species other than CO_2, CH_4 and N_2O, all models will rely on the provided GHG concentration forcings as far as we are aware.
 The production of GHG concentration forcings for all species also facilitates concentration-driven experiments,
-which can be key to understanding uncertainties in modelling of Earth's carbon cycle.
+which can be compared to their emissions-driven counterparts and help understand uncertainties in modelling of Earth's carbon cycle.
 
 Here we describe how the GHG concentration forcings are produced for CMIP7's future-focussed experiments.
+This covers how we ensure a smooth transition from the historical datasets (harmonisation).
+We also note that this dataset is subject to the same standardisation requirements
+as the historical dataset \citep{nicholls_historical-ghgs_2026}.
 We present the datasets which are already available (specifically ScenarioMIP's experiments and PolMIP's VL-CF experiment)
 and note that the production of any other dataset used in CMIP7's future-focussed experiments is likely to follow the same methodology.
 
@@ -93,12 +97,14 @@ The output datasets are provided at different spatial and temporal resolutions.
 We provide both monthly and yearly datasets,
 as well as global-means, hemispheric-means and datasets that include latitudinal variations.
 No dependency on longitude is provided.
-For a brief discussion on how add a vertical dimension to these datasets, see Sect.~[TODO number] of \citet{nicholls_historical-ghgs_2026}.
+For a brief discussion on how add a vertical dimension to these datasets, see Sect.~\ref{ssec:methods-vertical}.
 
-The output datasets extend from year 2022 to the end of 2500.
+The output datasets extend from 2022 to the end of 2500.
 The CMIP7 historical experiment runs to the end of 2021,
-so this means that users can use the scenario datasets from the end of their historical simulations
-(2022 is also included in the historical datasets, but users should use the scenario datasets for 2022 values where they can
+so this means that users can use the scenario datasets alone from the end of their historical simulations
+(2022 is also included in the historical datasets,
+but users should use the scenario datasets for 2022 values where they can
+% TODO: zalue check of max of this difference across all datasets at the lat. monthly level i.e. take max across the lat. month dimensions for the difference between history and all scenarios in 2022
 although the difference between the two is negligible).
 The output data is split by experiment
 and into `main' (up until the end of 2100) and extensions (2101 to the end of 2025).

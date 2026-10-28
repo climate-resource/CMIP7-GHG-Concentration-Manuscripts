@@ -7,7 +7,7 @@ so the emissions can be read against the concentrations they lead to:
 
 - every CMIP7 scenario's global emissions
 - the CMIP7 scenarios' global emissions next to CMIP6's,
-  in groups of high, medium and low scenarios
+  in groups of higher, medium and lower peak scenarios
 
 The CMIP7 emissions are the complete emissions MAGICC was run with
 in the original run: the history up to the harmonisation year,
