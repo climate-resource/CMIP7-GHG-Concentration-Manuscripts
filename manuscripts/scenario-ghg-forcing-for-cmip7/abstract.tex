@@ -1,0 +1,65 @@
+The seventh phase of the Coupled Model Intercomparison Project (CMIP7) is underway.
+A number of CMIP7 experiments explore future climate change.
+Here we provide the greenhouse gas (GHG) boundary conditions, i.e. forcings,
+to be used for the experiments which explore future climate change under a range of scenarios until 2100
+and their temporal extensions to 2500 (the ScenarioMIP experiments).
+The need to produce these GHG forcings on a tight delivery deadline means that an Earth System Model cannot be used to produce them.
+Instead, we use a simple climate model (namely the Model for the Assessment of Greenhouse Gas Induced Climate Change, MAGICC) as the basis for these forcings.
+As a result, they will inevitably differ from emissions-driven ESM outputs for the same experiment.
+The GHG concentration forcings cover a range of potential futures.
+Between 2022 and 2500,
+% value-check: {"tag": "co2-cmip7-min", "unit": "ppm", "lower": 199.5, "upper": 200.5}
+% value-check: {"tag": "co2-cmip7-min-is-ln"}
+% value-check: {"tag": "co2-cmip7-min-year", "unit": "yr", "lower": 2260, "upper": 2260}
+% value-check: {"tag": "co2-cmip7-max", "unit": "ppm", "lower": 1275, "upper": 1285}
+% value-check: {"tag": "co2-cmip7-max-is-h"}
+% value-check: {"tag": "co2-cmip7-max-year", "unit": "yr", "lower": 2268, "upper": 2268}
+CO_2 ranges from 200~ppm
+% (in LN in 2260)
+to 1280~ppm,
+% (in H in 2268)
+% value-check: {"tag": "ch4-cmip7-min", "unit": "ppb", "lower": 945, "upper": 955}
+% value-check: {"tag": "ch4-cmip7-min-is-vl"}
+% value-check: {"tag": "ch4-cmip7-min-year", "unit": "yr", "lower": 2500, "upper": 2500}
+% value-check: {"tag": "ch4-cmip7-max", "unit": "ppb", "lower": 3055, "upper": 3065}
+% value-check: {"tag": "ch4-cmip7-max-is-hl"}
+% value-check: {"tag": "ch4-cmip7-max-year", "unit": "yr", "lower": 2070, "upper": 2070}
+CH_4 from 950~ppb
+% (in VL in 2500)
+to 3060~ppb
+% (in HL in 2070)
+% value-check: {"tag": "n2o-cmip7-min", "unit": "ppb", "lower": 256.5, "upper": 257.5}
+% value-check: {"tag": "n2o-cmip7-min-is-vl-cf"}
+% value-check: {"tag": "n2o-cmip7-min-year", "unit": "yr", "lower": 2500, "upper": 2500}
+% value-check: {"tag": "n2o-cmip7-max", "unit": "ppb", "lower": 444.5, "upper": 445.5}
+% value-check: {"tag": "n2o-cmip7-max-is-h"}
+% value-check: {"tag": "n2o-cmip7-max-year", "unit": "yr", "lower": 2154, "upper": 2154}
+and N_2O from 257~ppb
+(in VL-CF in 2500)
+to 445~ppb,
+% (in H in 2154)
+while CFC-12 and other ozone-depleting substance concentrations are based on WMO and related studies
+so is assumed to be the same across all experiments and to continue to decline.
+Compared to CMIP6 over the same period,
+% value-check: {"tag": "co2-cmip7-range-width-relative-to-cmip6", "unit": "dimensionless", "lower": 0, "upper": 0.9}
+% value-check: {"tag": "co2-cmip6-min", "unit": "ppm", "lower": 335, "upper": 345}
+% value-check: {"tag": "co2-cmip6-max", "unit": "ppm", "lower": 2205, "upper": 2215}
+the range for CO_2 is narrower and lower (CMIP6: 340 to 2210~ppm),
+% value-check: {"tag": "ch4-cmip7-range-width-relative-to-cmip6", "unit": "dimensionless", "lower": 0, "upper": 0.9}
+% value-check: {"tag": "ch4-cmip6-min", "unit": "ppb", "lower": 855, "upper": 865}
+% value-check: {"tag": "ch4-cmip6-max", "unit": "ppb", "lower": 3445, "upper": 3455}
+the range for CH_4 is narrower (CMIP6: 860 to 3450~ppb),
+% value-check: {"tag": "n2o-cmip7-range-width-relative-to-cmip6", "unit": "dimensionless", "lower": 0.95, "upper": 1.05}
+% value-check: {"tag": "n2o-cmip6-min", "unit": "ppb", "lower": 332.5, "upper": 333.5}
+% value-check: {"tag": "n2o-cmip6-max", "unit": "ppb", "lower": 515.5, "upper": 516.5}
+the range for N_2O is a similar width but lower (CMIP6: 333 to 516~ppb)
+% value-check: {"tag": "cfc12-cmip7-above-all-cmip6"}
+% value-check: {"tag": "cfc12-cmip7-relative-to-cmip6-mean-to-2100", "unit": "dimensionless", "lower": 0.05, "upper": 0.065}
+and CFC-12 concentrations are slightly higher in the medium- and long-term than in CMIP6 scenarios.
+% (around 6\% higher than the mean of the CMIP6 scenarios on average up to 2100).
+The changes are driven by changes in the underlying scenarios
+and by producing the underlying GHG concentration projections with an emulator (specifically the MAGICC model)
+that is in line with AR6 science and includes an estimate of the impact of climate change on CH_4 emissions from wetlands.
+The underlying method can and will be used for any future-focussed experiments,
+which we illustrate by also presenting the GHG concentrations to be used for PolMIP's VL-CF experiment.
+The GHG concentrations are publicly available and in use by CMIP7 modelling teams.

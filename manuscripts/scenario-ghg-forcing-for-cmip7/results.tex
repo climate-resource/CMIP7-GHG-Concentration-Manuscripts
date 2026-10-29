@@ -1,0 +1,223 @@
+\section{Results}
+\label{sec:results}
+
+% Notes:
+% - not including CMIP5 at this point on purpose.
+%   It's not really relevant anymore, given how old CMIP5 concentrations are.
+%   (Belongs better in a forcings difference paper)
+% - write, then get feedback, then add things. It is hard to guess what people will find interesting
+% - deliberately left ERF quantifications out here, they can go in ScenarioMIP paper
+
+\subsection{Note on radiative effect comparisons}
+\label{ssec:results-radiative-forcing-comparisons-note}
+
+Throughout this section, we provide comparisons between datasets.
+We provide these comparisons both in units of concentration as well as in units of W/m2.
+As discussed in detail in \citet{nicholls_historical-ghgs_2026},
+it must be noted that the comparisons in units of W/m2 are an approximation.
+The approximation matches or overestimates the true (effective) radiative forcing.
+
+\subsection{CO_2}
+\label{ssec:results-co2}
+
+The resulting dataset transitions smoothly from the historical dataset
+at both our native resolution (Fig.~\ref{fig:results-co2}a),
+and hemispheric means (Fig.~\ref{fig:results-co2}b).
+The global- annual-means have approximately tracked
+the data available from the Indicators of Global Climate Change (IGCC) project \citep{forster_igcc_2026}.
+% % value-check: {"tag": "igcc-last-year", "unit": "yr", "lower": 2025, "upper": 2025}
+% % value-check: {"tag": "co2-scenariomip-minus-igcc-last-igcc-year", "unit": "ppm", "lower": -0.8, "upper": -0.6}
+% the ScenarioMIP experiments are around 0.7~ppm lower than IGCC (Fig.~\ref{fig:results-co2}c, inset).
+The experiments are roughly evenly spaced until 2100
+and the datasets all have one of two shapes (Fig.~\ref{fig:results-co2}c):
+peak and decline (with the decline being very gentle for VL-CF)
+or ongoing rise (H, M).
+% value-check: {"tag": "co2-settled-2500-range", "unit": "ppm", "lower": 305, "upper": 365}
+Post 2100, the datasets either settle between 305 and 365~ppm by 2500
+or demonstrate a slow stabilisation consistent with the net-zero emissions
+in the underlying emissions (Fig.~\ref{fig:emissions-co2}a).
+The clear exception here is the LN scenario,
+which has the equal lowest concentrations by 2100
+and continues to well below pre-industrial concentrations by 2200,
+before rising again once its emissions return to zero by 2300
+and the system begins to re-equilibrate (Fig.~\ref{fig:emissions-co2}a).
+This excursion into deeply negative emissions and below pre-industrial concentrations
+is a novelty that has not previously been explored in detail with ESMs,
+particularly emissions-driven ESMs.
+Examining the ESM output from this experiment
+will be key to informing future updates of simple climate models
+and our method as it will provide new information
+about the extent to which our assumptions
+about the reversibility of seasonality and latitudinal gradients holds in physics-based models.
+
+% Deliberately decide not to make any comment about when the scenarios are distinguishable.
+% Separating detectable signal from noise is its own paper.
+
+Compared to CMIP6, the highest concentration scenarios peak at much lower levels (Fig.~\ref{fig:results-co2}d).
+For example, CMIP6's highest concentration scenario was SSP5-8.5, which peaked above 2000~ppm.
+In contrast, CMIP7's highest concentration scenario is H, which peaks below 1500~ppm.
+The medium and lower peak groups cover a similar range across the two CMIP phases (Fig.~\ref{fig:results-co2}e, f).
+The major exception, as discussed already, is LN, which is a completely new shape and absolute value from anything in CMIP6.
+A more minor exception is VL-CF, which has a significantly lower peak than any CMIP6 or CMIP7 scenario,
+in line with its counterfactual nature.
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@co2-results-figure@}
+\caption{
+    CO_2 datasets.
+    a) Native resolution (monthly, 15\textdegree{} latitude bands) data.
+    Here shown for the historical and L experiment from 2019--2028.
+    % from the last three years of the historical dataset to the first seven years of the experiment (2019--2028).
+    b) Global- and hemispheric-, monthly-means.
+    Like in a), also shown for the L experiment.
+    % The dotted line marks where the historical dataset ends and the experiment starts.
+    c) Global-, annual-means for all CMIP7 experiments, alongside the historical dataset
+    and the global-, annual-means from the Indicators of Global Climate Change (IGCC) project.
+    % The inset magnifies the years from 2020 to the last year of IGCC data,
+    % % value-check: {"tag": "igcc-last-year", "unit": "yr", "lower": 2025, "upper": 2025}
+    % 2025.
+    d--f) Global-, annual-means for the CMIP7 experiments
+    compared with the CMIP6 experiments
+    % \citep[dashed,][]{meinshausen_ssp-ghgs_2020}
+    for the higher peak (d), medium peak (e) and lower peak (f) groups of experiments.
+    % In c--f), the time axis is broken in 2120, with the period after the break compressed.
+}
+\label{fig:results-co2}
+\end{figure}
+
+\subsection{CH_4}
+\label{ssec:results-ch4}
+
+CH_4's strong seasonality and latitudinal gradient continues into the scenarios (Fig.~\ref{fig:results-ch4}a, b).
+% value-check: {"tag": "igcc-last-year", "unit": "yr", "lower": 2025, "upper": 2025}
+% value-check: {"tag": "ch4-scenariomip-minus-igcc-last-igcc-year", "unit": "ppb", "lower": 30, "upper": 35}
+% value-check: {"tag": "ch4-history-minus-igcc-2022", "unit": "ppb", "lower": 10.5, "upper": 11.5}
+The global- annual-means for the ScenarioMIP experiments are 30--35~ppb higher than IGCC (Fig.~\ref{fig:results-ch4}c, inset),
+of which around 11~ppb is already there in 2022.
+The difference in 2022 is due to differences between IGCC and the historical dataset \citep{nicholls_historical-ghgs_2026},
+with the rest coming from the fact that we harmonise to the historical datasets' gradient (Sect.~\ref{sssec:methods-ch4-project-global-mean}).
+while the IGCC dataset shows a notable change in gradient in 2023,
+which provides another illustration of the difficulty of harmonisation (Sect.~\ref{sssec:methods-ch4-project-global-mean}).
+The lower peak group of experiments have concentrations consistent with declining emissions.
+The difference in their end of century concentrations is driven by the different floor
+which CH_4 emissions reach in each experiment
+(Figs.~\ref{fig:results-ch4}c and \ref{fig:emissions-ch4}a).
+The ML experiment's CH_4 concentrations take longer to start declining,
+then show a similar shape to the lower peak experiments,
+consistent with its delayed cut in CH_4 emissions.
+The M, H and HL experiments all follow a similar rise initially.
+M and H then stabilise at different levels, driven by the different levels at which their emissions stabilise.
+In line with its narrative and underlying emissions, concentrations in HL drop rapidly from 2070.
+% value-check: {"tag": "ch4-stabilised-2500-range", "unit": "ppb", "lower": 900, "upper": 1200}
+Post 2100, CH_4 concentrations stabilise between 900 and 1200~ppb (all experiments except M and H)
+or remain at elevated levels consistent with ongoing, approximately constant CH_4 emissions (M and H).
+
+Compared to CMIP6, the higher peak group of experiments reach similar concentrations until 2100 (Fig.~\ref{fig:results-ch4}d).
+After 2100, the H scenario's CH_4 concentrations remain notably higher than any CMIP6 scenario,
+reflecting the different extension choices.
+The medium peak group are similar to CMIP6, with the M's much higher extension being the notable difference (Fig.~\ref{fig:results-ch4}e).
+The lower peak group of experiments has a higher peak than CMIP6 (Fig.~\ref{fig:results-ch4}f),
+reflecting updated assumptions about the speed with which CH_4 mitigation can be implemented compared to CMIP6 (Fig.~\ref{fig:emissions-ch4}d).
+The lower peak group also has a larger spread in peak concentrations
+and different extensions that are in line with higher sustained CH_4 emissions than assumed in CMIP6.
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@ch4-results-figure@}
+\caption{
+    Like Fig.~\ref{fig:results-co2}, except for CH_4.
+}
+\label{fig:results-ch4}
+\end{figure}
+
+\subsection{N_2O}
+\label{ssec:results-n2o}
+
+N_2O's moderate seasonality and latitudinal gradient continues into the scenarios (Fig.~\ref{fig:results-n2o}a, b).
+% value-check: {"tag": "igcc-last-year", "unit": "yr", "lower": 2025, "upper": 2025}
+% value-check: {"tag": "n2o-scenariomip-minus-igcc-last-igcc-year", "unit": "ppb", "lower": 0.15, "upper": 0.25}
+The ScenarioMIP experiment datasets track the IGCC data closely (Fig.~\ref{fig:results-n2o}c, inset),
+providing an illustration of where the harmonisation seems to work better in the short-term
+(in contrast to CH_4, see Sect.~\ref{sec:results-ch4}).
+There is a roughly even spread of N_2O concentration pathways across the CMIP7 experiments (Fig.~\ref{fig:results-n2o}c),
+albeit with a larger gap to the VL and VL-CF experiments
+that reflects the exploration of all available N_2O mitigation options in VL
+(and VL-CF, which uses VL's N_2O emissions).
+Post 2100, all experiments' N_2O concentrations decline back to approximately pre-industrial levels,
+reflecting the emissions extensions which also return to approximately zero emissions (Fig.~\ref{fig:emissions-n2o}a).
+
+Compared to CMIP6, the concentrations are very similar out to 2100 (Fig.~\ref{fig:results-n2o}d, e, f).
+The exception is VL, which explores novel N_2O mitigation, compared to CMIP6 too.
+Beyond 2100, CMIP6 and CMIP7 are notably different.
+While CMIP6 assumed ongoing emissions, related to agriculture in particular \citep[see Fig.~\ref{fig:emissions-n2o}b--d and][]{meinshausen_ssp-ghgs_2020},
+CMIP7 assumes that all N_2O emissions can be mitigated.
+There is no correct answer for these highly uncertain long-term extensions
+but the impact of the two different choices is made clear here.
+% value-check: {"tag": "n2o-ssp370-minus-h-2500-radiative-effect", "unit": "W / m^2", "lower": 0.75, "upper": 0.85}
+In radiative effect terms, the difference in N_2O concentrations between the SSP3-7.0 and H experiments is around 0.8~W/m2 in 2500.
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@n2o-results-figure@}
+\caption{
+    Like Fig.~\ref{fig:results-co2}, except for N_2O.
+}
+\label{fig:results-n2o}
+\end{figure}
+
+\subsection{Equivalence datasets}
+\label{ssec:results-equivalence-datasets}
+
+\subsubsection{CFC-12-eq}
+\label{sssec:results-equivalence-datasets-cfc12eq}
+
+CFC-12-eq's seasonality and latitudinal gradient continues from the historical datasets'
+and looks unusual because it is the composite of multiple species' seasonality and latitudinal gradients (Fig.~\ref{fig:results-cfc12eq}a, b).
+In line with the input data sources, CFC-12-eq's ongoing decline is projected to continue in the future (Fig.~\ref{fig:results-cfc12eq}c).
+
+The changes from CMIP6 are minor (Fig.~\ref{fig:results-cfc12eq}d, e, f).
+Present-day concentrations are slightly lower than those used in CMIP6,
+largely because of a change in the radiative efficiencies used to convert to CFC-12-eq
+rather than a change in the actual concentrations of each gas \citep{nicholls_historical-ghgs_2026}.
+Future concentrations are slightly higher
+% TODO check with co-authors
+because of updated handling of bank emissions [TODO citations].
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@cfc12eq-results-figure@}
+\caption{
+    Like Fig.~\ref{fig:results-co2}, except for CFC-12-eq.
+    % IGCC (and so the inset in c) is not shown because its CFC-12-eq includes different gases and uses different radiative efficiencies to ours
+    % (Sect.~\ref{ssec:methods-equivalent-species}).
+}
+\label{fig:results-cfc12eq}
+\end{figure}
+
+\subsubsection{HFC-134a-eq}
+\label{sssec:results-equivalence-datasets-hfc134aeq}
+
+HFC-134a-eq's almost zero seasonality, but notable latitudinal gradient,
+continues from the historical datasets' (Fig.~\ref{fig:results-hfc134aeq}a, b).
+Compared to the other species, projections of HFC-134a-eq are less consistent with the underlying scenario narratives and show more unusual shapes.
+This is in line with the underlying emissions (Fig.~\ref{fig:emissions-hfc134aeq}a).
+The most notable features are the odd shapes of the ML and M datasets
+and the fact that L has the third highest concentrations,
+which points to a consistency issue across the experiment ensemble for the emissions which underpin HFC-134a-eq.
+Given the small effective radiative forcing of these gases compared to other forcers,
+these inconsistencies are a minor problem for CMIP7 experiments (they may be more important in other contexts).
+Post 2100, the extensions are consistent with an ongoing decline in emissions (Fig.~\ref{fig:emissions-hfc134aeq}a),
+with the difference in concentrations being largely determined by cumulative emissions of gases with long lifetimes on the way to zero emissions.
+
+Compared to CMIP6, the highest peak HFC-134a-eq concentration is slightly lower.
+The medium peak scenarios are similar at the end of the century, but take quite different paths before then.
+The lower peak experiments are similar, with the exception of L.
+The extensions in CMIP6 are generally similar, with the exception of SSP4-3.4 and SSP4-6.0,
+which both remain at elevated concentrations compared to M and ML.
+
+\begin{figure}[tp]
+\includegraphics[width=12cm]{@hfc134aeq-results-figure@}
+\caption{
+    Like Fig.~\ref{fig:results-co2}, except for HFC-134a-eq.
+    % IGCC (and so the inset in c) is not shown because its HFC-134a-eq includes different gases and uses different radiative efficiencies to ours
+    % (Sect.~\ref{ssec:methods-equivalent-species}).
+}
+\label{fig:results-hfc134aeq}
+\end{figure}

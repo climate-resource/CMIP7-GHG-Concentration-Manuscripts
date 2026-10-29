@@ -31,6 +31,8 @@ dependencies = [
     "nbformat>=5.10",
     "openscm-zenodo @ git+https://github.com/openscm/openscm-zenodo.git@3617c4fbe26282c810a6379721864b57a3892555",
     "openpyxl>=3.1.5",
+    "pytask>=0.6.0",
+    "pyarrow>=26.0.0",
 ]
 name = "local"
 version = "0.1.0"
@@ -48,6 +50,11 @@ source-include = [
 
 [tool.jupytext]
 formats = "ipynb,py:percent"
+
+# Without `paths`: in pytask 0.6.0, `paths` set here overrides paths given on the command line,
+# so `pytask tasks/<some-dir>` would silently build everything.
+# Collecting from the root instead costs nothing noticeable.
+[tool.pytask.ini_options]
 
 [tool.ruff]
 src = [
@@ -90,6 +97,11 @@ ignore = [
 ]
 "scripts/*" = [
     "S602",
+    "S603",
+    "S607",
+]
+# Runs pdflatex and bibtex (moved out of scripts/compile-gmd-template-based-latex.py)
+"src/local/gmd_latex.py" = [
     "S603",
     "S607",
 ]

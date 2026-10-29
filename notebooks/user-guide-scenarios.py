@@ -266,7 +266,7 @@ print(f"{extract_scenario_id('CR-l-1-1-0')=}")
 # These details will be provided both via the CMIP CVs
 # (see https://github.com/WCRP-CMIP/CMIP7-CVs)
 # and the final ScenarioMIP paper
-# (revisions of {raw-latex}`\textcite{van-vuuren_scenariomip_2025}`
+# (revisions of {raw-latex}`\textcite{van-vuuren_scenariomip_2026}`
 #  are expected soon).
 # Scenario IDs of the final datasets can be confirmed
 # [here](https://github.com/WCRP-CMIP/CMIP7-CVs/discussions/1#discussioncomment-14585785)[^scenario-id-final-comment].

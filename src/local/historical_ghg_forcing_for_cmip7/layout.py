@@ -214,6 +214,17 @@ class Panel:
     colour_bar_height: float = 1.0
     """Height of the colour bar, as a fraction of the panel's height"""
 
+    row_span: int = 1
+    """
+    Number of rows the panel spans, starting from the row it is in
+
+    A panel which spans more than one row must be the first panel in its row.
+    The rows below it then start to the right of it,
+    and it runs from the top of its own row's data boxes
+    to the bottom of the last spanned row's.
+    It cannot have a fixed `aspect`.
+    """
+
 
 @dataclass(frozen=True)
 class Row:
@@ -340,6 +351,55 @@ def get_broken_shares(panel: Panel) -> tuple[float, ...]:
         return tuple(share / total for share in panel.broken_split)
 
     return (panel.broken_split, 1.0 - panel.broken_split)
+
+
+def get_spanning_panels(rows: tuple[Row, ...]) -> list[Panel | None]:
+    """
+    Get the panel from an earlier row which takes up the left of each row, if any
+
+    Parameters
+    ----------
+    rows
+        Rows of the figure, top to bottom
+
+    Returns
+    -------
+    :
+        For each row, the panel from an earlier row
+        which spans down into it (see [Panel.row_span][]), or `None`
+
+    Raises
+    ------
+    AssertionError
+        A spanning panel isn't the first in its row, has a fixed aspect,
+        spans past the last row, or overlaps another spanning panel
+    """
+    res: list[Panel | None] = [None] * len(rows)
+    for i, row in enumerate(rows):
+        for j, panel in enumerate(row.panels):
+            if panel.row_span <= 1:
+                continue
+
+            if j > 0 or res[i] is not None:
+                msg = f"A panel which spans rows must be the first in its row: {panel}"
+                raise AssertionError(msg)
+
+            if panel.aspect is not None:
+                msg = f"A panel which spans rows can't have a fixed aspect: {panel}"
+                raise AssertionError(msg)
+
+            if i + panel.row_span > len(rows):
+                msg = f"Panel spans past the last row: {panel}"
+                raise AssertionError(msg)
+
+            for k in range(i + 1, i + panel.row_span):
+                if res[k] is not None:
+                    msg = f"Panels which span rows overlap: {panel}, {res[k]}"
+                    raise AssertionError(msg)
+
+                res[k] = panel
+
+    return res
 
 
 def get_colour_bar_axes_name(panel: Panel) -> str:
@@ -573,32 +633,65 @@ def _place(  # noqa: PLR0912, PLR0915
             pads[left.name].title_right + settings.title_gap + pads[right.name].left,
         )
 
+    spanning = get_spanning_panels(rows)
     # Every row's data starts at the same place on the left,
-    # so the vertical axes line up.
+    # so the vertical axes line up
+    # (rows which start to the right of a panel spanning down into them aside).
     # On the right, each row runs all the way to the edge,
     # otherwise a colour bar in one row would leave a gap at the end of all the others,
     # unless we've been asked to line the rows up on the right too.
-    left_edge = settings.margin + max(pads[row.panels[0].name].left for row in rows)
+    left_edge = settings.margin + max(
+        pads[row.panels[0].name].left
+        for row, spanner in zip(rows, spanning)
+        if spanner is None
+    )
     shared_right_edge = (
         settings.width
         - settings.margin
         - max(right_pad(row.panels[-1]) for row in rows)
     )
 
+    def row_top_pad(i: int) -> float:
+        # A spanning panel's decorations above it only count in its first row
+        return max(pads[panel.name].top for panel in rows[i].panels)
+
+    def row_bottom_pad(i: int) -> float:
+        # and those below it only in its last row
+        bottoms = [
+            pads[panel.name].bottom for panel in rows[i].panels if panel.row_span <= 1
+        ]
+        spanner = spanning[i]
+        if spanner is not None and (
+            i + 1 >= len(rows) or spanning[i + 1] is not spanner
+        ):
+            bottoms.append(pads[spanner.name].bottom)
+
+        return max(bottoms, default=0.0)
+
     # Positions from the top first, because we don't know the figure's height yet
     boxes_from_top = {}
+    span_tops = {}
     y = settings.margin
-    for row in rows:
+    for i_row, row in enumerate(rows):
         panels = row.panels
         if settings.align_right:
             right_edge = shared_right_edge
         else:
             right_edge = settings.width - settings.margin - right_pad(panels[-1])
 
+        spanner = spanning[i_row]
+        if spanner is None:
+            row_left_edge = left_edge
+        else:
+            spanner_x0, _, spanner_width, _ = boxes_from_top[spanner.name]
+            row_left_edge = (
+                spanner_x0 + spanner_width + space_between(spanner, panels[0])
+            )
+
         between = sum(
             space_between(left, right) for left, right in itertools.pairwise(panels)
         )
-        available = right_edge - left_edge - between
+        available = right_edge - row_left_edge - between
 
         if row.height is None:
             if any(panel.aspect is None for panel in panels):
@@ -627,8 +720,8 @@ def _place(  # noqa: PLR0912, PLR0915
             )
             raise AssertionError(msg)
 
-        y += max(pads[panel.name].top for panel in panels)
-        x = left_edge
+        y += row_top_pad(i_row)
+        x = row_left_edge
         for i, panel in enumerate(panels):
             if panel.aspect is None:
                 width = flexible_width * panel.width / flexible_weight
@@ -636,10 +729,25 @@ def _place(  # noqa: PLR0912, PLR0915
                 width = height / panel.aspect
 
             boxes_from_top[panel.name] = (x, y, width, height)
+            if panel.row_span > 1:
+                span_tops[panel.name] = y
+
             if i < len(panels) - 1:
                 x += width + space_between(panel, panels[i + 1])
 
-        y += height + max(pads[panel.name].bottom for panel in panels)
+        # A spanning panel runs down to the bottom of the last row it spans
+        if spanner is not None and (
+            i_row + 1 >= len(rows) or spanning[i_row + 1] is not spanner
+        ):
+            spanner_x0, spanner_y, spanner_width, _ = boxes_from_top[spanner.name]
+            boxes_from_top[spanner.name] = (
+                spanner_x0,
+                spanner_y,
+                spanner_width,
+                y + height - span_tops[spanner.name],
+            )
+
+        y += height + row_bottom_pad(i_row)
         y += settings.hspace
 
     figure_height = y - settings.hspace + settings.margin
@@ -732,10 +840,14 @@ def place_titles(
     settings
         Layout settings
     """
-    for row in rows:
+    spanning = get_spanning_panels(rows)
+    for row, spanner in zip(rows, spanning):
         for i, panel in enumerate(row.panels):
             x0, _, _, _ = boxes[panel.name]
-            title_left = settings.margin if i == 0 else x0 - pads[panel.name].left
+            # Only the first panel in a row which nothing spans down into
+            # starts at the figure's left edge
+            at_left_edge = i == 0 and spanner is None
+            title_left = settings.margin if at_left_edge else x0 - pads[panel.name].left
 
             names = get_panel_axes_names(panel)
             gap = settings.broken_gap if panel.broken_gap is None else panel.broken_gap
