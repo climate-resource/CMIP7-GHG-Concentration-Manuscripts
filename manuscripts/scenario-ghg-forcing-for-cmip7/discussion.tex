@@ -20,7 +20,7 @@ and output from ESMs is a known consequence of the experiment design.
 
 There are a number of discussion points and improvements worth returning to.
 The first is the use of harmonisation.
-Harmonisation is difficult in all contexts in which it is used [TODO cite e.g. Kikstra, Gidden].
+Harmonisation is difficult in all contexts in which it is used \citep[e.g.][]{gidden_aneris_2018,gidden_cmip6-harmonised-emissions_2019,kikstra_scenariomip-emissions_2026}.
 The need for it is an indication that there is a mismatch between the timeseries being harmonised to, usually a historical timeseries,
 the method/timeseries being harmonised, usually a projection timeseries based on modelling of some sort.
 Harmonisation then has to resolve this mismatch.
@@ -34,7 +34,9 @@ and persisting the difference from historical over all time (which can also intr
 %   We don't know whether it is overly sensitive to the kick in concentrations of CH4 and N2O in the last few years
 %   or whether the harmonisation is correctly correcting for a missing process/poor calibration in MAGICC/mismatch between historical emissions and concentrations inputs.
 The fact that the harmonisation effect also depends on the harmonisation time,
-therefore the experiment in this case (the harmonisation effect for VL differs notably from that for VL-CF, [TODO ref section]),
+therefore the experiment in this case
+(the harmonisation effect for VL differs notably from that for VL-CF,
+see Sects.~\ref{sssec:methods-ch4-project-global-mean} and~\ref{sssec:methods-n2o-like-project-global-mean}),
 is another clear undesirable side effect.
 The answer to this is to minimise the difference between the historical timeseries and the projection method,
 therefore reducing the possible impact of harmonisation.
@@ -66,7 +68,7 @@ i.e. higher CO_2 concentrations implies higher CH_4 concentrations).
 
 The fourth point to consider is the use of a single source for projections of ozone-depleting substances.
 In some ways, this is at odds with the overall scenario narrative that underpins ScenarioMIP scenarios.
-While it is true that the Montreal Agreement should constrain the evolution of concentrations of these species,
+While it is true that the Montreal Protocol should constrain the evolution of concentrations of these species,
 concentrations of other species explore a range of futures,
 both ones compliant with international agreements and ones that are not.
 Not applying the same logic to the ozone-depleting substances results in a small inconsistency
@@ -125,7 +127,7 @@ While there are no obvious solutions here, a number of elements could be conside
 The first is the driver for changes in the latitudinal gradient.
 While a linear regression against emissions works well for some species,
 for others (most notably CH_4) it is a much less good fit.
-The second, like also affected the historical dataset \citep{nicholls_historical-ghgs_2026}, is the need to scale latitudinal gradients and seasonality down
+The second, which also affected the historical dataset \citep{nicholls_historical-ghgs_2026}, is the need to scale latitudinal gradients and seasonality down
 in order to avoid negative values appearing in the output datasets.
 More careful consideration of the method as a whole
 and how to preserve internal consistency

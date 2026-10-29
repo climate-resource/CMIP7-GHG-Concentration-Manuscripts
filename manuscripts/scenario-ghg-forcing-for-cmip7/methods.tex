@@ -14,8 +14,8 @@ for details rather than repeating them.
 
 Our method is driven by three key requirements (Sect.~\ref{sec:output-dataset-requirements}).
 First, the concentrations should be consistent with the
-quantified information used to define the scenarios that underpin each experiment [TODO cite e.g. van Vuuren, Annika's PolMIP stuff],
-particularly the emissions in each experiment [TODO cite Kikstra, Annika's PolMIP dataset],
+quantified information used to define the scenarios that underpin each experiment,
+particularly the emissions in each experiment \citep{kikstra_scenariomip-emissions_2026,hogner_vl-cf-emissions_2026},
 so that the climate outcomes of the ESM simulations can be linked back to the underlying experiment inputs
 e.g. socio-economic assumptions and emissions.
 This constrains our available options.
@@ -23,10 +23,10 @@ In order to produce GHG concentration forcings for all experiments on CMIP timel
 we need a fast-running, all GHG emissions-driven model.
 This rules out all full scale ESMs.
 Instead we use simple models: a one-box model where it is sufficient
-and the simple climate model MAGICC \citep{meinshausen_magicc6-part-1_2011} [TODO cite Meinshausen et al., 2009] otherwise.
-MAGICC has demonstrated ability to emulate ESMs [TODO cite RCMIP phase 2, Meinshausen 2011],
-was used to produce the CMIP5 and CMIP6 scenario concentrations \citep{meinshausen_ssp-ghgs_2020} [TODO cite Meinshausen et al., 2011 RCP concentrations]
-and was used in the IPCC's Sixth Assessment Report (AR6) to provide insights consistent with the AR6 WG1 assessment throughout AR6 \citep{IPCC_AR6-WG1-Ch-7_2021}.
+and the simple climate model MAGICC \citep{meinshausen_magicc6-part-1_2011,meinshausen_ssp-ghgs_2020} otherwise.
+MAGICC has demonstrated ability to emulate ESMs \citep{meinshausen_magicc6-part-1_2011,nicholls_rcmip-phase-2_2021},
+was used to produce the CMIP5 and CMIP6 scenario concentrations \citep{meinshausen_rcp-concentrations_2011,meinshausen_ssp-ghgs_2020}
+and was used in the IPCC's Sixth Assessment Report (AR6) to provide insights consistent with the AR6 WG1 assessment throughout AR6 \citep{IPCC_AR6-WG1-Ch-7_2021,kikstra_ar6-climate-assessment_2022}.
 Second, the projections must continue smoothly from the historical dataset,
 i.e. there should be no spurious jumps at the transition from history to projection.
 This requires us to harmonise the projections with the history
@@ -49,8 +49,8 @@ This is the first dataset we generate for all gases.
 From the native resolution datasets, we create lower resolution data products
 (Sect.~\ref{ssec:methods-derived-grids}).
 
-We produce datasets for the ScenarioMIP scenarios [TODO cite]
-and for VL-CF, PolMIP's counterfactual to VL [TODO cite] (Sect.~\ref{sec:output-dataset-requirements}),
+We produce datasets for the ScenarioMIP scenarios
+and for VL-CF, PolMIP's counterfactual to VL (Sect.~\ref{sec:output-dataset-requirements}),
 which we refer to collectively as experiments.
 Each experiment follows the historical dataset up to and including
 a year which we call its harmonisation year, $y_h$,
@@ -97,12 +97,12 @@ The general approach can be broken down as follows:
                 % value-check: {"tag": "one-box-lifetimes"}
                 This allows us to use up-to-date lifetimes \citep[Table A-5,][]{wmo_ozone-ch7_2022}
                 in a transparent way
-                without altering the AR6-calibrated configuration of MAGICC [TODO citations].
+                without altering the AR6-calibrated configuration of MAGICC.
             }
             \item {
                 \textbf{MAGICC plus harmonisation.}
                 For all other gases, we run MAGICC v7.6.0a3 with each experiment's emissions
-                because MAGICC captures key features like climate and concentration feedbacks [TODO cite papers again?].
+                because MAGICC captures key features like climate and concentration feedbacks \citep{meinshausen_magicc6-part-1_2011,meinshausen_ssp-ghgs_2020}.
                 From MAGICC's probabilistic output,
                 we take the median of the probabilistic ensemble
                 and harmonise this median to the historical dataset
@@ -270,7 +270,7 @@ are the same for all gases.
 
 \textbf{Running MAGICC.}
 
-We run MAGICC v7.6.0a3 \citep{meinshausen_magicc6-part-1_2011} [TODO cite Meinshausen et al., 2009, 2011, 2020]
+We run MAGICC v7.6.0a3
 % The probabilistic distribution file is
 % `magicc/magicc-v7.6.0a3/configs/magicc-ar7-fast-track-drawnset-v0-3-0.json`, DOI 10.5281/zenodo.14678474.
 % Its description: "IPCC AR6 configuration, updated to include a probabilistic wetland methane feedback
@@ -279,11 +279,10 @@ We run MAGICC v7.6.0a3 \citep{meinshausen_magicc6-part-1_2011} [TODO cite Meinsh
 for each experiment.
 We use a 600-member probabilistic parameter ensemble
 that has been calibrated to be consistent with the assessment of the IPCC's Sixth Assessment Report \citep{IPCC_AR6-WG1-Ch-7_2021}
-based on the methods described in [TODO cite RCMIP2],
-with an update to include a probabilistic wetland CH_4 feedback as described in [TODO cite Sloughter et al.].
+based on the methods described in \citet{meinshausen_emission-targets_2009,nicholls_rcmip-phase-2_2021},
+with an update to include a probabilistic wetland CH_4 feedback as described in \citet{sloughter_magicc-ch4-feedbacks_2026}.
 For comparison, we also run MAGICC v7.5.3, the version used in AR6, which does not include this feedback,
 with the same emissions (Sect.~\ref{sssec:methods-ch4-project-global-mean}).
-These runs are not used in our output.
 % (`magicc_version_to_run` in `scripts/generate-concentration-files.py`.)
 % The difference between the two versions for e.g. CO2 is tiny, so we don't show it unless asked.
 
@@ -314,9 +313,9 @@ the resulting concentrations do not always match the CMIP7 concentrations exactl
 \textbf{Input emissions.}
 
 To derive the input emissions, we require multiple input datasets.
-The first is the harmonised emissions that result from the CMIP7 ScenarioMIP emissions harmonisation process [TODO cite Kikstra et al.].
+The first is the harmonised emissions that result from the CMIP7 ScenarioMIP emissions harmonisation process \citep{kikstra_scenariomip-emissions_2026}.
 This harmonised dataset only provides emissions for 23 species at most, with ozone-depleting substances being a notable absence in all cases.
-Emissions of other required species are provided by the CMIP7 ScenarioMIP infilling process [TODO cite Nicholls et al.].
+Emissions of other required species are provided by the CMIP7 ScenarioMIP infilling process \citep{nicholls_scenariomip-scm-projections_2026}.
 % Notes on this for the ScenarioMIP paper:
 % - infilling is silicone based first, to get to full set of 23
 % - then we use WMO inversions
@@ -335,8 +334,8 @@ Emissions of other required species are provided by the CMIP7 ScenarioMIP infill
 % - then use scaling arguments for whatever else is left (based on M2020 I think, need to check)
 % - might also need to describe that we take CO2 AFOLU from IAMs because that isn't used in Kikstra et al. at all
 These two processes produce estimates of emissions to the end of 2100.
-Emissions extensions beyond 2100 are provided by [TODO cite Sandsted et al.].
-The last dataset we use is the historical emissions used for harmonising the CMIP7 ScenarioMIP datasets [TODO described in Kikstra et al., based on list of other sources].
+Emissions extensions beyond 2100 are provided by \citet{sandstad_scenariomip-extensions_2026}.
+The last dataset we use is the historical emissions used for harmonising the CMIP7 ScenarioMIP datasets \citep[described in][which also lists the underlying sources]{kikstra_scenariomip-emissions_2026}.
 % The experiments' emissions are harmonised to history,
 % so are the same as each other (and history) up to these years.
 % value-check: {"tag": "scenariomip-emissions-last-historical-year", "unit": "yr", "lower": 2023, "upper": 2023}
@@ -373,7 +372,7 @@ to fit different input assumptions more quickly (see further discussion in Sect.
 
 \textbf{Best estimate.}
 
-MAGICC's output is probabilistic, spanning the assessed ranges from AR6 over multiple dimensions [TODO citation, I guess AR6 WG1 Ch.7?].
+MAGICC's output is probabilistic, spanning the assessed ranges from AR6 over multiple dimensions \citep{IPCC_AR6-WG1-Ch-7_2021,IPCC_AR6-WG1-Ch-7-SM_2021}.
 As a result of the requirement to produce a single forcing dataset,
 we must reduce this probabilistic output to a single dataset.
 We choose to use the median of the probabilistic ensemble as our best estimate
@@ -381,7 +380,7 @@ We choose to use the median of the probabilistic ensemble as our best estimate
 the chosen medians for all future datasets are shown in Fig.~\ref{fig:methods-co2}b, c).
 Other approaches would represent different choices,
 e.g. taking a percentile higher than the median would represent a more conservative approach
-and picking a specific carbon cycle calibration [as done in][]\citep{meinshausen_ssp-ghgs_2020}
+and picking a specific carbon cycle calibration \citep[as done in][]{meinshausen_ssp-ghgs_2020}
 would provide a line of sight to a specific ESM carbon cycle.
 
 \textbf{Harmonisation.}
@@ -394,7 +393,7 @@ we harmonise the MAGICC median to the historical global-, annual-mean (Fig.~\ref
 % Unlike the harmonisation used in the historical dataset
 % (which adds a linearly declining offset, see \citealp{nicholls_historical-ghgs_2026}),
 To ensure that both the absolute value and the gradient are continuous,
-we use `gradient-aware' harmonisation [TODO cite gradient-aware-harmonisation package].
+we use `gradient-aware' harmonisation \citep{bockting_gradient-aware-harmonisation_2025}.
 % `harmonise_splines_add_cubic` from the gradient-aware-harmonisation package,
 % used in `notebooks/0031_create-projection-gradient-aware-harmonisation.py`.
 % Both timeseries are linearly interpolated between their annual values before harmonising.
@@ -495,7 +494,7 @@ and the historical fossil CO_2 emissions that underpin the scenarios
 (Sect.~\ref{sssec:methods-co2-project-global-mean}, Fig.~\ref{fig:methods-regressions-co2}b).
 In the historical dataset, this regression was against emissions from PRIMAP-hist
 \citep{nicholls_historical-ghgs_2026},
-so we re-derive it to be consistent with the historical emissions that underpin the CMIP7 scenarios [TODO cite Kikstra and underlying datasets].
+so we re-derive it to be consistent with the historical emissions that underpin the CMIP7 scenarios \citep[][and references therein]{kikstra_scenariomip-emissions_2026}.
 % Another thing to fix when re-implementing.
 % We use all years in which emissions are non-zero,
 % starting two years before the first PC stops being constant
@@ -586,7 +585,7 @@ where the seasonality is simpler.
 As for CO_2 (Sect.~\ref{sssec:methods-co2-project-global-mean}).
 We also emphasise that the projected CH_4 concentrations
 include MAGICCv7.6.0a3's representation of the dependence of
-wetland CH_4 emissions on global-mean surface temperature [TODO cite Sloughter].
+wetland CH_4 emissions on global-mean surface temperature \citep{sloughter_magicc-ch4-feedbacks_2026}.
 These raise the resulting CH_4 concentrations significantly
 compared to the previous version of MAGICC which did not include this feedback (Fig.~\ref{fig:methods-ch4}a, b).
 
@@ -696,7 +695,7 @@ Also like for CH_4, the difference between VL-CF and VL illustrates the underlyi
 For the other gases processed like N_2O, the convergence time is three times the gas' lifetime
 (Table A-5 of \citealp{wmo_ozone-ch7_2022}):
 long enough to ensure the transition to MAGICC's raw output is smooth
-but short enough that the harmonisation only changes the outputs over a somewhat physically justified timesescale
+but short enough that the harmonisation only changes the outputs over a somewhat physically justified timescale
 (see Appendix~\ref{app:methods-figures-n2o-like}, as for CH_4,
 the limitations of harmonisation are considered in more depth in Sect.~\ref{sec:discussion}).
 % E.g. HFC-134a: 13.5 yr -> 40.5 yr; HFC-32: 5.27 yr -> ~16 yr; HFC-23: 228 yr -> 684 yr,
@@ -829,10 +828,11 @@ which use projections from \citet{western_hcfcs_2024}
 % `notebooks/0010_create-single-concentration-projection-annual-mean-file.py`
 For CFC-12 and the other gases from \citet{wmo_ozone-ch7_2022},
 we use the baseline scenario projections of \citet{wmo_ozone-ch7_2022}
-[TODO check whether to cite the data file provided for CMIP7 separately, \texttt{MixingRatiosCMIP7\_20250210.xlsx}].
+(provided for CMIP7 by John Daniel, personal communication, 11 February 2025).
+% Copernicus cites personal communications in the text only (no reference list entry).
 These projections are the same for all datasets
 (Fig.~\ref{fig:methods-cfc12}a, i.e. we assume that all the experiments should use concentrations that follow the Montreal Protocol and its amendments,
-as is also assumed in the underlying emissions, [TODO cite Nicholls et al. ScenarioMIP]).
+as is also assumed in the underlying emissions, \citealp{nicholls_scenariomip-scm-projections_2026}).
 The raw data from our input sources is values at the start of each year.
 We convert them to annual-means by taking the mean of the values at the start of each year and the start of the next year.
 % value-check: {"tag": "single-projection-final-year-linearly-extrapolated"}
@@ -867,7 +867,7 @@ and $\alpha$ converts from emissions (in mass units) to concentrations
 $\alpha$ depends on the molecular mass of the gas
 and the number of moles in the atmosphere,
 which we calculate from the mass of the atmosphere (5.137 $\times 10^{18}$~kg)
-and the molar mass of dry air (28.9~g~mol$^{-1}$) [TODO cite CDIAC conversion table or equivalent].
+and the molar mass of dry air (28.9~g~mol$^{-1}$, \citealp{cdiac_conversion-tables_2003}).
 We use the lifetimes from Table A-5 of \citet{wmo_ozone-ch7_2022}.
 % value-check: {"tag": "one-box-lifetimes"}
 For the extension, we assume that emissions are constant after 2100,
@@ -886,8 +886,9 @@ There are two minor inconsistencies across various data production processes
 that have resulted from the use of prescribed concentrations.
 The first is how the extensions are handled.
 For the species handled like CFC-12, we have or have derived concentrations to 2500.
-We did not make [TODO cite Sandsted] aware of this before they produced their extensions,
-so there is an inconsistency with the emissions extensions produced by [TODO cite Sandsted]
+We did not make the producers of the emissions extensions \citep{sandstad_scenariomip-extensions_2026}
+aware of this before they produced their extensions,
+so there is an inconsistency between their emissions extensions
 and inversions of the official concentrations.
 % Note: no point updating official extensions to match inversions.
 % We've already run MAGICC using the official extensions so they're in use.
@@ -914,7 +915,7 @@ whereas inversions of the CMIP7 concentrations imply emissions which are much cl
 To give a sense of how important this difference is,
 we take, for each species, the maximum (over time) difference in approximate radiative effect
 % (concentration difference multiplied by radiative efficiency, \citealp{IPCC_AR6-WG1-Ch-7-SM_2021}, Table 7.SM.7)
-(TODO forward ref section where we talk about limits of approximate radiative effect)
+(see Sect.~\ref{ssec:results-radiative-forcing-comparisons-note} for the limitations of this approximation)
 between MAGICC's median concentrations and the CMIP7 concentrations, then sum over species.
 % value-check: {"tag": "single-projection-magicc-max-erf-difference-sum-l", "unit": "W / m^2", "lower": 0.029, "upper": 0.031}
 In L, this sum is around 0.03~W/m^2
@@ -1140,8 +1141,7 @@ As for the historical dataset,
 the input4MIPs CVs pages \citep{input4mips-cvs_docs_2026},
 the user guide \citep{nicholls_scenario-user-guide_2026}
 and the CMIP7 guidance pages
-% ZNTODO: repeat link here
-(see the introduction)
+(\mbox{\url{https://wcrp-cmip.github.io/cmip7-guidance/docs/CMIP7/Experiment_set_up_and_Forcings/}})
 are the best sources of information on how to find and use these files,
 because they can be updated over time.
 

@@ -10,6 +10,49 @@ Paths are relative to `manuscripts/scenario-ghg-forcing-for-cmip7/` unless state
 
 ### Outstanding
 
+#### To ask co-authors
+
+- [ ] Invite all the data producers to be co-authors (ZN to do, not a manuscript edit)
+- [ ] `results.tex:160-162`: check with co-authors that future CFC-12-eq concentrations are slightly higher
+      "because of updated handling of bank emissions" (and get the citations for it).
+- [ ] `metadata.toml:32,65`: email for FB (currently `tbd@invalid.com`).
+
+#### Waiting on others
+
+- [ ] `conclusion.tex:36-39`: C3S paragraph stays commented out until C3S is confirmed (also needs the C3S project name).
+- [ ] Ask John Daniel whether there is an official citation for the WMO data file provided for CMIP7
+      (`MixingRatiosCMIP7_20250210.xlsx`, `methods.tex:832`, currently cited as a personal communication, 11 February 2025).
+- [ ] Check that Jarmo's paper does indeed describe historical emissions and sources (search for "last dataset we use is the historical emissions used for harmonising")
+
+#### Citations and cross-references
+
+- [ ] PolMIP: proper citation (ZN to get), currently the placeholder `tbd_polmip_2026`
+      (`introduction.tex:22`, `output-requirements.tex:13`).
+      None of PolMIP's references in WCRP-universe (`reference/polmip_cmip7_ref_00*.json`) describe PolMIP itself.
+- [ ] The ScenarioMIP focus collection papers (all unpublished, from the paper tracker,
+      https://docs.google.com/spreadsheets/d/1GNoZwdBkpGEoXiT7v6CksxKFfBwXna-DJsOB15vDfi4/edit) need updating
+      as they are published (titles, author lists, journal details): `riahi_new-ssps-overview_2026`,
+      the seven marker papers (`*-marker_2026`), `kikstra_scenariomip-emissions_2026`,
+      `nicholls_scenariomip-scm-projections_2026`, `sandstad_scenariomip-extensions_2026`.
+- [ ] Bank emissions (CFC-12-eq): `results.tex:182` (see To ask co-authors).
+
+#### Needs editor or reviewer feedback
+
+- [ ] `results.tex:8`: deliberately minimal, add things based on feedback.
+
+#### Not manuscript edits
+
+- [ ] Produce corrected versions of VL-CF and upload them to ESGF
+      (`discussion.tex:73-75`, possibly in the DestinE context; `discussion.tex:84` commits to "endeavour" to do this).
+
+#### Optional
+
+- [ ] `output-requirements.tex:74`: maybe mention other limits.
+
+### Done
+
+#### General
+
 - [x] make full TODO list
 - [x] `methods.tex:336-354`: impact of the 2014/2015 jump in MAGICC's inputs
       (was "less than [TODO number, I think 0.03 degree C and 0.05 W / m2]").
@@ -69,16 +112,11 @@ Paths are relative to `manuscripts/scenario-ghg-forcing-for-cmip7/` unless state
 
 #### To ask co-authors
 
-- [ ] Invite all the data producers to be co-authors (ZN to do, not a manuscript edit)
-- [ ] `results.tex:160-162`: check with co-authors that future CFC-12-eq concentrations are slightly higher
-      "because of updated handling of bank emissions" (and get the citations for it).
-- [ ] `metadata.toml:32,65`: email for FB (currently `tbd@invalid.com`).
 - [x] `metadata.toml:12`: author contributions are placeholders, confirm them.
 - [x] `metadata.toml:1`: title is a placeholder (the comment points to `manuscript-planning.md`, which no longer exists).
 
 #### Waiting on others
 
-- [ ] `conclusion.tex:36-39`: C3S paragraph stays commented out until C3S is confirmed (also needs the C3S project name).
 - [x] Scenario user guide needs to be published so we can cite/link it
       (`methods.tex:1099` "[TODO cite scenario user guide]", `conclusion.tex:6` "[TODO link]").
       Source is `notebooks/user-guide-scenarios.py`; the historical one is `nicholls_historical-user-guide_2026`.
@@ -88,6 +126,12 @@ Paths are relative to `manuscripts/scenario-ghg-forcing-for-cmip7/` unless state
       (see Citations). Added `nicholls_historical-ghgs_2026` (unpublished, in preparation).
 
 #### Text to write or rework
+
+- [x] `output-requirements.tex:33`: "[TODO consider switching from historical dataset to dataset used for the historical experiment
+      throughout as it is more explicit]" (in the text, wasn't on this list; found 2026-10-29).
+      Done (ZN's call, 2026-10-29): defined once at the first use (`introduction.tex:50-53`) as
+      "the dataset used for CMIP7's historical experiment (source ID `CR-CMIP-1-0-0`, ...),
+      which we refer to as 'the historical dataset' in the rest of this paper". Elsewhere unchanged.
 
 Introduction
 
@@ -243,11 +287,12 @@ Text changed to match the data (please review):
       (2023 for ScenarioMIP, 2016 for VL-CF)", which mixed the last year on history (2023) with the first year off it (2016).
       The ScenarioMIP experiments' emissions are identical up to 2023 and VL-CF's equal VL's up to 2015.
       Now "the last year in which each experiment's emissions follow history (2023 ..., 2015 for VL-CF)".
-- [ ] `methods.tex` CO2 (and N2O) latitudinal gradient regression years: the original code compares an array index with years,
+- [x] `methods.tex` CO2 (and N2O) latitudinal gradient regression years: the original code compares an array index with years,
       so the regression starts two years before the first PC stops being constant
       (CO2: includes 1750, N2O: includes 1988 and 1989, CH4 unaffected).
       Text now describes this as "an artefact of how the code selects the years"; ZNTODO left for ZN to decide
       whether to call it a bug and/or mention it in the discussion.
+      ZN decided (2026-10-29): description moved into comments ("Another thing to fix when re-implementing").
 - [x] `methods.tex` mean-preserving interpolation: monthly global-means in 2022 are the same across the ScenarioMIP
       experiments to within 1.4e-5 (relative), not exactly. Text now says "(to within 0.01\%)".
       (At native resolution, 2022 differs by up to 0.4% between experiments (CH2Cl2, January),
@@ -263,86 +308,68 @@ Text changed to match the data (please review):
 
 #### Citations and cross-references
 
-Historical paper (now `nicholls_historical-ghgs_2026`):
-`methods.tex:5,9,40,71,149,412,464,473,489,591,601,704,972,974,1017,1040,1063,1113`
-(and commented `371`),
-`introduction.tex:55,67,81,84,96,108` (`81` is written "[CITE historical paper]"),
-`output-requirements.tex:4`, `results.tex:20,159`, `discussion.tex:91,102`, `conclusion.tex:15`, `appendices.tex:31`
-and the generated C_8F_18 caption (`src/local/scenario_ghg_forcing_for_cmip7/appendix_figures.py:221`).
+Bibliographic details of new entries checked against Crossref/DataCite (2026-10-29).
 
-- [x] Add the historical paper bib entry and replace all of the above.
+- [x] Add the historical paper bib entry (`nicholls_historical-ghgs_2026`) and replace all the "[TODO cite historical paper]".
       `\citep` where the citation is parenthetical, `\citet` after "noted in"/"discussed in"/"refer to",
       `\citealp` inside existing parentheses. Also updated `nicholls_scenario-ghgs_2026` to the scenario `metadata.toml` title and authors.
-- [ ] `introduction.tex:96`: also needs the section number in the historical paper (vertical dimension).
-      It was 3.11 (`ssec:methods-vertical`) in the last historical build (2026-10-21),
-      but the historical methods have changed since, so re-check before hard-coding it.
-
-Others (bib entry exists for those marked ✓):
-
-- [ ] ScenarioMIP / van Vuuren ✓ (`van-vuuren_scenariomip_2025`): `methods.tex:17,52`, `conclusion.tex:3`,
-      `output-requirements.tex:13` ("[cite van Vuuren]"), plus "other citations" at `introduction.tex:21`.
-- [ ] Underlying papers for each scenario: `introduction.tex:26`.
-- [ ] Riahi: `introduction.tex:33`.
-- [ ] SSP paper: `introduction.tex:10`.
-- [ ] Paris Agreement: `introduction.tex:30,32`.
-- [ ] PolMIP (Annika): `introduction.tex:35` (check citation), `methods.tex:17,18` (PolMIP stuff and dataset),
-      `methods.tex:53`, `output-requirements.tex:13` ("[cite Annika?]").
-- [ ] Kikstra et al. (harmonisation): `methods.tex:18,307,329` (plus "list of other sources"), `methods.tex:474` (plus underlying datasets),
-      `discussion.tex:22` (with Gidden).
-- [ ] Nicholls et al. (ScenarioMIP infilling): `methods.tex:309,774`.
-- [ ] Sandstad et al. (extensions): `methods.tex:328,825,826`.
-- [ ] MAGICC: Meinshausen et al. 2009 (`methods.tex:26,263`),
-      Meinshausen et al. 2011 RCP concentrations (`methods.tex:28,263`),
-      Meinshausen et al. 2020 ✓ (`methods.tex:263`),
-      RCMIP phase 2 (`methods.tex:27,272`),
-      AR6-calibrated configuration "[TODO citations]" (`methods.tex:96`),
-      feedbacks "[TODO cite papers again?]" (`methods.tex:101`),
-      AR6 WG1 Ch. 7 ✓ for probabilistic output (`methods.tex:348`).
-- [ ] Sloughter et al. (wetland CH_4 feedback): `methods.tex:273,545`.
-- [ ] gradient-aware-harmonisation package: `methods.tex:373`.
-- [ ] CDIAC conversion table or equivalent: `methods.tex:808`.
-- [ ] Decide whether to cite the WMO data file for CMIP7 (`MixingRatiosCMIP7_20250210.xlsx`) separately: `methods.tex:771`.
-- [ ] Bank emissions (CFC-12-eq): `results.tex:162` (see To ask co-authors).
-
-Cross-references:
-
-- [ ] `discussion.tex:36`: ref the section showing VL vs. VL-CF harmonisation differences (CH_4 Step 1, `methods.tex:558-566`, and N_2O Step 1).
-- [ ] `methods.tex:853`: forward ref to the note on approximate radiative effect (`ssec:results-radiative-forcing-comparisons-note`).
-- [ ] `methods.tex:1101`: repeat the guidance pages link.
+- [x] Section number in the historical paper for the vertical dimension (`introduction.tex:100` points to our `ssec:methods-vertical`,
+      which cites the historical paper). Now "Sect. 3.12 of" (12th subsection of the historical methods, a "Motivation"
+      subsection was added since the 2026-10-21 build, which had 3.11). Comment says to re-check if the historical methods change.
+- [x] ScenarioMIP / van Vuuren: cited at `methods.tex:17,52`, `conclusion.tex:2`, `output-requirements.tex:13`.
+      Bib entry updated to the published version (GMD 19, 2627-2656, 2026), key now `van-vuuren_scenariomip_2026`
+      (also in `notebooks/user-guide-scenarios.py`).
+- [x] SSP paper (`introduction.tex:26`): Riahi et al. (2017) SSP overview (`riahi_ssps_2017`).
+- [x] Paris Agreement (`introduction.tex:15,17`): `unfccc_paris-agreement_2015` (FCCC/CP/2015/L.9/Rev.1).
+- [x] AR6 1.5 degC (`introduction.tex:22`, not in the original list): AR6 WG1 Ch. 7 and Kikstra et al. (2022).
+- [x] Kikstra et al. (harmonisation, also the historical emissions), Nicholls et al. (ScenarioMIP, including infilling)
+      and Sandstad et al. (extensions): first placeholder entries (ZN, 2026-10-29, no EGU abstracts or Zenodo records),
+      then the ScenarioMIP focus collection papers from ZN's paper tracker (2026-10-29):
+      "Harmonized and gridded emissions dataset for ScenarioMIP-CMIP7" (Kikstra et al., `kikstra_scenariomip-emissions_2026`),
+      "Probabilistic simple climate model projections in support of ScenarioMIP scenario development"
+      (Nicholls et al., `nicholls_scenariomip-scm-projections_2026`)
+      and "FLEX: ScenarioMIP CMIP7 Post-2100 Extensions Framework" (Sandstad et al., `sandstad_scenariomip-extensions_2026`).
+      `discussion.tex:23` also cites Gidden et al. (2018, 2019).
+- [x] ScenarioMIP other citations (`introduction.tex:6`) and the HL "Riahi citation" (`introduction.tex:18`):
+      Riahi et al. "Overview of the new SSPs for ScenarioMIP" (`riahi_new-ssps-overview_2026`, from the paper tracker).
+- [x] Underlying papers for each scenario (`introduction.tex:11-19`): the seven marker scenario papers from the paper tracker,
+      each cited next to its scenario (H GCAM, HL WITCH, M IMAGE, ML COFFEE, L MESSAGE-GLOBIOM, LN AIM, VL REMIND-MAgPIE).
+- [x] VL-CF: the VL-CF emissions dataset documentation (Zenodo 21487425, `hogner_vl-cf-emissions_2026`),
+      `introduction.tex:20`, `methods.tex:18,53`, `output-requirements.tex:13`.
+- [x] WMO data file for CMIP7: cited as a personal communication from John Daniel (11 February 2025) in the text
+      (Copernicus doesn't put personal communications in the reference list). Asking about an official citation is Outstanding.
+- [x] MAGICC: Meinshausen et al. 2009 (`methods.tex:26,273`), RCP concentrations 2011 (`methods.tex:28`),
+      RCMIP phase 2 (`methods.tex:27,100,282`), AR6-calibrated configuration (`methods.tex:100`: RCMIP2, Kikstra et al. 2022),
+      feedbacks (`methods.tex:105`: MAGICC6 part 1, Meinshausen et al. 2020),
+      probabilistic output (`methods.tex:376`: AR6 WG1 Ch. 7, Kikstra et al. 2022).
+- [x] Sloughter et al. (wetland CH_4 feedback, GMD 19, 9063-9076, 2026): `methods.tex:273,283,589`.
+- [x] gradient-aware-harmonisation package (`methods.tex:397`): no release or DOI,
+      so cited as the GitHub repository at the commit the original run pins (`bockting_gradient-aware-harmonisation_2025`).
+- [x] CDIAC conversion table (`methods.tex:870`): `cdiac_conversion-tables_2003`
+      (the original CDIAC page redirects, cited via the FSU mirror; it gives 5.137e18 kg, and its 2.13 GtC/ppm implies 28.9 g/mol).
+- [x] Cross-references: `discussion.tex:37` (CH_4 and N_2O Step 1 sections),
+      `methods.tex:917` (approximate radiative effect note), `methods.tex:1143` (guidance pages link repeated).
 
 #### Typos and small fixes
 
-Not marked as TODOs, spotted while compiling this list.
-
 - [x] `abstract.tex:12-13,18-19`: CH_4 and N_2O units are ppm, should be ppb.
-- [x] `abstract.tex:14,20`: "CFC12" → "CFC-12".
+- [x] `abstract.tex:14,20`: "CFC12" -> "CFC-12".
 - [x] `introduction.tex:104`: extensions run "2101 to the end of 2025", should be 2500.
-- [ ] `introduction.tex:96`: "how add" → "how to add".
-- [ ] `introduction.tex:79`: "once an agreed communication format has been agreed".
-- [ ] `discussion.tex:66`: "Montreal Agreement" → "Montreal Protocol".
-- [ ] `discussion.tex:102`: "The second, like also affected the historical dataset" (grammar).
-- [ ] `methods.tex:360`: `[as done in][]\citep{meinshausen_ssp-ghgs_2020}` is malformed, should be `\citep[as done in][]{...}`.
+- [x] `introduction.tex:100`: "how add" -> "how to add".
+- [x] `introduction.tex:83`: "once an agreed communication format has been agreed" -> "once a communication format has been agreed".
+- [x] `discussion.tex:69`: "Montreal Agreement" -> "Montreal Protocol".
+- [x] `discussion.tex:128`: "The second, like also affected the historical dataset" -> "The second, which also affected ...".
+- [x] `methods.tex:384`: `[as done in][]\citep{...}` -> `\citep[as done in][]{...}`.
 - [x] `methods.tex:562`: `\~70ppb` renders as an accent, use `$\sim$70~ppb`.
 - [x] `methods.tex:972`: unclosed parenthesis in the zero-seasonality gas list (closed when adding the historical citation).
-- [ ] Spelling: "conistency" (`introduction.tex:15`), "counterfactural" (`introduction.tex:36`), "throughly" (`introduction.tex:78`),
-      "experiemnt" (`output-requirements.tex:57`), "timesescale" (`methods.tex:654`), "scenarion" (`methods.tex:1084`).
+- [x] Spelling: "conistency", "counterfactural", "throughly" (introduction), "experiemnt" (output requirements),
+      "timesescale" (methods). "scenarion" was already fixed.
 
 #### Build code
 
 - [x] `src/local/scenario_ghg_forcing_for_cmip7/scenarios.py:80,86`: official colour palettes, and a colour for VL-CF.
       Done 2026-10-29: official CMIP7 ScenarioMIP palette (from ZN). VL-CF isn't part of ScenarioMIP, so keeps its grey.
       The methods figures didn't depend on `scenarios.py` (so wouldn't pick up colour changes), fixed. All figures regenerated.
-
-#### Needs editor or reviewer feedback
-
-- [ ] `introduction.tex:52-53`: the rest of the introduction "isn't really introduction", could become its own section.
-- [ ] `output-requirements.tex:74`: maybe mention other limits.
-- [ ] `results.tex:8`: deliberately minimal, add things based on feedback.
-
-#### Not manuscript edits
-
-- [ ] Produce corrected versions of VL-CF and upload them to ESGF
-      (`discussion.tex:73-75`, possibly in the DestinE context; `discussion.tex:84` commits to "endeavour" to do this).
 
 ## historical GHG forcing for CMIP7 manuscript
 
