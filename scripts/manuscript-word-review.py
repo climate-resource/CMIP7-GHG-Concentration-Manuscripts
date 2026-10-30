@@ -458,6 +458,19 @@ def export(args):
     for shape in doc.inline_shapes:
         scale = min(1, Inches(6.3) / shape.width, Inches(6.1) / shape.height)
         shape.width, shape.height = int(shape.width * scale), int(shape.height * scale)
+    paragraphs_in_body = doc.paragraphs
+    for i, paragraph in enumerate(paragraphs_in_body):
+        if paragraph._p.xpath(".//w:drawing") and not paragraph.text.strip():
+            paragraph.paragraph_format.keep_with_next = True
+            if i + 1 < len(paragraphs_in_body):
+                caption = paragraphs_in_body[i + 1]
+                if caption.text.startswith("Figure "):
+                    caption.paragraph_format.keep_together = True
+        if paragraph.text.startswith("Table ") and not paragraph.text.startswith(
+            "Table note:"
+        ):
+            paragraph.paragraph_format.keep_with_next = True
+            paragraph.paragraph_format.keep_together = True
     for table in doc.tables:
         table.autofit = False
         widths = {
