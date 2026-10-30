@@ -262,7 +262,13 @@ def export(args):
             ):
                 return {"t": "Subscript", "c": inlines(index[1])}
             c[1] = re.sub(r"\\(?:begin|end)\{equation\*?\}", "", c[1])
-            c[1] = c[1].replace("{align}", "{aligned}")
+            # Pandoc 3.8's OMML writer emits alignment ampersands literally.
+            # A one-column native math matrix retains the equation rows and
+            # their notation without displaying the TeX alignment controls.
+            if r"\begin{align}" in c[1] or r"\begin{aligned}" in c[1]:
+                c[1] = c[1].replace("{align}", "{matrix}")
+                c[1] = c[1].replace("{aligned}", "{matrix}")
+                c[1] = re.sub(r"(?<!\\)&", "", c[1])
         if t == "Para" and (
             marker := re.fullmatch(r"MMSOURCE(\d+)TOKEN", plain(node).strip())
         ):
