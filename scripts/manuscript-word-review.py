@@ -494,6 +494,11 @@ def export(args):
         shape.width, shape.height = int(shape.width * scale), int(shape.height * scale)
     paragraphs_in_body = doc.paragraphs
     for i, paragraph in enumerate(paragraphs_in_body):
+        if (
+            re.fullmatch(r"Step \d+: [^.]+", paragraph.text.strip())
+            and len(paragraph.text) < 100
+        ):
+            paragraph.paragraph_format.keep_with_next = True
         if paragraph._p.xpath(".//w:drawing") and not paragraph.text.strip():
             paragraph.paragraph_format.keep_with_next = True
             if i + 1 < len(paragraphs_in_body):
