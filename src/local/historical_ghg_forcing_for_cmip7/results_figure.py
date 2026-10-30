@@ -1666,6 +1666,13 @@ def generate_results_figure(  # noqa: PLR0913
         gas, gm_yearly, cmip6_yearly, panel_axes("yearly-diff"), yearly_segments
     )
 
+    # Nearly constant pre-industrial values can produce a long offset label.
+    # Anchor it inside the panel so it cannot cover the next panel.
+    for axis in panel_axes("yearly"):
+        offset = axis.yaxis.get_offset_text()
+        offset.set_horizontalalignment("right")
+        offset.set_x(0.9)
+
     piece_labels = label_results_panels(axes)
     add_legend_with_sub_headers(
         axes[LEGEND_PANEL],
