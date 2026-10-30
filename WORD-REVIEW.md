@@ -34,6 +34,11 @@ Keep that prefix available while using the scenario environment, because its
 compiled netCDF extension links to those libraries. On another computer, use an
 appropriate compatible prefix rather than copying a Python environment.
 
+The scenario MAGICC wrapper also uses a temporary short alias for the model
+folder. This avoids the model's 255-character Fortran filename limit in deep
+checkouts. The alias points to the same archived executable and input files and
+is removed after each run.
+
 The export needs Pandoc, Poppler (`pdftoppm`), and Python with `python-docx`.
 With Codex, use its bundled artifact Python runtime. Otherwise, create a separate
 tool environment, for example `uv run --with python-docx python ...`.

@@ -24,6 +24,7 @@ The runs are compared in [local.scenario_ghg_forcing_for_cmip7.magicc_jump_summa
 from __future__ import annotations
 
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import jupytext
 import yaml
@@ -213,20 +214,27 @@ def run_magicc_jump(  # noqa: PLR0913
         ),
         "out_file": out_file.as_posix(),
     }
-    run_in_bundle(
-        [
-            "pixi",
-            "run",
-            "--frozen",
-            "papermill",
-            "--cwd",
-            str(bundle_dir.resolve()),
-            str(to_run.resolve()),
-            str(executed.resolve()),
-            "-y",
-            yaml.safe_dump(parameters),
-        ],
-        bundle_dir=bundle_dir,
-    )
+    # MAGICC's Fortran filename fields are limited to 255 characters. A deep
+    # checkout plus a long model/scenario name can silently truncate SCEN7 paths.
+    # A short-lived alias keeps exactly the same executable and input files.
+    with TemporaryDirectory(prefix="cmip7-magicc-", dir="/tmp") as temporary:
+        alias = Path(temporary) / "model"
+        alias.symlink_to((bundle_dir / MAGICC_DIR).resolve(), target_is_directory=True)
+        parameters["magicc_exe"] = (alias / "bin" / MAGICC_EXE.name).as_posix()
+        run_in_bundle(
+            [
+                "pixi",
+                "run",
+                "--frozen",
+                "papermill",
+                "--cwd",
+                str(bundle_dir.resolve()),
+                str(to_run.resolve()),
+                str(executed.resolve()),
+                "-y",
+                yaml.safe_dump(parameters),
+            ],
+            bundle_dir=bundle_dir,
+        )
 
     return bundle_dir / out_file
