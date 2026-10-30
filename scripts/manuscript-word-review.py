@@ -480,6 +480,17 @@ def export(args):
             cwd=build,
         )
     doc = Document(output)
+    # Pandoc's DOCX writer resolves internal figure links again, replacing
+    # appendix labels (e.g. C3) with its own consecutive float counter (70).
+    # Restore the labels from the successfully compiled manuscript after writing.
+    for hyperlink in doc.element.iter(qn("w:hyperlink")):
+        label = labels.get(hyperlink.get(qn("w:anchor")))
+        if label is not None:
+            texts = list(hyperlink.iter(qn("w:t")))
+            if texts:
+                texts[0].text = label
+                for extra in texts[1:]:
+                    extra.text = ""
     tracking = OxmlElement("w:trackRevisions")
     doc.settings.element.append(tracking)
     doc.core_properties.identifier = export_id
