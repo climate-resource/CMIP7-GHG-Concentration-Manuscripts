@@ -12,7 +12,7 @@ from collections.abc import Collection
 from pathlib import Path
 
 from loguru import logger
-from openscm_zenodo import ZenodoClient
+from openscm_zenodo import ZenodoClient, build_session
 
 
 def download_files(
@@ -51,7 +51,12 @@ def download_files(
         f"Ensuring {len(filenames)} file(s) "
         f"from Zenodo record {record_id} are in {dest_dir}"
     )
-    with ZenodoClient() as client:
+    # Zenodo's API can be slow and flaky (well over 10s per request, 504s),
+    # so be more patient than openscm_zenodo's defaults.
+    with ZenodoClient(
+        timeout=120,
+        session=build_session(max_retries=10, backoff_factor=2.0),
+    ) as client:
         return client.download_files(record_id, dest_dir, filenames=filenames)
 
 
