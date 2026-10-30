@@ -101,6 +101,11 @@ def normalize_tex(tex, labels=None):
                 path = str(Path(path).relative_to(ROOT))
             except ValueError:
                 pass
+        # Generated inserts have no closing source marker. Keep their containing
+        # original section as the merge destination, rather than attributing the
+        # rest of a methods/appendix section to an inserted generated table.
+        if not path.startswith("manuscripts/"):
+            return ""
         sources.append(path)
         return f"\n\nMMSOURCE{len(sources):05d}TOKEN\n\n"
 
