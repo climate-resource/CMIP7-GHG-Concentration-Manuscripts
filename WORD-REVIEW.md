@@ -99,3 +99,34 @@ paragraph, a comment, source conflict detection, and preservation of citations
 and equation markup. The final delivery also requires compilation of the edited
 test manuscript and visual inspection of the Word render. A comparison report
 alone does not establish scientific correctness or conversion fidelity.
+
+## Scientific tracked drafts
+
+The separate `*_MM_trackdraft.docx` files contain unaccepted scientific proposals
+and anchored review comments. Their original Word exports and canonical LaTeX
+remain unchanged. Native Word revisions preserve the existing equations, figures,
+bookmarks and source export identifier. A scientific review can be regenerated
+from its checked proposal JSON and original export:
+
+```sh
+python scripts/manuscript-scientific-review.py build/review/proposals.json \
+  --baseline review-baselines/<manuscript>/<export-id>/manifest.json \
+  --output compiled-manuscripts/<manuscript>_MM_trackdraft.docx
+python scripts/test-manuscript-scientific-review.py \
+  --baseline review-baselines/<manuscript>/<export-id>/manifest.json
+```
+
+The command refuses to overwrite an existing draft. It saves an untouched review
+copy, proposals, reference audit, source commit, QA results, a readable review
+report and a separate proposed LaTeX patch in a sibling baseline bundle whose
+name contains `-trackdraft-`. The patch contains exact matching source edits only;
+its transfer-status file lists proposals requiring individual transfer. New
+references are supplied separately as BibTeX and as tracked bibliography entries.
+Numeric analyses requested in comments have not been performed.
+
+Accept or reject suggestions in Word before requesting a return transfer, or
+explicitly identify the revisions to apply. An unaccepted insertion is not an
+author-approved scientific change. Keep the review bundle so an agent can
+distinguish the initial scientific suggestions from subsequent author edits.
+The return comparison extracts accepted-view text and all remaining revisions;
+the agent must reconcile decisions rather than silently accepting every change.
