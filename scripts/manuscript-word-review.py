@@ -260,12 +260,15 @@ def export(args):
             return node
         t, c = node.get("t"), node.get("c")
         if t == "Math":
-            # Empty-base subscripts are index markers in prose, not incomplete
+            # Empty-base scripts are index/unit markers in prose, not incomplete
             # equations; Word otherwise displays an editable placeholder box.
             if c[0]["t"] == "InlineMath" and (
-                index := re.fullmatch(r"_\{?([A-Za-z0-9]+)\}?", c[1].strip())
+                index := re.fullmatch(r"([_^])\{?(-?[A-Za-z0-9]+)\}?", c[1].strip())
             ):
-                return {"t": "Subscript", "c": inlines(index[1])}
+                return {
+                    "t": "Subscript" if index[1] == "_" else "Superscript",
+                    "c": inlines(index[2]),
+                }
             c[1] = re.sub(r"\\(?:begin|end)\{equation\*?\}", "", c[1])
             # Pandoc 3.8's OMML writer emits alignment ampersands literally.
             # A one-column native math matrix retains the equation rows and
