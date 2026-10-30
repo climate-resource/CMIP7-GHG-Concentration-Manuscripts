@@ -110,7 +110,9 @@ alone does not establish scientific correctness or conversion fidelity.
 The separate `*_MM_trackdraft.docx` files contain unaccepted scientific proposals
 and anchored review comments. Their original Word exports and canonical LaTeX
 remain unchanged. Native Word revisions preserve the existing equations, figures,
-bookmarks and source export identifier. A scientific review can be regenerated
+bookmarks and source export identifier. A separate review identifier in the Word
+properties matches the derived file to its untouched scientific-review baseline,
+even after renaming. A scientific review can be regenerated
 from its checked proposal JSON and original export:
 
 ```sh

@@ -37,7 +37,7 @@ def main():
     internal = review.node("hyperlink", anchor="fig:test")
     internal.append(reviewer.run(None, "70"))
     paragraph.append(internal)
-    paragraph.append(reviewer.run(None, " and "))
+    paragraph.append(reviewer.run(None, "b and "))
     external = review.node("hyperlink")
     external.set(
         "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id",
@@ -94,7 +94,11 @@ def main():
             "new": "https://doi.org/example",
         }
     )
+    reviewer.replace(
+        {"id": "label-suffix", "paragraph_index": index, "old": "70b", "new": "C3b"}
+    )
     reviewer.repair_cross_references({"fig:test": "C3"})
+    assert review.text_of(internal) == "C3"
     state = E.tostring(paragraph)
     try:
         reviewer.replace(
@@ -130,7 +134,7 @@ def main():
     assert result["revision_elements"] >= 6
     assert review.text_of(paragraph) == (
         "The revised estimate is x consistent with (Smith, 2020). "
-        "See C3 and https://doi.org/example"
+        "See C3b and https://doi.org/example"
     )
     assert not review.text_of(external)
     assert review.text_of(external, True) == "https://doi.org/https://doi.org/example"
