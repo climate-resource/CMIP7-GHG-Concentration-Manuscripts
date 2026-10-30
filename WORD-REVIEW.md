@@ -17,6 +17,23 @@ bash scripts/create-cmip7-historical-ghgs-manuscript.sh
 bash scripts/create-cmip7-scenario-ghgs-manuscript.sh
 ```
 
+On Apple Silicon, the scenario archive's pinned `netCDF4==1.7.2` may need to
+compile from source. If an older Anaconda `nc-config` causes compilation errors,
+point the build at a compatible netCDF/HDF5 prefix without changing the archive's
+lock file. For these worktrees, the historical bundle already supplies netCDF
+4.9.2 and HDF5:
+
+```sh
+# Run from the scenario worktree; the historical environment must exist first.
+mm_native_prefix="$(cd ../CMIP7-GHG-Concentration-Manuscripts/data/raw/cmip-ghg-concentration-generation/v1.0.0/.pixi/envs/default && pwd)"
+env NETCDF4_DIR="$mm_native_prefix" HDF5_DIR="$mm_native_prefix" \
+  bash scripts/create-cmip7-scenario-ghgs-manuscript.sh
+```
+
+Keep that prefix available while using the scenario environment, because its
+compiled netCDF extension links to those libraries. On another computer, use an
+appropriate compatible prefix rather than copying a Python environment.
+
 The export needs Pandoc, Poppler (`pdftoppm`), and Python with `python-docx`.
 With Codex, use its bundled artifact Python runtime. Otherwise, create a separate
 tool environment, for example `uv run --with python-docx python ...`.
