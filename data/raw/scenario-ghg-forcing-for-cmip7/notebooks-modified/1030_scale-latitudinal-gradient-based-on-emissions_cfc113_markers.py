@@ -58,8 +58,8 @@ out_file: str = "../output-bundles/dev-test/data/interim/latitudinal-gradient/c8
 # Parameters
 ghg = "cfc113"
 annual_mean_emissions_file = "data/interim/inverse-emissions/single-concentration-projection_cfc113_inverse-emissions.feather"
-historical_data_root_dir = "/Users/znicholls/Documents/repos/CMIP7-GHG-Concentration-Manuscripts/data/raw/cmip-ghg-concentration-generation/v1.0.0/data/processed/esgf-ready/input4MIPs/CMIP7/CMIP/CR/CR-CMIP-1-0-0"
-historical_data_seasonality_lat_gradient_info_root = "/Users/znicholls/Documents/repos/CMIP7-GHG-Concentration-Manuscripts/data/raw/cmip-ghg-concentration-generation/v1.0.0/data/interim"
+historical_data_root_dir = "../../cmip-ghg-concentration-generation/v1.0.0/data/processed/esgf-ready/input4MIPs/CMIP7/CMIP/CR/CR-CMIP-1-0-0"
+historical_data_seasonality_lat_gradient_info_root = "../../cmip-ghg-concentration-generation/v1.0.0/data/interim"
 out_file = "manuscript-outputs/rerun-markers/latitudinal-gradient/cfc113_latitudinal-gradient-info.nc"
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
