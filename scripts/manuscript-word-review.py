@@ -548,8 +548,12 @@ def export(args):
     # Include every final Word paragraph in the map, including bibliography/frontmatter.
     paragraphs = read_docx(output)["paragraphs"]
     in_references = False
+    previous_source = str(metadata_file.relative_to(ROOT))
     for para in paragraphs:
         in_references = in_references or para["text"].strip() == "References"
+        mapped = provenance.get(para["bookmark"])
+        if mapped and mapped.get("source"):
+            previous_source = mapped["source"]
         para.update(
             provenance.get(
                 para["bookmark"],
@@ -557,7 +561,7 @@ def export(args):
                     "source": (
                         "references/references.bib"
                         if in_references
-                        else str(metadata_file.relative_to(ROOT))
+                        else previous_source
                     ),
                     "section": "Metadata or references",
                 },
@@ -706,6 +710,8 @@ def compare(args):
     baseline_docx = baseline.parent / "baseline.docx"
     old = read_docx(baseline_docx)["paragraphs"]
     source_map = {p["bookmark"]: p for p in manifest["paragraphs"] if p["bookmark"]}
+    index_map = {p["index"]: p for p in manifest["paragraphs"]}
+    reviewed_sources = {}
     changes, conflicts = [], []
     file_state = {}
     for path, snapshot in manifest["snapshots"].items():
@@ -719,18 +725,23 @@ def compare(args):
     matcher = difflib.SequenceMatcher(a=old_text, b=new_text, autojunk=False)
     for kind, a, b, c, d in matcher.get_opcodes():
         if kind == "equal":
+            for old_index, new_index in zip(range(a, b), range(c, d), strict=True):
+                hint = index_map[old[old_index]["index"]]
+                reviewed_sources[new_index] = (
+                    [hint["source"]] if hint.get("source") else []
+                )
             continue
         originals, replacements = old[a:b], reviewed["paragraphs"][c:d]
-        hints = [
-            source_map[p["bookmark"]] for p in originals if p["bookmark"] in source_map
-        ]
+        hints = [index_map[p["index"]] for p in originals if p["index"] in index_map]
         if not hints:
             hints = [
-                source_map[p["bookmark"]]
+                index_map[p["index"]]
                 for p in old[max(0, a - 1) : a + 1]
-                if p["bookmark"] in source_map
+                if p["index"] in index_map
             ]
         paths = sorted({p["source"] for p in hints if p.get("source")})
+        for new_index in range(c, d):
+            reviewed_sources[new_index] = paths
         item = {
             "kind": kind,
             "before": originals,
@@ -745,10 +756,14 @@ def compare(args):
     for comment in reviewed["comments"]:
         comment["source_candidates"] = sorted(
             {
-                source_map[p["bookmark"]]["source"]
+                path
                 for p in comment["paragraphs"]
-                if p["bookmark"] in source_map
-                and source_map[p["bookmark"]].get("source")
+                for path in (
+                    [source_map[p["bookmark"]]["source"]]
+                    if p["bookmark"] in source_map
+                    and source_map[p["bookmark"]].get("source")
+                    else reviewed_sources.get(p["index"], [])
+                )
             }
         )
     report = {
