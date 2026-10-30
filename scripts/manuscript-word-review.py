@@ -646,6 +646,14 @@ def read_docx(path):
         root = ET.fromstring(z.read("word/document.xml"))
         core = ET.fromstring(z.read("docProps/core.xml"))
         identifier = core.find("{http://purl.org/dc/elements/1.1/}identifier")
+        keywords = core.find(
+            "{http://schemas.openxmlformats.org/package/2006/metadata/"
+            "core-properties}keywords"
+        )
+        scientific_review = re.search(
+            r"MMReviewID=([A-Za-z0-9_-]+)",
+            keywords.text or "" if keywords is not None else "",
+        )
         comment_nodes = (
             ET.fromstring(z.read("word/comments.xml"))
             if "word/comments.xml" in z.namelist()
@@ -703,6 +711,7 @@ def read_docx(path):
                     )
         return {
             "export_id": identifier.text if identifier is not None else None,
+            "scientific_review_id": scientific_review[1] if scientific_review else None,
             "paragraphs": paragraphs,
             "comments": list(comments.values()),
         }
@@ -787,6 +796,7 @@ def compare(args):
         )
     report = {
         "export_id": manifest["export_id"],
+        "scientific_review_id": reviewed["scientific_review_id"],
         "source_commit": manifest["source_commit"],
         "source_branch": manifest["source_branch"],
         "reviewed": str(args.reviewed.resolve()),

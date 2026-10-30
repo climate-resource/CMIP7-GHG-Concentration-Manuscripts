@@ -40,6 +40,18 @@ def node(name, **attrs):
     return el
 
 
+def stamp_review_identity(parts, review_id, export_id):
+    core = E.fromstring(parts["docProps/core.xml"])
+    name = "{http://schemas.openxmlformats.org/package/2006/metadata/core-properties}keywords"
+    keywords = core.find(name)
+    if keywords is None:
+        keywords = E.SubElement(core, name)
+    keywords.text = f"MMReviewID={review_id}; MMSourceExportID={export_id}"
+    parts["docProps/core.xml"] = E.tostring(
+        core, xml_declaration=True, encoding="UTF-8", standalone=True
+    )
+
+
 def text_of(el, original=False):
     if el.tag in (tag("ins"), tag("moveTo")) and original:
         return ""
@@ -260,11 +272,26 @@ class Reviewer:
         matcher = difflib.SequenceMatcher(None, old_tokens, new_tokens, autojunk=False)
         for kind, a, b, c, d in reversed(matcher.get_opcodes()):
             if kind != "equal":
+                previous = "".join(old_tokens[a:b])
+                replacement = "".join(new_tokens[c:d])
+                left, right = 0, 0
+                while (
+                    left < min(len(previous), len(replacement))
+                    and previous[left] == replacement[left]
+                ):
+                    left += 1
+                while (
+                    right < min(len(previous), len(replacement)) - left
+                    and previous[-right - 1] == replacement[-right - 1]
+                ):
+                    right += 1
+                # Preserve common affixes inside a changed token too: e.g.
+                # 70b -> C3b must retain the b outside the figure hyperlink.
                 self.change(
                     p,
-                    offset + boundaries[a],
-                    offset + boundaries[b],
-                    "".join(new_tokens[c:d]),
+                    offset + boundaries[a] + left,
+                    offset + boundaries[b] - right,
+                    replacement[left : len(replacement) - right if right else None],
                 )
         expected = current[:offset] + new + current[offset + len(old) :]
         if text_of(p) != expected:
@@ -489,6 +516,45 @@ def write_review_report(proposals, bundle, qa):
         "",
     ]
     (bundle / "REVIEW.md").write_text("\n".join(lines))
+    audit_path = bundle / "reference-audit.json"
+    if audit_path.exists():
+        audit = json.loads(audit_path.read_text())
+        records = (
+            audit
+            if isinstance(audit, list)
+            else audit.get("references", audit.get("records", []))
+        )
+        lines = [
+            "# Reference audit",
+            "",
+            "Metadata verification, claim support and possible updates are separate "
+            "checks. A verified DOI alone does not establish support for a claim.",
+            "",
+        ]
+        for record in records:
+            lines += ["## " + record["key"], ""]
+            for key, label in (
+                ("metadata_status", "Bibliographic metadata"),
+                ("claim_support_status", "Support for manuscript claims"),
+                ("update_status", "Updates"),
+                ("evidence_summary", "Evidence"),
+                ("limitations", "Limitations"),
+            ):
+                value = record.get(key)
+                if value:
+                    lines += [
+                        label
+                        + ": "
+                        + (
+                            value
+                            if isinstance(value, str)
+                            else json.dumps(value, ensure_ascii=False)
+                        ),
+                        "",
+                    ]
+            for url in record.get("primary_urls", []):
+                lines += [f"- [Primary source]({url})", ""]
+        (bundle / "reference-audit.md").write_text("\n".join(lines))
 
 
 def main():
@@ -553,15 +619,16 @@ def main():
                 True,
             )
     qa = reviewer.finish()
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    with ZipFile(args.output, "w", ZIP_DEFLATED) as archive:
-        for name, data in reviewer.parts.items():
-            archive.writestr(name, data)
     review_id = (
         datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         + "-"
         + uuid.uuid4().hex[:8]
     )
+    stamp_review_identity(reviewer.parts, review_id, baseline["export_id"])
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    with ZipFile(args.output, "w", ZIP_DEFLATED) as archive:
+        for name, data in reviewer.parts.items():
+            archive.writestr(name, data)
     bundle = args.baseline.parent.parent / (
         baseline["export_id"] + "-trackdraft-" + review_id
     )
