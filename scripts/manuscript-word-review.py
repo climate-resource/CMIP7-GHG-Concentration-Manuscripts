@@ -180,6 +180,7 @@ def normalize_tex(tex, labels=None):
 
 def export(args):
     from docx import Document
+    from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
     from docx.shared import Inches, Pt, RGBColor
@@ -219,6 +220,33 @@ def export(args):
         if isinstance(node, list):
             result = []
             for item in node:
+                # A display equation and the following explanatory prose can
+                # share a Pandoc paragraph. Split them so Word does not center
+                # the prose or move the equation number to the paragraph's end.
+                if (
+                    isinstance(item, dict)
+                    and item.get("t") in ("Para", "Plain")
+                    and len(item["c"]) > 1
+                    and any(
+                        child.get("t") == "Math" and child["c"][0]["t"] == "DisplayMath"
+                        for child in item["c"]
+                    )
+                ):
+                    pending = []
+                    for child in item["c"]:
+                        if (
+                            child.get("t") == "Math"
+                            and child["c"][0]["t"] == "DisplayMath"
+                        ):
+                            if plain(pending).strip():
+                                result.append(transform({"t": "Para", "c": pending}))
+                            result.append(transform({"t": "Para", "c": [child]}))
+                            pending = []
+                        else:
+                            pending.append(child)
+                    if plain(pending).strip():
+                        result.append(transform({"t": "Para", "c": pending}))
+                    continue
                 item = transform(item)
                 if item is not drop:
                     result.append(item)
@@ -226,6 +254,15 @@ def export(args):
         if not isinstance(node, dict):
             return node
         t, c = node.get("t"), node.get("c")
+        if t == "Math":
+            # Empty-base subscripts are index markers in prose, not incomplete
+            # equations; Word otherwise displays an editable placeholder box.
+            if c[0]["t"] == "InlineMath" and (
+                index := re.fullmatch(r"_\{?([A-Za-z0-9]+)\}?", c[1].strip())
+            ):
+                return {"t": "Subscript", "c": inlines(index[1])}
+            c[1] = re.sub(r"\\(?:begin|end)\{equation\*?\}", "", c[1])
+            c[1] = c[1].replace("{align}", "{aligned}")
         if t == "Para" and (
             marker := re.fullmatch(r"MMSOURCE(\d+)TOKEN", plain(node).strip())
         ):
@@ -416,7 +453,14 @@ def export(args):
         scale = min(1, Inches(6.3) / shape.width, Inches(6.1) / shape.height)
         shape.width, shape.height = int(shape.width * scale), int(shape.height * scale)
     for table in doc.tables:
-        table.autofit = True
+        table.autofit = False
+        widths = {
+            7: [0.95, 0.7, 1.05, 1.2, 0.5, 0.7, 1.5],
+            4: [0.7, 1.3, 2.65, 1.95],
+            2: [1.0, 5.6],
+        }.get(len(table.columns), [6.6 / len(table.columns)] * len(table.columns))
+        for column, width in zip(table.columns, widths):
+            column.width = Inches(width)
         table_pr = table._tbl.tblPr
         borders = OxmlElement("w:tblBorders")
         for edge in ("top", "left", "bottom", "right", "insideH", "insideV"):
@@ -426,9 +470,21 @@ def export(args):
             borders.append(el)
         table_pr.append(borders)
         for ri, row in enumerate(table.rows):
-            if ri == 0:
+            row._tr.get_or_add_trPr().append(OxmlElement("w:cantSplit"))
+            header = ri < (2 if len(table.columns) == 7 else 1)
+            if header:
                 row._tr.get_or_add_trPr().append(OxmlElement("w:tblHeader"))
-            for cell in row.cells:
+            seen_cells = set()
+            for ci, cell in enumerate(row.cells):
+                if cell._tc in seen_cells:
+                    continue
+                seen_cells.add(cell._tc)
+                cell.width = Inches(sum(widths[ci : ci + cell._tc.grid_span]))
+                cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+                if header:
+                    shading = OxmlElement("w:shd")
+                    shading.set(qn("w:fill"), "E9E9E9")
+                    cell._tc.get_or_add_tcPr().append(shading)
                 for paragraph in cell.paragraphs:
                     for run_item in paragraph.runs:
                         run_item.font.size = Pt(10)
