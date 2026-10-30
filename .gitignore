@@ -19,6 +19,10 @@ data/raw/*
 # Output pdfs
 output-pdfs
 
+# Editable review copies and their immutable recovery baselines
+/compiled-manuscripts/*.docx
+/review-baselines/
+
 # Intermediate notebooks
 notebooks-unexecuted
 notebooks-executed
