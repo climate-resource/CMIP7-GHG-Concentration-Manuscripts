@@ -366,7 +366,10 @@ def export(args):
         state["source"] = todos[0][0]
         ast["blocks"].append(
             transform(
-                {"t": "Header", "c": [1, ["", [], []], inlines("Manuscript TODOs")]}
+                {
+                    "t": "Header",
+                    "c": [1, ["", ["unnumbered"], []], inlines("Manuscript TODOs")],
+                }
             )
         )
         for source, line, text in todos:
