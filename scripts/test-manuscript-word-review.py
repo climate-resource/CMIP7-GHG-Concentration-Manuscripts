@@ -197,6 +197,17 @@ def main():
                 for c in report["changes"]
                 for p in c["after"]
             )
+            # Simulate a genuinely competing later edit: Word says "7th",
+            # while current LaTeX now says "eighth". Comparison must report
+            # the overlap and leave that newer source untouched.
+            later_intro = intro.replace("seventh", "eighth", 1)
+            assert later_intro != intro
+            (tmp / intro_path).write_text(later_intro)
+            review.compare(comparison)
+            report = json.loads(comparison.output.read_text())
+            assert report["conflicts"] > 0, "Later LaTeX edits must be reported"
+            assert (tmp / intro_path).read_text() == later_intro
+            (tmp / intro_path).write_text(intro)
             # Perform the agent's surgical merge into the original section snapshot.
             edited_intro = intro.replace("seventh", "7th", 1).replace(
                 old_phrase, old_phrase + " review verification", 1
@@ -212,9 +223,6 @@ def main():
             assert re.findall(r"\\cite\w*(?:\[[^]]*\])*\{[^}]+\}", intro) == re.findall(
                 r"\\cite\w*(?:\[[^]]*\])*\{[^}]+\}", edited_intro
             )
-            review.compare(comparison)
-            report = json.loads(comparison.output.read_text())
-            assert report["conflicts"] > 0, "Later LaTeX edits must be reported"
         finally:
             review.ROOT = saved_root
         if args.compile:
