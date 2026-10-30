@@ -357,7 +357,7 @@ def export(args):
     for source in sorted((ROOT / "manuscripts" / name).glob("*.tex")):
         content = source.read_text()
         for match in re.finditer(r"(?:^[ \t]*%[^\n]*(?:\n|$))+", content, re.M):
-            if not re.search(r"\b(?:ZN)?TODO\b", match[0], re.I):
+            if not re.search(r"\b(?:ZN)?TODOs?\b", match[0], re.I):
                 continue
             line = content.count("\n", 0, match.start()) + 1
             text = re.sub(r"^[ \t]*% ?", "", match[0], flags=re.M).strip()
