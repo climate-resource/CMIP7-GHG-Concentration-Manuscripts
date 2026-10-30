@@ -351,6 +351,29 @@ def export(args):
         return node
 
     ast["blocks"] = transform(ast["blocks"])
+    # TODOs in TeX comments are invisible in the compiled PDF. Keep them
+    # available to the Word reviewer, including their original source location.
+    todos = []
+    for source in sorted((ROOT / "manuscripts" / name).glob("*.tex")):
+        content = source.read_text()
+        for match in re.finditer(r"(?:^[ \t]*%[^\n]*(?:\n|$))+", content, re.M):
+            if not re.search(r"\b(?:ZN)?TODO\b", match[0], re.I):
+                continue
+            line = content.count("\n", 0, match.start()) + 1
+            text = re.sub(r"^[ \t]*% ?", "", match[0], flags=re.M).strip()
+            todos.append((str(source.relative_to(ROOT)), line, text))
+    if todos:
+        state["source"] = todos[0][0]
+        ast["blocks"].append(
+            transform(
+                {"t": "Header", "c": [1, ["", [], []], inlines("Manuscript TODOs")]}
+            )
+        )
+        for source, line, text in todos:
+            state["source"] = source
+            ast["blocks"].append(
+                transform({"t": "Para", "c": inlines(f"{source}:{line} — {text}")})
+            )
     title = metadata["title_info"]["title"]
     ast["meta"] = {"title": {"t": "MetaInlines", "c": inlines(title)}}
     # Use the actual metadata to retain journal-specific Author/affil commands.

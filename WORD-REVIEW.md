@@ -31,6 +31,9 @@ The editable copies are `compiled-manuscripts/<manuscript>_MM.docx`.
 Track Changes is enabled. Use comments for questions and suggestions; edit prose
 normally. Track Changes is helpful but not required for detecting text edits.
 Equations, tables, citations, headings and paragraph moves need individual review.
+TODOs hidden in LaTeX comments are included in a manuscript TODO section, with
+their original filenames and line numbers. Existing TODOs in visible prose remain
+in place.
 
 Each export has a unique identifier in its Word properties. Its untouched original,
 source snapshots, Git commit, paragraph map and conversion intermediates are kept
@@ -70,8 +73,8 @@ an intentional scientific change may require reviewing its corresponding check.
 ## Verification
 
 ```sh
-python scripts/test-manuscript-word-review.py --manuscript historical
-python scripts/test-manuscript-word-review.py --manuscript scenario
+python scripts/test-manuscript-word-review.py --manuscript historical --compile
+python scripts/test-manuscript-word-review.py --manuscript scenario --compile
 ```
 
 These tests use disposable copies: tracked and ordinary edits, an inserted
