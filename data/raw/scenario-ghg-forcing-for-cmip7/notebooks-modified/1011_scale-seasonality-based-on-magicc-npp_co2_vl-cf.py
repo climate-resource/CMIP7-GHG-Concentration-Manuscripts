@@ -66,7 +66,7 @@ scenario_info_markers = "REMIND-MAgPIE 3.5-4.11;VL-cf;vl-cf"
 harmonisation_year = 2015
 magicc_output_db_dir = "data/interim/magicc-output/db"
 magicc_db_backend_str = "feather"
-historical_data_seasonality_lat_gradient_info_root = "/Users/znicholls/Documents/repos/CMIP7-GHG-Concentration-Manuscripts/data/raw/cmip-ghg-concentration-generation/v1.0.0/data/interim"
+historical_data_seasonality_lat_gradient_info_root = "../../cmip-ghg-concentration-generation/v1.0.0/data/interim"
 out_file = "manuscript-outputs/rerun-markers/seasonality/modelling-based-projection_co2_seasonality-all-time_vl-cf.nc"
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}

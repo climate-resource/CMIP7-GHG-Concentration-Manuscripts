@@ -13,7 +13,7 @@ for details rather than repeating them.
 \label{ssec:methods-motivation}
 
 Our method is driven by three key requirements (Sect.~\ref{sec:output-dataset-requirements}).
-First, the concentrations should be consistent with the
+The first requirement is that the concentrations should be consistent with the
 quantified information used to define the scenarios that underpin each experiment,
 particularly the emissions in each experiment \citep{kikstra_scenariomip-emissions_2026,hogner_vl-cf-emissions_2026},
 so that the climate outcomes of the ESM simulations can be linked back to the underlying experiment inputs
@@ -27,11 +27,13 @@ and the simple climate model MAGICC \citep{meinshausen_magicc6-part-1_2011,meins
 MAGICC has demonstrated ability to emulate ESMs \citep{meinshausen_magicc6-part-1_2011,nicholls_rcmip-phase-2_2021},
 was used to produce the CMIP5 and CMIP6 scenario concentrations \citep{meinshausen_rcp-concentrations_2011,meinshausen_ssp-ghgs_2020}
 and was used in the IPCC's Sixth Assessment Report (AR6) to provide insights consistent with the AR6 WG1 assessment throughout AR6 \citep{IPCC_AR6-WG1-Ch-7_2021,kikstra_ar6-climate-assessment_2022}.
-Second, the projections must continue smoothly from the historical dataset,
+
+The second requirement is that the projections must continue smoothly from the historical dataset,
 i.e. there should be no spurious jumps at the transition from history to projection.
 This requires us to harmonise the projections with the history
 to remove any otherwise undesirable artefacts of our modelling approach and the limited time available.
-Third, the latitudinal and seasonal structure of the projected concentrations should be consistent with the historical dataset
+
+The third requirement is that the latitudinal and seasonal structure of the projected concentrations should be consistent with the historical dataset
 and evolve in a way that is informed by history, but which can be driven by quantities that are available in all experiments all the way out to 2500
 (where `available' means either available directly from the emissions or as output of the simple model runs).
 This last requirement is limiting and a key motivator for the relatively simple approach we take
@@ -47,7 +49,7 @@ As for the historical dataset, our `native resolution'
 has monthly temporal resolution and 15\textdegree~latitudinal spatial resolution.
 This is the first dataset we generate for all gases.
 From the native resolution datasets, we create lower resolution data products
-(Sect.~\ref{ssec:methods-derived-grids}).
+(as described in Sect.~\ref{ssec:methods-derived-grids}).
 
 We produce datasets for the ScenarioMIP scenarios
 and for VL-CF, PolMIP's counterfactual to VL (Sect.~\ref{sec:output-dataset-requirements}),

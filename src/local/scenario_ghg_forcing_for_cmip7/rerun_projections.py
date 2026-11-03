@@ -27,6 +27,7 @@ so the original run's data is never overwritten.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -456,6 +457,26 @@ manuscript_pcs_file
 """
 
 
+def path_from_bundle_root(path: Path, bundle_dir: Path) -> str:
+    """
+    Get a root bath from bundle
+
+    Parameters
+    ----------
+    path
+        Path to convert
+
+    bundle_dir
+        Directory which holds the bundle
+
+    Returns
+    -------
+    :
+        `path`, relative to `bundle_dir`
+    """
+    return Path(os.path.relpath(path.resolve(), bundle_dir.resolve())).as_posix()
+
+
 def rerun(
     executed_notebook: Path,
     rerun_name: str,
@@ -524,7 +545,7 @@ def rerun_co2_seasonality(bundle_dir: Path = BUNDLE_DIR) -> Path:
             f'magicc_output_db_dir = "{MAGICC_OUTPUT_DB_DIR.as_posix()}"',
             'magicc_db_backend_str = "feather"',
             "historical_data_seasonality_lat_gradient_info_root"
-            f' = "{HISTORICAL_INTERIM_ROOT.resolve().as_posix()}"',
+            f' = "{path_from_bundle_root(HISTORICAL_INTERIM_ROOT, bundle_dir)}"',
             f'out_file = "{CO2_SEASONALITY_FILE.as_posix()}"',
         ],
         extra_cells=[
@@ -563,9 +584,9 @@ def rerun_two_eof_lat_gradient(ghg: str, bundle_dir: Path = BUNDLE_DIR) -> Path:
             f' = "{get_eof_scaling_emissions_file(ghg).as_posix()}"',
             f"harmonisation_year = {HARMONISATION_YEAR}",
             "historical_data_root_dir"
-            f' = "{HISTORICAL_CONCENTRATIONS_ROOT.resolve().as_posix()}"',
+            f' = "{path_from_bundle_root(HISTORICAL_CONCENTRATIONS_ROOT, bundle_dir)}"',
             "historical_data_seasonality_lat_gradient_info_root"
-            f' = "{HISTORICAL_INTERIM_ROOT.resolve().as_posix()}"',
+            f' = "{path_from_bundle_root(HISTORICAL_INTERIM_ROOT, bundle_dir)}"',
             f'out_file = "{get_lat_gradient_info_file(ghg).as_posix()}"',
         ],
         extra_cells=[
@@ -605,9 +626,9 @@ def rerun_one_eof_lat_gradient(ghg: str, bundle_dir: Path = BUNDLE_DIR) -> Path:
             "annual_mean_emissions_file"
             f' = "{get_eof_scaling_emissions_file(ghg).as_posix()}"',
             "historical_data_root_dir"
-            f' = "{HISTORICAL_CONCENTRATIONS_ROOT.resolve().as_posix()}"',
+            f' = "{path_from_bundle_root(HISTORICAL_CONCENTRATIONS_ROOT, bundle_dir)}"',
             "historical_data_seasonality_lat_gradient_info_root"
-            f' = "{HISTORICAL_INTERIM_ROOT.resolve().as_posix()}"',
+            f' = "{path_from_bundle_root(HISTORICAL_INTERIM_ROOT, bundle_dir)}"',
             f'out_file = "{get_lat_gradient_info_file(ghg).as_posix()}"',
         ],
         extra_cells=[get_save_pcs_cell(get_pcs_file(ghg), {0: "pc_extended"})],
