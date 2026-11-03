@@ -20,17 +20,18 @@ and output from ESMs is a known consequence of the experiment design.
 
 In this section, a number of improvements and tradeoffs are discussed.
 
-\textbf{Harmonisation}
+\subsection{Harmonisation}
+\label{ssec:discussion-harmonisation}
 
 Harmonisation is difficult in all contexts in which it is used \citep[e.g.][]{gidden_aneris_2018,gidden_cmip6-harmonised-emissions_2019,kikstra_scenariomip-emissions_2026}.
 The need for it is an indication that there is a mismatch between the timeseries being harmonised to, usually a historical timeseries,
 the method/timeseries being harmonised, usually a projection timeseries based on modelling of some sort.
 Harmonisation then has to resolve this mismatch.
 As illustrated in this paper, there is no perfect way to do this.
-Using no harmonisation leads to a spurious jump in the output at the time point when we transition from the historical timeseries
- to the projections.
+Using no harmonisation leads to a spurious jump in the output
+at the time point when we transition from the historical timeseries to the projections.
 Applying a harmonisation on the whole time period of the future projection,
-never therefore returning to the values of the projection timeseries,
+therefore never returning to the values of the projection timeseries,
 means that the difference at the harmonisation point
 affects every projected time point too, which does not always make physical sense (e.g. for short-lived emissions in this paper).
 Between these two extremes, a tradeoff is being made between having a faster transition to the projected timeseries (and therefore risking introducing unphysical features)
@@ -54,8 +55,8 @@ Ideally, this calibration process would be sufficiently sophisticated that it wo
 like AR6, while taking into account the updated historical timeseries.
 This is certainly challenging, but it is also doable.
 
-
-\textbf{MAGICC re-calibration}
+\subsection{MAGICC re-calibration}
+\label{ssec:discussion-magicc-recalibration}
 
 Being able to re-calibrate MAGICC on shorter timescales would solve two other identified issues.
 The first is the use of a one-box model for projections of some gases rather than MAGICC.
@@ -66,7 +67,8 @@ would resolve this issue too.
 The second is the jump from 2014 to 2015 in the inputs that MAGICC (implicitly) uses.
 A re-calibrated MAGICC could have used CMIP7 inputs and therefore avoided this issue entirely.
 
-\textbf{Limited set of supported experiments}
+\subsection{Limited set of supported experiments}
+\label{ssec:discussion-experiment-set}
 
 The datasets produced here are not exhaustive.
 Due to the computational expense of ESMs, only a limited number of experiments can be run.
@@ -77,7 +79,8 @@ that full range is wider than shown here, particularly in the relationship acros
 i.e. higher CO_2 concentrations implies higher CH_4 concentrations).
 
 
-\textbf{Ozone depleting substance}
+\subsection{Ozone depleting substance}
+\label{ssec:discussion-ods}
 
 The fourth point to consider is the use of a single source for projections of ozone-depleting substances.
 In some ways, this is at odds with the overall scenario narrative that underpins ScenarioMIP scenarios.
@@ -87,8 +90,9 @@ both ones compliant with international agreements and ones that are not.
 Not applying the same logic to the ozone-depleting substances results in a small inconsistency
 that may be worth further consideration.
 
+\subsection{Inconsistencies between experiments}
+\label{ssec:discussion-inconsistencies-experiments}
 
-\textbf{Inconsistencies between experiments}
 % Note to us: we should probably produce corrected versions of VL-CF
 % and upload them to ESGF in case anyone wants to see what the impact of these issues are in an ESM.
 % This would be a good exercise to do in the context of the DestinE project.
@@ -116,8 +120,10 @@ which showed that the sensitivity of projections to latitudinal gradients and se
 we expect the impact to be small and therefore have not recommended that any simulations that use the existing VL-CF dataset be re-run.
 
 
-\textbf{Inconsistencies between methods}
-Onother issue is inconsistencies between the methods used for the historical dataset and for the projections.
+\subsection{Inconsistencies between methods}
+\label{ssec:discussion-inconsistencies-methods}
+
+Another issue is inconsistencies between the methods used for the historical dataset and for the projections.
 Specifically, NPP is used to drive seasonality change in the future
 but a composite of global-, annual-mean concentrations and temperature is used to drive the same changes in the historical dataset \citep{nicholls_historical-ghgs_2026}.
 In addition, the latitudinal gradient is based on regressions that use different emissions sets.
@@ -137,11 +143,12 @@ but then apply them with the CMIP7 emissions.
 These introduce further inconsistencies in seasonality and latitudinal gradients
 that should be reconsidered in future work.
 
-\textbf{Limitations to the methods}
+\subsection{Methods limitations}
+\label{ssec:discussion-methods-limitations}
 
 The need to use a method which can produce datasets that span from year 1 to 2500 or beyond
 introduces some limitations on the level of sophistication which can be used,
- as there are only a few ways to get information over such a long timespan.
+as there are only a few ways to get information over such a long timespan.
 While there are no obvious solutions here, a number of elements could be considered more carefully and perhaps updated.
 The first is the driver for changes in the latitudinal gradient.
 While a linear regression against emissions works well for some species,
@@ -153,7 +160,8 @@ and how to preserve internal consistency
 may lead to better results or identification of improved methods
 that nonetheless meet the constraints set by the output dataset requirements.
 
-\textbf{Inconsistencies between forcing products}
+\subsection{Inconsistencies between forcing products}
+\label{ssec:discussion-inconsistencies-forcing-products}
 
 The last issue is the difference between inversions of the CMIP7 concentrations and the CMIP7 extended emissions,
 and the fact that we run MAGICC in emissions-driven mode for gases where the CMIP7 concentrations are defined by an external source.

@@ -1,9 +1,9 @@
 The seventh phase of the Coupled Model Intercomparison Project (CMIP7) is in progress \citep{dunne_cmip7_2025}.
-To enable model comparison, input datasets are established for each of the experiments defined within CMIP7.
-
-Forcing datasets are among such inputs. Here, we descibe the methods and data products
+To enable model comparison, input datasets are standardised for each of the experiments defined within CMIP7.
+These input datasets are typically referred to as `forcings'.
+Here, we describe the methods and data products
 generated to support a range of experiments exploring possible future climate change trajectories,
-specifically ScenarioMIP scenarios and PolMIP VL-CF scenario.
+specifically ScenarioMIP scenarios and the PolMIP VL-CF scenario.
 
 Within CMIP7's exploration of possible futures, ScenarioMIP \citep{van-vuuren_scenariomip_2026,riahi_new-ssps-overview_2026} is the most well known effort.
 ScenarioMIP's remit is to explore future climate change under a selected range of possible boundary conditions
@@ -21,15 +21,19 @@ and high followed by low (and then negative) emissions (HL, \citealp{aleluia-rei
 For full details of these scenarios, see the underlying papers referenced above.
 For details of the scenario design as a whole, see \citet{van-vuuren_scenariomip_2026,riahi_new-ssps-overview_2026}.
 
-Here we also illustrate our support for such efforts by also presenting the GHG forcings
-for the Policy-Aligned Model Intercomparison Projec (PolMIP)'s \citep{tbd_polmip-guidance_2026}
-VL-CF experiment \citep{hogner_vl-cf-emissions_2026}. PolMIP is also, like ScenarioMIP, a set modelling experiments exploring future climate change,
-but is designed as complementary effort to other MIPs with a focus on policy-driven pathways, rather than plausibility and range.
+Here we also illustrate our support for such efforts by presenting the GHG forcings
+for the Policy-aligned Model Intercomparison Project's (PolMIP's) \citep{tbd_polmip-guidance_2026}
+VL-CF experiment \citep{hogner_vl-cf-emissions_2026}.
+% Maybe bring back in if reviewers ask and we have an actual reference.
+% PolMIP is, like ScenarioMIP, a set modelling experiments exploring future climate change.
+% but is designed as complementary effort with a focus on policy-driven pathways, rather than plausibility and range.
 VL-CF is a counterfactual experiment in which emissions are reduced from the start of 2016 onwards (i.e. just after the signing of The Paris Agreement)
 such that global-mean temperatures peak at around 1.5~\textdegree C (according to AR6 science, \citealp{IPCC_AR6-WG1-Ch-7_2021,kikstra_ar6-climate-assessment_2022}).
-Given the focus within CMIP7 on pathways overshooting and then returning to 1.5~\textdegree C (overshoot, peak, and decline), VL-CF is
-a useful tool to analyse their outcomes compared to a scenario where the overshoot does not happen [TODO: cite Carl's paper A conceptual framework for analysing
-Overshoot, Peak and Decline Pathways, I couldn't fint it, is it out already?].
+% Add back in if we can get some citations
+% Given the focus within CMIP7 on pathways overshooting and then returning to 1.5~\textdegree C (overshoot, peak, and decline),
+% VL-CF is a useful tool to analyse their outcomes compared to a scenario
+% where the overshoot does not happen.
+% [TODO: cite Carl's paper A conceptual framework for analysing Overshoot, Peak and Decline Pathways if it comes out in time].
 
 The design of the ScenarioMIP experiments maximises the usefulness derived from the resulting Earth System Model (ESM) output,
 given that ESMs cannot be run for all experiments of interest due to their computational expense.
@@ -50,12 +54,12 @@ allows for an at least approximate estimate of future climate change under any s
 There is an increasing move towards emissions-driven capability in ESMs.
 At this stage, CO_2 emissions-driven capability is close to mainstream,
 while some early adopters also have CH_4 and N_2O emissions-driven capability.
-
-For these teams, the CO_2, CH_4 and N_2O concentrations provided here are not needed for the main experiment runs,
-but it is recommended to perform a forcings driven run to help assess the impact of this change [TODO: cite cmip7 page].
-Moreover, for all other teams, there is still a reliance on our provided concentrations.
-For species other than CO_2, CH_4 and N_2O, all models participatin in ScenarioMIP will rely on
- our provided GHG concentration forcings as far as we are aware.
+For these teams, the CO_2, CH_4 and N_2O concentrations provided here are not needed for emissions-driven runs,
+but there are still requests to perform parallel concentration-driven runs
+to help assess the differences between emissions-driven and concentration-driven setups \citep{van-vuuren_scenariomip_2026}.
+For all other teams, there is still a reliance on our provided concentrations.
+For species other than CO_2, CH_4 and N_2O, all models participating in ScenarioMIP
+will rely on our provided GHG concentration forcings as far as we are aware.
 
 The production of GHG concentration forcings for all species also facilitates concentration-driven experiments,
 which can be compared to their emissions-driven counterparts and help understand uncertainties in modelling of Earth's carbon cycle.
