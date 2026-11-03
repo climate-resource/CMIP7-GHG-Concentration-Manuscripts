@@ -1,5 +1,9 @@
 # TODOs
 
+## General
+
+- [ ] Figure out how to set things up so that running on different machines and merging PRs doesn't trigger unnecessary full rebuilds (maybe very hard or even impossible...)
+
 ## scenario GHG forcing for CMIP7 manuscript
 
 Compiled from `manuscripts/scenario-ghg-forcing-for-cmip7/*`
