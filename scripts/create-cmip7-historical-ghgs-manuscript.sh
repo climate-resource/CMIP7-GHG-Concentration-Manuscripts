@@ -238,3 +238,13 @@ uv run python "${script_dir}/compile-gmd-template-based-latex.py" \
 # --extra "${methods_subfile}" \
 
 echo "Output file is in ${output_pdf}"
+
+# Export to Word, for review in Google Docs
+# Uses the numbering from the latex build above, so must come after it.
+output_docx="${output_pdf_dir}/historical-ghg-forcing-for-cmip7.docx"
+uv run python "${script_dir}/export-latex-to-docx.py" \
+    --latex-main "${build_dir}/latex/main.tex" \
+    --work-dir "${build_dir}/docx" \
+    --output "${output_docx}"
+
+echo "Word file is in ${output_docx}"

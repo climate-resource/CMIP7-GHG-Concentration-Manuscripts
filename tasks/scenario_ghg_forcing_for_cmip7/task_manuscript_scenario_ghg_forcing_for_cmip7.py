@@ -1,5 +1,5 @@
 """
-Tasks which assemble the manuscript and compile it to PDF
+Tasks which assemble the manuscript, compile it to PDF and export it to Word
 """
 
 import shutil
@@ -9,6 +9,7 @@ from typing import Annotated
 
 from pytask import Product
 
+import local.docx_export
 import local.gmd_latex
 import local.scenario_ghg_forcing_for_cmip7.value_checks
 from local.gmd_latex import (
@@ -33,13 +34,16 @@ from local.scenario_ghg_forcing_for_cmip7.config import (
     COMPETING_INTERESTS,
     CONCLUSION,
     COPERNICUS_TEMPLATE_DIR,
+    DOCX_DIR,
     FIGURE_FILES,
     FILES_TO_INLINE,
     INTRODUCTION,
+    LATEX_AUX,
     LATEX_DIR,
     LATEX_MAIN,
     MAGICC_SUMMARY,
     METADATA,
+    OUTPUT_DOCX,
     OUTPUT_PDF,
     REFERENCES_BIB,
     REPLACEMENTS,
@@ -143,10 +147,36 @@ def task_compile_pdf(
     main_tex: Path = LATEX_MAIN,
     latex_support_files: list[Path] = LATEX_SUPPORT_FILES,
     output_pdf: Annotated[Path, Product] = OUTPUT_PDF,
+    main_aux: Annotated[Path, Product] = LATEX_AUX,
 ) -> None:
-    """Compile `main.tex` to PDF"""
+    """
+    Compile `main.tex` to PDF
+
+    Latex's `.aux` file is also a product, as the Word export uses its numbering.
+    """
     # stderr, as in scripts/compile-gmd-template-based-latex.py
     built_pdf = compile_latex(main_tex, output_sink=sys.stderr)
 
     output_pdf.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(built_pdf, output_pdf)
+
+
+def task_export_docx(
+    main_tex: Path = LATEX_MAIN,
+    main_aux: Path = LATEX_AUX,
+    latex_support_files: list[Path] = LATEX_SUPPORT_FILES,
+    docx_export_source: Path = Path(local.docx_export.__file__),
+    output_docx: Annotated[Path, Product] = OUTPUT_DOCX,
+) -> None:
+    """
+    Export the compiled manuscript to Word
+
+    For review, e.g. by uploading to Google Drive and opening with Google Docs.
+    """
+    local.docx_export.export_to_docx(
+        latex_main=main_tex,
+        output=output_docx,
+        work_dir=DOCX_DIR,
+        aux_file=main_aux,
+        bibliography=LATEX_DIR / REFERENCES_BIB.name,
+    )
