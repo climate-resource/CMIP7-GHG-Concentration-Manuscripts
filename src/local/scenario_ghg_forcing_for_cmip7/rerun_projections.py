@@ -459,7 +459,7 @@ manuscript_pcs_file
 
 def path_from_bundle_root(path: Path, bundle_dir: Path) -> str:
     """
-    Get a root bath from bundle
+    Get a root path from bundle
 
     Parameters
     ----------
