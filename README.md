@@ -83,6 +83,26 @@ bash scripts/create-cmip7-historical-ghgs-manuscript.sh
 bash scripts/create-cmip7-scenario-ghgs-manuscript.sh
 ```
 
+### Word based docs for review
+
+Both manuscript scripts above also write a Word copy of the manuscript
+next to the PDF (`compiled-manuscripts/*.docx`).
+The Word based versions are for review, not submission.
+The title, authors and abstract are dropped
+and citations use pandoc's default style,
+but section, figure, table and equation numbers match the PDF.
+It needs [pandoc](https://pandoc.org/installing.html).
+
+For the scenario manuscript, the export is a pytask task
+so you can also run it on its own (along with whatever it depends on):
+
+```sh
+uv run pytask -k "task_manuscript_scenario_ghg_forcing_for_cmip7.py::task_export_docx"
+```
+
+To export any other compiled GMD-template manuscript, see
+`uv run python scripts/export-latex-to-docx.py --help`.
+
 ### Historical data user guide
 
 ```sh

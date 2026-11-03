@@ -71,4 +71,6 @@ cd "${repo_root}"
 
 # Careful: a `-k` which matches no task deselects everything
 # and pytask still reports success, so check the task name.
-uv run pytask -k "task_manuscript_scenario_ghg_forcing_for_cmip7.py::task_compile_pdf"
+# The Word export depends on the PDF,
+# so selecting it builds both.
+uv run pytask -k "task_manuscript_scenario_ghg_forcing_for_cmip7.py::task_export_docx"
