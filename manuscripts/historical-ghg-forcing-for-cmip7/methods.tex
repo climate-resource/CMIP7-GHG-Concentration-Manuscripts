@@ -5,6 +5,29 @@ To derive our dataset, we largely follow the methods described in \citet{meinsha
 However, we have made changes in a number of places and completely re-implemented the underlying software so,
 for reasons of clarity and accuracy, we describe the method in full.
 
+\subsection{Motivation}
+\label{ssec:methods-motivation}
+
+Our method is driven by the requirements (Sect.~\ref{sec:output-dataset-requirements}).
+This major requirement is in how they method can be applied.
+Firstly, the method has to allow us to produce a dataset
+which extends from year 1 to as close to present-day as possible.
+Secondly, future concentration forcings will also need to be produced [TODO cite future forcing paper].
+So, our method also needs to be able to be applied to produce future concentration forcings
+that are consistent with the historical forcings.
+This is a limiting factor.
+It means that we can only rely on methods that can be applied over a timespan from year 1
+to the end of the scenario forcings (2500 in CMIP6 \citealp{meinshausen_ssp-ghgs_2020}).
+As a result, we have to stick to relatively simple methods
+that can be extended with basic regressions and scaling arguments.
+More sophisticated methods that rely on detailed inputs may work well for the present-day and recent decades
+but there is limited detailed information available in the past
+and modelling to produce detailed information in the future is usually too expensive (i.e. slow) to be used for producing future forcings.
+Working within these constraints and dropping non-essential features like longitudinal gradients
+(which are generally small because of greenhouse gases' well-mixed nature on climate relevant timescales),
+while also capturing key features of greenhouse gas concentrations like their seasonality and latitudinal gradient,
+has played a key role in shaping the method used here.
+
 \subsection{General approach}
 \label{ssec:methods-general-approach}
 
@@ -1431,7 +1454,6 @@ From this native grid output, we then derive four other output products:
 
 These outputs are trivially derived by taking means in the relevant axes
 (where the spatial means are area-weighted).
-The outputs are then formatted before being published on the ESGF for distribution to modelling teams.
 
 We also have the ability to produce higher-resolution spatial grids
 by applying mean-preserving interpolation to the latitudinal axis of the native grid output.

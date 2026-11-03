@@ -282,6 +282,7 @@ def write_modified_notebook(  # noqa: PLR0913
     extra_cells: Iterable[str],
     config_file: str = BUNDLE_CONFIG_FILE,
     step_config_id: str | None = None,
+    injected_parameters: list[str] | None = None,
 ) -> Path:
     """
     Write a modified copy of a notebook from the original run
@@ -322,15 +323,27 @@ def write_modified_notebook(  # noqa: PLR0913
 
         If `None`, whatever the original run used is kept.
 
+    injected_parameters
+        Lines to use as the injected parameters, e.g. `['ghg = "ccl4"']`
+
+        For notebooks which aren't parameterised
+        by a config file and step config ID, like the historical run's are
+        (e.g. the scenario run's notebooks).
+        If supplied, `config_file` and `step_config_id` are ignored.
+        Like `config_file`, any paths are interpreted
+        relative to the notebook's working directory,
+        which is the bundle's root directory.
+
     Returns
     -------
         `out_ipynb`, i.e. the notebook to execute
     """
     notebook = jupytext.read(start_from)
 
-    injected_parameters = [f'config_file = "{config_file}"']
-    if step_config_id is not None:
-        injected_parameters.append(f'step_config_id = "{step_config_id}"')
+    if injected_parameters is None:
+        injected_parameters = [f'config_file = "{config_file}"']
+        if step_config_id is not None:
+            injected_parameters.append(f'step_config_id = "{step_config_id}"')
 
     _set_injected_parameters(notebook, injected_parameters)
     _clear_run_artefacts(notebook)

@@ -1,4 +1,4 @@
-# Applied in order (see `apply_replacements` in scripts/compile-gmd-template-based-latex.py),
+# Applied in order (see `apply_replacements` in src/local/gmd_latex.py),
 # so a key must come before any key it contains (e.g. CFC-11-eq before CFC-11),
 # otherwise the longer key never matches.
 # Every command is \protect-ed, so the replacements also work in moving arguments
