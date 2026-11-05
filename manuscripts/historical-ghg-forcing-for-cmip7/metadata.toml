@@ -27,7 +27,7 @@ contributions = [
 [[authors]]
 given_name = "Malte"
 surname = "Meinshausen"
-email = "malte.meinshausen@climate-resource.com"
+# Email: malte.meinshausen@climate-resource.com
 affiliations = ["cr", "uom-sgeas"]
 contributions_initials = "MM"
 contributions = [
@@ -40,7 +40,7 @@ contributions = [
 [[authors]]
 given_name = "Mika"
 surname = 'Pfl\"uger'
-email = "mika.pflueger@climate-resource.com"
+# Email: mika.pflueger@climate-resource.com
 affiliations = ["crs"]
 contributions_initials = "MP"
 contributions = [
@@ -51,7 +51,7 @@ contributions = [
 [[authors]]
 given_name = "Anna"
 surname = 'Lanteri'
-email = "anna.lanteri@climate-resource.com"
+# Email: anna.lanteri@climate-resource.com
 affiliations = ["crs"]
 contributions_initials = "AL"
 contributions = [
@@ -63,7 +63,7 @@ contributions = [
 [[authors]]
 given_name = "Florence"
 surname = 'Bockting'
-email = "florence.bockting@gmail.com"
+# Email: florence.bockting@gmail.com
 affiliations = ["crs", "aalto"]
 contributions_initials = "FB"
 contributions = [
@@ -74,16 +74,415 @@ contributions = [
 [[authors]]
 given_name = "Jared"
 surname = "Lewis"
-email = "jared.lewis@climate-resource.com"
+# Email: jared.lewis@climate-resource.com
 affiliations = ["cr"]
 contributions_initials = "JL"
 contributions = [
     "dataset-production",
 ]
 
+# Producers of the input data
+# (the sources of each gas are in the input data references tables in the appendices,
+# from the original run's `dependencies.db`).
+# For each source which the gases' timeseries are built from,
+# the people the data files name as its data owners, principal investigators,
+# suppliers or contacts (for AGAGE, the station data owners,
+# as AGAGE's data policy asks for co-authorship to be offered to them),
+# otherwise the dataset's lead authors.
+# In alphabetical order by surname from here.
+
+[[authors]]
+given_name = "Ben"
+surname = "Adam"
+affiliations = ["bristol"]
+contributions_initials = "BA"
+contributions = [
+    "input-data-agage-hfc23",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Jgor"
+surname = "Arduini"
+affiliations = ["urbino"]
+contributions_initials = "JA"
+contributions = [
+    "input-data-agage-monte-cimone",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "John S."
+surname = "Daniel"
+affiliations = ["noaa-csl"]
+contributions_initials = "JD"
+contributions = [
+    "input-data-wmo-2022",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Eleanor S."
+surname = "Droste"
+affiliations = ["uea"]
+contributions_initials = "ED"
+contributions = [
+    "input-data-droste-pfcs",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Geoff S."
+surname = "Dutton"
+affiliations = ["cires", "noaa-gml"]
+contributions_initials = "GD"
+contributions = [
+    "input-data-noaa-hats-combined",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Andreas"
+surname = "Engel"
+affiliations = ["frankfurt"]
+contributions_initials = "AE"
+contributions = [
+    "input-data-agage-taunus",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "David M."
+surname = "Etheridge"
+affiliations = ["csiro"]
+contributions_initials = "DE"
+contributions = [
+    "input-data-law-dome-menking",
+    "input-data-law-dome-rubino",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Ove"
+surname = "Hermansen"
+affiliations = ["nilu"]
+contributions_initials = "OH"
+contributions = [
+    "input-data-agage-zeppelin",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Ralph F."
+surname = "Keeling"
+affiliations = ["sio"]
+contributions_initials = "RK"
+contributions = [
+    "input-data-scripps-co2",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Paul B."
+surname = "Krummel"
+affiliations = ["csiro"]
+contributions_initials = "PK"
+contributions = [
+    "input-data-agage-cape-grim",
+    "input-data-law-dome-menking",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Xin"
+surname = "Lan"
+affiliations = ["cires", "noaa-gml"]
+contributions_initials = "XL"
+contributions = [
+    "input-data-noaa-ccgg-flask",
+    "input-data-noaa-ccgg-in-situ-ch4",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Johannes C."
+surname = "Laube"
+affiliations = ["fzj"]
+contributions_initials = "JCL"
+contributions = [
+    "input-data-droste-pfcs",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Chris R."
+surname = "Lunder"
+affiliations = ["nilu"]
+contributions_initials = "CL"
+contributions = [
+    "input-data-agage-zeppelin",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Michela"
+surname = "Maione"
+affiliations = ["urbino"]
+contributions_initials = "MMa"
+contributions = [
+    "input-data-agage-monte-cimone",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "James A."
+surname = "Menking"
+affiliations = ["csiro"]
+contributions_initials = "JAM"
+contributions = [
+    "input-data-law-dome-menking",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Ben R."
+surname = "Miller"
+affiliations = ["cires", "noaa-gml"]
+contributions_initials = "BM"
+contributions = [
+    "input-data-noaa-hats-flask",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Stephen A."
+surname = "Montzka"
+affiliations = ["noaa-gml"]
+contributions_initials = "SM"
+contributions = [
+    "input-data-noaa-hats-combined",
+    "input-data-noaa-hats-flask",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Jens"
+surname = 'M\"uhle'
+affiliations = ["sio"]
+contributions_initials = "JM"
+contributions = [
+    "input-data-agage-trinidad-head-samoa",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Simon"
+surname = "O'Doherty"
+affiliations = ["bristol"]
+contributions_initials = "SO"
+contributions = [
+    "input-data-agage-mace-head",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Sunyoung"
+surname = "Park"
+affiliations = ["knu"]
+contributions_initials = "SP"
+contributions = [
+    "input-data-agage-gosan",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Ronald G."
+surname = "Prinn"
+affiliations = ["mit"]
+contributions_initials = "RP"
+contributions = [
+    "input-data-agage-ale-gage",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Stefan"
+surname = "Reimann"
+affiliations = ["empa"]
+contributions_initials = "SR"
+contributions = [
+    "input-data-agage-jungfraujoch",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Matthew"
+surname = "Rigby"
+affiliations = ["bristol"]
+contributions_initials = "MR"
+contributions = [
+    "input-data-agage-hfc23",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Mauro"
+surname = "Rubino"
+affiliations = ["unicampania"]
+contributions_initials = "MRu"
+contributions = [
+    "input-data-law-dome-rubino",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Kieran M."
+surname = "Stanley"
+affiliations = ["bristol"]
+contributions_initials = "KS"
+contributions = [
+    "input-data-agage-tacolneston",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Pieter P."
+surname = "Tans"
+affiliations = ["instaar"]
+contributions_initials = "PT"
+contributions = [
+    "input-data-noaa-ccgg-in-situ-co2",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Kirk W."
+surname = "Thoning"
+affiliations = ["noaa-gml"]
+contributions_initials = "KT"
+contributions = [
+    "input-data-noaa-ccgg-in-situ-co2",
+    "input-data-noaa-ccgg-in-situ-ch4",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Cathy M."
+surname = "Trudinger"
+affiliations = ["csiro"]
+contributions_initials = "CT"
+contributions = [
+    "input-data-law-dome-menking",
+    "input-data-law-dome-rubino",
+    "input-data-trudinger-pfcs",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Guus J. M."
+surname = "Velders"
+affiliations = ["rivm", "uu-imau"]
+contributions_initials = "GV"
+contributions = [
+    "input-data-velders-hfcs",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Isaac J."
+surname = "Vimont"
+affiliations = ["cires", "noaa-gml"]
+contributions_initials = "IV"
+contributions = [
+    "input-data-noaa-hats-flask",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Martin K."
+surname = "Vollmer"
+affiliations = ["empa"]
+contributions_initials = "MV"
+contributions = [
+    "input-data-agage-jungfraujoch",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Stephen J."
+surname = "Walker"
+affiliations = ["sio"]
+contributions_initials = "SW"
+contributions = [
+    "input-data-scripps-co2",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Ray H. J."
+surname = "Wang"
+affiliations = ["gatech"]
+contributions_initials = "RHJW"
+contributions = [
+    "input-data-agage-archive",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Ray F."
+surname = "Weiss"
+affiliations = ["sio"]
+contributions_initials = "RW"
+contributions = [
+    "input-data-agage-trinidad-head-samoa",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Luke M."
+surname = "Western"
+affiliations = ["bristol"]
+contributions_initials = "LW"
+contributions = [
+    "input-data-agage-hfc23",
+    "input-data-western-hcfcs",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Dickon"
+surname = "Young"
+affiliations = ["bristol"]
+contributions_initials = "DY"
+contributions = [
+    "input-data-agage-ragged-point",
+    "review-and-editing",
+]
+
+# The affiliations are numbered in the order they are given here,
+# so keep them in the order they first appear in the author list.
 [affiliations]
 crs = "Climate Resource S, Berlin, Germany"
-cr =  "Climate Resource, Melbourne, Australia"
+cr = "Climate Resource, Melbourne, Australia"
 uom-sgeas = "School of Geography, Earth and Atmospheric Sciences, The University of Melbourne, Melbourne, Victoria, Australia"
 iiasa-ece = "Energy, Climate and Environment Program, International Institute for Applied Systems Analysis (IIASA), 2361 Laxenburg, Austria"
 aalto = "Aalto University"
+bristol = "School of Chemistry, University of Bristol, Bristol, UK"
+urbino = "Department of Pure and Applied Sciences, University of Urbino Carlo Bo, Urbino, Italy"
+noaa-csl = "NOAA Chemical Sciences Laboratory, Boulder, Colorado, USA"
+uea = "Centre for Ocean and Atmospheric Sciences, School of Environmental Sciences, University of East Anglia, Norwich, UK"
+cires = "Cooperative Institute for Research in Environmental Sciences, University of Colorado Boulder, Boulder, Colorado, USA"
+noaa-gml = "NOAA Global Monitoring Laboratory, Boulder, Colorado, USA"
+frankfurt = "Institute for Atmospheric and Environmental Sciences, Goethe University Frankfurt, Frankfurt am Main, Germany"
+csiro = "CSIRO Environment, Aspendale, Victoria, Australia"
+nilu = "NILU, Kjeller, Norway"
+sio = "Scripps Institution of Oceanography, University of California San Diego, La Jolla, California, USA"
+fzj = 'Institute of Climate and Energy Systems, Stratosphere (ICE-4), Forschungszentrum J\"ulich, J\"ulich, Germany'
+knu = "Department of Oceanography, Kyungpook National University, Daegu, Republic of Korea"
+mit = "Center for Global Change Science, Massachusetts Institute of Technology, Cambridge, Massachusetts, USA"
+empa = 'Laboratory for Air Pollution/Environmental Technology, Empa, Swiss Federal Laboratories for Materials Science and Technology, D\"ubendorf, Switzerland'
+unicampania = "Dipartimento di Matematica e Fisica, Universit\\`a degli Studi della Campania ``Luigi Vanvitelli'', Caserta, Italy"
+instaar = "Institute of Arctic and Alpine Research, University of Colorado Boulder, Boulder, Colorado, USA"
+rivm = "National Institute for Public Health and the Environment (RIVM), Bilthoven, the Netherlands"
+uu-imau = "Institute for Marine and Atmospheric Research Utrecht, Utrecht University, Utrecht, the Netherlands"
+gatech = "School of Earth and Atmospheric Sciences, Georgia Institute of Technology, Atlanta, Georgia, USA"

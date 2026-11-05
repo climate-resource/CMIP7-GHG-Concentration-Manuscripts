@@ -26,7 +26,6 @@ contributions = [
 [[authors]]
 given_name = "Florence"
 surname = 'Bockting'
-email = "florence.bockting@gmail.com"
 affiliations = ["crs", "aalto"]
 contributions_initials = "FB"
 contributions = [
@@ -37,7 +36,6 @@ contributions = [
 [[authors]]
 given_name = "Anna"
 surname = 'Lanteri'
-email = "anna.lanteri@climate-resource.com"
 affiliations = ["crs"]
 contributions_initials = "AL"
 contributions = [
@@ -49,7 +47,6 @@ contributions = [
 [[authors]]
 given_name = "Mika"
 surname = 'Pfl\"uger'
-email = "mika.pflueger@climate-resource.com"
 affiliations = ["crs"]
 contributions_initials = "MP"
 contributions = [
@@ -59,7 +56,6 @@ contributions = [
 [[authors]]
 given_name = "Jared"
 surname = "Lewis"
-email = "jared.lewis@climate-resource.com"
 affiliations = ["cr"]
 contributions_initials = "JL"
 contributions = [
@@ -70,11 +66,101 @@ contributions = [
 [[authors]]
 given_name = "Malte"
 surname = "Meinshausen"
-email = "malte.meinshausen@unimelb.edu.au"
 affiliations = ["cr", "uom-sgeas"]
 contributions_initials = "MM"
 contributions = [
     "conceptualisation",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "John S."
+surname = "Daniel"
+affiliations = ["noaa-csl"]
+contributions_initials = "JD"
+contributions = [
+    "input-data-wmo-2022",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Guus J. M."
+surname = "Velders"
+affiliations = ["rivm", "uu-imau"]
+contributions_initials = "GV"
+contributions = [
+    "input-data-velders-hfcs",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Luke M."
+surname = "Western"
+affiliations = ["bristol"]
+contributions_initials = "LW"
+contributions = [
+    "input-data-agage-hfc23",
+    "input-data-western-hcfcs",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Matthew"
+surname = "Rigby"
+affiliations = ["bristol"]
+contributions_initials = "MR"
+contributions = [
+    "input-data-agage-hfc23",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Jarmo"
+surname = "Kikstra"
+affiliations = ["iiasa-ece"]
+contributions_initials = "JK"
+contributions = [
+    "input-emissions-preparation",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Marco"
+surname = "Zecchetto"
+affiliations = ["iiasa-ece"]
+contributions_initials = "MZ"
+contributions = [
+    "input-emissions-preparation",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Annika"
+surname = 'H\"ogner'
+affiliations = ["iiasa-ece"]
+contributions_initials = "AH"
+contributions = [
+    "input-emissions-preparation",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Marit"
+surname = "Sandstad"
+affiliations = ["cicero"]
+contributions_initials = "MS"
+contributions = [
+    "input-emissions-preparation",
+    "review-and-editing",
+]
+
+[[authors]]
+given_name = "Ben"
+surname = "Sanderson"
+affiliations = ["cicero"]
+contributions_initials = "BS"
+contributions = [
+    "input-emissions-preparation",
     "review-and-editing",
 ]
 
@@ -84,3 +170,8 @@ cr =  "Climate Resource, Melbourne, Australia"
 uom-sgeas = "School of Geography, Earth and Atmospheric Sciences, The University of Melbourne, Melbourne, Victoria, Australia"
 iiasa-ece = "Energy, Climate and Environment Program, International Institute for Applied Systems Analysis (IIASA), 2361 Laxenburg, Austria"
 aalto = "Aalto University"
+noaa-csl = "NOAA Chemical Sciences Laboratory, Boulder, Colorado, USA"
+cicero = "CICERO Center for International Climate Research, Oslo, Norway"
+rivm = "National Institute for Public Health and the Environment (RIVM), Bilthoven, the Netherlands"
+uu-imau = "Institute for Marine and Atmospheric Research Utrecht, Utrecht University, Utrecht, the Netherlands"
+bristol = "School of Chemistry, University of Bristol, Bristol, UK"
