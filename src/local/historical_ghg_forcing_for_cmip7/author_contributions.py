@@ -28,6 +28,100 @@ CONTRIBUTIONS = {
     # "conceptualisation-support": "supported the conceptualisation",
     # "software": "developed the software used to produce the dataset",
     "input-data": "provided input data and advised on its use",
+    "input-data-noaa-ccgg-flask": (
+        "provided the CO_2 and CH_4 surface flask data from the "
+        "NOAA Global Monitoring Laboratory (GML) "
+        "Carbon Cycle Cooperative Global Air Sampling Network"
+    ),
+    "input-data-noaa-ccgg-in-situ-co2": (
+        "provided the in situ CO_2 data from the NOAA GML observatories"
+        # "at Barrow (Alaska), Mauna Loa (Hawaii), American Samoa and the South Pole"
+    ),
+    "input-data-noaa-ccgg-in-situ-ch4": (
+        "provided the in situ CH_4 data from the NOAA GML observatories"
+        # "at Barrow (Alaska) and Mauna Loa (Hawaii)"
+    ),
+    "input-data-noaa-hats-combined": (
+        "provided the NOAA GML Halocarbons and other Atmospheric Trace Species (HATS) "
+        "combined data products (CCl_4, CFC-11, CFC-113, CFC-12, N_2O and SF_6)"
+    ),
+    "input-data-noaa-hats-flask": "provided the NOAA GML HATS flask data",
+    "input-data-agage-ale-gage": (
+        "provided the data from AGAGE's predecessor networks, ALE and GAGE"
+    ),
+    "input-data-agage-archive": "curated the AGAGE data archive",
+    "input-data-agage-cape-grim": (
+        "provided the AGAGE data from Kennaook/Cape Grim (Tasmania, Australia)"
+    ),
+    "input-data-agage-mace-head": ("provided the AGAGE data from Mace Head (Ireland)"),
+    "input-data-agage-ragged-point": (
+        "provided the AGAGE data from Ragged Point (Barbados)"
+    ),
+    "input-data-agage-trinidad-head-samoa": (
+        "provided the AGAGE data from Trinidad Head (California, USA) "
+        "and Cape Matatula (American Samoa)"
+    ),
+    "input-data-agage-jungfraujoch": (
+        "provided the AGAGE data from Jungfraujoch (Switzerland)"
+    ),
+    "input-data-agage-zeppelin": (
+        r"provided the AGAGE data from Zeppelin (Ny-\AA{}lesund, Svalbard, Norway)"
+    ),
+    "input-data-agage-monte-cimone": (
+        "provided the AGAGE data from Monte Cimone (Italy)"
+    ),
+    "input-data-agage-gosan": (
+        "provided the AGAGE data from Gosan (Jeju Island, Republic of Korea)"
+    ),
+    "input-data-agage-tacolneston": ("provided the AGAGE data from Tacolneston (UK)"),
+    "input-data-agage-taunus": (
+        "provided the AGAGE data from Taunus Observatory (Germany)"
+    ),
+    "input-data-agage-hfc23": (
+        "provided data for global-mean HFC-23 concentrations"
+        # r"from the AGAGE 12-box model of \citet{adam_hfc23_2024}"
+    ),
+    "input-data-law-dome-menking": (
+        "provided the spline fits to the CSIRO Law Dome ice core and firn "
+        "CO_2 and N_2O data"
+        # of \citet{menking_law-dome_2025}"
+    ),
+    "input-data-law-dome-rubino": (
+        "provided the CSIRO Law Dome ice core 2000-year CO_2, CH_4 and N_2O "
+        "data collection"
+        # of \citet{rubino_law-dome-dataset_2019}"
+    ),
+    "input-data-scripps-co2": (
+        "provided the Scripps CO_2 Program's merged Law Dome ice core, "
+        r"Mauna Loa and South Pole CO_2 record"
+        # \citep{keeling_co2-exchanges_2001}"
+    ),
+    "input-data-trudinger-pfcs": (
+        r"provided CF_4, C_2F_6 and C_3F_8 histories"
+        # of \citet{trudinger_pfcs_2016}"
+    ),
+    "input-data-droste-pfcs": (
+        r"provided cC_4F_8, C_4F_10, C_5F_12, C_6F_14 and C_7F_16 data "
+        "(from Cape Grim and Tacolneston air samples)"
+        # r"of \citet{droste_pfcs_2020} "
+    ),
+    "input-data-wmo-2022": (
+        "provided the mixing ratios of the ozone-depleting substances "
+        r"from Chapter 7 of the WMO (2022) Scientific Assessment of Ozone Depletion"
+        # r"\citep{wmo_ozone-ch7_2022}"
+    ),
+    "input-data-velders-hfcs": (
+        r"provided HFC input"
+        # of \citet{velders_hfcs_2022}"
+    ),
+    "input-data-western-hcfcs": (
+        r"provided HCFC input"
+        # of \citet{western_hcfcs_2024}"
+    ),
+    "input-emissions-preparation": (
+        "contributed to preparation of the input emissions "
+        "with which the simple climate model MAGICC was run"
+    ),
     # "validation": "tested and validated the dataset",
     "figures-tables": "produced the figures and tables",
     # "figures-tables": "produced the figures and tables",

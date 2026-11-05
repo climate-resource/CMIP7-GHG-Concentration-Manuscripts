@@ -3,6 +3,7 @@
 ## General
 
 - [ ] Figure out how to set things up so that running on different machines and merging PRs doesn't trigger unnecessary full rebuilds (maybe very hard or even impossible...)
+- [x] Fix up affiliation numbering so it matches the order in which they appear
 
 ## scenario GHG forcing for CMIP7 manuscript
 
