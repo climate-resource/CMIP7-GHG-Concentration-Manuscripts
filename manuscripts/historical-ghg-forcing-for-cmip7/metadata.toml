@@ -27,7 +27,6 @@ contributions = [
 [[authors]]
 given_name = "Malte"
 surname = "Meinshausen"
-# Email: malte.meinshausen@climate-resource.com
 affiliations = ["cr", "uom-sgeas"]
 contributions_initials = "MM"
 contributions = [
@@ -40,7 +39,6 @@ contributions = [
 [[authors]]
 given_name = "Mika"
 surname = 'Pfl\"uger'
-# Email: mika.pflueger@climate-resource.com
 affiliations = ["crs"]
 contributions_initials = "MP"
 contributions = [
@@ -51,7 +49,6 @@ contributions = [
 [[authors]]
 given_name = "Anna"
 surname = 'Lanteri'
-# Email: anna.lanteri@climate-resource.com
 affiliations = ["crs"]
 contributions_initials = "AL"
 contributions = [
@@ -63,7 +60,6 @@ contributions = [
 [[authors]]
 given_name = "Florence"
 surname = 'Bockting'
-# Email: florence.bockting@gmail.com
 affiliations = ["crs", "aalto"]
 contributions_initials = "FB"
 contributions = [
@@ -74,7 +70,6 @@ contributions = [
 [[authors]]
 given_name = "Jared"
 surname = "Lewis"
-# Email: jared.lewis@climate-resource.com
 affiliations = ["cr"]
 contributions_initials = "JL"
 contributions = [
