@@ -85,13 +85,60 @@ def get_source_file_str(source_file: Path) -> str:
     return f"% Source file: {source_file.relative_to(REPO_ROOT)}"
 
 
+def get_affiliation_numbers(metadata: dict[str, Any]) -> dict[str, int]:
+    """
+    Get the number of each affiliation
+
+    Affiliations are numbered in the order they first appear in the author list
+    (not the order they are defined in the metadata).
+
+    Parameters
+    ----------
+    metadata
+        Manuscript metadata
+
+    Returns
+    -------
+    :
+        Map from affiliation key to its number (starting from 1),
+        in the order of the numbers
+
+    Raises
+    ------
+    KeyError
+        An author has an affiliation which isn't defined in the metadata
+
+    AssertionError
+        An affiliation is defined in the metadata but no author has it
+    """
+    numbers: dict[str, int] = {}
+    for author in metadata["authors"]:
+        for key in author["affiliations"]:
+            if key not in metadata["affiliations"]:
+                msg = (
+                    f"Affiliation {key!r} of {author['given_name']} "
+                    f"{author['surname']} is not defined in the metadata"
+                )
+                raise KeyError(msg)
+
+            if key not in numbers:
+                numbers[key] = len(numbers) + 1
+
+    unused = [key for key in metadata["affiliations"] if key not in numbers]
+    if unused:
+        msg = f"These affiliations are not used by any author: {unused}"
+        raise AssertionError(msg)
+
+    return numbers
+
+
 def insert_author_list_and_affiliations(
     start: str, metadata: dict[str, Any], metadata_file: Path
 ) -> str:
     """Insert author list into the text"""
     affiliations = {
-        key: (value, i + 1)
-        for i, (key, value) in enumerate(metadata["affiliations"].items())
+        key: (metadata["affiliations"][key], number)
+        for key, number in get_affiliation_numbers(metadata).items()
     }
 
     author_entries = [get_source_file_str(metadata_file)]
