@@ -28,6 +28,7 @@ Paths are relative to `manuscripts/scenario-ghg-forcing-for-cmip7/` unless state
 - [ ] Ask John Daniel whether there is an official citation for the WMO data file provided for CMIP7
       (`MixingRatiosCMIP7_20250210.xlsx`, `methods.tex:832`, currently cited as a personal communication, 11 February 2025).
 - [ ] Check that Jarmo's paper does indeed describe historical emissions and sources (search for "last dataset we use is the historical emissions used for harmonising")
+- [ ] Add Claire/Simon to acknowledgements once we have their review of the papers
 
 #### Citations and cross-references
 
