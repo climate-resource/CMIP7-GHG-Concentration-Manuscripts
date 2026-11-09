@@ -11,6 +11,7 @@ from pytask import Product
 
 import local.docx_export
 import local.gmd_latex
+import local.markdown_export
 import local.scenario_ghg_forcing_for_cmip7.value_checks
 from local.gmd_latex import (
     COPERNICUS_TEMPLATE_FILES,
@@ -28,6 +29,7 @@ from local.scenario_ghg_forcing_for_cmip7.config import (
     ACKNOWLEDGEMENTS,
     APPENDICES,
     AUTHOR_CONTRIBUTION,
+    AUTHOR_MARKDOWN,
     BUILD_DIR,
     CLEAN_COPERNICUS_TEMPLATE_FILENAME,
     CODE_AND_DATA_AVAILABILITY,
@@ -43,6 +45,7 @@ from local.scenario_ghg_forcing_for_cmip7.config import (
     LATEX_MAIN,
     MAGICC_SUMMARY,
     METADATA,
+    OUTPUT_AUTHOR_MARKDOWN,
     OUTPUT_DOCX,
     OUTPUT_PDF,
     REFERENCES_BIB,
@@ -112,7 +115,9 @@ def task_assemble_latex(  # noqa: PLR0913
         local.scenario_ghg_forcing_for_cmip7.value_checks.__file__
     ),
     gmd_latex_source: Path = Path(local.gmd_latex.__file__),
+    markdown_export_source: Path = Path(local.markdown_export.__file__),
     main_tex: Annotated[Path, Product] = LATEX_MAIN,
+    author_markdown: Annotated[Path, Product] = AUTHOR_MARKDOWN,
     latex_support_files: Annotated[list[Path], Product] = LATEX_SUPPORT_FILES,
 ) -> None:
     """
@@ -121,7 +126,7 @@ def task_assemble_latex(  # noqa: PLR0913
     Fails if any value check comment's statement no longer holds
     or has no check.
     """
-    latex_main, collector = assemble_main_tex(
+    latex_main, written_author_markdown, collector = assemble_main_tex(
         **manuscript_files,
         replacements=replacements,
         metadata=metadata,
@@ -134,6 +139,10 @@ def task_assemble_latex(  # noqa: PLR0913
     )
     if latex_main != main_tex:
         msg = f"Assembly wrote {latex_main}, expected {main_tex}"
+        raise AssertionError(msg)
+
+    if author_markdown != written_author_markdown:
+        msg = f"Assembly wrote {written_author_markdown}, expected {author_markdown}"
         raise AssertionError(msg)
 
     value_check_report = run_value_checks(
@@ -161,15 +170,19 @@ def task_compile_pdf(
     shutil.copy2(built_pdf, output_pdf)
 
 
-def task_export_docx(
+def task_export_docx(  # noqa: PLR0913
     main_tex: Path = LATEX_MAIN,
     main_aux: Path = LATEX_AUX,
+    author_markdown: Path = AUTHOR_MARKDOWN,
     latex_support_files: list[Path] = LATEX_SUPPORT_FILES,
     docx_export_source: Path = Path(local.docx_export.__file__),
     output_docx: Annotated[Path, Product] = OUTPUT_DOCX,
+    output_author_markdown: Annotated[Path, Product] = OUTPUT_AUTHOR_MARKDOWN,
 ) -> None:
     """
     Export the compiled manuscript to Word
+
+    Also copies the author list, as markdown, next to the Word file.
 
     For review, e.g. by uploading to Google Drive and opening with Google Docs.
     """
@@ -180,3 +193,6 @@ def task_export_docx(
         aux_file=main_aux,
         bibliography=LATEX_DIR / REFERENCES_BIB.name,
     )
+
+    # Copy author list as markdown too
+    shutil.copy2(author_markdown, output_author_markdown)

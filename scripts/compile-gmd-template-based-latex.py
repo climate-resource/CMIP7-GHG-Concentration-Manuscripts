@@ -349,7 +349,7 @@ def main(  # noqa: PLR0913
         split_tag_and_path(v, option="--inline-file") for v in inline_file or []
     ]
 
-    latex_main, collector = assemble_main_tex(
+    latex_main, author_markdown, collector = assemble_main_tex(
         abstract=abstract,
         introduction=introduction,
         sections=section,
@@ -386,6 +386,9 @@ def main(  # noqa: PLR0913
 
     output.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(built_pdf, output)
+
+    # Copy author list as markdown too
+    shutil.copy2(author_markdown, output.parent / f"{output.stem}_authors.md")
 
 
 if __name__ == "__main__":

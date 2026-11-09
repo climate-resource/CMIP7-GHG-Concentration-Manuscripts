@@ -21,6 +21,7 @@ from typing import IO, Any
 
 import yaml
 
+from local.markdown_export import authors_to_markdown
 from local.paths import REPO_ROOT
 from local.value_checks import ValueCheckCollector
 
@@ -807,7 +808,7 @@ def assemble_main_tex(  # noqa: PLR0913, PLR0915
     Returns
     -------
     :
-        Path to `main.tex` and the collector of the value check comments
+        Path to `main.tex`, `authors.md`, and the collector of the value check comments
         in everything which went into it
 
     Raises
@@ -894,6 +895,12 @@ def assemble_main_tex(  # noqa: PLR0913, PLR0915
         collector=collector,
     )
 
+    markdown_dir = build_dir / "markdown"
+    markdown_dir.mkdir(exist_ok=True, parents=True)
+    author_markdown_out_file = markdown_dir / "authors.md"
+    with open(author_markdown_out_file, "w", encoding="utf-8") as fh:
+        fh.write(authors_to_markdown(metadata_values))
+
     latex_dir = build_dir / "latex"
     latex_dir.mkdir(exist_ok=True, parents=True)
 
@@ -939,4 +946,4 @@ def assemble_main_tex(  # noqa: PLR0913, PLR0915
     for auxiliary_file in auxiliary:
         shutil.copy2(auxiliary_file, latex_main.parent / auxiliary_file.name)
 
-    return latex_main, collector
+    return latex_main, author_markdown_out_file, collector

@@ -399,6 +399,7 @@ The section each item came from is in parentheses (see Done for the context).
 
 - [ ] (Section 6) The C3S paragraph at the end of `conclusion.tex` stays commented out until C3S is resolved
       (it also needs the C3S project name).
+- [ ] remove competing interest in historical manuscript if C3S is resolved
 
 #### Needs editor or reviewer feedback
 

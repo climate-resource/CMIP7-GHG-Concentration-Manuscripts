@@ -273,5 +273,10 @@ LATEX_DIR = BUILD_DIR / "latex"
 LATEX_MAIN = LATEX_DIR / "main.tex"
 LATEX_AUX = LATEX_DIR / "main.aux"
 OUTPUT_PDF = REPO_ROOT / "compiled-manuscripts" / f"{MANUSCRIPT_NAME}.pdf"
+MARKDOWN_DIR = BUILD_DIR / "markdown"
+AUTHOR_MARKDOWN = MARKDOWN_DIR / "authors.md"
 DOCX_DIR = BUILD_DIR / "docx"
 OUTPUT_DOCX = REPO_ROOT / "compiled-manuscripts" / f"{MANUSCRIPT_NAME}.docx"
+OUTPUT_AUTHOR_MARKDOWN = (
+    REPO_ROOT / "compiled-manuscripts" / f"{MANUSCRIPT_NAME}_authors.md"
+)
