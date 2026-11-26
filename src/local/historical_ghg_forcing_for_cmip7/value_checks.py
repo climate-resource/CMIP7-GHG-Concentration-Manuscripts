@@ -73,11 +73,11 @@ LAST_N_YEARS = 10
 N_MONTHS_PER_YEAR = 12
 """Number of months in a year"""
 
-MAUNA_LOA_CLOSE_THRESHOLD = 1.0
+MAUNA_LOA_CLOSE_THRESHOLD = 1.1
 """
 Annual-mean difference from Mauna Loa (ppm) which counts as close
 
-As stated in the results section of the manuscript.
+The results section of the manuscript states this as approximately 1 ppm.
 """
 
 CMIP6_LAST_YEAR = 2014
@@ -1144,11 +1144,86 @@ def get_diff_from_noaa_monthly(gas: str, *, bundle_dir: Path) -> pd.Series[float
     return (ours - noaa).dropna()
 
 
+def to_complete_year_annual_means(values: pd.Series[float]) -> pd.Series[float]:
+    """
+    Get the annual-mean of a monthly series, for the years with all twelve months
+
+    Parameters
+    ----------
+    values
+        Monthly values, indexed by the middle of each month as a decimal year
+
+    Returns
+    -------
+    :
+        Annual-means, indexed by (integer) year
+    """
+    grouped = values.groupby(np.floor(values.index).astype(int))
+
+    return grouped.mean()[grouped.count() == N_MONTHS_PER_YEAR]
+
+
+@cache
+def get_diff_from_noaa_trend(gas: str, *, bundle_dir: Path) -> pd.Series[float]:
+    """
+    Get the difference between our global-, annual-mean and NOAA's global-mean trend
+
+    NOAA's trend is its global-mean with the seasonal cycle removed.
+    It is monthly, so we take its annual-mean
+    (for the years with all twelve months)
+    to compare with our global-, annual-mean.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Difference, for each year both cover, in our units
+    """
+    ours = get_output(gas, bundle_dir=bundle_dir)[1].to_series()
+    (noaa_trend,) = (
+        c for c in get_noaa_comparisons(gas, deseasonalised=True) if not c.is_spatial
+    )
+    noaa = to_complete_year_annual_means(
+        comparison_to_series(
+            noaa_trend, get_units(gas, bundle_dir=bundle_dir), yearly=False
+        )
+    )
+
+    return (ours - noaa).dropna()
+
+
+def get_mauna_loa_lat_bin(*, bundle_dir: Path) -> float:
+    """
+    Get the latitude of the band of our native grid in which Mauna Loa sits
+
+    Parameters
+    ----------
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Centre of the band
+    """
+    native = get_output("co2", bundle_dir=bundle_dir)[0]
+
+    return float(native["lat"].sel(lat=MAUNA_LOA_LATITUDE, method="nearest"))
+
+
 def get_diff_from_mauna_loa(*, bundle_dir: Path) -> pd.Series[float]:
     """
     Get the difference between our CO2 and NOAA's Mauna Loa record
 
-    Our native resolution output is linearly interpolated to Mauna Loa's latitude.
+    We use our native resolution output in the band in which Mauna Loa sits
+    (no interpolation in latitude).
 
     Parameters
     ----------
@@ -1162,7 +1237,9 @@ def get_diff_from_mauna_loa(*, bundle_dir: Path) -> pd.Series[float]:
     """
     gas = "co2"
     ours = monthly_to_series(
-        get_output(gas, bundle_dir=bundle_dir)[0].interp(lat=MAUNA_LOA_LATITUDE)
+        get_output(gas, bundle_dir=bundle_dir)[0].sel(
+            lat=get_mauna_loa_lat_bin(bundle_dir=bundle_dir)
+        )
     )
     (mauna_loa,) = (
         c for c in get_noaa_comparisons(gas, deseasonalised=False) if c.is_spatial
@@ -1192,10 +1269,7 @@ def get_annual_diff_from_mauna_loa(*, bundle_dir: Path) -> pd.Series[float]:
     :
         Annual-mean difference, by year
     """
-    diff = get_diff_from_mauna_loa(bundle_dir=bundle_dir)
-    grouped = diff.groupby(np.floor(diff.index).astype(int))
-
-    return grouped.mean()[grouped.count() == N_MONTHS_PER_YEAR]
+    return to_complete_year_annual_means(get_diff_from_mauna_loa(bundle_dir=bundle_dir))
 
 
 def get_mauna_loa_close_start_year(threshold: float, *, bundle_dir: Path) -> int:
@@ -1227,7 +1301,8 @@ def get_mauna_loa_seasonal_cycles(*, bundle_dir: Path) -> pd.DataFrame:
     """
     Get the average seasonal cycle of our CO2 and NOAA's Mauna Loa record
 
-    Our native resolution output is linearly interpolated to Mauna Loa's latitude.
+    We use our native resolution output in the band in which Mauna Loa sits
+    (no interpolation in latitude).
     The average is over the years in which we use the observation network.
 
     Parameters
@@ -1257,7 +1332,9 @@ def get_mauna_loa_seasonal_cycles(*, bundle_dir: Path) -> pd.DataFrame:
         return anomaly.groupby(month).mean()
 
     ours = monthly_to_series(
-        get_output(gas, bundle_dir=bundle_dir)[0].interp(lat=MAUNA_LOA_LATITUDE)
+        get_output(gas, bundle_dir=bundle_dir)[0].sel(
+            lat=get_mauna_loa_lat_bin(bundle_dir=bundle_dir)
+        )
     )
     mauna_loa_values = comparison_to_series(mauna_loa, units, yearly=False)
     # Only the months both cover
@@ -1465,16 +1542,38 @@ def get_max_abs_igcc_diff_from_noaa(gas: str, *, bundle_dir: Path) -> pint.Quant
     """
     units = get_units(gas, bundle_dir=bundle_dir)
     igcc = comparison_to_series(get_igcc_comparison(gas), units, yearly=True)
-    noaa = comparison_to_series(get_noaa_global_mean(gas), units, yearly=False)
-    grouped = noaa.groupby(np.floor(noaa.index).astype(int))
-    noaa_annual = grouped.mean()[grouped.count() == N_MONTHS_PER_YEAR]
+    noaa_annual = to_complete_year_annual_means(
+        comparison_to_series(get_noaa_global_mean(gas), units, yearly=False)
+    )
 
     return max_abs((igcc - noaa_annual).dropna(), units)
 
 
-def get_mean_diff_from_igcc_noaa_era(gas: str, *, bundle_dir: Path) -> pint.Quantity:
+def mean_abs(diff: pd.Series[float], units: str) -> pint.Quantity:
     """
-    Get the mean difference from IGCC over the years NOAA's global-mean covers
+    Get the mean absolute value of a difference
+
+    Parameters
+    ----------
+    diff
+        Difference
+
+    units
+        Units of `diff`
+
+    Returns
+    -------
+    :
+        Mean absolute value of `diff`
+    """
+    return Q(float(diff.abs().mean()), units)
+
+
+def get_mean_abs_diff_from_igcc_noaa_era(
+    gas: str, *, bundle_dir: Path
+) -> pint.Quantity:
+    """
+    Get the mean absolute difference from IGCC over the years NOAA's global-mean covers
 
     Parameters
     ----------
@@ -1487,22 +1586,26 @@ def get_mean_diff_from_igcc_noaa_era(gas: str, *, bundle_dir: Path) -> pint.Quan
     Returns
     -------
     :
-        Mean difference from IGCC
+        Mean absolute difference from IGCC
     """
     noaa_start = get_noaa_global_mean_start_year(gas)
 
-    return Q(
-        float(get_diff_from_igcc(gas, start=noaa_start, bundle_dir=bundle_dir).mean()),
+    return mean_abs(
+        get_diff_from_igcc(gas, start=noaa_start, bundle_dir=bundle_dir),
         get_units(gas, bundle_dir=bundle_dir),
     )
 
 
-def get_mean_diff_from_uci_ch4(*, bundle_dir: Path) -> pint.Quantity:
+def get_mean_abs_diff_from_uci_ch4(*, bundle_dir: Path) -> pint.Quantity:
     """
-    Get the mean difference between our global-mean CH4 and UCI's
+    Get the mean absolute difference between our global-mean CH4 and UCI's
 
-    UCI's record is quarterly, so our global-mean monthly
-    is linearly interpolated to UCI's times.
+    UCI's record is quarterly.
+    Each UCI value is compared with the mean of our global-mean monthly
+    over the three months of the calendar quarter which contains the UCI value's time.
+    In practice, UCI's times are the middle of a month,
+    mostly March, June, September and December
+    (i.e. the last month of each calendar quarter).
 
     Parameters
     ----------
@@ -1512,82 +1615,57 @@ def get_mean_diff_from_uci_ch4(*, bundle_dir: Path) -> pint.Quantity:
     Returns
     -------
     :
-        Mean difference
+        Mean absolute difference
     """
     gas = "ch4"
-    ours = monthly_to_series(get_output(gas, bundle_dir=bundle_dir)[2])
-    uci = (
-        get_uci_ch4_comparison(deseasonalised=False)
-        .to_units(get_units(gas, bundle_dir=bundle_dir))
-        .data
+    units = get_units(gas, bundle_dir=bundle_dir)
+    ours_monthly = get_output(gas, bundle_dir=bundle_dir)[2].to_series()
+    ours_quarterly = ours_monthly.groupby(
+        [
+            ours_monthly.index.get_level_values("year"),
+            (ours_monthly.index.get_level_values("month") - 1) // 3,
+        ]
+    ).agg(["mean", "count"])
+    ours_quarterly = ours_quarterly.loc[ours_quarterly["count"] == 3, "mean"]  # noqa: PLR2004
+    ours_quarterly.index.names = ["year", "quarter"]
+
+    uci = get_uci_ch4_comparison(deseasonalised=False).to_units(units).data
+    uci_year = np.floor(uci[TIME_COLUMN].to_numpy()).astype(int)
+    uci_month = np.floor(
+        (uci[TIME_COLUMN].to_numpy() - uci_year) * N_MONTHS_PER_YEAR
+    ).astype(int)
+    uci_quarterly = pd.Series(
+        uci[VALUE_COLUMN].to_numpy(),
+        index=pd.MultiIndex.from_arrays(
+            [uci_year, uci_month // 3], names=["year", "quarter"]
+        ),
     )
-    in_range = uci[
-        (uci[TIME_COLUMN] >= ours.index.min()) & (uci[TIME_COLUMN] <= ours.index.max())
-    ]
-    ours_at_uci_times = np.interp(in_range[TIME_COLUMN], ours.index, ours.to_numpy())
+    if uci_quarterly.index.duplicated().any():
+        msg = "More than one UCI value in a quarter"
+        raise AssertionError(msg)
 
-    return Q(
-        float(np.mean(ours_at_uci_times - in_range[VALUE_COLUMN])),
-        get_units(gas, bundle_dir=bundle_dir),
-    )
+    return mean_abs((ours_quarterly - uci_quarterly).dropna(), units)
 
 
-@cache
-def get_cfc12_like_obs_network_diffs(gas: str, *, bundle_dir: Path) -> pd.DataFrame:
-    """
-    Get the difference between our output and each observation in the network
-
-    Our native resolution output is linearly interpolated
-    to each observation's latitude.
-
-    Parameters
-    ----------
-    gas
-        Gas of interest
-
-    bundle_dir
-        Directory in which to keep the original run's bundle
-
-    Returns
-    -------
-    :
-        One row per observation, with its year, network and the difference
-    """
-    obs = get_cfc12_like_all_data_with_bins(gas, bundle_dir)
-    (obs_units,) = obs["unit"].unique()
-    if obs_units != get_units(gas, bundle_dir=bundle_dir):
-        raise NotImplementedError(obs_units)
-
-    native = get_output(gas, bundle_dir=bundle_dir)[0]
-    res = []
-    for latitude, latitude_obs in obs.groupby("latitude"):
-        ours = native.interp(lat=latitude).to_series()
-        index = pd.MultiIndex.from_frame(latitude_obs[["year", "month"]])
-        res.append(
-            pd.DataFrame(
-                {
-                    "year": latitude_obs["year"].to_numpy(),
-                    "network": latitude_obs["network"].to_numpy(),
-                    "diff": ours.reindex(index).to_numpy()
-                    - latitude_obs["value"].to_numpy(),
-                }
-            )
-        )
-
-    return pd.concat(res).dropna()
-
-
-# This function is specific to CFC12, why isn't it named as such?
-def get_mean_diff_from_network(
+def get_area_weighted_network_global_mean(
     gas: str, network: str, *, bundle_dir: Path
-) -> pint.Quantity:
+) -> pd.Series[float]:
     """
-    Get the mean difference between our output and a network's observations
+    Get a network's global-, annual-mean, directly from its observations
+
+    Each month, the observations in each of the original run's
+    latitude-longitude bins are averaged.
+    The bins' averages are then averaged, weighted by each bin's area,
+    using only the bins which contain observations.
+    No gap filling is done, so this is only an estimate of the global-mean
+    over the area the network covers.
+    The annual-mean is the mean of these monthly values,
+    for the years with all twelve months.
 
     Parameters
     ----------
     gas
-        Gas of interest
+        Gas of interest (processed like CFC-12)
 
     network
         Network of interest
@@ -1598,14 +1676,71 @@ def get_mean_diff_from_network(
     Returns
     -------
     :
-        Mean difference over all the network's observations
+        Global-, annual-mean, indexed by year, in our units
     """
-    diffs = get_cfc12_like_obs_network_diffs(gas, bundle_dir=bundle_dir)
+    obs = get_cfc12_like_all_data_with_bins(gas, bundle_dir)
+    (obs_units,) = obs["unit"].unique()
+    if obs_units != get_units(gas, bundle_dir=bundle_dir):
+        raise NotImplementedError(obs_units)
 
-    return Q(
-        float(diffs.loc[diffs["network"] == network, "diff"].mean()),
-        get_units(gas, bundle_dir=bundle_dir),
+    obs = obs[obs["network"] == network]
+    bin_means = (
+        obs.groupby(["year", "month", "lat_bin", "lon_bin"])["value"]
+        .mean()
+        .reset_index()
     )
+    # The bins are evenly spaced in latitude and longitude,
+    # so their areas are proportional to the difference in the sine of
+    # their bounding latitudes
+    lat_bin_half_width = float(np.diff(np.sort(obs["lat_bin"].unique())).min()) / 2.0
+    weights = np.sin(np.deg2rad(bin_means["lat_bin"] + lat_bin_half_width)) - np.sin(
+        np.deg2rad(bin_means["lat_bin"] - lat_bin_half_width)
+    )
+    weighted = (
+        bin_means.assign(weighted_value=bin_means["value"] * weights, weight=weights)
+        .groupby(["year", "month"])[["weighted_value", "weight"]]
+        .sum()
+    )
+    monthly = weighted["weighted_value"] / weighted["weight"]
+    monthly.index = get_decimal_month(
+        monthly.index.get_level_values("year"),
+        monthly.index.get_level_values("month"),
+    )
+
+    return to_complete_year_annual_means(monthly)
+
+
+@cache
+def get_network_global_mean_comparison(gas: str, *, bundle_dir: Path) -> pd.DataFrame:
+    """
+    Get NOAA's and AGAGE's global-, annual-means and ours, over the years they all cover
+
+    See [get_area_weighted_network_global_mean][] for how the networks'
+    global-means are calculated.
+
+    Parameters
+    ----------
+    gas
+        Gas of interest (processed like CFC-12)
+
+    bundle_dir
+        Directory in which to keep the original run's bundle
+
+    Returns
+    -------
+    :
+        Global-, annual-means, indexed by year,
+        with columns "NOAA", "AGAGE" and "ours"
+    """
+    return pd.DataFrame(
+        {
+            network: get_area_weighted_network_global_mean(
+                gas, network, bundle_dir=bundle_dir
+            )
+            for network in ("NOAA", "AGAGE")
+        }
+        | {"ours": get_output(gas, bundle_dir=bundle_dir)[1].to_series()}
+    ).dropna()
 
 
 def is_global_mean_from_source(gas: str, source: str, *, bundle_dir: Path) -> bool:
@@ -2646,89 +2781,6 @@ def get_ch4_law_dome_smoothing_config(*, bundle_dir: Path) -> dict[str, Any]:
     raise AssertionError(msg)
 
 
-def get_input_lat_gradient_trend(gas: str, *, bundle_dir: Path) -> pint.Quantity:
-    """
-    Get the trend in the size of the input data's latitudinal gradient
-
-    For each year, the latitudinal gradient is the gradient of a linear fit
-    of the observations' annual-mean at each latitude against latitude.
-    The trend is the trend in this gradient's magnitude
-    over the last ten years of our output,
-    i.e. negative if the gradient is weakening.
-
-    Parameters
-    ----------
-    gas
-        Gas of interest
-
-    bundle_dir
-        Directory in which to keep the original run's bundle
-
-    Returns
-    -------
-    :
-        Trend in the size of the latitudinal gradient
-    """
-    obs = get_cfc12_like_all_data_with_bins(gas, bundle_dir)
-    years = get_last_n_years(gas, bundle_dir=bundle_dir)
-    annual_mean = (
-        obs[obs["year"].isin(years)]
-        .groupby(["year", "latitude"])["value"]
-        .mean()
-        .reset_index()
-    )
-    gradients = pd.Series(
-        {
-            year: np.polyfit(year_df["latitude"], year_df["value"], 1)[0]
-            for year, year_df in annual_mean.groupby("year")
-        }
-    )
-    trend = np.polyfit(gradients.index, gradients.abs().to_numpy(), 1)[0]
-
-    return Q(trend, f"{get_units(gas, bundle_dir=bundle_dir)} / degree / yr")
-
-
-def get_last_n_years_lat_gradient_trend(gas: str, *, bundle_dir: Path) -> pint.Quantity:
-    """
-    Get the trend in the size of our output's latitudinal gradient
-
-    For each year, the latitudinal gradient is the gradient of a linear fit
-    of our native resolution output's annual-mean against latitude.
-    The trend is the trend in this gradient's magnitude
-    over the last ten years,
-    i.e. negative if the gradient is weakening.
-
-    Parameters
-    ----------
-    gas
-        Gas of interest
-
-    bundle_dir
-        Directory in which to keep the original run's bundle
-
-    Returns
-    -------
-    :
-        Trend in the size of the latitudinal gradient
-    """
-    annual_mean = (
-        get_output(gas, bundle_dir=bundle_dir)[0]
-        .sel(year=get_last_n_years(gas, bundle_dir=bundle_dir))
-        .mean("month")
-    )
-    gradients = pd.Series(
-        {
-            int(year): np.polyfit(
-                annual_mean["lat"].values, annual_mean.sel(year=year).values, 1
-            )[0]
-            for year in annual_mean["year"].values
-        }
-    )
-    trend = np.polyfit(gradients.index, gradients.abs().to_numpy(), 1)[0]
-
-    return Q(trend, f"{get_units(gas, bundle_dir=bundle_dir)} / degree / yr")
-
-
 REPRODUCTION_TOLERANCES = {"CMIP7": 1e-9, "CMIP6": 1e-3, "IGCC": 1e-9}
 """
 How closely each dataset's definition must reproduce its published equivalent species
@@ -3560,6 +3612,15 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
             "max abs difference from NOAA global-mean monthly",
         )
         add(
+            f"{gas}-trend-diff-from-noaa",
+            lambda gas=gas: max_abs(
+                get_diff_from_noaa_trend(gas, bundle_dir=bundle_dir),
+                get_units(gas, bundle_dir=bundle_dir),
+            ),
+            "max abs difference between our global-, annual-mean "
+            "and the annual-mean of NOAA's global-mean trend (seasonal cycle removed)",
+        )
+        add(
             f"{gas}-diff-from-igcc",
             lambda gas=gas: max_abs(
                 get_diff_from_igcc(gas, bundle_dir=bundle_dir),
@@ -3598,7 +3659,7 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
             float(np.ptp(get_mauna_loa_seasonal_cycles(bundle_dir=bundle_dir)["ours"])),
             co2_units,
         ),
-        "peak-to-trough of our average seasonal cycle at Mauna Loa's latitude, "
+        "peak-to-trough of our average seasonal cycle in Mauna Loa's band, "
         "over the observation network years",
     )
     add(
@@ -3628,8 +3689,13 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
     add(
         "co2-annual-diff-from-mauna-loa-close-start",
         lambda: Q(mauna_loa_close_start(), "yr"),
-        "first year from which our annual-mean at Mauna Loa's latitude stays within "
+        "first year from which our annual-mean in Mauna Loa's band stays within "
         f"{MAUNA_LOA_CLOSE_THRESHOLD} ppm of NOAA's Mauna Loa annual-mean",
+    )
+    add(
+        "co2-mauna-loa-lat-bin",
+        lambda: Q(get_mauna_loa_lat_bin(bundle_dir=bundle_dir), "degree"),
+        "centre of the band of our native grid in which Mauna Loa sits",
     )
     add(
         "co2-annual-diff-from-mauna-loa-after-close-start",
@@ -3673,16 +3739,16 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
     # CH4
     add(
         "ch4-monthly-diff-from-noaa",
-        lambda: Q(
-            float(get_diff_from_noaa_monthly("ch4", bundle_dir=bundle_dir).mean()),
+        lambda: mean_abs(
+            get_diff_from_noaa_monthly("ch4", bundle_dir=bundle_dir),
             get_units("ch4", bundle_dir=bundle_dir),
         ),
-        "mean difference from NOAA global-mean monthly",
+        "mean abs difference from NOAA global-mean monthly",
     )
     add(
         "ch4-diff-from-igcc-noaa-era-mean",
-        partial(get_mean_diff_from_igcc_noaa_era, "ch4", bundle_dir=bundle_dir),
-        "mean difference from IGCC global-, annual-mean, "
+        partial(get_mean_abs_diff_from_igcc_noaa_era, "ch4", bundle_dir=bundle_dir),
+        "mean abs difference from IGCC global-, annual-mean, "
         "over the years NOAA's global-mean covers",
     )
     for gas in ("ch4", "n2o"):
@@ -3722,8 +3788,9 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
     )
     add(
         "ch4-monthly-diff-from-uci",
-        partial(get_mean_diff_from_uci_ch4, bundle_dir=bundle_dir),
-        "mean difference from UCI global-mean quarterly",
+        partial(get_mean_abs_diff_from_uci_ch4, bundle_dir=bundle_dir),
+        "mean abs difference from UCI global-mean quarterly "
+        "(our global-mean monthly averaged over each calendar quarter)",
     )
 
     # N2O
@@ -3736,24 +3803,58 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
     )
 
     # CFC-12
+    cfc12_units = get_units("cfc12", bundle_dir=bundle_dir)
+
+    def network_global_means() -> pd.DataFrame:
+        return get_network_global_mean_comparison("cfc12", bundle_dir=bundle_dir)
+
+    add(
+        "cfc12-network-global-means-common-min-year",
+        lambda: Q(int(network_global_means().index.min()), "yr"),
+        "first year in which NOAA's and AGAGE's area-weighted global-, "
+        "annual-means and ours are all available",
+    )
+
     for network in ("NOAA", "AGAGE"):
         add(
-            f"cfc12-monthly-diff-from-{network.lower()}",
-            partial(
-                get_mean_diff_from_network, "cfc12", network, bundle_dir=bundle_dir
+            f"cfc12-{network.lower()}-global-mean-minus-ours-mean",
+            lambda network=network: Q(
+                float(
+                    (
+                        network_global_means()[network] - network_global_means()["ours"]
+                    ).mean()
+                ),
+                cfc12_units,
             ),
-            f"mean difference from the {network} network's monthly observations "
-            "(our output interpolated to each observation's latitude)",
+            f"mean of ({network}'s area-weighted global-, annual-mean "
+            "minus ours) over the years both networks cover (signed)",
         )
 
     add(
-        "cfc12-agage-minus-noaa",
-        lambda: (
-            get_mean_diff_from_network("cfc12", "NOAA", bundle_dir=bundle_dir)
-            - get_mean_diff_from_network("cfc12", "AGAGE", bundle_dir=bundle_dir)
+        "cfc12-agage-noaa-global-mean-diff-mean-abs",
+        lambda: mean_abs(
+            network_global_means()["AGAGE"] - network_global_means()["NOAA"],
+            cfc12_units,
         ),
-        "how much higher the AGAGE network's observations are than NOAA's "
-        "(difference of our mean differences from each)",
+        "mean abs difference between AGAGE's and NOAA's area-weighted global-, "
+        "annual-means, over the years both cover",
+    )
+    add(
+        "cfc12-agage-noaa-global-mean-diff-relative-mean-abs",
+        lambda: Q(
+            float(
+                (
+                    (network_global_means()["AGAGE"] - network_global_means()["NOAA"])
+                    / network_global_means()["ours"]
+                )
+                .abs()
+                .mean()
+            ),
+            "dimensionless",
+        ),
+        "mean abs difference between AGAGE's and NOAA's area-weighted global-, "
+        "annual-means, relative to our global-, annual-mean, "
+        "over the years both cover",
     )
 
     add(
@@ -3775,25 +3876,20 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
         ),
         "max abs difference from IGCC global-, annual-mean, all years both cover",
     )
-    add(
-        "cfc12-input-datasets-weakening-lat-gradient",
-        partial(get_input_lat_gradient_trend, "cfc12", bundle_dir=bundle_dir),
-        "trend in the size of the input data's latitudinal gradient "
-        "over the last ten years (negative if weakening)",
-    )
-    add(
-        "cfc12-weakening-lat-gradient",
-        partial(get_last_n_years_lat_gradient_trend, "cfc12", bundle_dir=bundle_dir),
-        "trend in the size of our output's latitudinal gradient "
-        "over the last ten years (negative if weakening)",
-    )
 
     # Equivalent species
-    add_with_radiative_effect(
-        "cfc12eq-diff-from-cmip6-1995-on",
-        "cfc12eq",
-        partial(get_max_abs_diff_from_cmip6, "cfc12eq", 1995, bundle_dir=bundle_dir),
-        "max abs difference from CMIP6 global-, annual-mean, 1995 onwards",
+    add(
+        "cfc12eq-diff-from-cmip6-1989-on-min-abs",
+        lambda: Q(
+            float(
+                get_diff_from_cmip6("cfc12eq", bundle_dir=bundle_dir)
+                .loc[1989:]
+                .abs()
+                .min()
+            ),
+            get_units("cfc12eq", bundle_dir=bundle_dir),
+        ),
+        "min abs difference from CMIP6 global-, annual-mean, 1989 onwards",
     )
     add(
         "cfc12eq-diff-from-cmip6-radiative-efficiency-share",

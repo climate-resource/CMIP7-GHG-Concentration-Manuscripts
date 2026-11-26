@@ -139,8 +139,6 @@ The general approach can be broken down as follows:
         % The historical dataset's PCs extend to 2023 (one year beyond its concentrations),
         % and the projection takes them up to then.
         % value-check: {"tag": "second-pc-follows-history-then-constant"}
-        % comparison-method (current): our projected second PCs vs the historical dataset's second PCs | time: annual | stat: allclose (rtol, atol 1e-5) to history up to its last year, then to history's harmonisation-year value | period: every projected year, every experiment
-% this is correct
         Where a second PC is used (CO_2, CH_4 and N_2O), it follows the historical dataset's PCs up to their last year (2023),
         then is held constant at its value in the harmonisation year.
         % Mentioned in discussion, doesn't need to come up here again.
@@ -156,8 +154,6 @@ The general approach can be broken down as follows:
         using mean-preserving interpolation.
         This interpolation is done such that the experiments with the same harmonisation year
         are identical up to the end of that year and agree with the historical dataset.
-        % comparison-method (current): "identical" = the 2022 monthly global-mean check (Step 3 below); "agree with the historical dataset" = the native-grid 2022 check below (which shows they differ slightly)
-% this is correct
         As for the historical dataset, we adjust the seasonality and latitudinal gradient where needed to avoid negative values.
     }
 
@@ -369,7 +365,6 @@ to fit different input assumptions more quickly (see further discussion in Sect.
 % % value-check: {"tag": "magicc-jump-max-co2-difference-to-2500", "unit": "ppm", "lower": 6.5, "upper": 7}
 % % value-check: {"tag": "magicc-jump-max-ch4-difference-to-2500", "unit": "ppb", "lower": 95, "upper": 105}
 % % value-check: {"tag": "magicc-jump-max-n2o-difference-to-2500", "unit": "ppb", "lower": 17.5, "upper": 18.5}
-% comparison-method (current): MAGICC run with the CMIP7 history vs as published (`-reproduce-published` = our re-run of the published set-up minus the published output is exactly zero for every variable) | spatial: global-mean | time: annual | stat: max over experiments and years of |median(with CMIP7 history) - median(published)|, medians taken over the ensemble first | period: 2015 to 2500 (`-to-2500`), 1750 to 2014 (`-history`)
 % These updates would lead to changes of around
 % 7~ppm for CO_2, 100~ppb for CH_4 and 18~ppb for N_2O
 % (in the ensemble median, over 2015--2500, across all experiments).
@@ -462,8 +457,6 @@ over the historical period
 % % value-check: {"tag": "vl-cf-regression-is-up-to-harmonisation-year"}
 % For VL-CF, the regression only uses the years up to its harmonisation year (1981--2015),
 % % value-check: {"tag": "co2-seasonality-change-vl-cf-regression-slope-ratio", "unit": "dimensionless", "lower": 1.35, "upper": 1.45}
-% comparison-method (current): `vl-cf-regression-is-up-to-harmonisation-year` = refitted slope (years up to 2015) isclose (rtol 1e-8) to VL-CF's stored slope; slope ratio = VL-CF refit slope / ScenarioMIP slope (all years), same regression data otherwise. The other `-vl-cf-regression-slope-ratio` tags below work the same way
-% this is correct
 % which makes its slope around 40\% steeper,
 % i.e. the same change in NPP gives around 40\% more change in VL-CF's seasonality change PC
 % (this was not intended, see Sect.~\ref{sec:discussion}).
@@ -550,8 +543,6 @@ specifically the mean of the values in the harmonisation year and the following 
 % The original run's notebook checks the relative difference between scenarios in December 2022 with rtol=1e-4.
 % The value check covers every month of 2022 and every gas (in the global-mean).
 % value-check: {"tag": "scenariomip-max-relative-difference-2022-monthly-global-mean", "unit": "dimensionless", "lower": 0, "upper": 1e-4}
-% comparison-method (current): each ScenarioMIP experiment vs the first ScenarioMIP experiment (not VL-CF) | spatial: global-mean (published monthly global-mean files) | time: monthly | stat: max |experiment - first| / |first| over every published variable and month | period: 2022 only
-% this is correct
 As a result, the monthly values are the same (to within 0.01\%)
 in all experiments with the same harmonisation year up to the end of the harmonisation year.
 We also constrain the interpolated values to be non-negative.
@@ -562,8 +553,6 @@ For the ScenarioMIP scenarios, the monthly values in 2022 (which are part of our
 because the historical dataset's monthly values in 2022 were interpolated using
 2023 values derived from observations rather than the values derived by our method.
 % value-check: {"tag": "max-2022-monthly-difference-from-history-radiative-effect", "unit": "W / m^2", "lower": 0, "upper": 0.002}
-% comparison-method (current): ScenarioMIP experiments (not VL-CF) vs the CMIP7 historical dataset | spatial: cell by cell on the native 15-degree grid, published files | time: monthly, matched by month | stat: max |scenario - history| times the gas' linear radiative efficiency, max over every gas, experiment, band and month (per gas, not summed) | period: 2022 only
-% this is correct
 The differences are negligible
 (at most 0.002~W/m^2 in approximate radiative effect terms (Sect.~\ref{ssec:results-radiative-forcing-comparisons-note})
 for any gas, latitude band and month).
@@ -618,11 +607,7 @@ Despite the fact that these two experiments have identical CH_4 emissions,
 therefore the CH_4 concentrations should only differ due to feedback effects,
 % value-check: {"tag": "ch4-vl-minus-vl-cf-max", "unit": "ppb", "lower": 65, "upper": 72}
 % value-check: {"tag": "ch4-vl-minus-vl-cf-max-year", "unit": "yr", "lower": 2038, "upper": 2042}
-% comparison-method (current): VL vs VL-CF | spatial: global-mean (our published global-mean files) | time: annual-means, matched by year | stat: max of (VL - VL-CF), signed (not abs), and its year | period: 2022 to 2500 (not just "before 2040")
-% this is correct
 their concentrations before 2040 differ by approximately 70~ppb at most.
-% comparison-method (current): none for the attribution to harmonisation, unchecked claim (read off the figure)
-% clear by eye, no method needed
 When considering the raw MAGICC output, it is clear that this difference is driven by the harmonisation,
 which is compensating for the difference between the raw MAGICC output and the historical concentrations after 2020
 (Fig.~\ref{fig:methods-ch4}c, d).
@@ -666,8 +651,6 @@ We note here that the regression is particularly poor (Fig.~\ref{fig:methods-reg
 which suggests that this method may be worth reconsidering in future.
 It is also notably different from the regression used in the historical dataset
 (see Sect.~\ref{sec:discussion} for both points).
-% comparison-method (current): "notably different" = the slope ratio in the discussion (commented out there); "particularly poor" is unchecked
-% this is fine as is
 % % value-check: {"tag": "ch4-vl-cf-regression-slope-ratio", "unit": "dimensionless", "lower": 1.03, "upper": 1.05}
 % As for CO_2, VL-CF's regression only uses the years up to its harmonisation year,
 % which makes its slope around 4\% steeper.
@@ -753,8 +736,6 @@ resulting PCs shown in Fig.~\ref{fig:methods-n2o}d).
 % For N_2O, this makes its slope around 40\% steeper,
 % value-check: {"tag": "n2o-vl-cf-pc0-2300", "unit": "dimensionless", "lower": -0.15, "upper": -0.13}
 % value-check: {"tag": "n2o-vl-pc0-2300", "unit": "dimensionless", "lower": -0.56, "upper": -0.54}
-% comparison-method (current): a value computed separately for each experiment | stat: projected first latitudinal gradient PC (annual) in 2300, VL-CF and VL each checked against its own bounds
-% this is correct
 % so VL-CF's first PC ends up notably different from VL's
 % (around $-0.14$, rather than around $-0.55$, in 2300, Fig.~\ref{fig:methods-n2o}d).
 %
@@ -785,8 +766,6 @@ For VL-CF, the PC is also anchored to the historical PC and emissions in its har
 which differs from the ScenarioMIP scenarios harmonisation year (2022),
 % value-check: {"tag": "hfc134a-vl-cf-pc0-2300", "unit": "dimensionless", "lower": -1.9, "upper": -1.7}
 % value-check: {"tag": "hfc134a-vl-pc0-2300", "unit": "dimensionless", "lower": 4.4, "upper": 4.6}
-% comparison-method (current): a value computed separately for each experiment | stat: projected first latitudinal gradient PC (annual) in 2300, VL-CF and VL each checked against its own bounds
-% this is correct
 thus makes VL-CF's PC notably different from VL's
 (e.g. for HFC-134a, around $-1.8$, rather than around 4.5, in 2300,
 see discussion of this issue in Sect.~\ref{sec:discussion}).
@@ -867,8 +846,6 @@ We use the input data as is (we do not perform any harmonisation to the historic
 To check this won't lead to spurious jumps, we check that the projection and the historical dataset agree in 2022 to within
 % The largest difference is for CH3CCl3 (around 0.13\%).
 % value-check: {"tag": "cfc12-like-wmo-historical-agreement-2022", "unit": "dimensionless", "lower": 0, "upper": 0.002}
-% comparison-method (current): each single-concentration-projection gas' projection (as used, before joining) vs the historical dataset | spatial: global-mean (interim projection file vs historical global-mean file) | time: annual-means | stat: max over gases of |projection - history| / history | period: 2022 only
-% this is correct
 0.2\%.
 % Note there is no gradient matching here, so there can be a kink at 2022 in principle.
 % The projections are used from 2022 onwards.
@@ -945,8 +922,6 @@ we take, for each species, the maximum (over time) difference in approximate rad
 (see Sect.~\ref{ssec:results-radiative-forcing-comparisons-note} for the limitations of this approximation)
 between MAGICC's median concentrations and the CMIP7 concentrations, then sum over species.
 % value-check: {"tag": "single-projection-magicc-max-erf-difference-sum-l", "unit": "W / m^2", "lower": 0.029, "upper": 0.031}
-% comparison-method (current): MAGICC median vs our concentrations, per single-projection gas | spatial: global-mean | time: annual, years both cover (2022 to 2500) | stat: per gas, max over years of |MAGICC - ours| times the gas' linear radiative efficiency, then summed over gases (the maxima can fall in different years, so the sum is an upper bound on any one year's total) | `-range` = min and max of that sum across the ScenarioMIP experiments and VL-CF
-% this is correct
 In L, this sum is around 0.03~W/m^2
 % value-check: {"tag": "single-projection-magicc-max-erf-difference-sum-range", "unit": "W / m^2", "lower": 0.029, "upper": 0.038}
 and it is 0.03--0.04~W/m^2 across all experiments.
