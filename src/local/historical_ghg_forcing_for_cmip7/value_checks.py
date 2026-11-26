@@ -1577,6 +1577,7 @@ def get_cfc12_like_obs_network_diffs(gas: str, *, bundle_dir: Path) -> pd.DataFr
     return pd.concat(res).dropna()
 
 
+# This function is specific to CFC12, why isn't it named as such?
 def get_mean_diff_from_network(
     gas: str, network: str, *, bundle_dir: Path
 ) -> pint.Quantity:
@@ -3744,6 +3745,7 @@ def get_value_checks(  # noqa: PLR0912, PLR0915
             f"mean difference from the {network} network's monthly observations "
             "(our output interpolated to each observation's latitude)",
         )
+
     add(
         "cfc12-agage-minus-noaa",
         lambda: (

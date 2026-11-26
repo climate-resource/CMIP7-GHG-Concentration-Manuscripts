@@ -44,17 +44,22 @@ Compared to CMIP6 over the same period,
 % value-check: {"tag": "co2-cmip7-range-width-relative-to-cmip6", "unit": "dimensionless", "lower": 0, "upper": 0.9}
 % value-check: {"tag": "co2-cmip6-min", "unit": "ppm", "lower": 335, "upper": 345}
 % value-check: {"tag": "co2-cmip6-max", "unit": "ppm", "lower": 2205, "upper": 2215}
+% comparison-method (current): CMIP7 experiments vs CMIP6 scenarios, via ranges computed separately for each phase | spatial: global-mean (CMIP7: our published global-mean files; CMIP6: ESGF global-mean files) | time: annual-means | stat: min and max over every experiment and every year of that phase (CMIP7 includes VL-CF); `-range-width-relative-to-cmip6` = (CMIP7 max - min) / (CMIP6 max - min) | period: 2022 to 2500 for both (all eight CMIP6 scenarios used have extensions to 2500) | "lower" = from comparing the separately checked end points
 the range for CO_2 is narrower and lower (CMIP6: 340 to 2210~ppm),
 % value-check: {"tag": "ch4-cmip7-range-width-relative-to-cmip6", "unit": "dimensionless", "lower": 0, "upper": 0.9}
 % value-check: {"tag": "ch4-cmip6-min", "unit": "ppb", "lower": 855, "upper": 865}
 % value-check: {"tag": "ch4-cmip6-max", "unit": "ppb", "lower": 3445, "upper": 3455}
+% comparison-method (current): as for CO_2 above (ranges over all experiments and 2022-2500, computed separately for each phase)
 the range for CH_4 is narrower (CMIP6: 860 to 3450~ppb),
 % value-check: {"tag": "n2o-cmip7-range-width-relative-to-cmip6", "unit": "dimensionless", "lower": 0.95, "upper": 1.05}
 % value-check: {"tag": "n2o-cmip6-min", "unit": "ppb", "lower": 332.5, "upper": 333.5}
 % value-check: {"tag": "n2o-cmip6-max", "unit": "ppb", "lower": 515.5, "upper": 516.5}
+% comparison-method (current): as for CO_2 above (ranges over all experiments and 2022-2500, computed separately for each phase)
 the range for N_2O is a similar width but lower (CMIP6: 333 to 516~ppb)
 % value-check: {"tag": "cfc12-cmip7-above-all-cmip6"}
 % value-check: {"tag": "cfc12-cmip7-relative-to-cmip6-mean-to-2100", "unit": "dimensionless", "lower": 0.05, "upper": 0.065}
+% comparison-method (current): CMIP7 (the same in every experiment, so the first is used) vs CMIP6 scenarios | spatial: global-mean (published files) | time: annual-means, matched by year | stat: `-above-all-cmip6` = CMIP7 > every CMIP6 scenario in every year (true/false); `-relative-to-cmip6-mean-to-2100` = mean over years of (CMIP7 / mean across CMIP6 scenarios - 1) | period: 2022 to 2500 (above-all), 2022 to 2100 (relative)
+% comparison-method (concern): "in the medium- and long-term" is checked as every year from 2022, i.e. including the short term
 and CFC-12 concentrations are slightly higher in the medium- and long-term than in CMIP6 scenarios.
 % (around 6\% higher than the mean of the CMIP6 scenarios on average up to 2100).
 The changes are driven by changes in the underlying scenarios

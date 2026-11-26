@@ -1,6 +1,7 @@
 \section{Discussion}
 \label{sec:discussion}
 
+% comparison-method (current): none here for "its inputs" and "other observation networks" (summary of the results section); only the CMIP6 part is checked, below
 The output dataset shows differences from its inputs, other observation networks and the CMIP6 dataset
 that are small in the context of earth system modelling (Sect.~\ref{sec:results}).
 % value-check: {"tag": "co2-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0}
@@ -9,6 +10,7 @@ that are small in the context of earth system modelling (Sect.~\ref{sec:results}
 % value-check: {"tag": "cfc12-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0}
 % value-check: {"tag": "cfc12eq-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0}
 % value-check: {"tag": "hfc134aeq-diff-from-cmip6-all-radiative-effect", "unit": "W/m^2", "upper": 0.06, "lower": 0}
+% comparison-method (current): ours vs CMIP6, per gas | spatial: global-mean, each dataset's own published global-mean file | time: annual-means, matched by year | stat: max |ours - CMIP6| times the gas' AR6 linear radiative efficiency | period: every year both cover (1 to 2014)
 For example, in approximate radiative effect terms, the differences from the CMIP6 dataset are less than 0.06~W/m2 over the length of the dataset
 % value-check: {"tag": "co2-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.03, "lower": 0}
 % value-check: {"tag": "ch4-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.03, "lower": 0}
@@ -16,6 +18,7 @@ For example, in approximate radiative effect terms, the differences from the CMI
 % value-check: {"tag": "cfc12-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.03, "lower": 0}
 % value-check: {"tag": "cfc12eq-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.03, "lower": 0}
 % value-check: {"tag": "hfc134aeq-diff-from-cmip6-1850-on-radiative-effect", "unit": "W/m^2", "upper": 0.03, "lower": 0}
+% comparison-method (current): as above, period 1850 to 2014
 and less than 0.03~W/m2 over the period used for CMIP modelling (1850 onwards).
 There are nonetheless a number of points to discuss and areas for potential improvement.
 
@@ -126,10 +129,12 @@ For example, IGCC \citep{forster_igcc_2026} reports uncertainties in global-mean
 of 0.4~ppm for CO_2, 3.3~ppb for CH_4 and 0.4~ppb for N_2O.
 % NOAA only option in case reviewers ask
 % % value-check: {"tag": "ch4-monthly-diff-from-noaa", "unit": "ppb", "upper": 15, "lower": 5}
+% comparison-method (current): ours vs NOAA's global-mean | spatial: global-mean (our global-mean file vs NOAA's published global-mean) | time: monthly (seasonal cycle included), matched by month | stat: mean of (ours - NOAA), signed | period: every month both cover (mid-1983 to 2022)
 % Given that our CH_4 global-mean differs from NOAA's by around 10~ppb (Sect.~\ref{ssec:results-ch4}),
 % despite both being based on largely the same observations,
 % value-check: {"tag": "ch4-noaa-global-mean-start", "unit": "yr", "upper": 1983, "lower": 1983}
 % value-check: {"tag": "ch4-diff-from-igcc-noaa-era-mean", "unit": "ppb", "upper": 12.5, "lower": 7.5}
+% comparison-method (current): ours vs IGCC | spatial: global-mean (our global-mean file vs IGCC's global-mean) | time: annual-means, matched by year | stat: mean of (ours - IGCC), signed | period: first year of NOAA's global-mean (1983) to the last year both cover (2022)
 Given that our CH_4 global-mean differs from IGCC's by around 10~ppb on average from 1983 onwards (Sect.~\ref{ssec:results-ch4}),
 despite both being based on the same NOAA and AGAGE observations,
 it seems that the reported uncertainty estimates exclude this methodological uncertainty.
@@ -148,6 +153,7 @@ These are very simple: linear interpolation between available data points
 with constant poleward extensions as needed.
 Such methods clearly do not capture any more complex physics or chemistry.
 Another example is our representation of the latitudinal gradient and seasonal cycles.
+% comparison-method (current): none, unchecked claim (summary of the results section; "slightly too strong CH_4 seasonality" is also unchecked there)
 While our simple method produces results that largely agree with other data sources (Sect.~\ref{sec:results}),
 more carefully considered methods could lead to improvements,
 such as addressing our slightly too strong CH_4 seasonality (Sect.~\ref{ssec:results-ch4}).
@@ -188,6 +194,7 @@ is that we do not convert between the calibration scales of the different observ
 nor have we explored the differences between them in depth.
 For the gases with the largest radiative forcing, the effect is negligible:
 we only use data from NOAA for CO_2,
+% comparison-method (current): none, from the literature (Meinshausen et al., 2017's AGAGE-to-NOAA factor), not calculated by us
 the difference between the AGAGE and NOAA scales for CH_4 is less than 0.1\%
 (\citealp{meinshausen_historical-ghgs_2017} converted AGAGE CH_4 to the NOAA scale by multiplying by 1.0003)
 and the AGAGE and NOAA scales for N_2O are compatible without conversion
