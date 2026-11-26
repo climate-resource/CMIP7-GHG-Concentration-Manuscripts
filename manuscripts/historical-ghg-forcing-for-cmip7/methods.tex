@@ -249,9 +249,14 @@ Full references for the generation of each gas are given in Appendix~\ref{app:in
                 The latitudinal gradient PC is extended back in time
                 by doing an optimisation against ice core data from both the Southern and Northern Hemispheres,
                 rather than based on a single ice core timeseries alone.
+                % The original run's check is in notebook 1104_ch4_extend-global-annual-mean (cell 68 of the rerun copy,
+                % data/raw/cmip-ghg-concentration-generation/v1.0.0/notebooks-rerun/1104_ch4_extend-global-annual-mean.ipynb).
+                % It asserts (np.testing.assert_allclose, outside CI) that the extended full field, in the band nearest each ice core,
+                % matches NEEM to rtol=1e-3 (0.1%) and the harmonised smoothed Law Dome and EPICA to the default rtol (1e-7).
+                % value-check: {"tag": "ch4-neem-max-relative-diff", "unit": "dimensionless", "lower": 0.0, "upper": 0.001}
                 We check that we maintain agreement with available ice core data in both the Northern and Southern hemispheres
                 (based on the already extended latitudinal gradient)
-                to within 0.5\% when extending the global-, annual-mean.
+                to within 0.1\% when extending the global-, annual-mean.
             }
         \end{enumerate}
     }
@@ -747,7 +752,7 @@ As for the merged Law Dome--Mauna Loa record data,
 there is a small offset, albeit of only around 0.5~ppm in this case,
 between the \citet{menking_law-dome_2025}
 and the value implied by our global-, annual-mean and latitudinal gradient
-in the time period in which they overlap.
+in the first year of our global annual mean.
 Like for the merged Law Dome--Mauna Loa record data,
 to avoid introducing an artificial step in the output,
 we harmonise the \citet{menking_law-dome_2025} data.
