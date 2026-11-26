@@ -250,6 +250,7 @@ Full references for the generation of each gas are given in Appendix~\ref{app:in
                 by doing an optimisation against ice core data from both the Southern and Northern Hemispheres,
                 rather than based on a single ice core timeseries alone.
                 % comparison-method (current): none, unchecked claim here (the CH_4 section has the NEEM check, max relative difference in NEEM's band, bound 0.1%, not 0.5%)
+                % I think this number is based on the notebooks we ran so we can't check it (but we can add a reference here to the notebook in which the 0.5% appeared)
                 We check that we maintain agreement with available ice core data in both the Northern and Southern hemispheres
                 (based on the already extended latitudinal gradient)
                 to within 0.5\% when extending the global-, annual-mean.
@@ -527,6 +528,7 @@ Relative seasonality is seasonality divided by the average global-, annual-mean 
 % the average of the resulting seasonality over the observation network period
 % value-check: {"tag": "n2o-seasonality-reproduces-observed-average", "unit": "dimensionless", "lower": 0.0, "upper": 1e-10}
 % comparison-method (current): our seasonality vs the observed seasonality (relative seasonality times the mean of the obs network global-, annual-mean) | spatial: cell by cell on our native 15-degree bands | time: by calendar month, our seasonality averaged over the obs network years | stat: max |ours - observed| / max |observed| | period: obs network years (1989 to 2023)
+% this is correct
 % is exactly the seasonality calculated from the observations
 % (provided that the global-, annual-mean over this period is the one derived from the observation network).
 % It also gives less weight to years with lower concentrations,
@@ -551,6 +553,7 @@ removing the need for us to make our own spline interpolation choices
 (unlike \citet{meinshausen_historical-ghgs_2017}, which used a much more involved interpolation method).
 % value-check: {"tag": "n2o-menking-offset", "unit": "ppb", "lower": 1.6, "upper": 1.9}
 % comparison-method (current): our obs network global-, annual-mean (interim file) vs Menking et al. (2025) | spatial: global-mean vs the Menking record as is (single latitude, no latitudinal adjustment) | time: annual | stat: single signed difference (obs network - Menking) | period: 1989 only (harmonisation year)
+% this is correct (the Menking N2O record doesn't have a latitude associated I don't think ?)
 There is a small offset of around 1.7~ppb between the \citet{menking_law-dome_2025} data
 and our global-, annual-mean.
 To avoid introducing an artificial step in the output,
@@ -733,6 +736,7 @@ We use all data from the merged Law Dome--Mauna Loa record which is not already 
 In practice this means that we use the merged Law Dome--Mauna Loa record from 1959 to 1980.
 % value-check: {"tag": "co2-mauna-loa-offset", "unit": "ppm", "lower": 1.4, "upper": 1.6}
 % comparison-method (current): our obs network global-, annual-mean (interim file) vs the merged Law Dome--Mauna Loa record | spatial: global-mean vs the merged record as is | time: annual-mean vs the merged record's mid-year (1981.5) value | stat: single signed difference (obs network - merged) | period: 1981 only (harmonisation year)
+% this is correct
 There is an offset of around 1.5~ppm between the merged Law Dome--Mauna Loa record
 and the global-, annual-mean we derive from the observation network in 1981.
 To avoid introducing an artificial step in the output,
@@ -750,10 +754,11 @@ As for the merged Law Dome--Mauna Loa record data,
 % value-check: {"tag": "co2-menking-offset", "unit": "ppm", "lower": 0.4, "upper": 0.6}
 % comparison-method (current): our output vs Menking et al. (2025) | spatial: our native band nearest to Menking's latitude (-67.5) | time: annual-mean of our monthly values vs Menking's annual values | stat: single signed difference (ours - Menking) | period: 1959 only (start of the merged record we use, the harmonisation year)
 % comparison-method (concern): the text says "in the time period in which they overlap", but the check is the single harmonisation year
+% Check is correct. I have updated the text to address the concern
 there is a small offset, albeit of only around 0.5~ppm in this case,
 between the \citet{menking_law-dome_2025}
 and the value implied by our global-, annual-mean and latitudinal gradient
-in the time period in which they overlap.
+in the first year of our global annual mean.
 Like for the merged Law Dome--Mauna Loa record data,
 to avoid introducing an artificial step in the output,
 we harmonise the \citet{menking_law-dome_2025} data.
@@ -762,6 +767,7 @@ when it is combined with the (now temporally extended) latitudinal gradient,
 our output dataset matches the harmonised \citet{menking_law-dome_2025}
 % value-check: {"tag": "co2-menking-output-match", "unit": "ppm", "lower": 0.0, "upper": 1e-05}
 % comparison-method (current): our output vs Menking et al. (2025) harmonised by us (offset above, declining linearly to zero over 100 years) | spatial: our native band nearest to Menking's latitude (-67.5) | time: annual-mean of our monthly values | stat: max |ours - harmonised Menking| | period: every year before 1959
+% this is correct
 in the latitudinal bin in which the ice cores were taken exactly
 (this is the -67.5\textdegree~bin on our native grid).
 
@@ -938,6 +944,7 @@ We use it in the same way as the \citet{menking_law-dome_2025} data is used for 
 i.e. we harmonise it to the value implied by our observation network-based global-, annual-mean and latitudinal gradient
 % value-check: {"tag": "ch4-law-dome-offset", "unit": "ppb", "lower": 0.0, "upper": 1.0}
 % comparison-method (current): our output vs smoothed Law Dome | spatial: our native band nearest to Law Dome's latitude (-67.5) | time: annual-mean of our monthly values vs Law Dome's annual values | stat: |ours - Law Dome| (sign dropped) | period: 1984 only (obs network start, the harmonisation year)
+% this is correct
 (the offset is less than 1~ppb, so the harmonisation has a much smaller effect than for CO_2),
 then calculate the temporally extended global-, annual-mean such that our output dataset matches the harmonised data
 % value-check: {"tag": "ch4-law-dome-lat-bin", "unit": "degree", "lower": -67.5, "upper": -67.5}
@@ -961,6 +968,7 @@ but is slightly closer to the centre of the -82.5\textdegree bin).
 
 % value-check: {"tag": "ch4-neem-max-relative-diff", "unit": "dimensionless", "lower": 0.0, "upper": 0.001}
 % comparison-method (current): our output vs the NEEM ice core values | spatial: our native band nearest to NEEM's latitude (82.5) | time: annual-mean of our monthly values, in each NEEM sample's year (rounded to the nearest year) | stat: max |ours - NEEM| / NEEM | period: every NEEM sample
+% this is correct
 As a final check, we verify that the values implied by our global-, annual-mean and latitudinal gradient
 match the values from the NEEM data to within 0.1\%.
 This ensures that our processing has closely maintained the latitudinal gradient information
