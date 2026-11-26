@@ -109,6 +109,7 @@ to their drivers is different in VL-CF than in the ScenarioMIP scenarios, which 
 % % value-check: {"tag": "co2-seasonality-change-vl-cf-regression-slope-ratio", "unit": "dimensionless", "lower": 1.35, "upper": 1.45}
 % % value-check: {"tag": "n2o-vl-cf-regression-slope-ratio", "unit": "dimensionless", "lower": 1.35, "upper": 1.45}
 % comparison-method (current): VL-CF vs ScenarioMIP regression | stat: ratio of linear-fit slopes, VL-CF's refitted using only years up to its harmonisation year (2015) vs all the years the ScenarioMIP regression uses, same regression data otherwise
+% this is correct
 % The difference is largest for CO_2's seasonality change and N_2O's latitudinal gradient,
 % for which VL-CF's regression slopes are around 40\% steeper
 % (Sects.~\ref{sssec:methods-co2-project-seasonality-lat-gradient} and \ref{sssec:methods-n2o-like-project-seasonality-lat-gradient}).
@@ -136,6 +137,7 @@ but then apply them with the CMIP7 emissions.
 % The difference is largest for CH_4.
 % % value-check: {"tag": "ch4-lat-gradient-regression-slope-ratio-to-historical", "unit": "dimensionless", "lower": 5.5, "upper": 5.7}
 % comparison-method (current): our CH_4 PC0 regression vs the historical dataset's | stat: ratio of slopes, each as stored by its own run (ours from the regression info, historical from its YAML), over different fitting years and data
+% this is correct
 % The slope of our regression is around 5.6 times that of the regression used in the historical dataset
 % % value-check: {"tag": "ch4-lat-gradient-regression-first-year", "unit": "yr", "lower": 1750, "upper": 1750}
 % % value-check: {"tag": "ch4-lat-gradient-regression-last-year", "unit": "yr", "lower": 2023, "upper": 2023}
